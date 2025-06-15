@@ -81,7 +81,7 @@ namespace Code.Network
 
         private void TryBeginStreaming()
         {
-            if (!IsOwner || rawImage == null || _sendLoop != null)
+            if (!IsOwner || !rawImage || _sendLoop != null)
                 return;                                  // стримит только владелец (хост)
 
             _sendLoop = StartCoroutine(SendLoop());
@@ -150,9 +150,11 @@ namespace Code.Network
             if (dataType != DATA_TYPE)
                 return;                                   // не наш тип данных
 
-            // Хост уже показал картинку локально, поэтому игнорируем.
-            if (IsOwner) return;
-
+            if(senderId == NetworkObject.OwnerId)
+                return;
+            
+            Debug.Log($"Packed size is {packedSize}");
+            
             ApplyImage(data);
         }
 
