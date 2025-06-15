@@ -76,13 +76,6 @@ namespace Code.Network
             TryBeginStreaming();
         }
 
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
-        {
-            base.OnOwnershipClient(prevOwner);
-            
-            Debug.Log($"OnOwnershipClient {OwnerId}");
-        }
-
         /*private void OnEnable()  => TryBeginStreaming();
         private void OnDisable() => EndStreaming();*/
 
