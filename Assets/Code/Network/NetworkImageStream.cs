@@ -61,7 +61,7 @@ namespace Code.Network
             
             ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
         }
-        
+
         #endregion
 
         /* =================================================================== */
@@ -79,12 +79,16 @@ namespace Code.Network
 
         private void OnDestroy() => TurtlePassManager.Receivers.Remove(this);
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            TryBeginStreaming();
+        }
+
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
 
-            TryBeginStreaming();
-            
             Debug.Log($"OnOwnershipClient {OwnerId}");
         }
 
@@ -93,7 +97,10 @@ namespace Code.Network
 
         private void TryBeginStreaming()
         {
-            if (IsOwner || !rawImage || _sendLoop != null)
+            Debug.Log($"TryBeginStreaming {OwnerId}");
+            Debug.Log(
+                $"OwnerId != -1 ({OwnerId != -1}) || !rawImage ({!rawImage}) || _sendLoop != null ({_sendLoop != null})");
+            if (OwnerId != -1 || !rawImage || _sendLoop != null)
                 return; // стримит только владелец (хост)
 
             Debug.Log("BeginStreaming");
