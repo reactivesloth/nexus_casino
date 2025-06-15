@@ -57,14 +57,7 @@ namespace Code.Network
 
         private void ServerManagerOnOnRemoteConnectionState(NetworkConnection arg1, RemoteConnectionStateArgs arg2)
         {
-            const int HOST_ID = 0; // у FishNet сервер‑клиент всегда Id 0
-            
-            Debug.Log(arg1.ClientId);
-            
-            if (arg1.ClientId == HOST_ID)
-            {
-                NetworkObject.GiveOwnership(arg1);
-            }
+            NetworkObject.GiveOwnership(arg1);
             
             ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
         }
