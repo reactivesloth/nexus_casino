@@ -188,7 +188,6 @@ namespace Code.Network
             tex.name = "NetStream";
 
             rawImage.texture = tex;
-            rawImage.SetNativeSize();
         }
 
         #endregion
