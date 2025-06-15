@@ -1,220 +1,167 @@
-using System;
+// NetworkImageStream.cs
+// Streams RawImage from the host (client‑server) to all other players
+// using FishNet + TurtlePass for chunked delivery.
+
 using System.Collections;
 using FishNet.Connection;
 using FishNet.Object;
-using FishNet.Transporting;
+using Plugins.FishNet.TurtlePass;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Code.Network
 {
     /// <summary>
-    /// Отправляет изображение из <see cref="RawImage"/> у владельца
-    /// и выводит его в тот же RawImage у всех других клиентов.
-    /// При старте сервера назначает владельцем объекта хоста (Client Id 0).
+    ///   • Хост (clientId = 0) становится владельцем объекта и каждые <see cref="fps"/> секунд
+    ///     рассылает снимок своего <see cref="RawImage"/> всем игрокам.
+    ///   • Turtle Pass автоматически дробит большие массивы и собирает их на клиенте.
+    ///   • Клиенты, не являющиеся владельцем, лишь принимают PNG/JPG и выводят в RawImage.
     /// </summary>
-    public sealed class NetworkImageStream : NetworkBehaviour
+    public sealed class NetworkImageStream : NetworkBehaviour, ITurtlePassReceiver
     {
-        /* ─────────────────────────── Настройки ─────────────────────────── */
+        /* ─────────── Inspector ─────────── */
 
-        [Tooltip("RawImage-компонент, который показывает картинку у всех игроков.")]
         [SerializeField] private RawImage rawImage;
 
         [Header("Stream")]
-        [SerializeField, Min(0.1f)] private float fps = 2f;
+        [Min(0.1f)]      [SerializeField] private float fps        = 2f;
         [SerializeField] private bool  useJpg    = true;
-        [SerializeField, Range(10, 100)]
-        private int jpgQuality = 70;
+        [Range(10,100)]  [SerializeField] private int   jpgQuality = 70;
 
-        [Header("Networking")]
-        [Tooltip("Размер одного чанка (< MTU транспорта).")]
-        [SerializeField, Min(128)] private int chunkSize = 950;
+        /* ─────────── Constants ─────────── */
 
-        /* ───────────────────────── Runtime ───────────────────────── */
+        private const TurtlePassDataType DATA_TYPE = TurtlePassDataType.GameState;
+
+        /* ─────────── Internals ─────────── */
 
         private Coroutine _sendLoop;
-        private FrameAssembler _assembler;
 
-        /* ===================================================================== */
-        #region Ownership
-        /* ===================================================================== */
+        /* =================================================================== */
+        #region ▸ Ownership
+        /* =================================================================== */
 
         /// <summary>
-        /// При запуске сервера отдаём владение объектом хосту (Client Id 0),
-        /// чтобы именно он рассылал кадры.
+        /// На сервере сразу передаём объект во владение хост‑клиенту (Id 0),
+        /// чтобы именно он стримил картинку.
         /// </summary>
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+
+            const int HOST_ID = 0;                       // у FishNet сервер‑клиент всегда Id 0
+            if (OwnerId == HOST_ID)                      // уже владелец
+                return;
+
+            if (NetworkManager.ServerManager.Clients.TryGetValue(HOST_ID, out NetworkConnection hostConn))
+                NetworkObject.GiveOwnership(hostConn);  // требуемый сигнатурой NetworkConnection
+        }
+
+        #endregion
+        /* =================================================================== */
+        #region ▸ Unity lifecycle
+        /* =================================================================== */
+
+        private void Awake()
+        {
+            // регистрируемся как приёмник в TurtlePassManager
+            if (!TurtlePassManager.Receivers.Contains(this))
+                TurtlePassManager.Receivers.Add(this);
+        }
+
+        private void OnDestroy() => TurtlePassManager.Receivers.Remove(this);
+
         public override void OnStartClient()
         {
             base.OnStartClient();
-            
-            const int hostId = 0;                    // FishNet: сервер-клиент всегда 0
-            if (OwnerId != hostId) 
-                GiveOwnership(NetworkManager.ClientManager.Connection); 
-            
-            if (IsOwner && rawImage != null)
-                _sendLoop = StartCoroutine(SendLoop());
+            TryBeginStreaming();
+        }
+
+        private void OnEnable()  => TryBeginStreaming();
+        private void OnDisable() => EndStreaming();
+
+        private void TryBeginStreaming()
+        {
+            if (!IsOwner || rawImage == null || _sendLoop != null)
+                return;                                  // стримит только владелец (хост)
+
+            _sendLoop = StartCoroutine(SendLoop());
+        }
+
+        private void EndStreaming()
+        {
+            if (_sendLoop == null) return;
+            StopCoroutine(_sendLoop);
+            _sendLoop = null;
         }
 
         #endregion
-        /* ===================================================================== */
-
-        #region Unity Lifecycle
-        /* ===================================================================== */
-
-        private void OnEnable()
-        {
-            if (IsOwner && rawImage != null)
-                _sendLoop = StartCoroutine(SendLoop());
-        }
-
-        private void OnDisable()
-        {
-            if (_sendLoop != null)
-                StopCoroutine(_sendLoop);
-
-            _assembler = null;
-        }
-
-        #endregion
-        /* ===================================================================== */
-
-        #region Sending side (owner)
-        /* ===================================================================== */
+        /* =================================================================== */
+        #region ▸ Sending side (owner / host)
+        /* =================================================================== */
 
         private IEnumerator SendLoop()
         {
             var wait = new WaitForSeconds(1f / fps);
-
             while (true)
             {
                 yield return wait;
-                CaptureAndSend();
+                SendFrame();
             }
         }
 
-        /// <summary>
-        /// Берёт Texture из RawImage, сериализует и шлёт чанками.
-        /// </summary>
-        private void CaptureAndSend()
+        private void SendFrame()
         {
             if (rawImage.texture == null) return;
 
-            Texture2D srcTex = rawImage.texture as Texture2D
-                               ?? CopyIntoTexture2D(rawImage.texture);
-            if (srcTex == null) return;
+            Texture2D tex = rawImage.texture as Texture2D ?? CopyIntoTexture2D(rawImage.texture);
+            if (tex == null) return;
 
-            byte[] data = useJpg ? srcTex.EncodeToJPG(jpgQuality)
-                                 : srcTex.EncodeToPNG();
+            byte[] bytes = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
 
-            int total = data.Length;
-            for (int offset = 0; offset < total; offset += chunkSize)
-            {
-                int len = Math.Min(chunkSize, total - offset);
-                var part = new byte[len];
-                Buffer.BlockCopy(data, offset, part, 0, len);
+            // хост является сервером, поэтому можем сразу бросать «-1» (всем клиентам)
+            TurtlePassManager.QueueSendBytes(-1, DATA_TYPE, bytes, bytes.Length, false);
 
-                UploadChunk(part, offset, total, srcTex.width, srcTex.height);
-            }
-
-            if (srcTex != rawImage.texture)          // мы создавали временную Texture2D
-                Destroy(srcTex);
+            if (tex != rawImage.texture)
+                Object.Destroy(tex);
         }
 
-        /// <summary>
-        /// Копирует любую Texture (RenderTexture, VideoPlayer и т.д.) в «читаемую» Texture2D.
-        /// </summary>
         private static Texture2D CopyIntoTexture2D(Texture src)
         {
-            if (src == null) return null;
-
-            var rt = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32);
+            var rt   = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32);
             Graphics.Blit(src, rt);
-
-            RenderTexture prev = RenderTexture.active;
+            var prev = RenderTexture.active;
             RenderTexture.active = rt;
-
             var tex = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
             tex.ReadPixels(new Rect(0, 0, src.width, src.height), 0, 0);
-            tex.Apply(false, false);
-
+            tex.Apply();
             RenderTexture.active = prev;
             RenderTexture.ReleaseTemporary(rt);
             return tex;
         }
 
         #endregion
-        /* ===================================================================== */
+        /* =================================================================== */
+        #region ▸ TurtlePass receiver
+        /* =================================================================== */
 
-        #region Network RPCs
-        /* ===================================================================== */
-
-        [ServerRpc(RequireOwnership = false)]
-        private void UploadChunk(byte[] chunk,
-                                 int offset,
-                                 int total,
-                                 int width,
-                                 int height)
+        /// <inheritdoc />
+        public void ReceiveTurtlePassMessage(byte[] data, int packedSize, int senderId, TurtlePassDataType dataType)
         {
-            RelayChunk(chunk, offset, total, width, height);
+            if (dataType != DATA_TYPE)
+                return;                                   // не наш тип данных
+
+            // Хост уже показал картинку локально, поэтому игнорируем.
+            if (IsOwner) return;
+
+            ApplyImage(data);
         }
-
-        [ObserversRpc()]
-        private void RelayChunk(byte[] chunk,
-                                int offset,
-                                int total,
-                                int width,
-                                int height)
-        {
-            _assembler ??= new FrameAssembler(total);
-            _assembler.Add(chunk, offset);
-
-            if (_assembler.IsComplete)
-            {
-                ApplyImage(_assembler.Data);
-                _assembler = null;                   // под следующий кадр
-            }
-        }
-
-        #endregion
-        /* ===================================================================== */
-
-        #region Receiving side (all clients)
-        /* ===================================================================== */
 
         private void ApplyImage(byte[] bytes)
         {
             var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             tex.LoadImage(bytes, false);
             tex.name = "NetStream";
-
             rawImage.texture = tex;
-            rawImage.SetNativeSize();
-        }
-
-        #endregion
-        /* ===================================================================== */
-
-        #region Helpers
-        /* ===================================================================== */
-
-        /// <summary>
-        /// Сборщик чанков одного кадра.
-        /// </summary>
-        private sealed class FrameAssembler
-        {
-            private readonly byte[] _buffer;
-            private int _received;
-
-            public bool  IsComplete => _received >= _buffer.Length;
-            public byte[] Data       => _buffer;
-
-            public FrameAssembler(int totalBytes) => _buffer = new byte[totalBytes];
-
-            public void Add(byte[] chunk, int offset)
-            {
-                Buffer.BlockCopy(chunk, 0, _buffer, offset, chunk.Length);
-                _received += chunk.Length;
-            }
         }
 
         #endregion
