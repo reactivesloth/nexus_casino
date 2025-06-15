@@ -39,7 +39,7 @@ namespace Code.Network
         /* =================================================================== */
         #region ▸ Ownership
         /* =================================================================== */
-
+        
         /// <summary>
         /// На сервере сразу передаём объект во владение хост‑клиенту (Id 0),
         /// чтобы именно он стримил картинку.
@@ -48,7 +48,7 @@ namespace Code.Network
         {
             base.OnStartServer();
 
-            const int HOST_ID = 0;                       // у FishNet сервер‑клиент всегда Id 0
+            const int HOST_ID = 0;                       // у FishNet сервер‑клиент всегда Id 0
             if (OwnerId == HOST_ID)                      // уже владелец
                 return;
 
@@ -76,14 +76,17 @@ namespace Code.Network
             TryBeginStreaming();
         }
 
-        private void OnEnable()  => TryBeginStreaming();
-        private void OnDisable() => EndStreaming();
+        /*private void OnEnable()  => TryBeginStreaming();
+        private void OnDisable() => EndStreaming();*/
 
         private void TryBeginStreaming()
         {
-            if (!IsOwner || !rawImage || _sendLoop != null)
+            Debug.Log($"TryBeginStreaming {OwnerId}");
+            Debug.Log($"OwnerId != -1 ({OwnerId != -1}) || !rawImage ({!rawImage}) || _sendLoop != null ({_sendLoop != null})");
+            if (OwnerId != -1 || !rawImage || _sendLoop != null)
                 return;                                  // стримит только владелец (хост)
 
+            Debug.Log("BeginStreaming");
             _sendLoop = StartCoroutine(SendLoop());
         }
 
@@ -118,11 +121,12 @@ namespace Code.Network
 
             byte[] bytes = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
 
+            Debug.Log($"SendFrame. Owner is {OwnerId}, Data: {bytes.Length} bytes");
             // хост является сервером, поэтому можем сразу бросать «-1» (всем клиентам)
-            TurtlePassManager.QueueSendBytes(-1, DATA_TYPE, bytes, bytes.Length, false);
+            TurtlePassManager.QueueSendBytes(OwnerId, DATA_TYPE, bytes, bytes.Length);
 
             if (tex != rawImage.texture)
-                Object.Destroy(tex);
+                Destroy(tex);
         }
 
         private static Texture2D CopyIntoTexture2D(Texture src)
