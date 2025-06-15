@@ -5,6 +5,7 @@
 using System.Collections;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Transporting;
 using Plugins.FishNet.TurtlePass;
 using UnityEngine;
 using UnityEngine.UI;
@@ -23,10 +24,11 @@ namespace Code.Network
 
         [SerializeField] private RawImage rawImage;
 
-        [Header("Stream")]
-        [Min(0.1f)]      [SerializeField] private float fps        = 2f;
-        [SerializeField] private bool  useJpg    = true;
-        [Range(10,100)]  [SerializeField] private int   jpgQuality = 70;
+        [Header("Stream")] [Min(0.1f)] [SerializeField]
+        private float fps = 2f;
+
+        [SerializeField] private bool useJpg = true;
+        [Range(10, 100)] [SerializeField] private int jpgQuality = 70;
 
         /* ─────────── Constants ─────────── */
 
@@ -37,9 +39,11 @@ namespace Code.Network
         private Coroutine _sendLoop;
 
         /* =================================================================== */
+
         #region ▸ Ownership
+
         /* =================================================================== */
-        
+
         /// <summary>
         /// На сервере сразу передаём объект во владение хост‑клиенту (Id 0),
         /// чтобы именно он стримил картинку.
@@ -48,17 +52,29 @@ namespace Code.Network
         {
             base.OnStartServer();
 
-            const int HOST_ID = 0;                       // у FishNet сервер‑клиент всегда Id 0
-            if (OwnerId == HOST_ID)                      // уже владелец
-                return;
+            ServerManager.OnRemoteConnectionState += ServerManagerOnOnRemoteConnectionState;
+        }
 
-            if (NetworkManager.ServerManager.Clients.TryGetValue(HOST_ID, out NetworkConnection hostConn))
-                NetworkObject.GiveOwnership(hostConn);  // требуемый сигнатурой NetworkConnection
+        private void ServerManagerOnOnRemoteConnectionState(NetworkConnection arg1, RemoteConnectionStateArgs arg2)
+        {
+            const int HOST_ID = 0; // у FishNet сервер‑клиент всегда Id 0
+            
+            Debug.Log(arg1.ClientId);
+            
+            if (arg1.ClientId == HOST_ID)
+            {
+                NetworkObject.GiveOwnership(arg1);
+            }
+            
+            ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
         }
 
         #endregion
+
         /* =================================================================== */
+
         #region ▸ Unity lifecycle
+
         /* =================================================================== */
 
         private void Awake()
@@ -79,7 +95,7 @@ namespace Code.Network
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            
+
             Debug.Log($"OnOwnershipClient {OwnerId}");
         }
 
@@ -89,9 +105,10 @@ namespace Code.Network
         private void TryBeginStreaming()
         {
             Debug.Log($"TryBeginStreaming {OwnerId}");
-            Debug.Log($"OwnerId != -1 ({OwnerId != -1}) || !rawImage ({!rawImage}) || _sendLoop != null ({_sendLoop != null})");
+            Debug.Log(
+                $"OwnerId != -1 ({OwnerId != -1}) || !rawImage ({!rawImage}) || _sendLoop != null ({_sendLoop != null})");
             if (OwnerId != -1 || !rawImage || _sendLoop != null)
-                return;                                  // стримит только владелец (хост)
+                return; // стримит только владелец (хост)
 
             Debug.Log("BeginStreaming");
             _sendLoop = StartCoroutine(SendLoop());
@@ -105,8 +122,11 @@ namespace Code.Network
         }
 
         #endregion
+
         /* =================================================================== */
+
         #region ▸ Sending side (owner / host)
+
         /* =================================================================== */
 
         private IEnumerator SendLoop()
@@ -138,7 +158,7 @@ namespace Code.Network
 
         private static Texture2D CopyIntoTexture2D(Texture src)
         {
-            var rt   = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32);
+            var rt = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32);
             Graphics.Blit(src, rt);
             var prev = RenderTexture.active;
             RenderTexture.active = rt;
@@ -151,21 +171,24 @@ namespace Code.Network
         }
 
         #endregion
+
         /* =================================================================== */
+
         #region ▸ TurtlePass receiver
+
         /* =================================================================== */
 
         /// <inheritdoc />
         public void ReceiveTurtlePassMessage(byte[] data, int packedSize, int senderId, TurtlePassDataType dataType)
         {
             if (dataType != DATA_TYPE)
-                return;                                   // не наш тип данных
+                return; // не наш тип данных
 
-            if(senderId == NetworkObject.OwnerId)
+            if (senderId == NetworkObject.OwnerId)
                 return;
-            
+
             Debug.Log($"Packed size is {packedSize}");
-            
+
             ApplyImage(data);
         }
 
