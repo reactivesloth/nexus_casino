@@ -13785,9 +13785,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7443408887813606051, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
       insertIndex: -1
       addedObject: {fileID: 821905086}
-    - targetCorrespondingSourceObject: {fileID: 7443408887813606051, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 821905091}
   m_SourcePrefab: {fileID: 100100000, guid: 0b650fca685f2eb41a86538aa883e4c1, type: 3}
 --- !u!1 &821905080 stripped
 GameObject:
@@ -13917,19 +13914,6 @@ MonoBehaviour:
   _tickRate: 50
   _pingInterval: 1
   _physicsMode: 1
---- !u!114 &821905091
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 821905080}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e53c100962618ff469db876f287bd0f6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  debug: 0
 --- !u!1 &828121504 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1527601707680634570, guid: ba59e4b022ae96f4c97733a473b01f44, type: 3}
@@ -34780,6 +34764,7 @@ MonoBehaviour:
   fps: 2
   useJpg: 1
   jpgQuality: 70
+  chunkSize: 950
 --- !u!1 &1806559889 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -6754674874353905211, guid: dfb4fcf6529098c49bfffd75b5d9b93b, type: 3}
