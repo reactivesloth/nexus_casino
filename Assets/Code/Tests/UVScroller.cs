@@ -18,7 +18,7 @@ public class UVScroller : MonoBehaviour
     {
         if (scrollSpeed != Vector2.zero)
         {
-            renderer.materials[materialID].mainTextureOffset = ((Time.time + offset) * scrollSpeed);
+            renderer.materials[materialID].mainTextureOffset = (Time.time + offset) * scrollSpeed;
         }
     }
 }
