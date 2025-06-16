@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using FishNet.Connection;
 using FishNet.Object;
+using K4os.Compression.LZ4;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,7 +12,7 @@ namespace Code.Network
     /// Экран игрового автомата:
     /// • Без владельца — локальная Idle‑текстура.
     /// • С владельцем — стриминг экрана с даунскейлом.
-    /// Опционально можно пропускать неизменные кадры (вкл/выкл через инспектор).
+    /// Дополнительно: пропуск одинаковых кадров и опциональное LZ4‑сжатие.
     /// </summary>
     public sealed class NetworkImageStream : NetworkBehaviour
     {
@@ -36,6 +37,8 @@ namespace Code.Network
         [Header("Networking")]
         [Tooltip("Размер одного чанка (< MTU транспорта). 1150 байт обычно безопасно для UDP IPv4.")]
         [SerializeField, Min(256)] private int chunkSize = 1150;
+        [Tooltip("Сжимать полезную нагрузку LZ4Pickler‑ом (быстрое, ~2‑3× экономия на PNG / 10‑20 % на JPEG).")]
+        [SerializeField] private bool lz4Compress = true;
         [Tooltip("Назначить ли хоста владельцем объекта при запуске клиента.")]
         [SerializeField] private bool hostIsOwnerOnStart = true;
 
@@ -43,7 +46,7 @@ namespace Code.Network
 
         private Coroutine _sendLoop;
         private FrameAssembler _assembler;
-        private Hash128 _lastHash; // Для пропуска одинаковых кадров
+        private Hash128 _lastHash;
 
         /* ===================================================================== */
         #region Public API
@@ -62,7 +65,7 @@ namespace Code.Network
         {
             base.OnOwnershipClient(prevOwner);
 
-            NetworkConnection newOwner = Owner; // может быть null
+            NetworkConnection newOwner = Owner;
             bool iWasOwner = prevOwner == NetworkManager.ClientManager.Connection;
             bool iAmOwner  = newOwner == NetworkManager.ClientManager.Connection;
 
@@ -163,7 +166,7 @@ namespace Code.Network
             RenderTexture.active = prev;
             RenderTexture.ReleaseTemporary(rt);
 
-            // 2) Пропуск дубликатов (по хэшу)
+            // 2) Пропуск дубликатов
             if (skipDuplicateFrames)
             {
                 Hash128 hash = Hash128.Compute(tex.GetRawTextureData());
@@ -172,18 +175,21 @@ namespace Code.Network
             }
 
             // 3) Кодирование
-            byte[] data = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
+            byte[] payload = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
+            UnityEngine.Object.Destroy(tex);
 
-            // 4) Отправка чанками
-            int total = data.Length;
+            if (lz4Compress)
+                payload = LZ4Pickler.Pickle(payload);
+
+            // 4) Разбивка на чанки
+            int total = payload.Length;
             for (int offset = 0; offset < total; offset += chunkSize)
             {
                 int len = Math.Min(chunkSize, total - offset);
                 var part = new byte[len];
-                Buffer.BlockCopy(data, offset, part, 0, len);
+                Buffer.BlockCopy(payload, offset, part, 0, len);
                 UploadChunk(part, offset, total, w, h);
             }
-            UnityEngine.Object.Destroy(tex);
         }
 
         #endregion
@@ -203,15 +209,19 @@ namespace Code.Network
             _assembler.Add(chunk, offset);
             if (_assembler.IsComplete)
             {
-                ApplyImage(_assembler.Data);
-                _assembler = null; // под следующий кадр
+                byte[] data = _assembler.Data;
+                if (lz4Compress)
+                    data = LZ4Pickler.Unpickle(data);
+
+                ApplyImage(data);
+                _assembler = null;
             }
         }
 
         #endregion
         /* ===================================================================== */
 
-        #region Receiving side (all clients)
+        #region Receiving side
         /* ===================================================================== */
 
         private void ApplyImage(byte[] bytes)
