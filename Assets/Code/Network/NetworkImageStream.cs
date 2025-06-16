@@ -145,10 +145,18 @@ namespace Code.Network
         private IEnumerator SendLoop()
         {
             var wait = new WaitForSeconds(1f / fps);
+            var currentFps = fps;
+            
             while (true)
             {
                 yield return wait;
                 CaptureAndSend();
+
+                if (Mathf.Approximately(fps, currentFps)) 
+                    continue;
+                
+                wait = new WaitForSeconds(1f / fps);
+                currentFps = fps;
             }
         }
 
