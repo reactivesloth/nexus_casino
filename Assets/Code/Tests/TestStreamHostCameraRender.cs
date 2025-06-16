@@ -12,17 +12,26 @@ namespace Code.Tests
         [SerializeField] private NetworkImageStream imageStream;
         
         private bool _isInitialized = false;
+        private Transform _cameraTransform;
 
         private void Update()
         {
-            if(_isInitialized) 
-                return;
-            
-            if(!imageStream.IsOwner)
-                return;
-            
-            Camera.main.targetTexture = renderTexture;
-            _isInitialized = true;
+            if(!_isInitialized)
+            {
+                if (!imageStream.IsOwner)
+                    return;
+
+                var newCamera = new GameObject("Camera").AddComponent<Camera>();
+                newCamera.CopyFrom(Camera.main);
+                newCamera.targetTexture = renderTexture;
+                _cameraTransform = newCamera.transform;
+
+                _isInitialized = true;
+            }
+            else
+            {
+                _cameraTransform.SetPositionAndRotation(Camera.main.transform.position, Camera.main.transform.rotation);
+            }
         }
     }
 }
