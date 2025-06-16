@@ -32633,7 +32633,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 0}
+  m_Texture: {fileID: 8400000, guid: 2b381b329691f5448bbc3dfb7b4312d1, type: 2}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -34366,6 +34366,7 @@ GameObject:
   - component: {fileID: 1805616390}
   - component: {fileID: 1805616393}
   - component: {fileID: 1805616394}
+  - component: {fileID: 1805616395}
   m_Layer: 0
   m_Name: ScreenContentCanvas
   m_TagString: Untagged
@@ -34478,6 +34479,8 @@ MonoBehaviour:
   useJpg: 1
   jpgQuality: 50
   skipDuplicateFrames: 1
+  lz4Compress: 1
+  lz4Level: 12
   chunkSize: 1000
   hostIsOwnerOnStart: 1
 --- !u!114 &1805616394
@@ -34532,6 +34535,23 @@ MonoBehaviour:
     Rotation: {x: 0, y: 0, z: 0, w: 0}
     Scale: {x: 0, y: 0, z: 0}
     IsValid: 0
+--- !u!114 &1805616395
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1805616388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 957a229f259e9324eb066c46913c9e86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1805616394}
+  _networkObjectCache: {fileID: 0}
+  renderTexture: {fileID: 8400000, guid: 2b381b329691f5448bbc3dfb7b4312d1, type: 2}
+  imageStream: {fileID: 1805616393}
 --- !u!1 &1806559889 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -6754674874353905211, guid: dfb4fcf6529098c49bfffd75b5d9b93b, type: 3}

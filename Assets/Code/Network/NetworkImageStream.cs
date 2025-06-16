@@ -3,7 +3,6 @@ using System.Collections;
 using FishNet.Connection;
 using FishNet.Object;
 using K4os.Compression.LZ4;
-using K4os.Compression.LZ4.Streams;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -38,6 +37,7 @@ namespace Code.Network
         [Header("LZ4")]
         [Tooltip("Сжимать полезную нагрузку LZ4Pickler‑ом (быстрое, ~2‑3× экономия на PNG / 10‑20 % на JPEG).")]
         [SerializeField] private bool lz4Compress = true;
+        [Tooltip("Уровень сжатия LZ4.")]
         [SerializeField] private LZ4Level lz4Level = LZ4Level.L00_FAST;
 
         [Header("Networking")]
@@ -214,7 +214,6 @@ namespace Code.Network
             if (_assembler.IsComplete)
             {
                 byte[] data = _assembler.Data;
-                Debug.Log($"Recive Data {data.Length} bytes");
                 if (lz4Compress)
                     data = LZ4Pickler.Unpickle(data);
 
