@@ -34367,6 +34367,7 @@ GameObject:
   - component: {fileID: 1805616393}
   - component: {fileID: 1805616394}
   - component: {fileID: 1805616395}
+  - component: {fileID: 1805616396}
   m_Layer: 0
   m_Name: ScreenContentCanvas
   m_TagString: Untagged
@@ -34552,6 +34553,22 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   renderTexture: {fileID: 8400000, guid: 2b381b329691f5448bbc3dfb7b4312d1, type: 2}
   imageStream: {fileID: 1805616393}
+--- !u!114 &1805616396
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1805616388}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _overrideType: 1
+  _updateHostVisibility: 0
+  _observerConditions:
+  - {fileID: 11400000, guid: 77980fe7b99a848428ea623c92c8f466, type: 2}
 --- !u!1 &1806559889 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -6754674874353905211, guid: dfb4fcf6529098c49bfffd75b5d9b93b, type: 3}
