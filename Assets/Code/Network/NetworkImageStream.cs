@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using Epic.OnlineServices.P2P;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -9,9 +8,10 @@ using UnityEngine.UI;
 namespace Code.Network
 {
     /// <summary>
-    /// Экран игрового автомата: 
-    /// • Когда автомат свободен (нет владельца) — показывает локальную текстуру‑застойку.
-    /// • Когда автомат занят — владелец стримит изображение всем клиентам.
+    /// Экран игрового автомата:
+    /// • Без владельца — локальная Idle‑текстура.
+    /// • С владельцем — стриминг экрана с даунскейлом.
+    /// Опционально можно пропускать неизменные кадры (вкл/выкл через инспектор).
     /// </summary>
     public sealed class NetworkImageStream : NetworkBehaviour
     {
@@ -24,15 +24,18 @@ namespace Code.Network
         [Tooltip("Текстура, отображаемая когда автомат свободен (нет владельца).")]
         [SerializeField] private Texture2D idleTexture;
 
-        [Header("Stream")]
+        [Header("Stream Quality")]
         [SerializeField, Min(0.1f)] private float fps = 24f;
-        [SerializeField] private bool  useJpg    = true;
+        [Tooltip("Снижение разрешения перед кодированием (0.1‑1). 0.5 = половина ширины/высоты → 4× меньше пикселей.")]
+        [SerializeField, Range(0.1f, 1f)] private float downscale = 0.5f;
+        [SerializeField] private bool useJpg = true;
         [SerializeField, Range(10, 100)] private int jpgQuality = 70;
+        [Tooltip("Пропускать ли кадры, идентичные предыдущему.")]
+        [SerializeField] private bool skipDuplicateFrames = true;
 
         [Header("Networking")]
-        [Tooltip("Размер одного чанка (< MTU транспорта).")]
-        [SerializeField, Min(128)] private int chunkSize = P2PInterface.MaxPacketSize - 170;
-
+        [Tooltip("Размер одного чанка (< MTU транспорта). 1150 байт обычно безопасно для UDP IPv4.")]
+        [SerializeField, Min(256)] private int chunkSize = 1150;
         [Tooltip("Назначить ли хоста владельцем объекта при запуске клиента.")]
         [SerializeField] private bool hostIsOwnerOnStart = true;
 
@@ -40,30 +43,14 @@ namespace Code.Network
 
         private Coroutine _sendLoop;
         private FrameAssembler _assembler;
+        private Hash128 _lastHash; // Для пропуска одинаковых кадров
 
         /* ===================================================================== */
         #region Public API
         /* ===================================================================== */
 
-        /// <summary>
-        /// Назначает указанного клиента владельцем объекта.
-        /// Вызывать только на сервере.
-        /// </summary>
-        [Server]
-        public void SetOwner(NetworkConnection connection)
-        {
-            if (connection == null)
-                throw new ArgumentNullException(nameof(connection));
-
-            GiveOwnership(connection);
-        }
-
-        /// <summary>
-        /// Сбрасывает владельца, делая объект бесхозным.
-        /// Вызывать только на сервере.
-        /// </summary>
-        [Server]
-        public void ClearOwner() => RemoveOwnership();
+        [Server] public void SetOwner(NetworkConnection connection) => GiveOwnership(connection ?? throw new ArgumentNullException(nameof(connection)));
+        [Server] public void ClearOwner() => RemoveOwnership();
 
         #endregion
         /* ===================================================================== */
@@ -71,42 +58,28 @@ namespace Code.Network
         #region Ownership callbacks
         /* ===================================================================== */
 
-        /// <summary>
-        /// Вызывается у клиента при смене владения.
-        /// (FishNet 5.x: передаётся только предыдущий владелец.)
-        /// </summary>
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
 
-            NetworkConnection newOwner = Owner;               // текущий владелец после смены (может быть null)
+            NetworkConnection newOwner = Owner; // может быть null
+            bool iWasOwner = prevOwner == NetworkManager.ClientManager.Connection;
+            bool iAmOwner  = newOwner == NetworkManager.ClientManager.Connection;
 
-            bool iWasOwner   = prevOwner == NetworkManager.ClientManager.Connection;
-            bool iAmOwner    = newOwner == NetworkManager.ClientManager.Connection;
-
-            // Теряем владение — выключаем отправку
             if (iWasOwner && !iAmOwner && _sendLoop != null)
             {
                 StopCoroutine(_sendLoop);
                 _sendLoop = null;
             }
-            // Получаем владение — включаем отправку
             else if (iAmOwner && _sendLoop == null && rawImage != null)
             {
                 _sendLoop = StartCoroutine(SendLoop());
             }
 
-            // Нет владельца → показываем idle
             if (newOwner == null && idleTexture != null)
                 ShowIdleTexture();
-            
-            Debug.Log($"OnOwnership {IsOwner}");
         }
 
-        /// <summary>
-        /// При запуске клиента: по желанию назначаем хоста владельцем.
-        /// Если объект остаётся бесхозным — показываем idle‑текстуру.
-        /// </summary>
         public override void OnStartClient()
         {
             base.OnStartClient();
@@ -123,13 +96,9 @@ namespace Code.Network
             }
 
             if (IsOwner && rawImage != null)
-            {
                 _sendLoop = StartCoroutine(SendLoop());
-            }
             else if (!IsOwner && Owner == null && idleTexture != null)
-            {
                 ShowIdleTexture();
-            }
         }
 
         #endregion
@@ -148,12 +117,7 @@ namespace Code.Network
 
         private void OnDisable()
         {
-            if (_sendLoop != null)
-            {
-                StopCoroutine(_sendLoop);
-                _sendLoop = null;
-            }
-
+            if (_sendLoop != null) { StopCoroutine(_sendLoop); _sendLoop = null; }
             _assembler = null;
         }
 
@@ -183,38 +147,43 @@ namespace Code.Network
 
         private void CaptureAndSend()
         {
-            if (!rawImage.texture) return;
+            if (rawImage.texture == null) return;
 
-            Texture2D srcTex = rawImage.texture as Texture2D ?? CopyIntoTexture2D(rawImage.texture);
-            if (srcTex == null) return;
+            // 1) Даунскейл
+            int w = Mathf.RoundToInt(rawImage.texture.width * downscale);
+            int h = Mathf.RoundToInt(rawImage.texture.height * downscale);
+            var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
+            Graphics.Blit(rawImage.texture, rt);
 
-            byte[] data = useJpg ? srcTex.EncodeToJPG(jpgQuality) : srcTex.EncodeToPNG();
+            var prev = RenderTexture.active;
+            RenderTexture.active = rt;
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            tex.Apply(false, false);
+            RenderTexture.active = prev;
+            RenderTexture.ReleaseTemporary(rt);
+
+            // 2) Пропуск дубликатов (по хэшу)
+            if (skipDuplicateFrames)
+            {
+                Hash128 hash = Hash128.Compute(tex.GetRawTextureData());
+                if (hash == _lastHash) { UnityEngine.Object.Destroy(tex); return; }
+                _lastHash = hash;
+            }
+
+            // 3) Кодирование
+            byte[] data = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
+
+            // 4) Отправка чанками
             int total = data.Length;
-            Debug.Log(total);
-            
             for (int offset = 0; offset < total; offset += chunkSize)
             {
                 int len = Math.Min(chunkSize, total - offset);
                 var part = new byte[len];
                 Buffer.BlockCopy(data, offset, part, 0, len);
-                UploadChunk(part, offset, total, srcTex.width, srcTex.height);
+                UploadChunk(part, offset, total, w, h);
             }
-            if (srcTex != rawImage.texture) Destroy(srcTex);
-        }
-
-        private static Texture2D CopyIntoTexture2D(Texture src)
-        {
-            if (src == null) return null;
-            var rt = RenderTexture.GetTemporary(src.width, src.height, 0, RenderTextureFormat.ARGB32);
-            Graphics.Blit(src, rt);
-            RenderTexture prev = RenderTexture.active;
-            RenderTexture.active = rt;
-            var tex = new Texture2D(src.width, src.height, TextureFormat.RGBA32, false);
-            tex.ReadPixels(new Rect(0, 0, src.width, src.height), 0, 0);
-            tex.Apply(false, false);
-            RenderTexture.active = prev;
-            RenderTexture.ReleaseTemporary(rt);
-            return tex;
+            UnityEngine.Object.Destroy(tex);
         }
 
         #endregion
@@ -224,23 +193,18 @@ namespace Code.Network
         /* ===================================================================== */
 
         [ServerRpc(RequireOwnership = false)]
-        private void UploadChunk(byte[] chunk, int offset, int total, int width, int height)
-            => RelayChunk(chunk, offset, total, width, height);
+        private void UploadChunk(byte[] chunk, int offset, int total, int width, int height) =>
+            RelayChunk(chunk, offset, total, width, height);
 
-        [ObserversRpc]
+        [ObserversRpc(ExcludeOwner = true)]
         private void RelayChunk(byte[] chunk, int offset, int total, int width, int height)
         {
-            if(IsOwner)
-                return;
-            
             _assembler ??= new FrameAssembler(total);
             _assembler.Add(chunk, offset);
-            
-            Debug.Log($"Relay Data {chunk.Length} bytes");
             if (_assembler.IsComplete)
             {
                 ApplyImage(_assembler.Data);
-                _assembler = null;
+                _assembler = null; // под следующий кадр
             }
         }
 
@@ -252,9 +216,8 @@ namespace Code.Network
 
         private void ApplyImage(byte[] bytes)
         {
-            var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            var tex = new Texture2D(2, 2, TextureFormat.RGB24, false);
             tex.LoadImage(bytes, false);
-            tex.name = "NetStream";
             rawImage.texture = tex;
         }
 
