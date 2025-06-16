@@ -210,6 +210,7 @@ namespace Code.Network
             if (_assembler.IsComplete)
             {
                 byte[] data = _assembler.Data;
+                Debug.Log($"Recive Data {data.Length} bytes");
                 if (lz4Compress)
                     data = LZ4Pickler.Unpickle(data);
 
