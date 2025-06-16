@@ -3,6 +3,7 @@ using System.Collections;
 using FishNet.Connection;
 using FishNet.Object;
 using K4os.Compression.LZ4;
+using K4os.Compression.LZ4.Streams;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -33,12 +34,15 @@ namespace Code.Network
         [SerializeField, Range(10, 100)] private int jpgQuality = 70;
         [Tooltip("Пропускать ли кадры, идентичные предыдущему.")]
         [SerializeField] private bool skipDuplicateFrames = true;
+        
+        [Header("LZ4")]
+        [Tooltip("Сжимать полезную нагрузку LZ4Pickler‑ом (быстрое, ~2‑3× экономия на PNG / 10‑20 % на JPEG).")]
+        [SerializeField] private bool lz4Compress = true;
+        [SerializeField] private LZ4Level lz4Level = LZ4Level.L00_FAST;
 
         [Header("Networking")]
         [Tooltip("Размер одного чанка (< MTU транспорта). 1150 байт обычно безопасно для UDP IPv4.")]
         [SerializeField, Min(256)] private int chunkSize = 1150;
-        [Tooltip("Сжимать полезную нагрузку LZ4Pickler‑ом (быстрое, ~2‑3× экономия на PNG / 10‑20 % на JPEG).")]
-        [SerializeField] private bool lz4Compress = true;
         [Tooltip("Назначить ли хоста владельцем объекта при запуске клиента.")]
         [SerializeField] private bool hostIsOwnerOnStart = true;
 
@@ -179,7 +183,7 @@ namespace Code.Network
             UnityEngine.Object.Destroy(tex);
 
             if (lz4Compress)
-                payload = LZ4Pickler.Pickle(payload);
+                payload = LZ4Pickler.Pickle(payload, lz4Level);
 
             // 4) Разбивка на чанки
             int total = payload.Length;
