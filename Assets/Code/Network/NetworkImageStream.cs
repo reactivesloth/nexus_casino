@@ -79,7 +79,7 @@ namespace Code.Network
         {
             base.OnOwnershipClient(prevOwner);
 
-            NetworkConnection newOwner = Owner;                // текущий владелец после смены (может быть null)
+            NetworkConnection newOwner = Owner;               // текущий владелец после смены (может быть null)
 
             bool iWasOwner   = prevOwner == NetworkManager.ClientManager.Connection;
             bool iAmOwner    = newOwner == NetworkManager.ClientManager.Connection;
@@ -99,6 +99,8 @@ namespace Code.Network
             // Нет владельца → показываем idle
             if (newOwner == null && idleTexture != null)
                 ShowIdleTexture();
+            
+            Debug.Log($"OnOwnership {IsOwner}");
         }
 
         /// <summary>
@@ -181,13 +183,15 @@ namespace Code.Network
 
         private void CaptureAndSend()
         {
-            if (rawImage.texture == null) return;
+            if (!rawImage.texture) return;
 
             Texture2D srcTex = rawImage.texture as Texture2D ?? CopyIntoTexture2D(rawImage.texture);
             if (srcTex == null) return;
 
             byte[] data = useJpg ? srcTex.EncodeToJPG(jpgQuality) : srcTex.EncodeToPNG();
             int total = data.Length;
+            Debug.Log(total);
+            
             for (int offset = 0; offset < total; offset += chunkSize)
             {
                 int len = Math.Min(chunkSize, total - offset);
@@ -226,8 +230,13 @@ namespace Code.Network
         [ObserversRpc]
         private void RelayChunk(byte[] chunk, int offset, int total, int width, int height)
         {
+            if(IsOwner)
+                return;
+            
             _assembler ??= new FrameAssembler(total);
             _assembler.Add(chunk, offset);
+            
+            Debug.Log($"Relay Data {chunk.Length} bytes");
             if (_assembler.IsComplete)
             {
                 ApplyImage(_assembler.Data);
