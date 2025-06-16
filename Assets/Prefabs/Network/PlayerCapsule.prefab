@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 8896356315214667368}
   - component: {fileID: 1378175651563572112}
   - component: {fileID: -900036213847681167}
+  - component: {fileID: -5917946733807627221}
   m_Layer: 8
   m_Name: PlayerCapsule
   m_TagString: Player
@@ -196,9 +197,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 55919ac34a26952479f3fc91f777b2fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 1378175651563572112}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 1378175651563572112}
   MoveSpeed: 4
   SprintSpeed: 6
   RotationSpeed: 1
@@ -368,7 +369,10 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 2415609653926660748}
+  - {fileID: -900036213847681167}
+  - {fileID: 7952519003774064334}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -393,15 +397,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 1
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 7145553280805649160
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: -0, y: -0, z: -0, w: 1}
+    Scale: {x: 1, y: 1, z: 1}
+    IsValid: 1
 --- !u!114 &-900036213847681167
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -414,9 +418,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 1378175651563572112}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 1378175651563572112}
   _componentConfiguration: 1
   _synchronizeParent: 0
   _packing:
@@ -445,6 +449,22 @@ MonoBehaviour:
     X: 0
     Y: 0
     Z: 0
+--- !u!114 &-5917946733807627221
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5580574997611087599}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _overrideType: 2
+  _updateHostVisibility: 1
+  _observerConditions:
+  - {fileID: 11400000, guid: 817a7eacd3ba0fd45b64e2f701a10702, type: 2}
 --- !u!1 &8779395777359788371
 GameObject:
   m_ObjectHideFlags: 0
@@ -620,9 +640,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f3dcd8a791b1ee48a539849116d19ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 1378175651563572112}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 1378175651563572112}
   virtualCamera: {fileID: 4017182968204835073}
 --- !u!4 &4017182968204835072 stripped
 Transform:
