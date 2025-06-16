@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Epic.OnlineServices.P2P;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -30,7 +31,7 @@ namespace Code.Network
 
         [Header("Networking")]
         [Tooltip("Размер одного чанка (< MTU транспорта).")]
-        [SerializeField, Min(128)] private int chunkSize = 950;
+        [SerializeField, Min(128)] private int chunkSize = P2PInterface.MaxPacketSize - 170;
 
         [Tooltip("Назначить ли хоста владельцем объекта при запуске клиента.")]
         [SerializeField] private bool hostIsOwnerOnStart = true;
