@@ -1,0 +1,24 @@
+using CurvedUI.Core.Utilities.Editor;
+using UnityEditor;
+using UnityEngine;
+
+namespace CurvedUI.Core.ControlMethods.Editor
+{
+    public class CustomRayInspector : ControlMethodInspector
+    {
+        public CustomRayInspector(CurvedUIControlMethod m) : base(m) { }
+        
+        public override void Draw()
+        {
+            if(Method is not CustomRayControlMethod settings) return;
+            
+            GUILayout.Label("Set a ray used to interact with canvas using CustomControllerRay function. Use CustomControllerButtonState bool to set button pressed state. Find both in CurvedUIInputModule class", EditorStyles.helpBox);
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("View code snippet")) 
+                DocsUtility.OpenDocs(DocsUtility.Bookmark.CustomRay);
+            GUILayout.EndHorizontal();
+        }
+    }
+}
+
