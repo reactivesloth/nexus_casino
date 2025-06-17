@@ -39,11 +39,11 @@ public class MicrophoneManager : MonoBehaviour
 
         List<OptionData> options = new List<OptionData>();
         AvailableDevices.ForEach(x => options.Add(new OptionData(x)));
-        Dropdown.AddOptions(options);
+        Dropdown?.AddOptions(options);
     }
 
     public string GetCurrentDeviceName()
     {
-        return Microphone.devices[Dropdown.value];
+        return Microphone.devices[0];
     }
 }
