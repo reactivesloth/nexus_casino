@@ -2,7 +2,13 @@ using System.Collections;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
+using FishNet.Transporting;
 
+/// <summary>
+/// Compact, low‑latency voice chat component for Fish‑Net.
+/// ▸ 20‑мс пакеты (960 семплов) передаются по каналу UnreliableFragmented.
+/// ▸ Воспроизведение через AudioSource.PlayOneShot не прерывает предыдущие пакеты.
+/// </summary>
 public class VoiceChat : NetworkBehaviour
 {
     public enum ChatType { Global, Proximity }
@@ -11,125 +17,127 @@ public class VoiceChat : NetworkBehaviour
     public enum DetectionType { PushToTalk, VoiceActivation }
     public DetectionType VoiceDetectionType = DetectionType.PushToTalk;
 
+    [Header("Runtime")]
     public bool Activated = true;
-    public KeyCode PushToTalkKey;
+    public KeyCode PushToTalkKey = KeyCode.V;
 
+    [Header("Audio settings")]
     public AudioSource source;
     public float proximityRange = 10f;
+    [Range(0f, 0.01f)]
     public float voiceActivationThreshold = 0.002f;
 
-    private bool canTalk = true;
-    private bool previousCanTalk = false;
+    // ───────────────────────────────── CONSTANTS ─────────────────────────────────
+    private const int sampleRate = 48_000;   // Гц
+    private const int packetMs   = 20;       // длительность одного пакета
+    private const int bufferSize = sampleRate * packetMs / 1000; // 960 семплов
+
+    // ───────────────────────────────── STATE ─────────────────────────────────────
+    private bool canTalk;
+    private bool previousCanTalk;
 
     private string deviceName;
-    private const int sampleRate = 48000;
-    private const int bufferSize = 16384;
+    private int position;                    // позиция чтения в циклическом буфере микрофона
 
-    private float[] audioBuffer;
-    private int position;
+    private AudioClip micClip;               // клип микрофона (ring‑buffer 1с)
+    private Coroutine talkRoutine;
 
-    private AudioClip microphoneClip;
+    // буферы
+    private float[] audioBuffer;             // исходящий пакет
+    private float[] sampleData;              // временный буфер для VAD
+    private float[] micDataBuffer;           // для визуализации уровня
 
-    private float[] sampleData;
-    private float[] micDataBuffer;
-
+    // ──────────────────────────────── LIFECYCLE ──────────────────────────────────
     public override void OnStartClient()
     {
         base.OnStartClient();
-        if (!IsOwner)
-            return;
+        if (!IsOwner) return;
 
         if (source == null)
             Debug.LogError("[VOICE] AudioSource not assigned!");
 
         deviceName = Microphone.devices.Length > 0 ? Microphone.devices[0] : null;
-
         if (string.IsNullOrEmpty(deviceName))
             Debug.LogError("[VOICE] No microphone device found!");
 
-        audioBuffer = new float[bufferSize];
-        sampleData = new float[bufferSize];
-        micDataBuffer = new float[bufferSize];
+        // allocate buffers
+        audioBuffer    = new float[bufferSize];
+        sampleData     = new float[bufferSize];
+        micDataBuffer  = new float[bufferSize];
+
         source.playOnAwake = false;
     }
 
-    void Update()
+    private void Update()
     {
-        if (!Activated || !IsOwner)
-            return;
+        if (!Activated || !IsOwner) return;
 
+        // переключение устройств во время работы
         string selectedDevice = MicrophoneManager.Instance.GetCurrentDeviceName();
         if (selectedDevice != deviceName)
-        {
             UpdateMicrophone(selectedDevice);
-        }
 
+        // определяем, разрешено ли говорить
         switch (VoiceDetectionType)
         {
             case DetectionType.PushToTalk:
                 canTalk = Input.GetKey(PushToTalkKey);
-                if (canTalk && microphoneClip == null)
-                {
-                    StartMicrophone();
-                    StartTalking();
-                }
-                else if (!canTalk && microphoneClip != null)
-                {
-                    StopTalking();
-                    StopMicrophone();
-                }
                 break;
 
             case DetectionType.VoiceActivation:
-                if (microphoneClip == null)
-                {
-                    StartMicrophone();
-                }
+                if (micClip == null) StartMicrophone();
                 canTalk = IsVoiceActivated();
                 break;
         }
 
-        if (!previousCanTalk && canTalk)
-            StartTalking();
+        // управление жизненным циклом микрофона (PTT)
+        if (VoiceDetectionType == DetectionType.PushToTalk)
+        {
+            if (canTalk && micClip == null)
+            {
+                StartMicrophone();
+                StartTalking();
+            }
+            else if (!canTalk && micClip != null)
+            {
+                StopTalking();
+                StopMicrophone();
+            }
+        }
 
-        if (previousCanTalk && !canTalk)
-            StopTalking();
+        // старт/стоп для voice activation
+        if (VoiceDetectionType == DetectionType.VoiceActivation)
+        {
+            if (!previousCanTalk && canTalk) StartTalking();
+            if (previousCanTalk  && !canTalk) StopTalking();
+        }
 
         previousCanTalk = canTalk;
     }
 
+    // ─────────────────────────── MICROPHONE CONTROL ─────────────────────────────
     private void StartMicrophone()
     {
-        if (string.IsNullOrEmpty(deviceName))
-            return;
+        if (string.IsNullOrEmpty(deviceName)) return;
 
         position = 0;
-        microphoneClip = Microphone.Start(deviceName, true, 10, sampleRate);
+        // ring buffer на 1 секунду достаточно, чтобы избежать переполнения
+        micClip = Microphone.Start(deviceName, true, 1, sampleRate);
     }
 
     private void StopMicrophone()
     {
-        if (string.IsNullOrEmpty(deviceName))
-            return;
-
+        if (micClip == null) return;
         Microphone.End(deviceName);
-        microphoneClip = null;
+        micClip = null;
     }
 
     private void UpdateMicrophone(string newDeviceName)
     {
-        if (!string.IsNullOrEmpty(deviceName))
-        {
-            Debug.Log($"[VOICE] Switching microphone from '{deviceName}' to '{newDeviceName}'");
-
-            // Stop the current microphone
-            StopTalking();
-            StopMicrophone();
-        }
+        StopTalking();
+        StopMicrophone();
 
         deviceName = newDeviceName;
-
-        // If currently talking, restart with the new microphone
         if (canTalk)
         {
             StartMicrophone();
@@ -137,165 +145,123 @@ public class VoiceChat : NetworkBehaviour
         }
     }
 
+    // ───────────────────────────── TRANSMIT AUDIO ───────────────────────────────
     private void StartTalking()
     {
-        if (string.IsNullOrEmpty(deviceName))
-            return;
-
-        StartCoroutine(TransmitVoice());
+        if (talkRoutine == null && micClip != null)
+            talkRoutine = StartCoroutine(TransmitVoice());
     }
 
     private void StopTalking()
     {
-        if (string.IsNullOrEmpty(deviceName))
-            return;
-
-        StopCoroutine(TransmitVoice());
+        if (talkRoutine != null)
+        {
+            StopCoroutine(talkRoutine);
+            talkRoutine = null;
+        }
     }
 
     private IEnumerator TransmitVoice()
     {
-        while (canTalk)
+        var wait = new WaitForSeconds(packetMs / 1000f);
+        while (canTalk && micClip != null)
         {
-            if (microphoneClip == null)
-                yield break;
+            int micPos = Microphone.GetPosition(deviceName);
+            if (micPos < position) position = micPos; // перешли границу кольцевого буфера
 
-            int micPosition = Microphone.GetPosition(deviceName);
+            if (position + bufferSize > micPos) { yield return null; continue; }
 
-            if (micPosition < position)
-                position = micPosition;
-
-            if (position + bufferSize > micPosition)
-            {
-                yield return null;
-                continue;
-            }
-
-            microphoneClip.GetData(audioBuffer, position);
-            position = (position + bufferSize) % microphoneClip.samples;
+            micClip.GetData(audioBuffer, position);
+            position = (position + bufferSize) % micClip.samples;
 
             TransmitAudioServerRpc(audioBuffer);
-
-            yield return new WaitForSeconds(bufferSize / (float)sampleRate);
+            yield return wait;
         }
     }
 
+    // ───────────────────────────── VOICE ACTIVATION ─────────────────────────────
     private bool IsVoiceActivated()
     {
-        if (microphoneClip == null)
-            return false;
+        if (micClip == null) return false;
 
-        int micPosition = Microphone.GetPosition(deviceName);
+        int micPos = Microphone.GetPosition(deviceName);
+        int start  = micPos - bufferSize;
+        if (start < 0) return false; // мало данных
 
-        int sampleStartPosition = micPosition - bufferSize;
-        if (sampleStartPosition < 0)
-        {
-            // Not enough data yet
-            return false;
-        }
+        micClip.GetData(sampleData, start);
 
-        microphoneClip.GetData(sampleData, sampleStartPosition);
-
-        float sum = 0;
+        float sum = 0f;
         for (int i = 0; i < sampleData.Length; i++)
-        {
             sum += Mathf.Abs(sampleData[i]);
-        }
 
-        float average = sum / sampleData.Length;
-        return average > voiceActivationThreshold;
+        return (sum / sampleData.Length) > voiceActivationThreshold;
     }
 
+    // ──────────────────────────────── NETWORKING ────────────────────────────────
     [ServerRpc(RequireOwnership = false)]
     private void TransmitAudioServerRpc(float[] audioData, NetworkConnection sender = null)
     {
         TransmitAudioObserversRpc(audioData, sender.ClientId);
     }
 
-    [ObserversRpc]
+    [ObserversRpc()]
     private void TransmitAudioObserversRpc(float[] audioData, int senderClientId)
     {
-        // Ensure we do not play our own voice
+        // не воспроизводим собственный голос
         if (senderClientId == NetworkManager.ClientManager.Connection.ClientId)
             return;
 
-        Debug.Log(audioData.Length);
-        
         PlayReceivedAudio(audioData, senderClientId);
     }
 
+    // ─────────────────────────────── PLAYBACK ───────────────────────────────────
     private void PlayReceivedAudio(float[] audioData, int senderClientId)
     {
-        if (source == null)
-        {
-            Debug.LogError("[VOICE] AudioSource not assigned!");
-            return;
-        }
+        if (source == null) return;
 
-        // Set spatial blend based on chat type
         if (VoiceChatType == ChatType.Proximity)
         {
-            source.spatialBlend = 1.0f; // Make the audio 3D
+            source.spatialBlend = 1f;
             source.maxDistance = proximityRange;
-            Transform senderTransform = GetPlayerTransform(senderClientId);
-            if (senderTransform != null)
-            {
-                float distance = Vector3.Distance(transform.position, senderTransform.position);
-                if (distance > proximityRange)
-                {
-                    return; // This is to save on bandwidth
-                }
-            }
+
+            Transform senderTf = GetPlayerTransform(senderClientId);
+            if (senderTf != null && Vector3.Distance(transform.position, senderTf.position) > proximityRange)
+                return; // далеко, не воспроизводим
         }
         else
         {
-            source.spatialBlend = 0.0f; // Make the audio 2D for global chat
+            source.spatialBlend = 0f; // 2D
         }
 
-        AudioClip clip = AudioClip.Create("ReceivedVoice", audioData.Length, 1, sampleRate, false);
+        // создаём крошечный клип и играем без прерывания текущего
+        AudioClip clip = AudioClip.Create("pkt", audioData.Length, 1, sampleRate, false);
         clip.SetData(audioData, 0);
-
-        source.clip = clip;
-        source.Play();
+        source.PlayOneShot(clip);
     }
 
     private Transform GetPlayerTransform(int clientId)
     {
         foreach (var obj in FindObjectsOfType<NetworkObject>())
-        {
             if (obj.Owner.ClientId == clientId)
-            {
                 return obj.transform;
-            }
-        }
         return null;
     }
 
+    // ──────────────────────────── DEBUG / VISUAL ───────────────────────────────
     private float GetMicInputVolume()
     {
-        if (microphoneClip == null || string.IsNullOrEmpty(deviceName))
-            return 0f;
+        if (micClip == null) return 0f;
 
-        int micPosition = Microphone.GetPosition(deviceName);
+        int micPos = Microphone.GetPosition(deviceName);
+        int start  = micPos - bufferSize;
+        if (start < 0) return 0f;
 
-        int sampleStartPosition = micPosition - bufferSize;
-        if (sampleStartPosition < 0)
-        {
-            // Not enough data yet
-            return 0f;
-        }
+        micClip.GetData(micDataBuffer, start);
 
-        microphoneClip.GetData(micDataBuffer, sampleStartPosition);
-
-        float sum = 0;
+        float sum = 0f;
         for (int i = 0; i < micDataBuffer.Length; i++)
-        {
-            sum += micDataBuffer[i] * micDataBuffer[i]; // Squared values for RMS
-        }
+            sum += micDataBuffer[i] * micDataBuffer[i];
 
-        float rmsValue = Mathf.Sqrt(sum / micDataBuffer.Length);
-
-        float amplifiedVolume = Mathf.Clamp(rmsValue * 50f, 0f, 1f);
-        return amplifiedVolume;
+        return Mathf.Clamp(Mathf.Sqrt(sum / micDataBuffer.Length) * 50f, 0f, 1f);
     }
 }
