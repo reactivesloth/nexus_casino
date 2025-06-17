@@ -219,6 +219,8 @@ public class VoiceChat : NetworkBehaviour
         if (senderClientId == NetworkManager.ClientManager.Connection.ClientId)
             return;
 
+        Debug.Log(audioData.Length);
+        
         PlayReceivedAudio(audioData, senderClientId);
     }
 
