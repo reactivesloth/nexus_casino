@@ -3,9 +3,7 @@ using System.Collections;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
-using FishNet.Transporting;
 using K4os.Compression.LZ4;
-using K4os.Compression.LZ4.Streams;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -59,18 +57,13 @@ namespace Code.Network
         
         private void OnClientReady(NetworkConnection conn, bool asServer)
         {
-            if (!asServer) return;          // если хост (сервер-клиент)
+            // Даём владение хосту по готовности
+            if (!asServer) return;          
             GiveOwnership(conn);
-            
             InstanceFinder.SceneManager.OnClientLoadedStartScenes -= OnClientReady;
         }
 
         /* ========= Client ========= */
-
-        private void Update()
-        {
-            Debug.Log(IsOwner);
-        }
 
         public override void OnStartClient()
         {

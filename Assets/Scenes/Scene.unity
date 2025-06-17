@@ -16514,6 +16514,52 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1896612196648750230, guid: 10f71bc985071e5498f07c31163237e2, type: 3}
   m_PrefabInstance: {fileID: 2038052399}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &947978099
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 947978100}
+  - component: {fileID: 947978101}
+  m_Layer: 0
+  m_Name: MicrophoneManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &947978100
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 947978099}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.091612, y: 5.413681, z: -2.0199752}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &947978101
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 947978099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad7cb67258b3c7647acda4afb8d98a48, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Dropdown: {fileID: 0}
+  AvailableDevices: []
 --- !u!1 &951360267 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6400700940113968501, guid: 8dffd259302f85b49b449410a8cfc74a, type: 3}
@@ -40036,6 +40082,7 @@ SceneRoots:
   - {fileID: 508018334}
   - {fileID: 323944153}
   - {fileID: 821905079}
+  - {fileID: 947978100}
   - {fileID: 97996625}
   - {fileID: 1674668678}
   - {fileID: 60889539378096550}
