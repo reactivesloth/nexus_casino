@@ -204,12 +204,13 @@ public class VoiceChat : NetworkBehaviour
         TransmitAudioObserversRpc(audioData, sender.ClientId);
     }
 
-    [ObserversRpc()]
+    [ObserversRpc]
     private void TransmitAudioObserversRpc(float[] audioData, int senderClientId)
     {
         // не воспроизводим собственный голос
         if (senderClientId == NetworkManager.ClientManager.Connection.ClientId)
             return;
+        Debug.Log($"[VOICE] TransmitAudioObserversRpc. {audioData.Length} bytes");
 
         PlayReceivedAudio(audioData, senderClientId);
     }
@@ -236,6 +237,7 @@ public class VoiceChat : NetworkBehaviour
         // создаём крошечный клип и играем без прерывания текущего
         AudioClip clip = AudioClip.Create("pkt", audioData.Length, 1, sampleRate, false);
         clip.SetData(audioData, 0);
+        Debug.Log($"[VOICE] PlayReceivedAudio. {clip.length} bytes");
         source.PlayOneShot(clip);
     }
 
