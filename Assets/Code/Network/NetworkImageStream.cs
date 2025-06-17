@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Transporting;
@@ -46,32 +47,22 @@ namespace Code.Network
         private FrameAssembler _assembler;
         private Hash128 _lastHash;
 
-        /* ========= PUBLIC API ========= */
-
-        [Server] public void ClearOwner() => RemoveOwnership();
-
         /* ========= Server ========= */
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            ServerManager.OnRemoteConnectionState += OnRemoteState;
+            
+            if(hostIsOwnerOnStart)
+                SceneManager.OnClientLoadedStartScenes += OnClientReady;
         }
-
-        private void OnRemoteState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        
+        private void OnClientReady(NetworkConnection conn, bool asServer)
         {
-            if (args.ConnectionState != RemoteConnectionState.Started) return;
-            // Подождать 2 тика, чтобы убедиться, что сценовые объекты уже доставлены
-            StartCoroutine(DelayedGiveOwnership(conn));
-            ServerManager.OnRemoteConnectionState -= OnRemoteState;
-        }
-
-        private IEnumerator DelayedGiveOwnership(NetworkConnection conn)
-        {
-            // Ждём два сетевых тика
-            yield return new WaitForSeconds(1f);
-            Debug.Log($"SetOwner {conn}");
+            if (!asServer) return;          // если хост (сервер-клиент)
             GiveOwnership(conn);
+            
+            InstanceFinder.SceneManager.OnClientLoadedStartScenes -= OnClientReady;
         }
 
         /* ========= Client ========= */
