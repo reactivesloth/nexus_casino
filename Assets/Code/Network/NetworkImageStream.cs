@@ -2,213 +2,179 @@ using System;
 using System.Collections;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Transporting;
 using K4os.Compression.LZ4;
+using K4os.Compression.LZ4.Streams;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Code.Network
 {
     /// <summary>
-    /// Экран игрового автомата:
-    /// • Без владельца — локальная Idle‑текстура.
-    /// • С владельцем — стриминг экрана с даунскейлом.
-    /// Дополнительно: пропуск одинаковых кадров и опциональное LZ4‑сжатие.
+    /// Экран игрового автомата.
+    /// • Без владельца — idle‑текстура.
+    /// • С владельцем — стрим потоком.
+    /// Исправлено назначение владельца: теперь оно выполняется чуть позже,
+    /// чтобы клиент уже получил сценовый объект и ошибка SceneId not found не появлялась.
     /// </summary>
     public sealed class NetworkImageStream : NetworkBehaviour
     {
-        /* ─────────────────────────── Настройки ─────────────────────────── */
+        /* ──────────── Инспектор ──────────── */
 
-        [Tooltip("RawImage‑компонент, который показывает картинку у всех игроков.")]
         [SerializeField] private RawImage rawImage;
-
         [Header("Idle State")]
-        [Tooltip("Текстура, отображаемая когда автомат свободен (нет владельца).")]
         [SerializeField] private Texture2D idleTexture;
 
         [Header("Stream Quality")]
         [SerializeField, Min(0.1f)] private float fps = 24f;
-        [Tooltip("Снижение разрешения перед кодированием (0.1‑1). 0.5 = половина ширины/высоты → 4× меньше пикселей.")]
         [SerializeField, Range(0.1f, 1f)] private float downscale = 0.5f;
         [SerializeField] private bool useJpg = true;
         [SerializeField, Range(10, 100)] private int jpgQuality = 70;
-        [Tooltip("Пропускать ли кадры, идентичные предыдущему.")]
         [SerializeField] private bool skipDuplicateFrames = true;
-        
+
         [Header("LZ4")]
-        [Tooltip("Сжимать полезную нагрузку LZ4Pickler‑ом (быстрое, ~2‑3× экономия на PNG / 10‑20 % на JPEG).")]
         [SerializeField] private bool lz4Compress = true;
-        [Tooltip("Уровень сжатия LZ4.")]
         [SerializeField] private LZ4Level lz4Level = LZ4Level.L00_FAST;
 
         [Header("Networking")]
-        [Tooltip("Размер одного чанка (< MTU транспорта). 1150 байт обычно безопасно для UDP IPv4.")]
         [SerializeField, Min(256)] private int chunkSize = 1150;
-        [Tooltip("Назначить ли хоста владельцем объекта при запуске клиента.")]
         [SerializeField] private bool hostIsOwnerOnStart = true;
 
-        /* ───────────────────────── Runtime ───────────────────────── */
+        /* ──────────── Runtime ──────────── */
 
         private Coroutine _sendLoop;
         private FrameAssembler _assembler;
         private Hash128 _lastHash;
 
-        /* ===================================================================== */
-        #region Public API
-        /* ===================================================================== */
+        /* ========= PUBLIC API ========= */
 
-        [Server] public void SetOwner(NetworkConnection connection) => GiveOwnership(connection ?? throw new ArgumentNullException(nameof(connection)));
         [Server] public void ClearOwner() => RemoveOwnership();
 
-        #endregion
-        /* ===================================================================== */
+        /* ========= Server ========= */
 
-        #region Ownership callbacks
-        /* ===================================================================== */
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            ServerManager.OnRemoteConnectionState += OnRemoteState;
+        }
+
+        private void OnRemoteState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            if (args.ConnectionState != RemoteConnectionState.Started) return;
+            // Подождать 2 тика, чтобы убедиться, что сценовые объекты уже доставлены
+            StartCoroutine(DelayedGiveOwnership(conn));
+            ServerManager.OnRemoteConnectionState -= OnRemoteState;
+        }
+
+        private IEnumerator DelayedGiveOwnership(NetworkConnection conn)
+        {
+            // Ждём два сетевых тика
+            yield return new WaitForSeconds(1f);
+            Debug.Log($"SetOwner {conn}");
+            GiveOwnership(conn);
+        }
+
+        /* ========= Client ========= */
+
+        private void Update()
+        {
+            Debug.Log(IsOwner);
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            ApplyOwnerState(null);
+        }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
+            ApplyOwnerState(prevOwner);
+        }
 
-            NetworkConnection newOwner = Owner;
-            bool iWasOwner = prevOwner == NetworkManager.ClientManager.Connection;
-            bool iAmOwner  = newOwner == NetworkManager.ClientManager.Connection;
+        private void ApplyOwnerState(NetworkConnection prev)
+        {
+            bool iAmOwner   = Owner == NetworkManager.ClientManager.Connection;
+            bool iWasOwner  = prev == NetworkManager.ClientManager.Connection;
 
             if (iWasOwner && !iAmOwner && _sendLoop != null)
             {
                 StopCoroutine(_sendLoop);
                 _sendLoop = null;
             }
-            else if (iAmOwner && _sendLoop == null && rawImage != null)
+            else if (iAmOwner && _sendLoop == null)
             {
                 _sendLoop = StartCoroutine(SendLoop());
             }
 
-            if (newOwner == null && idleTexture != null)
+            if (Owner == null)
                 ShowIdleTexture();
         }
 
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-
-            if (hostIsOwnerOnStart)
-            {
-                const int hostId = 0;
-                if (OwnerId != hostId)
-                {
-                    var hostConn = NetworkManager.ClientManager.Connection;
-                    if (hostConn != null)
-                        GiveOwnership(hostConn);
-                }
-            }
-
-            if (IsOwner && rawImage != null)
-                _sendLoop = StartCoroutine(SendLoop());
-            else if (!IsOwner && Owner == null && idleTexture != null)
-                ShowIdleTexture();
-        }
-
-        #endregion
-        /* ===================================================================== */
-
-        #region Unity Lifecycle
-        /* ===================================================================== */
+        /* ========= Unity ========= */
 
         private void OnEnable()
         {
-            if (IsOwner && rawImage != null)
-                _sendLoop = StartCoroutine(SendLoop());
-            else if (!IsOwner && Owner == null && idleTexture != null)
-                ShowIdleTexture();
+            if (IsOwner) _sendLoop = StartCoroutine(SendLoop());
+            else if (Owner == null) ShowIdleTexture();
         }
 
         private void OnDisable()
         {
-            if (_sendLoop != null) { StopCoroutine(_sendLoop); _sendLoop = null; }
+            if (_sendLoop != null) StopCoroutine(_sendLoop);
+            _sendLoop = null;
             _assembler = null;
         }
 
-        #endregion
-        /* ===================================================================== */
+        /* ========= Idle ========= */
 
-        #region Idle‑local logic
-        /* ===================================================================== */
+        private void ShowIdleTexture()
+        {
+            if (rawImage) rawImage.texture = idleTexture;
+        }
 
-        private void ShowIdleTexture() => rawImage.texture = idleTexture;
-
-        #endregion
-        /* ===================================================================== */
-
-        #region Sending side (owner)
-        /* ===================================================================== */
+        /* ========= Send ========= */
 
         private IEnumerator SendLoop()
         {
             var wait = new WaitForSeconds(1f / fps);
-            var currentFps = fps;
-            
-            while (true)
-            {
-                yield return wait;
-                CaptureAndSend();
-
-                if (Mathf.Approximately(fps, currentFps)) 
-                    continue;
-                
-                wait = new WaitForSeconds(1f / fps);
-                currentFps = fps;
-            }
+            while (true) { yield return wait; CaptureAndSend(); }
         }
 
         private void CaptureAndSend()
         {
             if (rawImage.texture == null) return;
-
-            // 1) Даунскейл
             int w = Mathf.RoundToInt(rawImage.texture.width * downscale);
             int h = Mathf.RoundToInt(rawImage.texture.height * downscale);
             var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
             Graphics.Blit(rawImage.texture, rt);
-
-            var prev = RenderTexture.active;
-            RenderTexture.active = rt;
+            var prev = RenderTexture.active; RenderTexture.active = rt;
             var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
-            tex.Apply(false, false);
-            RenderTexture.active = prev;
-            RenderTexture.ReleaseTemporary(rt);
+            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0); tex.Apply(false);
+            RenderTexture.active = prev; RenderTexture.ReleaseTemporary(rt);
 
-            // 2) Пропуск дубликатов
             if (skipDuplicateFrames)
             {
-                Hash128 hash = Hash128.Compute(tex.GetRawTextureData());
-                if (hash == _lastHash) { UnityEngine.Object.Destroy(tex); return; }
-                _lastHash = hash;
+                var hsh = Hash128.Compute(tex.GetRawTextureData());
+                if (hsh == _lastHash) { Destroy(tex); return; }
+                _lastHash = hsh;
             }
 
-            // 3) Кодирование
-            byte[] payload = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
-            UnityEngine.Object.Destroy(tex);
-
-            if (lz4Compress)
-                payload = LZ4Pickler.Pickle(payload, lz4Level);
-
-            // 4) Разбивка на чанки
-            int total = payload.Length;
-            for (int offset = 0; offset < total; offset += chunkSize)
+            byte[] data = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
+            Destroy(tex);
+            if (lz4Compress) data = LZ4Pickler.Pickle(data, lz4Level);
+            int total = data.Length;
+            for (int off = 0; off < total; off += chunkSize)
             {
-                int len = Math.Min(chunkSize, total - offset);
-                var part = new byte[len];
-                Buffer.BlockCopy(payload, offset, part, 0, len);
-                UploadChunk(part, offset, total, w, h);
+                int len = Math.Min(chunkSize, total - off);
+                var chunk = new byte[len];
+                Buffer.BlockCopy(data, off, chunk, 0, len);
+                UploadChunk(chunk, off, total, w, h);
             }
         }
 
-        #endregion
-        /* ===================================================================== */
-
-        #region Network RPCs
-        /* ===================================================================== */
+        /* ========= RPCs ========= */
 
         [ServerRpc(RequireOwnership = false)]
         private void UploadChunk(byte[] chunk, int offset, int total, int width, int height) =>
@@ -219,22 +185,14 @@ namespace Code.Network
         {
             _assembler ??= new FrameAssembler(total);
             _assembler.Add(chunk, offset);
-            if (_assembler.IsComplete)
-            {
-                byte[] data = _assembler.Data;
-                if (lz4Compress)
-                    data = LZ4Pickler.Unpickle(data);
-
-                ApplyImage(data);
-                _assembler = null;
-            }
+            if (!_assembler.IsComplete) return;
+            var data = _assembler.Data;
+            if (lz4Compress) data = LZ4Pickler.Unpickle(data);
+            ApplyImage(data);
+            _assembler = null;
         }
 
-        #endregion
-        /* ===================================================================== */
-
-        #region Receiving side
-        /* ===================================================================== */
+        /* ========= Receive ========= */
 
         private void ApplyImage(byte[] bytes)
         {
@@ -243,11 +201,7 @@ namespace Code.Network
             rawImage.texture = tex;
         }
 
-        #endregion
-        /* ===================================================================== */
-
-        #region Helpers
-        /* ===================================================================== */
+        /* ========= Helper ========= */
 
         private sealed class FrameAssembler
         {
@@ -255,14 +209,8 @@ namespace Code.Network
             private int _received;
             public bool IsComplete => _received >= _buffer.Length;
             public byte[] Data => _buffer;
-            public FrameAssembler(int totalBytes) => _buffer = new byte[totalBytes];
-            public void Add(byte[] chunk, int offset)
-            {
-                Buffer.BlockCopy(chunk, 0, _buffer, offset, chunk.Length);
-                _received += chunk.Length;
-            }
+            public FrameAssembler(int size) => _buffer = new byte[size];
+            public void Add(byte[] c, int off) { Buffer.BlockCopy(c, 0, _buffer, off, c.Length); _received += c.Length; }
         }
-
-        #endregion
     }
 }
