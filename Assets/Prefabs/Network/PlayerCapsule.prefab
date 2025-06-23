@@ -9,9 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1065175228551390614}
-  - component: {fileID: 2392113993810399474}
   - component: {fileID: 8181195146644079797}
-  - component: {fileID: 1547717793095875454}
   m_Layer: 8
   m_Name: Voice
   m_TagString: Untagged
@@ -34,28 +32,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1675033957408390423}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2392113993810399474
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116093457216313307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36ed8226d477e144cb86620c8cf2d14f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 1378175651563572112}
-  _networkObjectCache: {fileID: 0}
-  VoiceChatType: 0
-  VoiceDetectionType: 0
-  Activated: 1
-  PushToTalkKey: 103
-  source: {fileID: 8181195146644079797}
-  proximityRange: 1
-  voiceActivationThreshold: 0.002
 --- !u!82 &8181195146644079797
 AudioSource:
   m_ObjectHideFlags: 0
@@ -153,58 +129,6 @@ AudioSource:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
---- !u!114 &1547717793095875454
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2116093457216313307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  <IsNested>k__BackingField: 0
-  WasActiveDuringEdit: 1
-  WasActiveDuringEdit_Set1: 1
-  <ComponentIndex>k__BackingField: 0
-  <PredictedSpawn>k__BackingField: {fileID: 0}
-  <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
-  InitializedParentNetworkBehaviour: {fileID: 0}
-  InitializedNestedNetworkObjects: []
-  RuntimeParentNetworkBehaviour: {fileID: 0}
-  RuntimeChildNetworkBehaviours: []
-  _isNetworked: 1
-  _isSpawnable: 1
-  _isGlobal: 0
-  _initializeOrder: 0
-  _preventDespawnOnDisconnect: 0
-  _defaultDespawnType: 0
-  NetworkObserver: {fileID: 0}
-  _enablePrediction: 0
-  _predictionType: 0
-  _graphicalObject: {fileID: 0}
-  _detachGraphicalObject: 0
-  _enableStateForwarding: 1
-  _networkTransform: {fileID: 0}
-  _ownerInterpolation: 1
-  _ownerSmoothedProperties: 255
-  _adaptiveInterpolation: 3
-  _spectatorSmoothedProperties: 255
-  _spectatorInterpolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
-  <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 0
-  <SceneId>k__BackingField: 0
-  SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
 --- !u!1 &2589230075613288802
 GameObject:
   m_ObjectHideFlags: 0
@@ -339,6 +263,7 @@ GameObject:
   - component: {fileID: 1378175651563572112}
   - component: {fileID: -900036213847681167}
   - component: {fileID: -5917946733807627221}
+  - component: {fileID: 6781029713378158158}
   m_Layer: 8
   m_Name: PlayerCapsule
   m_TagString: Player
@@ -671,6 +596,28 @@ MonoBehaviour:
   _updateHostVisibility: 1
   _observerConditions:
   - {fileID: 11400000, guid: 817a7eacd3ba0fd45b64e2f701a10702, type: 2}
+--- !u!114 &6781029713378158158
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5580574997611087599}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36ed8226d477e144cb86620c8cf2d14f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1378175651563572112}
+  _networkObjectCache: {fileID: 0}
+  VoiceChatType: 0
+  VoiceDetectionType: 1
+  Activated: 1
+  PushToTalkKey: 103
+  source: {fileID: 8181195146644079797}
+  proximityRange: 1
+  voiceActivationThreshold: 0.002
 --- !u!1 &8779395777359788371
 GameObject:
   m_ObjectHideFlags: 0
