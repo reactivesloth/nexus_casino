@@ -138,7 +138,6 @@ namespace StarterAssets
 
         private void Start()
         {
-            _cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
             
             _hasAnimator = TryGetComponent(out _animator);
@@ -162,7 +161,11 @@ namespace StarterAssets
         private void Update()
         {
             if(!IsOwner) return;
-
+            
+            if (_cinemachineVirtualCamera == null)
+                _cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            
+            
             _hasAnimator = TryGetComponent(out _animator);
 
             JumpAndGravity();
