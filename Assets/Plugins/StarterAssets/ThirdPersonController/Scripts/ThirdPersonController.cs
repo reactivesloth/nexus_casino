@@ -154,18 +154,18 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
-            
-            SwitchCamera();
         }
 
         private void Update()
         {
             if(!IsOwner) return;
-            
+
             if (_cinemachineVirtualCamera == null)
+            {
                 _cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
-            
-            
+                SwitchCamera();
+            }
+
             _hasAnimator = TryGetComponent(out _animator);
 
             JumpAndGravity();
