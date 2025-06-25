@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using EOSLobby;
 using Epic.OnlineServices;
@@ -39,17 +40,36 @@ namespace Code.Network
                 LobbyVariables.Instance.lobbyPopupUI.Show("Searching lobby...", "");
                 yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
 
-                var lobbyList = searchLobbies.LobbyDetailsArray;
-                if (lobbyList == null || lobbyList.Length == 0)
+                var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
+                if (lobbyList == null || lobbyList.Count == 0)
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
                 else
                 {
-                    var randomLobby = lobbyList[Random.Range(0, lobbyList.Length)];
-                    StartCoroutine(OnJoinLobbyClickedRoutine(randomLobby));
+                    bool isConnected = false;
+                    var lobies = new List<LobbyDetails>(lobbyList);
+                    while (lobies.Count > 0)
+                    {
+                        var randomLobby = lobies[Random.Range(0, lobies.Count)];
+
+                        Lobby.GetLobbyInfo(randomLobby, out var info);
+                        var maxMembers = info.Value.MaxMembers;
+                        var memberCount = Lobby.GetMembers(randomLobby).Count;
+                        if (memberCount >= maxMembers)
+                        {
+                            lobies.Remove(randomLobby);
+                            continue;
+                        }
+
+                        StartCoroutine(OnJoinLobbyClickedRoutine(randomLobby));
+                        isConnected = true;
+                    }
+
+                    if (!isConnected)
+                        StartCoroutine(OnHobbyLobbyClickedRoutine());
                 }
-                
+
                 StopPollingLobbies();
-                
+
                 yield return new WaitForSeconds(LobbyVariables.Instance.pollLobbiesInterval);
             }
         }
@@ -122,7 +142,7 @@ namespace Code.Network
                 attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
 
             lobbyDetails.Release();
-            
+
             StartHostConnection();
         }
 
@@ -185,14 +205,16 @@ namespace Code.Network
             currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
             currentLobby.attributeValues =
                 attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
-            
+
+            LobbyVariables.Instance.lobbyPopupUI.Hide();
+
             StartClientConnection();
         }
 
         private void StartClientConnection()
         {
             var currentLobby = LobbyVariables.Instance.currentLobby;
-            
+
             var hostIdIndex = Array.IndexOf(currentLobby.attributeKeys, "HOST_ID");
             if (hostIdIndex == -1)
             {
@@ -216,7 +238,7 @@ namespace Code.Network
                     : LobbyVariables.Instance.AuthData.displayName;
             fishyEOS.gameObject.SetActive(true);
             networkManager.ClientManager.StartConnection();
-            
+
             LobbyVariables.Instance.lobbyGameUI.SetActive(true);
             LobbyVariables.Instance.lobbyGame.SetActive(true);
         }
