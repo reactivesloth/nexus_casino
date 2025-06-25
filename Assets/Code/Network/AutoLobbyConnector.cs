@@ -62,6 +62,7 @@ namespace Code.Network
 
                         StartCoroutine(OnJoinLobbyClickedRoutine(randomLobby));
                         isConnected = true;
+                        break;
                     }
 
                     if (!isConnected)
