@@ -231,8 +231,8 @@ namespace EOSLobby
             currentLobby.attributeValues =
                 attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
 
-            //var gameStartedIndex = Array.IndexOf(currentLobby.attributeKeys, "GAME");
-            /*if (gameStartedIndex != -1 && currentLobby.attributeValues[gameStartedIndex] == "Started")
+            var gameStartedIndex = Array.IndexOf(currentLobby.attributeKeys, "GAME");
+            if (gameStartedIndex != -1 && currentLobby.attributeValues[gameStartedIndex] == "Started")
             {
                 LobbyVariables.Instance.hostLobbyName.Value = string.Empty;
                 LobbyEvents.Instance.LobbyMemberStatusReceived.RemovePersistentListener(OnLobbyMemberStatusReceived);
@@ -242,7 +242,7 @@ namespace EOSLobby
                     "Game has already started.");
                 StartPollingLobbies();
                 yield break;
-            }*/
+            }
 
             ReleaseSearchResults();
             LobbyVariables.Instance.lobbyPopupUI.Hide();
@@ -305,8 +305,8 @@ namespace EOSLobby
             networkManager.ServerManager.StartConnection();
             networkManager.ClientManager.StartConnection();
 
-            //yield return LobbyLeaveLobby.Run(out _, lobbyId, localUserId);
-            //LobbyVariables.Instance.currentLobby = null;
+            yield return LobbyLeaveLobby.Run(out _, lobbyId, localUserId);
+            LobbyVariables.Instance.currentLobby = null;
 
             LobbyVariables.Instance.lobbyRoomUI.SetActive(false);
             LobbyVariables.Instance.lobbyGameUI.SetActive(true);

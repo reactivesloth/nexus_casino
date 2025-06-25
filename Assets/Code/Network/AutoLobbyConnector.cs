@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Linq;
 using EOSLobby;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
@@ -6,167 +8,295 @@ using Epic.OnlineServices.Lobby;
 using FishNet;
 using FishNet.Transporting.FishyEOSPlugin;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
-public class AutoLobbyConnector : MonoBehaviour
+namespace Code.Network
 {
-    [SerializeField] private float searchDuration = 10f; // N секунд
-    [SerializeField] private uint maxLobbyUsers = 5;
-    [SerializeField] private string bucketId = "MyBucket";
-
-    private void Start()
+    public class AutoLobbyConnector : MonoBehaviour
     {
-        StartCoroutine(FindOrCreateLobbyRoutine());
-    }
+        private Coroutine _pollCoroutine;
 
-    private IEnumerator FindOrCreateLobbyRoutine()
-    {
-        // Получаем локального пользователя через внутренний класс LocalUser из LobbyCode.cs
-        yield return LocalUser.Get(out var localUser);
-        var localUserId = localUser.Id;
-
-        float timer = 0f;
-        LobbyDetails foundLobby = null;
-        LobbyDetailsInfo? foundLobbyInfo = null;
-        uint foundLobbyMemberCount = 0;
-
-        // Ищем лобби N секунд
-        while (timer < searchDuration)
+        private void Start()
         {
-            yield return LobbySearchLobbies.Run(out var searchLobbies, localUserId);
-            if (searchLobbies.LobbyDetailsArray != null)
+            StartPollingLobbies();
+        }
+
+        private void StartPollingLobbies()
+        {
+            _pollCoroutine = StartCoroutine(PollLobbiesRoutine());
+        }
+
+        private void StopPollingLobbies()
+        {
+            if (_pollCoroutine != null) StopCoroutine(_pollCoroutine);
+        }
+
+        private IEnumerator PollLobbiesRoutine()
+        {
+            yield return LocalUser.Get(out var localUser);
+            while (enabled)
             {
-                foreach (var lobby in searchLobbies.LobbyDetailsArray)
+                LobbyVariables.Instance.lobbyPopupUI.Show("Searching lobby...", "");
+                yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+
+                var lobbyList = searchLobbies.LobbyDetailsArray;
+                if (lobbyList == null || lobbyList.Length == 0)
+                    StartCoroutine(OnHobbyLobbyClickedRoutine());
+                else
                 {
-                    // Получаем инфо о лобби
-                    Lobby.GetLobbyInfo(lobby, out var lobbyInfo);
-                    // Получаем текущее количество игроков
-                    var memberCountOptions = new LobbyDetailsGetMemberCountOptions();
-                    var memberCount = lobby.GetMemberCount(ref memberCountOptions);
-                    if (lobbyInfo.HasValue && memberCount < lobbyInfo.Value.MaxMembers)
-                    {
-                        foundLobby = lobby;
-                        foundLobbyInfo = lobbyInfo;
-                        foundLobbyMemberCount = memberCount;
-                        break;
-                    }
+                    var randomLobby = lobbyList[Random.Range(0, lobbyList.Length)];
+                    StartCoroutine(OnJoinLobbyClickedRoutine(randomLobby));
                 }
-            }
-            if (foundLobby != null)
-                break;
-
-            yield return new WaitForSeconds(1f);
-            timer += 1f;
-        }
-
-        if (foundLobby != null)
-        {
-            // Подключаемся к найденному лобби
-            yield return LobbyJoinLobby.Run(out var joinLobby, localUserId, foundLobby);
-            if (joinLobby.CallbackInfo?.ResultCode == Result.Success)
-            {
-                StartFishNetAsClient(foundLobby, localUserId);
-            }
-            else
-            {
-                Debug.LogWarning("Не удалось подключиться к лобби, создаём своё...");
-                yield return CreateLobbyAndStart(localUserId);
+                
+                StopPollingLobbies();
+                
+                yield return new WaitForSeconds(LobbyVariables.Instance.pollLobbiesInterval);
             }
         }
-        else
-        {
-            // Лобби не найдено — создаём своё
-            yield return CreateLobbyAndStart(localUserId);
-        }
-    }
 
-    private IEnumerator CreateLobbyAndStart(ProductUserId localUserId)
-    {
-        yield return LobbyCreateLobby.Run(out var createLobby, localUserId, maxLobbyUsers, bucketId);
-        if (createLobby.CallbackInfo?.ResultCode == Result.Success)
+        private IEnumerator OnHobbyLobbyClickedRoutine()
         {
-            // После создания лобби обязательно выставляем HOST_ID
-            var lobbyId = createLobby.CallbackInfo?.LobbyId;
-            if (!string.IsNullOrEmpty(lobbyId))
+            StopPollingLobbies();
+
+            LobbyVariables.Instance.displayName.Value = $"Player{Random.Range(0, 1000):000}";
+            LobbyVariables.Instance.hostLobbyName.Value = $"Lobby{Random.Range(0, 1000):000}";
+
+            LobbyVariables.Instance.AuthData.displayName = LobbyVariables.Instance.displayName;
+            var lobbyName = LobbyVariables.Instance.hostLobbyName;
+            var maxLobbyUsers = LobbyVariables.Instance.maxLobbyUsers;
+            var bucketId = LobbyVariables.Instance.bucketId;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Logging in...");
+            yield return LocalUser.Get(out var localUser);
+            var localUserId = localUser.Id;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Creating Lobby...");
+            yield return LobbyCreateLobby.Run(out var createLobby, localUserId, maxLobbyUsers, bucketId);
+            if (createLobby.CallbackInfo?.ResultCode != Result.Success)
             {
-                yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID", localUserId.ToString());
-            }
-            StartFishNetAsHost(localUserId);
-        }
-        else
-        {
-            Debug.LogError("Не удалось создать лобби!");
-        }
-    }
-
-    private void StartFishNetAsHost(ProductUserId localUserId)
-    {
-        var networkManager = InstanceFinder.NetworkManager;
-        var fishyEOS = networkManager.GetComponent<FishyEOS>();
-        fishyEOS.RemoteProductUserId = localUserId.ToString();
-        // Заполняем AuthConnectData из LobbyVariables.Instance
-        var auth = LobbyVariables.Instance.AuthData;
-        fishyEOS.AuthConnectData.loginCredentialType = auth.loginCredentialType;
-        fishyEOS.AuthConnectData.externalCredentialType = auth.externalCredentialType;
-        fishyEOS.AuthConnectData.id = auth.id;
-        fishyEOS.AuthConnectData.token = auth.token;
-        fishyEOS.AuthConnectData.displayName = auth.loginCredentialType == LoginCredentialType.Developer ? "" : auth.displayName;
-        fishyEOS.gameObject.SetActive(true);
-        networkManager.ServerManager.StartConnection();
-        networkManager.ClientManager.StartConnection();
-    }
-
-    private void StartFishNetAsClient(LobbyDetails lobbyDetails, ProductUserId localUserId)
-    {
-        var networkManager = InstanceFinder.NetworkManager;
-        var fishyEOS = networkManager.GetComponent<FishyEOS>();
-        // Получаем hostId из атрибута HOST_ID
-        Lobby.GetAttribute(lobbyDetails, "HOST_ID", out var hostIdAttr);
-        var hostId = hostIdAttr?.Data?.Value.AsUtf8;
-        fishyEOS.RemoteProductUserId = hostId;
-        // Заполняем AuthConnectData из LobbyVariables.Instance
-        var auth = LobbyVariables.Instance.AuthData;
-        fishyEOS.AuthConnectData.loginCredentialType = auth.loginCredentialType;
-        fishyEOS.AuthConnectData.externalCredentialType = auth.externalCredentialType;
-        fishyEOS.AuthConnectData.id = auth.id;
-        fishyEOS.AuthConnectData.token = auth.token;
-        fishyEOS.AuthConnectData.displayName = auth.loginCredentialType == LoginCredentialType.Developer ? "" : auth.displayName;
-        fishyEOS.gameObject.SetActive(true);
-        networkManager.ClientManager.StartConnection();
-    }
-
-    // Внутренний класс для получения локального пользователя (скопировано из LobbyCode.cs)
-    private class LocalUser
-    {
-        public ProductUserId Id { get; private set; }
-        public static Coroutine Get(out LocalUser localUser)
-        {
-            localUser = new LocalUser();
-            return LobbyVariables.Instance.StartCoroutine(localUser.GetCoroutine());
-        }
-        private IEnumerator GetCoroutine()
-        {
-            if (LobbyVariables.Instance.ProductUserId != null)
-            {
-                Id = LobbyVariables.Instance.ProductUserId;
+                LobbyVariables.Instance.hostLobbyName.Value = string.Empty;
+                yield return LobbyVariables.Instance.lobbyPopupUI.PromptCoroutine(out _, "Error",
+                    createLobby.CallbackInfo?.ResultCode.ToString());
+                StartPollingLobbies();
                 yield break;
             }
-            yield return Authenticate.Run(out var authenticate);
-            Id = LobbyVariables.Instance.ProductUserId = authenticate.LocalUserId;
+
+            var lobbyId = createLobby.CallbackInfo?.LobbyId;
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
+            yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName.Value);
+            if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
+
+            var result = Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
+            if (result != Result.Success)
+            {
+                Debug.LogWarning($"[LobbyCode] Failed to get lobby details: {result}");
+            }
+
+            var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxLobbyUsers };
+            LobbyVariables.Instance.currentLobby = currentLobby;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...");
+            yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, "NAME",
+                LobbyVariables.Instance.displayName);
+            if (setName.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Ready...");
+            yield return LobbySetMemberAttribute.Run(out var setReady, lobbyId, localUserId, "READY",
+                "Ready");
+            if (setReady.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to set lobby member ready: {setReady.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...");
+            yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID",
+                localUserId.ToString());
+            if (setId.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Hide();
+
+            var attributes = Lobby.GetAttributes(lobbyDetails);
+            currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
+            currentLobby.attributeValues =
+                attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
+
+            lobbyDetails.Release();
+            
+            StartHostConnection();
         }
+
+        private IEnumerator OnJoinLobbyClickedRoutine(LobbyDetails lobbyDetails)
+        {
+            StopPollingLobbies();
+            if (string.IsNullOrEmpty(LobbyVariables.Instance.displayName))
+                LobbyVariables.Instance.displayName.Value = $"Player{Random.Range(0, 1000):000}";
+
+            yield return LocalUser.Get(out var localUser);
+            var localUserId = localUser.Id;
+
+            if (lobbyDetails == null)
+            {
+                yield return LobbyVariables.Instance.lobbyPopupUI.PromptCoroutine(out _, "Error",
+                    "Lobby details is null");
+                StartPollingLobbies();
+                yield break;
+            }
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Please wait...");
+            yield return LobbyJoinLobby.Run(out var joinLobby, localUserId, lobbyDetails);
+            if (joinLobby.CallbackInfo?.ResultCode != Result.Success)
+            {
+                yield return LobbyVariables.Instance.lobbyPopupUI.PromptCoroutine(out _, "Error",
+                    joinLobby.CallbackInfo?.ResultCode.ToString());
+                StartPollingLobbies();
+                yield break;
+            }
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Info...");
+            var getLobbyInfoResult = Lobby.GetLobbyInfo(lobbyDetails, out var lobbyInfo);
+            if (getLobbyInfoResult != Result.Success)
+            {
+                yield return LobbyVariables.Instance.lobbyPopupUI.PromptCoroutine(out _, "Error",
+                    getLobbyInfoResult.ToString());
+                StartPollingLobbies();
+                yield break;
+            }
+
+            var lobbyId = lobbyInfo?.LobbyId;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Name...");
+            var getAttributeResult = Lobby.GetAttribute(lobbyDetails, "NAME", out var lobbyNameAttribute);
+            if (getAttributeResult != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to get lobby name: {getAttributeResult}");
+            LobbyVariables.Instance.hostLobbyName.Value = lobbyNameAttribute?.Data?.Value.AsUtf8;
+
+            var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyNameAttribute?.Data?.Value.AsUtf8, };
+            LobbyVariables.Instance.currentLobby = currentLobby;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Setting Local User Display Name...");
+            yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, "NAME",
+                LobbyVariables.Instance.displayName);
+            if (setName.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...");
+            var attributes = Lobby.GetAttributes(lobbyDetails);
+            currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
+            currentLobby.attributeValues =
+                attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
+            
+            StartClientConnection();
+        }
+
+        private void StartClientConnection()
+        {
+            var currentLobby = LobbyVariables.Instance.currentLobby;
+            
+            var hostIdIndex = Array.IndexOf(currentLobby.attributeKeys, "HOST_ID");
+            if (hostIdIndex == -1)
+            {
+                Debug.LogWarning("[LobbyCode] Failed to get host id.");
+                return;
+            }
+
+            var hostId = currentLobby.attributeValues[hostIdIndex];
+
+            var networkManager = InstanceFinder.NetworkManager;
+            var fishyEOS = networkManager.GetComponent<FishyEOS>();
+            fishyEOS.RemoteProductUserId = hostId;
+            fishyEOS.AuthConnectData.loginCredentialType = LobbyVariables.Instance.AuthData.loginCredentialType;
+            fishyEOS.AuthConnectData.externalCredentialType =
+                LobbyVariables.Instance.AuthData.externalCredentialType;
+            fishyEOS.AuthConnectData.id = LobbyVariables.Instance.AuthData.id;
+            fishyEOS.AuthConnectData.token = LobbyVariables.Instance.AuthData.token;
+            fishyEOS.AuthConnectData.displayName =
+                LobbyVariables.Instance.AuthData.loginCredentialType == LoginCredentialType.Developer
+                    ? ""
+                    : LobbyVariables.Instance.AuthData.displayName;
+            fishyEOS.gameObject.SetActive(true);
+            networkManager.ClientManager.StartConnection();
+            
+            LobbyVariables.Instance.lobbyGameUI.SetActive(true);
+            LobbyVariables.Instance.lobbyGame.SetActive(true);
+        }
+
+        private void StartHostConnection()
+        {
+            var networkManager = InstanceFinder.NetworkManager;
+            var localUserId = LobbyVariables.Instance.ProductUserId;
+            var fishyEOS = networkManager.GetComponent<FishyEOS>();
+            fishyEOS.RemoteProductUserId = localUserId.ToString();
+            fishyEOS.AuthConnectData.loginCredentialType = LobbyVariables.Instance.AuthData.loginCredentialType;
+            fishyEOS.AuthConnectData.externalCredentialType = LobbyVariables.Instance.AuthData.externalCredentialType;
+            fishyEOS.AuthConnectData.id = LobbyVariables.Instance.AuthData.id;
+            fishyEOS.AuthConnectData.token = LobbyVariables.Instance.AuthData.token;
+            fishyEOS.AuthConnectData.displayName =
+                LobbyVariables.Instance.AuthData.loginCredentialType == LoginCredentialType.Developer
+                    ? ""
+                    : LobbyVariables.Instance.AuthData.displayName;
+            fishyEOS.gameObject.SetActive(true);
+            networkManager.ServerManager.StartConnection();
+            networkManager.ClientManager.StartConnection();
+
+            LobbyVariables.Instance.lobbyGameUI.SetActive(true);
+            LobbyVariables.Instance.lobbyGame.SetActive(true);
+        }
+
+        #region InternalClasses
+
+        private class LocalUser
+        {
+            public ProductUserId Id { get; private set; }
+
+            public static Coroutine Get(out LocalUser localUser)
+            {
+                localUser = new LocalUser();
+                return LobbyVariables.Instance.StartCoroutine(localUser.GetCoroutine());
+            }
+
+            private IEnumerator GetCoroutine()
+            {
+                if (LobbyVariables.Instance.ProductUserId != null)
+                {
+                    Id = LobbyVariables.Instance.ProductUserId;
+                    yield break;
+                }
+
+                yield return Authenticate.Run(out var authenticate);
+                Id = LobbyVariables.Instance.ProductUserId = authenticate.LocalUserId;
+            }
+        }
+
         private class Authenticate
         {
             public ProductUserId LocalUserId { get; set; }
+
             public static Coroutine Run(out Authenticate authenticate)
             {
                 authenticate = new Authenticate();
                 return LobbyVariables.Instance.StartCoroutine(authenticate.AuthenticateCoroutine());
             }
+
             private IEnumerator AuthenticateCoroutine()
             {
-                var auth = LobbyVariables.Instance.AuthData;
-                yield return ConnectLogin.Run(auth.loginCredentialType, auth.externalCredentialType, auth.id, auth.token, auth.displayName, auth.automaticallyCreateDeviceId, auth.automaticallyCreateConnectAccount, (int)auth.timeout, auth.authScopeFlags, out var login);
+                var loginCredentialType = LobbyVariables.Instance.AuthData.loginCredentialType;
+                var externalCredentialType = LobbyVariables.Instance.AuthData.externalCredentialType;
+                var id = LobbyVariables.Instance.AuthData.id;
+                var token = LobbyVariables.Instance.AuthData.token;
+                var displayName = LobbyVariables.Instance.AuthData.displayName;
+                var automaticallyCreateDeviceId = LobbyVariables.Instance.AuthData.automaticallyCreateDeviceId;
+                var automaticallyCreateConnectAccount =
+                    LobbyVariables.Instance.AuthData.automaticallyCreateConnectAccount;
+                var timeout = (int)LobbyVariables.Instance.AuthData.timeout;
+                var scopeFlags = LobbyVariables.Instance.AuthData.authScopeFlags;
+                yield return ConnectLogin.Run(loginCredentialType, externalCredentialType, id, token, displayName,
+                    automaticallyCreateDeviceId, automaticallyCreateConnectAccount, timeout, scopeFlags,
+                    out var login);
                 LocalUserId = login.CallbackInfo?.LocalUserId;
             }
         }
+
+        #endregion
     }
 }
