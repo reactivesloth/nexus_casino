@@ -13,14 +13,13 @@ namespace Code.Network
 
         public override void OnStartClient()
         {
-            if (IsOwner)
-            {
-                string name = GetLocalName();
-                string deviceId = SystemInfo.deviceUniqueIdentifier;
-                string authId = GetLocalAuthId();
-
-                SendAuthDataServerRpc(name, deviceId, authId);
-            }
+            string name = GetLocalName();
+            string deviceId = SystemInfo.deviceUniqueIdentifier;
+            string authId = GetLocalAuthId();
+            
+            Debug.Log(name + " : " + deviceId + " : " + authId);
+            
+            SendAuthDataServerRpc(name, deviceId, authId);
         }
 
         #endregion
@@ -83,7 +82,7 @@ namespace Code.Network
 
         private string GetLocalAuthId()
         {
-            return System.Guid.NewGuid().ToString();
+            return LobbyVariables.Instance.ProductUserId.ToString();
         }
 
         #endregion
