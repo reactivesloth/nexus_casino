@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Linq;
+using Code.Network.HostMigration;
 using EOSLobby;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using FishNet;
+using FishNet.Managing.Client;
 using FishNet.Transporting;
 using FishNet.Transporting.FishyEOSPlugin;
 using UnityEngine;
@@ -23,21 +25,20 @@ namespace Code.Network
         {
             InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionChanged;
         }
-
+        
         private void OnDestroy()
         {
             InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionChanged;
         }
-
+        
         private void OnClientConnectionChanged(ClientConnectionStateArgs args)
         {
             if (args.ConnectionState == LocalConnectionState.Started && _playerCharacterState != null)
                 SessionStateSender.Instance.SendSessionStateToHost(_playerCharacterState);
             
-            if(args.ConnectionState is LocalConnectionState.Stopping or LocalConnectionState.Stopped)
-            {
+            if(args.ConnectionState == LocalConnectionState.Stopping)
                 SavePlayerData();
-            }
+            
             if (args.ConnectionState == LocalConnectionState.Stopped)
             {
                 Debug.Log("Соединение потеряно. Начинаю переподключение...");
@@ -134,8 +135,9 @@ namespace Code.Network
 
         private void SavePlayerData()
         {
+            Debug.Log($"Connection owned objects count is {ClientObjectsSaver.OwnObjects.Count}" );
             var playerCharacterNetworkObject =
-                InstanceFinder.ClientManager.Connection.Objects.FirstOrDefault(o => o.CompareTag("Player"));
+                ClientObjectsSaver.OwnObjects.FirstOrDefault(o => o.CompareTag("Player"));
 
             if (playerCharacterNetworkObject == null)
             {
