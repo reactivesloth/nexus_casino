@@ -212,7 +212,7 @@ namespace Code.Network
             StartClientConnection();
         }
 
-        private void StartClientConnection()
+        public static void StartClientConnection()
         {
             var currentLobby = LobbyVariables.Instance.currentLobby;
 
@@ -244,7 +244,7 @@ namespace Code.Network
             LobbyVariables.Instance.lobbyGame.SetActive(true);
         }
 
-        private void StartHostConnection()
+        public static void StartHostConnection()
         {
             var networkManager = InstanceFinder.NetworkManager;
             var localUserId = LobbyVariables.Instance.ProductUserId;
