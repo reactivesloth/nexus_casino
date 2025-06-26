@@ -46,8 +46,9 @@ namespace Code.Network
 
                 var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
 
-                foreach (var lobby in lobbyList)
+                for (var i = 0; i < lobbyList.Count; i++)
                 {
+                    var lobby = lobbyList[i];
                     var lobbyVersionRequest = Lobby.GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttribute);
                     if (lobbyVersionRequest != Result.Success || !versionAttribute.HasValue ||
                         versionAttribute?.Data?.Value.AsUtf8 != Application.version)
