@@ -7,8 +7,12 @@ using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
 using Epic.OnlineServices.Lobby;
 using FishNet;
+using FishNet.Plugins.FishyEOS.Util;
 using FishNet.Transporting.FishyEOSPlugin;
+using PlayEveryWare.EpicOnlineServices;
+using PlayEveryWare.EpicOnlineServices.Editor.Windows;
 using UnityEngine;
+using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using Random = UnityEngine.Random;
 
 namespace Code.Network
@@ -41,6 +45,15 @@ namespace Code.Network
                 yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
 
                 var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
+
+                foreach (var lobby in lobbyList)
+                {
+                    var lobbyVersionRequest = Lobby.GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttribute);
+                    if (lobbyVersionRequest != Result.Success || !versionAttribute.HasValue ||
+                        versionAttribute?.Data?.Value.AsUtf8 != Application.version)
+                        lobbyList.Remove(lobby);
+                }
+
                 if (lobbyList == null || lobbyList.Count == 0)
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
                 else
@@ -104,6 +117,8 @@ namespace Code.Network
 
             var lobbyId = createLobby.CallbackInfo?.LobbyId;
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
+            yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, "PRODUCT_VERSION",
+                Application.version);
             yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName.Value);
             if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
