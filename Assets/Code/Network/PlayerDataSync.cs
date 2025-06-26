@@ -26,7 +26,7 @@ namespace Code.Network
 
         #region SERVER
 
-        [ServerRpc]
+        [ServerRpc(RequireOwnership = false)]
         private void SendAuthDataServerRpc(string name, string deviceId, string authId, NetworkConnection sender = null)
         {
             var data = new PlayerData()
