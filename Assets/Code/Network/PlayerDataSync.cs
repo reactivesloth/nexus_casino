@@ -15,11 +15,11 @@ namespace Code.Network
         {
             string name = GetLocalName();
             string deviceId = SystemInfo.deviceUniqueIdentifier;
-            string authId = GetLocalAuthId();
-            
-            Debug.Log(name + " : " + deviceId + " : " + authId);
-            
-            SendAuthDataServerRpc(name, deviceId, authId);
+            string productUserId = GetLocalAuthId();
+
+            Debug.Log(name + " : " + deviceId + " : " + productUserId);
+
+            SendAuthDataServerRpc(name, deviceId, productUserId);
         }
 
         #endregion
@@ -27,13 +27,13 @@ namespace Code.Network
         #region SERVER
 
         [ServerRpc(RequireOwnership = false)]
-        private void SendAuthDataServerRpc(string name, string deviceId, string authId, NetworkConnection sender = null)
+        private void SendAuthDataServerRpc(string name, string deviceId, string productUserId, NetworkConnection sender = null)
         {
-            var data = new PlayerData()
+            var data = new PlayerData
             {
                 PlayerName = name,
                 DeviceId = deviceId,
-                AuthId = authId
+                ProductUserId = productUserId
             };
 
             sender.CustomData = data;
@@ -42,7 +42,20 @@ namespace Code.Network
             foreach (var kvp in InstanceFinder.ServerManager.Clients)
             {
                 var conn = kvp.Value;
-                SendConnectionDataTargetRpc(conn, sender.ClientId, name, deviceId, authId);
+                SendConnectionDataTargetRpc(conn, sender.ClientId, name, deviceId, productUserId);
+            }
+
+            // Отправляем новому подключившемуся данные о всех других клиентах
+            foreach (var kvp in InstanceFinder.ServerManager.Clients)
+            {
+                var conn = kvp.Value;
+                if (conn.ClientId == sender.ClientId)
+                    continue; // самого себя не надо
+
+                if (conn.CustomData is PlayerData existingData)
+                {
+                    SendConnectionDataTargetRpc(sender, conn.ClientId, existingData.PlayerName, existingData.DeviceId, existingData.ProductUserId);
+                }
             }
         }
 
@@ -52,7 +65,7 @@ namespace Code.Network
 
         [TargetRpc]
         private void SendConnectionDataTargetRpc(NetworkConnection conn, int targetClientId, string name,
-            string deviceId, string authId)
+            string deviceId, string productUserId)
         {
             if (InstanceFinder.ClientManager.Clients.TryGetValue(targetClientId, out NetworkConnection targetConn))
             {
@@ -60,7 +73,7 @@ namespace Code.Network
                 {
                     PlayerName = name,
                     DeviceId = deviceId,
-                    AuthId = authId
+                    ProductUserId = productUserId
                 };
 
                 Debug.Log($"Заполнено CustomData для ClientId={targetClientId}: name={name}");

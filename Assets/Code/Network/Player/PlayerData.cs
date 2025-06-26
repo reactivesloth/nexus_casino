@@ -4,6 +4,6 @@ namespace Code.Network.Player
     {
         public string PlayerName;
         public string DeviceId;
-        public string AuthId;
+        public string ProductUserId;
     }
 }
