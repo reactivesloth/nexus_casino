@@ -43,7 +43,7 @@ namespace Code.Network
 
         private IEnumerator TryReconnect()
         {
-            while (_currentAttempts < maxReconnectAttempts)
+            /*while (_currentAttempts < maxReconnectAttempts)
             {
                 _currentAttempts++;
                 Debug.Log($"Попытка переподключения {_currentAttempts}/{maxReconnectAttempts}");
@@ -60,7 +60,8 @@ namespace Code.Network
                 }
             }
 
-            Debug.LogWarning("Не удалось переподключиться.");
+            Debug.LogWarning("Не удалось переподключиться.");*/
+            yield return null;
             OnReconnectFailed();
         }
 
