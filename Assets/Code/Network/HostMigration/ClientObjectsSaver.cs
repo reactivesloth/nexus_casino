@@ -34,13 +34,14 @@ namespace Code.Network.HostMigration
                     OwnObjects.Clear();
                     break;
                 case LocalConnectionState.Stopping:
-                    StopCoroutine(_updateLoopCoroutine);
+                    if(_updateLoopCoroutine != null)
+                        StopCoroutine(_updateLoopCoroutine);
                     _updateLoopCoroutine = null;
                     break;
                 case LocalConnectionState.Starting:
-                    _updateLoopCoroutine = StartCoroutine(CheckLoop());
                     break;
                 case LocalConnectionState.Started:
+                    _updateLoopCoroutine = StartCoroutine(CheckLoop());
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
