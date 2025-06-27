@@ -14,6 +14,7 @@ namespace Code.Network.HostMigration.Data
     [Serializable]
     public class NetworkObjectData
     {
+        public string objectName;
         public bool isSceneObject;
         public int networkObjectId;
         public int prefabId; // Для динамических объектов

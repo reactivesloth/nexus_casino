@@ -19,7 +19,7 @@ namespace Code.Network.HostMigration
         private PrefabObjects _spawnablePrefabs;
         private ServerManager _serverManager;
         private NetworkManager _networkManager;
-        
+
 
         private void Awake()
         {
@@ -33,6 +33,8 @@ namespace Code.Network.HostMigration
         {
             foreach (var networkObjectData in state.objects)
             {
+                Debug.Log(
+                    $"[HostSessionRestorer] Object {networkObjectData.objectName} is scened: {networkObjectData.isSceneObject}");
                 if (networkObjectData.isSceneObject)
                     ProcessSceneObject(networkObjectData, sender);
                 else
@@ -47,12 +49,15 @@ namespace Code.Network.HostMigration
 
         private void ProcessSpawnedObject(NetworkObjectData networkObjectData, NetworkConnection sender)
         {
+            Debug.Log($"[HostSessionRestorer] Process {networkObjectData.objectName}");
+
             var prefab = _spawnablePrefabs.GetObject(true, networkObjectData.prefabId);
-            var nob = _networkManager.GetPooledInstantiated(prefab, Vector3.zero, Quaternion.identity, true);
+            var nob = _networkManager.GetPooledInstantiated(prefab, true);
             _serverManager.Spawn(nob, sender);
-            
+            Debug.Log($"[HostSessionRestorer] {nob.name} Spawned");
+
             _networkManager.SceneManager.AddOwnerToDefaultScene(nob);
-            
+
             ProcessComponents(networkObjectData, nob);
         }
 
@@ -60,12 +65,14 @@ namespace Code.Network.HostMigration
         {
             foreach (var data in networkObjectData.componentsData)
             {
-                if(networkObject.GetComponent(data.componentName) is not IMigratableBase migratableComponent)
+                Debug.Log($"[HostSessionRestorer] Process {data.componentName} component");
+
+                if (networkObject.GetComponent(data.componentName) is not IMigratableBase migratableComponent)
                 {
                     Debug.LogError($"Component {data.componentName} not found on {networkObject.name}");
                     continue;
                 }
-                
+
                 migratableComponent.SetMigrateData(data.json);
             }
         }

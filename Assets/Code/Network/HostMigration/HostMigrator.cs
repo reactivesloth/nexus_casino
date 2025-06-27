@@ -129,6 +129,7 @@ namespace Code.Network.HostMigration
 
                 var migrateObject = new NetworkObjectData
                 {
+                    objectName = currentGameObject.name,
                     networkObjectId = currentGameObject.ObjectId,
                     prefabId = currentGameObject.PrefabId,
                     ownerId = currentGameObject.OwnerId,
