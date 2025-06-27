@@ -12,36 +12,19 @@ namespace Code.Network.HostMigration
     {
         public static SessionStateSender Instance;
         
-        private bool _isStartNetwork = false;
-
         private void Awake() => Instance = this;
         
-        public override void OnStartNetwork()
-        {
-            base.OnStartNetwork();
-            _isStartNetwork = true;
-        }
-
-        public override void OnStopNetwork()
-        {
-            base.OnStopNetwork();
-            _isStartNetwork = false;
-        }
         
         public void SendSessionStateToHost(MigratePlayerData playerCharacterState)
         {
             string playerStateJson = JsonUtility.ToJson(playerCharacterState);
-            StartCoroutine(SendPlayerStateToHostWhereReady(playerStateJson));
+            //SendPlayerStateToHost(playerStateJson);
+            StartCoroutine(SendPlayerStateToHostWithDelay(playerStateJson));
         }
 
-        private IEnumerator SendPlayerStateToHostWhereReady(string playerStateJson)
+        IEnumerator SendPlayerStateToHostWithDelay(string playerStateJson)
         {
-            // Ждём, пока клиент полностью стартует
-            yield return new WaitUntil(() => base.NetworkManager != null && base.NetworkManager.IsClientStarted);
-
-            // Ждём, пока объект заспавнен и инициализирован
-            yield return new WaitUntil(() => IsSpawned && _isStartNetwork);
-            
+            yield return new WaitForSeconds(5f);
             SendPlayerStateToHost(playerStateJson);
         }
 

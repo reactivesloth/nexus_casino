@@ -20,14 +20,18 @@ namespace Code.Network.HostMigration
         private ServerManager _serverManager;
         private NetworkManager _networkManager;
 
-
+        private Player.PlayerSpawner _playerSpawner;
+        
         private void Awake()
         {
             Instance = this;
             _spawnablePrefabs = InstanceFinder.NetworkManager.SpawnablePrefabs;
             _serverManager = InstanceFinder.ServerManager;
             _networkManager = InstanceFinder.NetworkManager;
+            _playerSpawner = _networkManager.GetComponent<Player.PlayerSpawner>();
         }
+        
+        public static void SetSpawnerEnable(bool value) => Instance._playerSpawner.enabled = value;
 
         public void RestorePlayerData(MigratePlayerData state, NetworkConnection sender)
         {

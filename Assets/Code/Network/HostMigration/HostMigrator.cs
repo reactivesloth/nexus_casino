@@ -68,6 +68,7 @@ namespace Code.Network.HostMigration
 
         private IEnumerator UpdateHost()
         {
+            HostSessionRestorer.SetSpawnerEnable(false);
             var productId = LobbyVariables.Instance.ProductUserId.ToString();
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
 
