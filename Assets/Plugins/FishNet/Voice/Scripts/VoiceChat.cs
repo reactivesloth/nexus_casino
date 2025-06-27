@@ -208,7 +208,7 @@ public class VoiceChat : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void TransmitAudioServerRpc(float[] audioData, NetworkConnection sender = null, Channel channel = Channel.Unreliable)
+    private void TransmitAudioServerRpc(float[] audioData, Channel channel = Channel.Unreliable, NetworkConnection sender = null)
     {
         TransmitAudioObserversRpc(audioData, sender.ClientId);
     }
