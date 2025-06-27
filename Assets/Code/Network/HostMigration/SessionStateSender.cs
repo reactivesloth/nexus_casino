@@ -15,7 +15,7 @@ namespace Code.Network
         public void SendSessionStateToHost(PlayerCharacterState playerCharacterState)
         {
             string playerStateJson = JsonUtility.ToJson(playerCharacterState);
-            SendSessionStateServerRpc(playerStateJson);
+            SendPlayerStateToHost(playerStateJson);
         }
 
         [ServerRpc(RequireOwnership = false)]
