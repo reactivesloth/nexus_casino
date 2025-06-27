@@ -11,7 +11,7 @@ using FishNet.Transporting.FishyEOSPlugin;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Code.Network
+namespace Code.Network.HostMigration
 {
     public class AutoLobbyConnector : MonoBehaviour
     {
@@ -41,6 +41,16 @@ namespace Code.Network
                 yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
 
                 var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
+
+                for (var i = 0; i < lobbyList.Count; i++)
+                {
+                    var lobby = lobbyList[i];
+                    var lobbyVersionRequest = Lobby.GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttribute);
+                    if (lobbyVersionRequest != Result.Success || !versionAttribute.HasValue ||
+                        versionAttribute?.Data?.Value.AsUtf8 != Application.version)
+                        lobbyList.Remove(lobby);
+                }
+
                 if (lobbyList == null || lobbyList.Count == 0)
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
                 else
@@ -104,6 +114,8 @@ namespace Code.Network
 
             var lobbyId = createLobby.CallbackInfo?.LobbyId;
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
+            yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, "PRODUCT_VERSION",
+                Application.version);
             yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName.Value);
             if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
@@ -212,7 +224,7 @@ namespace Code.Network
             StartClientConnection();
         }
 
-        private void StartClientConnection()
+        public static void StartClientConnection()
         {
             var currentLobby = LobbyVariables.Instance.currentLobby;
 
@@ -244,7 +256,7 @@ namespace Code.Network
             LobbyVariables.Instance.lobbyGame.SetActive(true);
         }
 
-        private void StartHostConnection()
+        public static void StartHostConnection()
         {
             var networkManager = InstanceFinder.NetworkManager;
             var localUserId = LobbyVariables.Instance.ProductUserId;
