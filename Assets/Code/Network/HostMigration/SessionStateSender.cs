@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Code.Network.HostMigration.Data;
@@ -12,7 +13,7 @@ namespace Code.Network.HostMigration
         public static SessionStateSender Instance;
 
         private void Awake() => Instance = this;
-        
+
         public void SendSessionStateToHost(MigratePlayerData playerCharacterState)
         {
             string playerStateJson = JsonUtility.ToJson(playerCharacterState);
@@ -21,7 +22,7 @@ namespace Code.Network.HostMigration
 
         public IEnumerator SendPlayerStateToHostWhereReady(string playerStateJson)
         {
-            yield return new WaitWhile(() => ClientManager.Started);
+            yield return new WaitWhile(() => !ClientManager.Started);
             SendPlayerStateToHost(playerStateJson);
         }
 
