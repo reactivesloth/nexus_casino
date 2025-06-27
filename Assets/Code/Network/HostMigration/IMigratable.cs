@@ -5,7 +5,6 @@ namespace Code.Network.HostMigration
 {
     public interface IMigratable<TMigrateDataType> : IMigratableBase where TMigrateDataType : class
     {
-        [Server]
         void OnMigrateDataReceived(TMigrateDataType data);
         new TMigrateDataType GetMigrateData();
 
