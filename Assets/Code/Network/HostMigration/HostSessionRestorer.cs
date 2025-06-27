@@ -77,7 +77,7 @@ namespace Code.Network.HostMigration
                     continue;
                 }
 
-                migratableComponent.SetMigrateData(data.json);
+                migratableComponent.OnMigrateDataReceived(data.json);
             }
         }
     }

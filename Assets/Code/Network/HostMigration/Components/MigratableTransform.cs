@@ -11,7 +11,7 @@ namespace Code.Network.HostMigration.Components
     [RequireComponent(typeof(NetworkTransform))]
     public class MigratableTransform : MonoBehaviour, IMigratable<SerializableTransform>
     {
-        public void SetMigrateData(SerializableTransform data)
+        public void OnMigrateDataReceived(SerializableTransform data)
         {
             transform.position = new Vector3(data.position.x, data.position.y, data.position.z);
             transform.rotation = new Quaternion(data.rotation.x, data.rotation.y, data.rotation.z, data.rotation.w);
