@@ -36,7 +36,12 @@ namespace Code.Network.HostMigration
 
         private IEnumerator SendPlayerStateToHostWhereReady(string playerStateJson)
         {
-            yield return new WaitWhile(() => !_isStartNetwork);
+            // Ждём, пока клиент полностью стартует
+            yield return new WaitUntil(() => base.NetworkManager != null && base.NetworkManager.IsClientStarted);
+
+            // Ждём, пока объект заспавнен и инициализирован
+            yield return new WaitUntil(() => IsSpawned && _isStartNetwork);
+            
             SendPlayerStateToHost(playerStateJson);
         }
 
