@@ -7,15 +7,11 @@ using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
 using Epic.OnlineServices.Lobby;
 using FishNet;
-using FishNet.Plugins.FishyEOS.Util;
 using FishNet.Transporting.FishyEOSPlugin;
-using PlayEveryWare.EpicOnlineServices;
-using PlayEveryWare.EpicOnlineServices.Editor.Windows;
 using UnityEngine;
-using Attribute = Epic.OnlineServices.Lobby.Attribute;
 using Random = UnityEngine.Random;
 
-namespace Code.Network
+namespace Code.Network.HostMigration
 {
     public class AutoLobbyConnector : MonoBehaviour
     {

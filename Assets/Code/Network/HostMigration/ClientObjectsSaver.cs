@@ -16,6 +16,8 @@ namespace Code.Network.HostMigration
 
         private Coroutine _updateLoopCoroutine;
         
+        public static event Action<List<NetworkObject>> OnOwnObjectsUpdated;
+
         private void Awake()
         {
             InstanceFinder.ClientManager.OnClientConnectionState += ClientManagerOnOnClientConnectionState;
@@ -77,6 +79,8 @@ namespace Code.Network.HostMigration
                 if (obj != null && !OwnObjects.Contains(obj))
                     OwnObjects.Add(obj);
             }
+            // Вызов события после обновления списка
+            OnOwnObjectsUpdated?.Invoke(OwnObjects);
         }
     }
 }

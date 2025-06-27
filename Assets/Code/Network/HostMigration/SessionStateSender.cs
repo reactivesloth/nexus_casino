@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using System.Linq;
+using Code.Network.HostMigration.Data;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
 
-namespace Code.Network
+namespace Code.Network.HostMigration
 {
     public class SessionStateSender : NetworkBehaviour
     {
@@ -12,7 +12,7 @@ namespace Code.Network
 
         private void Awake() => Instance = this;
         
-        public void SendSessionStateToHost(PlayerCharacterState playerCharacterState)
+        public void SendSessionStateToHost(MigratePlayerData playerCharacterState)
         {
             string playerStateJson = JsonUtility.ToJson(playerCharacterState);
             SendPlayerStateToHost(playerStateJson);
@@ -21,15 +21,8 @@ namespace Code.Network
         [ServerRpc(RequireOwnership = false)]
         private void SendPlayerStateToHost(string json, NetworkConnection sender = null)
         {
-            var state = JsonUtility.FromJson<PlayerCharacterState>(json);
-            HostSessionRestorer.Instance.RestorePlayerCharacterState(state, sender);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void SendSessionStateServerRpc(string json, NetworkConnection sender = null)
-        {
-            var state = JsonUtility.FromJson<PlayerSessionState>(json);
-            HostSessionRestorer.Instance.RestorePlayerState(state, sender);
+            var state = JsonUtility.FromJson<MigratePlayerData>(json);
+            HostSessionRestorer.Instance.RestorePlayerData(state, sender);
         }
 
         // Пример метода для получения своих объектов
