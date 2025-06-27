@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
+using FishNet.Transporting;
 
 public class VoiceChat : NetworkBehaviour
 {
@@ -207,13 +208,13 @@ public class VoiceChat : NetworkBehaviour
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void TransmitAudioServerRpc(float[] audioData, NetworkConnection sender = null)
+    private void TransmitAudioServerRpc(float[] audioData, NetworkConnection sender = null, Channel channel = Channel.Unreliable)
     {
         TransmitAudioObserversRpc(audioData, sender.ClientId);
     }
 
     [ObserversRpc]
-    private void TransmitAudioObserversRpc(float[] audioData, int senderClientId)
+    private void TransmitAudioObserversRpc(float[] audioData, int senderClientId,  Channel channel = Channel.Unreliable)
     {
         // Ensure we do not play our own voice
         if (senderClientId == NetworkManager.ClientManager.Connection.ClientId)
