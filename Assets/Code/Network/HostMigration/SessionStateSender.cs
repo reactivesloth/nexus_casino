@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Code.Network.HostMigration.Data;
 using FishNet.Connection;
@@ -15,6 +16,12 @@ namespace Code.Network.HostMigration
         public void SendSessionStateToHost(MigratePlayerData playerCharacterState)
         {
             string playerStateJson = JsonUtility.ToJson(playerCharacterState);
+            StartCoroutine(SendPlayerStateToHostWhereReady(playerStateJson));
+        }
+
+        public IEnumerator SendPlayerStateToHostWhereReady(string playerStateJson)
+        {
+            yield return new WaitWhile(() => ClientManager.Started);
             SendPlayerStateToHost(playerStateJson);
         }
 

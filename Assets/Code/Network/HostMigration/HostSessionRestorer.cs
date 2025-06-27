@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Code.Network.HostMigration.Data;
 using FishNet;
 using FishNet.Connection;
@@ -20,6 +19,7 @@ namespace Code.Network.HostMigration
         private PrefabObjects _spawnablePrefabs;
         private ServerManager _serverManager;
         private NetworkManager _networkManager;
+        
 
         private void Awake()
         {
@@ -61,7 +61,10 @@ namespace Code.Network.HostMigration
             foreach (var data in networkObjectData.componentsData)
             {
                 if(networkObject.GetComponent(data.componentName) is not IMigratableBase migratableComponent)
+                {
+                    Debug.LogError($"Component {data.componentName} not found on {networkObject.name}");
                     continue;
+                }
                 
                 migratableComponent.SetMigrateData(data.json);
             }
