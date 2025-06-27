@@ -11,18 +11,32 @@ namespace Code.Network.HostMigration
     public class SessionStateSender : NetworkBehaviour
     {
         public static SessionStateSender Instance;
+        
+        private bool _isStartNetwork = false;
 
         private void Awake() => Instance = this;
+        
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+            _isStartNetwork = true;
+        }
 
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            _isStartNetwork = false;
+        }
+        
         public void SendSessionStateToHost(MigratePlayerData playerCharacterState)
         {
             string playerStateJson = JsonUtility.ToJson(playerCharacterState);
             StartCoroutine(SendPlayerStateToHostWhereReady(playerStateJson));
         }
 
-        public IEnumerator SendPlayerStateToHostWhereReady(string playerStateJson)
+        private IEnumerator SendPlayerStateToHostWhereReady(string playerStateJson)
         {
-            yield return new WaitWhile(() => !ClientManager.Started);
+            yield return new WaitWhile(() => !_isStartNetwork);
             SendPlayerStateToHost(playerStateJson);
         }
 
