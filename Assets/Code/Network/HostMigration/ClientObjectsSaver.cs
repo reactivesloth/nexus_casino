@@ -55,8 +55,8 @@ namespace Code.Network.HostMigration
         {
             while (InstanceFinder.ClientManager.Started)
             {
-                ChekObjects();
                 yield return new WaitForSeconds(checkInterval);
+                ChekObjects();
             }
         }
 

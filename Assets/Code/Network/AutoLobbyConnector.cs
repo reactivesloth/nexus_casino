@@ -26,11 +26,13 @@ namespace Code.Network
         private void OnEnable()
         {
             LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyUpdateHost);
+            LobbyEvents.Instance.LobbyMemberUpdateReceived.AddListener(PopulateUserList);
         }
 
         private void OnDisable()
         {
             LobbyEvents.Instance.LobbyUpdateReceived.RemoveListener(OnLobbyUpdateHost);
+            LobbyEvents.Instance.LobbyMemberUpdateReceived.RemoveListener(PopulateUserList);
         }
 
         private void StartPollingLobbies()
@@ -334,7 +336,34 @@ namespace Code.Network
             }
         }
 
+        private void PopulateUserList(LobbyMemberUpdateReceivedCallbackInfo e)
+        {
+            var lobby = LobbyVariables.Instance.currentLobby;
+            if (lobby == null) return;
 
+            var lobbyId = lobby.lobbyId;
+            var lobbyMembers = lobby.lobbyMembers;
+            var localUserId = LobbyVariables.Instance.ProductUserId;
+            Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
+            lobbyMembers.Clear();
+            foreach (var productUserId in Lobby.GetMembers(lobbyDetails))
+            {
+                var getMemberAttributeResult =
+                    Lobby.GetMemberAttribute(lobbyDetails, productUserId, "NAME", out var memberName);
+                if (getMemberAttributeResult != Result.Success)
+                    Debug.LogWarning(
+                        $"[LobbyCode] Failed to get member name. {getMemberAttributeResult} - {productUserId}");
+                var allAttributes = Lobby.GetMemberAttributes(lobbyDetails, productUserId);
+                lobbyMembers.Add(new LobbyData.LobbyMember
+                {
+                    displayName = memberName?.Data?.Value.AsUtf8,
+                    ProductUserId = productUserId,
+                    attributeKeys = allAttributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray(),
+                    attributeValues = allAttributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray()
+                });
+            }
+        }
+        
         #region InternalClasses
 
         private class LocalUser

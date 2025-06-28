@@ -9,6 +9,7 @@ using FishNet.Managing.Client;
 using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -61,6 +62,7 @@ namespace Code.Network.HostMigration
         /// </summary>
         public void RunClient()
         {
+            Debug.Log("Client start migrating");
             _clientManager.Broadcast(_migrateData);
             _isMigrating = false;
         }
@@ -78,6 +80,7 @@ namespace Code.Network.HostMigration
             Channel channel)
         {
             hostMigrateProcessConnection?.Invoke(connection);
+            Debug.Log(JsonConvert.SerializeObject(data, Formatting.Indented));
             HostSessionRestorer.RestorePlayerData(data, connection);
         }
         
@@ -125,6 +128,8 @@ namespace Code.Network.HostMigration
                     migrateObject.componentsData.Add(migratableComponentData);
                 }
             }
+            
+            Debug.Log(JsonConvert.SerializeObject(_migrateData, Formatting.Indented));
         }
     }
 }

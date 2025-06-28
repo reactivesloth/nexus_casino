@@ -45,12 +45,14 @@ namespace Code.Network
 
         private void Migrate()
         {
+            _hostMigrator.MarkMigrating();
             if (HasCurrentClientIsNewHost())
                 StartCoroutine(MigrateAsHost());
         }
         
         private void ClientManagerOnOnClientConnectionState(ClientConnectionStateArgs obj)
         {
+            Debug.Log(obj.ConnectionState.ToString());
             if(obj.ConnectionState == LocalConnectionState.Stopped) 
                 if(!_isUserInitiatedDisconnect)
                     Migrate();
@@ -61,12 +63,12 @@ namespace Code.Network
             var productId = LobbyVariables.Instance.ProductUserId.ToString();
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
 
+            AutoLobbyConnector.StartHostConnection();
+            
             yield return LobbyUpdateLobby.Run(out var updateLobbyHostId, lobbyId, "HOST_ID", productId);
             if (updateLobbyHostId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning(
                     $"[HostMigrator] Failed to set lobby member host id: {updateLobbyHostId.CallbackInfo?.ResultCode}");
-
-            AutoLobbyConnector.StartHostConnection();
         }
 
         private bool HasCurrentClientIsNewHost()
