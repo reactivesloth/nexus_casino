@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Code.Network.HostMigration;
 using EOSLobby;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
@@ -11,7 +12,7 @@ using FishNet.Transporting.FishyEOSPlugin;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Code.Network.HostMigration
+namespace Code.Network
 {
     public class AutoLobbyConnector : MonoBehaviour
     {
@@ -20,6 +21,16 @@ namespace Code.Network.HostMigration
         private void Start()
         {
             StartPollingLobbies();
+        }
+
+        private void OnEnable()
+        {
+            LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyUpdateHost);
+        }
+
+        private void OnDisable()
+        {
+            LobbyEvents.Instance.LobbyUpdateReceived.RemoveListener(OnLobbyUpdateHost);
         }
 
         private void StartPollingLobbies()
@@ -220,7 +231,7 @@ namespace Code.Network.HostMigration
                 attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
 
             LobbyVariables.Instance.lobbyPopupUI.Hide();
-
+            
             StartClientConnection();
         }
 
@@ -277,6 +288,52 @@ namespace Code.Network.HostMigration
             LobbyVariables.Instance.lobbyGameUI.SetActive(true);
             LobbyVariables.Instance.lobbyGame.SetActive(true);
         }
+        
+        private void OnLobbyUpdateHost(LobbyUpdateReceivedCallbackInfo e)
+        {
+            var localUserId = LobbyVariables.Instance.ProductUserId;
+            var currentLobby = LobbyVariables.Instance.currentLobby;
+            if(currentLobby == null)
+                return;
+            
+            var result = Lobby.GetLobbyDetails(out var lobbyDetails, e.LobbyId, localUserId);
+
+            if (result != Result.Success)
+            {
+                Debug.LogWarning($"[LobbyCode] Failed to get lobby details. {result}");
+                return;
+            }
+
+            if(currentLobby.attributeKeys == null)
+                return;
+            var isCanGetHostAttr = currentLobby.attributeKeys.Contains("HOST_ID");
+            var oldHostId = string.Empty;
+            if(isCanGetHostAttr)
+                oldHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
+
+            var attributes = Lobby.GetAttributes(lobbyDetails);
+            lobbyDetails.Release();
+            currentLobby.attributeKeys = new string[attributes.Count];
+            currentLobby.attributeValues = new string[attributes.Count];
+
+            for (var i = 0; i < attributes.Count; i++)
+            {
+                currentLobby.attributeKeys[i] = attributes[i]?.Data?.Key;
+                currentLobby.attributeValues[i] = attributes[i]?.Data?.Value.AsUtf8;
+            }
+
+            isCanGetHostAttr = currentLobby.attributeKeys.Contains("HOST_ID");
+            var newHostId = string.Empty;
+            if(isCanGetHostAttr)
+                newHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
+            
+            if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
+            {
+                InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
+                StartClientConnection();
+            }
+        }
+
 
         #region InternalClasses
 

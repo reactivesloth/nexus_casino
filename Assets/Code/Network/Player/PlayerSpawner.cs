@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Object;
+using FishNet.Transporting;
 using UnityEngine;
 
 namespace Code.Network.Player
@@ -55,6 +57,8 @@ namespace Code.Network.Player
         /// Next spawns to use.
         /// </summary>
         private int _nextSpawn;
+        
+        private List<NetworkConnection> _dontSpawn = new();
         #endregion
 
         private void OnEnable()
@@ -70,12 +74,22 @@ namespace Code.Network.Player
             }
 
             _networkManager.SceneManager.OnClientLoadedStartScenes += SceneManager_OnClientLoadedStartScenes;
+            _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnOnServerConnectionState;
         }
 
         private void OnDisable()
         {
-            if (_networkManager != null)
-                _networkManager.SceneManager.OnClientLoadedStartScenes -= SceneManager_OnClientLoadedStartScenes;
+            if (_networkManager == null)
+                return;
+            
+            _networkManager.SceneManager.OnClientLoadedStartScenes -= SceneManager_OnClientLoadedStartScenes;
+            _networkManager.ServerManager.OnServerConnectionState -= ServerManagerOnOnServerConnectionState;
+        }
+        
+        private void ServerManagerOnOnServerConnectionState(ServerConnectionStateArgs obj)
+        {
+            if(obj.ConnectionState == LocalConnectionState.Stopped)
+                _dontSpawn.Clear();
         }
 
         /// <summary>
@@ -84,6 +98,8 @@ namespace Code.Network.Player
         private void SceneManager_OnClientLoadedStartScenes(NetworkConnection conn, bool asServer)
         {
             if (!asServer)
+                return;
+            if(_dontSpawn.Contains(conn))
                 return;
             if (_playerPrefab == null)
             {
@@ -146,6 +162,12 @@ namespace Code.Network.Player
         {
             pos = prefab.position;
             rot = prefab.rotation;
+        }
+
+        public void DontSpawnOnConnect(NetworkConnection conn)
+        {
+            Debug.Log($"[DontSpawnOnConnect] {conn}");
+            _dontSpawn.Add(conn);
         }
     }
 }

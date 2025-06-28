@@ -1,29 +1,28 @@
 using System;
 using System.Collections.Generic;
-using FishNet.Object;
-using UnityEngine;
+using FishNet.Broadcast;
 
 namespace Code.Network.HostMigration.Data
 {
     [Serializable]
-    public class MigratePlayerData
+    public struct MigratePlayerData: IBroadcast
     {
-        public List<NetworkObjectData> objects = new();
+        public List<NetworkObjectData> objects;
     }
 
     [Serializable]
-    public class NetworkObjectData
+    public struct NetworkObjectData: IBroadcast
     {
         public string objectName;
         public bool isSceneObject;
         public int networkObjectId;
         public int prefabId; // Для динамических объектов
         public int ownerId; // Владелец (игрок)
-        public List<MigratableComponentData> componentsData = new();
+        public List<MigratableComponentData> componentsData;
     }
 
     [Serializable]
-    public class MigratableComponentData
+    public struct MigratableComponentData: IBroadcast
     {
         public string componentName;
         public string json;

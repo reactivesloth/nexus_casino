@@ -1,124 +1,98 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.Network.HostMigration.Data;
-using EOSLobby;
-using Epic.OnlineServices;
-using Epic.OnlineServices.Lobby;
+using Code.Network.HostMigration.Utility;
 using FishNet;
+using FishNet.Connection;
+using FishNet.Managing.Client;
+using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Code.Network.HostMigration
 {
     public class HostMigrator : MonoBehaviour
     {
-        [SerializeField] private float reconnectDelay = 5f;
-        [SerializeField] private int maxReconnectAttempts = 1;
-
-        private int _currentAttempts;
+        private ServerManager _serverManager;
+        private ClientManager _clientManager;
 
         private MigratePlayerData _migrateData;
+        
+        private bool _isMigrating = false;
+
+        public UnityEvent<NetworkConnection> hostMigrateProcessConnection;
+
+        #region Unity Callbacks
 
         private void Awake()
         {
-            InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionChanged;
+            _serverManager = InstanceFinder.ServerManager;
+            _clientManager = InstanceFinder.ClientManager;
+        }
+
+        private void OnEnable()
+        {
             ClientObjectsSaver.OnOwnObjectsUpdated += UpdateLastPlayerSessionState;
+            _clientManager.OnAuthenticated += ClientManagerOnOnAuthenticated;
+            
+            _serverManager.RegisterBroadcast<MigratePlayerData>(OnServerReceiveMigrateBroadcast);
         }
-
-        private void OnDestroy()
+        
+        private void OnDisable()
         {
-            InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionChanged;
             ClientObjectsSaver.OnOwnObjectsUpdated -= UpdateLastPlayerSessionState;
+            _clientManager.OnAuthenticated -= ClientManagerOnOnAuthenticated;
+            
+            _serverManager.UnregisterBroadcast<MigratePlayerData>(OnServerReceiveMigrateBroadcast);
         }
 
-        private void OnClientConnectionChanged(ClientConnectionStateArgs args)
-        {
-            if (args.ConnectionState == LocalConnectionState.Started && _migrateData != null)
-                SessionStateSender.Instance.SendSessionStateToHost(_migrateData);
-
-            if (args.ConnectionState == LocalConnectionState.Stopped)
-            {
-                Debug.Log("Соединение потеряно. Начинаю переподключение...");
-                _currentAttempts = 0;
-                StartCoroutine(TryReconnect());
-            }
-        }
-
-        private IEnumerator TryReconnect()
-        {
-            yield return null;
-            OnReconnectFailed();
-        }
-
+        #endregion
+            
         /// <summary>
-        /// 
+        /// For auto run mark migrating
         /// </summary>
-        private void OnReconnectFailed()
+        public void MarkMigrating() => _isMigrating = true;
+        
+        /// <summary>
+        /// Execute where the client connected to new host on migrate
+        /// </summary>
+        public void RunClient()
         {
-            var isNewHost = true; //TODO: select new host logic
-
-            if (isNewHost)
-                StartCoroutine(UpdateHost());
-            else
-                ConnectToNewHost();
+            _clientManager.Broadcast(_migrateData);
+            _isMigrating = false;
         }
-
-        private IEnumerator UpdateHost()
+        
+        /// <summary>
+        /// Execute where the host started on migrate
+        /// </summary>
+        public void RunHost()
         {
-            HostSessionRestorer.SetSpawnerEnable(false);
-            var productId = LobbyVariables.Instance.ProductUserId.ToString();
-            var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
-
-            yield return LobbyUpdateLobby.Run(out var updateLobbyHostId, lobbyId, "HOST_ID", productId);
-            if (updateLobbyHostId.CallbackInfo?.ResultCode != Result.Success)
-                Debug.LogWarning(
-                    $"[HostMigrator] Failed to set lobby member host id: {updateLobbyHostId.CallbackInfo?.ResultCode}");
-
-            AutoLobbyConnector.StartHostConnection();
+            throw new NotImplementedException("Host handle on migrate dont implemented");
+            _isMigrating = false;
         }
-
-        private void ConnectToNewHost()
+        
+        private void OnServerReceiveMigrateBroadcast(NetworkConnection connection, MigratePlayerData data,
+            Channel channel)
         {
-            LobbyEvents.Instance.LobbyUpdateReceived.AddPersistentListener(OnLobbyUpdateReceived);
+            hostMigrateProcessConnection?.Invoke(connection);
+            HostSessionRestorer.RestorePlayerData(data, connection);
         }
-
-        private void OnLobbyUpdateReceived(LobbyUpdateReceivedCallbackInfo e)
+        
+        private void ClientManagerOnOnAuthenticated()
         {
-            var localUserId = LobbyVariables.Instance.ProductUserId;
-            var currentLobby = LobbyVariables.Instance.currentLobby;
-            var result = Lobby.GetLobbyDetails(out var lobbyDetails, e.LobbyId, localUserId);
-
-            if (result != Result.Success)
-            {
-                Debug.LogWarning($"[LobbyCode] Failed to get lobby details. {result}");
-                return;
-            }
-
-            var oldHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
-
-            var attributes = Lobby.GetAttributes(lobbyDetails);
-            lobbyDetails.Release();
-            currentLobby.attributeKeys = new string[attributes.Count];
-            currentLobby.attributeValues = new string[attributes.Count];
-
-            for (var i = 0; i < attributes.Count; i++)
-            {
-                currentLobby.attributeKeys[i] = attributes[i]?.Data?.Key;
-                currentLobby.attributeValues[i] = attributes[i]?.Data?.Value.AsUtf8;
-            }
-
-            var newHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
-
-            if (newHostId != oldHostId)
-                AutoLobbyConnector.StartClientConnection();
+            if(_isMigrating)
+                RunClient();
         }
 
         private void UpdateLastPlayerSessionState(List<NetworkObject> ownObjects)
         {
-            _migrateData = new MigratePlayerData();
+            _migrateData = new MigratePlayerData
+            {
+                objects = new List<NetworkObjectData>()
+            };
 
             foreach (var currentGameObject in ownObjects)
             {
@@ -134,7 +108,8 @@ namespace Code.Network.HostMigration
                     networkObjectId = currentGameObject.ObjectId,
                     prefabId = currentGameObject.PrefabId,
                     ownerId = currentGameObject.OwnerId,
-                    isSceneObject = currentGameObject.IsSceneObject
+                    isSceneObject = currentGameObject.IsSceneObject,
+                    componentsData = new List<MigratableComponentData>()
                 };
 
                 _migrateData.objects.Add(migrateObject);
