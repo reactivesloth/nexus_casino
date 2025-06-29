@@ -207,6 +207,11 @@ namespace StarterAssets
         {
             FirstPersonView = !FirstPersonView;
         
+            SetCamera();
+        }
+
+        public void SetCamera()
+        {
             Cinemachine3rdPersonFollow follow = _cinemachineVirtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
             _cinemachineVirtualCamera.Follow = CinemachineCameraTarget.transform;
             follow.CameraDistance = FirstPersonView ? 0 : 3;
