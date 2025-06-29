@@ -26,13 +26,13 @@ namespace Code.Network
         private void OnEnable()
         {
             LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyUpdateHost);
-            LobbyEvents.Instance.LobbyMemberUpdateReceived.AddListener(PopulateUserList);
+            LobbyEvents.Instance.LobbyMemberUpdateReceived.AddListener(OnMembersUpdate);
         }
 
         private void OnDisable()
         {
             LobbyEvents.Instance.LobbyUpdateReceived.RemoveListener(OnLobbyUpdateHost);
-            LobbyEvents.Instance.LobbyMemberUpdateReceived.RemoveListener(PopulateUserList);
+            LobbyEvents.Instance.LobbyMemberUpdateReceived.RemoveListener(OnMembersUpdate);
         }
 
         private void StartPollingLobbies()
@@ -233,7 +233,7 @@ namespace Code.Network
                 attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
 
             LobbyVariables.Instance.lobbyPopupUI.Hide();
-            
+
             StartClientConnection();
         }
 
@@ -290,14 +290,14 @@ namespace Code.Network
             LobbyVariables.Instance.lobbyGameUI.SetActive(true);
             LobbyVariables.Instance.lobbyGame.SetActive(true);
         }
-        
+
         private void OnLobbyUpdateHost(LobbyUpdateReceivedCallbackInfo e)
         {
             var localUserId = LobbyVariables.Instance.ProductUserId;
             var currentLobby = LobbyVariables.Instance.currentLobby;
-            if(currentLobby == null)
+            if (currentLobby == null)
                 return;
-            
+
             var result = Lobby.GetLobbyDetails(out var lobbyDetails, e.LobbyId, localUserId);
 
             if (result != Result.Success)
@@ -306,11 +306,11 @@ namespace Code.Network
                 return;
             }
 
-            if(currentLobby.attributeKeys == null)
+            if (currentLobby.attributeKeys == null)
                 return;
             var isCanGetHostAttr = currentLobby.attributeKeys.Contains("HOST_ID");
             var oldHostId = string.Empty;
-            if(isCanGetHostAttr)
+            if (isCanGetHostAttr)
                 oldHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
 
             var attributes = Lobby.GetAttributes(lobbyDetails);
@@ -326,9 +326,9 @@ namespace Code.Network
 
             isCanGetHostAttr = currentLobby.attributeKeys.Contains("HOST_ID");
             var newHostId = string.Empty;
-            if(isCanGetHostAttr)
+            if (isCanGetHostAttr)
                 newHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
-            
+
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
                 InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
@@ -336,7 +336,7 @@ namespace Code.Network
             }
         }
 
-        private void PopulateUserList(LobbyMemberUpdateReceivedCallbackInfo e)
+        private void OnMembersUpdate(LobbyMemberUpdateReceivedCallbackInfo e)
         {
             var lobby = LobbyVariables.Instance.currentLobby;
             if (lobby == null) return;
@@ -362,8 +362,36 @@ namespace Code.Network
                     attributeValues = allAttributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray()
                 });
             }
+
+            var isCanGetNextHostAttr = lobby.attributeKeys.Contains("NEXT_HOST_ID");
+            var nextHostId = string.Empty;
+            if (isCanGetNextHostAttr)
+                nextHostId = lobby.attributeValues[Array.IndexOf(lobby.attributeKeys, "NEXT_HOST_ID")];
+
+            var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == nextHostId);
+            if (nextHostMember == null)
+                OnNextHostDisconnected();
         }
-        
+
+        private void OnNextHostDisconnected()
+        {
+            if (InstanceFinder.NetworkManager.IsServerStarted)
+                return;
+
+            // Тут определяем нового хоста 
+            var minConnectionId = InstanceFinder.ClientManager.Clients.Keys.Min();
+
+            if (minConnectionId != InstanceFinder.ClientManager.Connection.ClientId)
+                return;
+
+            var lobby = LobbyVariables.Instance.currentLobby;
+            if (lobby == null) return;
+
+            var lobbyId = lobby.lobbyId;
+
+            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", LobbyVariables.Instance.productUserId);
+        }
+
         #region InternalClasses
 
         private class LocalUser

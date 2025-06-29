@@ -14,7 +14,10 @@ namespace Code.Network.HostMigration.Data
     public struct NetworkObjectData: IBroadcast
     {
         public string objectName;
+        
         public bool isSceneObject;
+        public bool isNetworkObject;
+        
         public int networkObjectId;
         public int prefabId; // Для динамических объектов
         public int ownerId; // Владелец (игрок)

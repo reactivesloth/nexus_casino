@@ -73,20 +73,17 @@ namespace Code.Network
 
         private bool HasCurrentClientIsNewHost()
         {
+            
             var currentLobby = LobbyVariables.Instance.currentLobby;
             var lobbyMembers = currentLobby.lobbyMembers;
             
-            var hostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
-
-            var hostMember = lobbyMembers.FirstOrDefault(i => i.productUserId == hostId);
-            lobbyMembers.Remove(hostMember);
-
+            var next = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
             var ownId = LobbyVariables.Instance.productUserId;
 
             if (lobbyMembers.Count == 0)
                 return false;
             
-            return lobbyMembers.First().productUserId == ownId;
+            return next == ownId;
         }
     }
 }
