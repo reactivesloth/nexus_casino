@@ -385,17 +385,13 @@ namespace Code.Network
 
         private void OnNextHostDisconnected()
         {
-            var members = LobbyVariables.Instance.currentLobby.lobbyMembers;
-            var currentHostMember =
-                members.FirstOrDefault(m => m.productUserId == LobbyVariables.Instance.productUserId);
-            if (currentHostMember != null)
-                members.Remove(currentHostMember);
+            var lobby = LobbyVariables.Instance.currentLobby;
+            var members = lobby.lobbyMembers;
 
             Debug.Log("[LobbyCode] OnNextHostDisconnected");
-            var lobby = LobbyVariables.Instance.currentLobby;
             var lobbyId = lobby.lobbyId;
 
-            var nextHostMember = lobby.lobbyMembers.FirstOrDefault();
+            var nextHostMember = members.FirstOrDefault();
             if (nextHostMember == null)
                 return;
             LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.productUserId);
