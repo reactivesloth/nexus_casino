@@ -73,11 +73,10 @@ namespace Code.Network
 
         private bool HasCurrentClientIsNewHost()
         {
-            
             var currentLobby = LobbyVariables.Instance.currentLobby;
             var lobbyMembers = currentLobby.lobbyMembers;
             
-            var next = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
+            var next = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "NEXT_HOST_ID")];
             var ownId = LobbyVariables.Instance.productUserId;
 
             if (lobbyMembers.Count == 0)

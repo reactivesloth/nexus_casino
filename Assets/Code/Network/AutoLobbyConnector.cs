@@ -362,15 +362,21 @@ namespace Code.Network
                     attributeValues = allAttributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray()
                 });
             }
-
+            
+            if(!InstanceFinder.NetworkManager.IsServerStarted)
+                return;
+            
+            Debug.Log("OnMembersUpdate");
+            
             if(lobby.attributeKeys == null)
                 return;
             
             var isCanGetNextHostAttr = lobby.attributeKeys.Contains("NEXT_HOST_ID");
             var nextHostId = string.Empty;
+            
             if (isCanGetNextHostAttr)
                 nextHostId = lobby.attributeValues[Array.IndexOf(lobby.attributeKeys, "NEXT_HOST_ID")];
-
+            
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == nextHostId);
             if (nextHostMember == null)
                 OnNextHostDisconnected();
@@ -378,21 +384,20 @@ namespace Code.Network
 
         private void OnNextHostDisconnected()
         {
-            if (InstanceFinder.NetworkManager.IsServerStarted)
-                return;
+            var members = LobbyVariables.Instance.currentLobby.lobbyMembers;
+            var currentHostMember = members.FirstOrDefault(m => m.productUserId == LobbyVariables.Instance.productUserId);
+            if (currentHostMember != null)
+                members.Remove(currentHostMember);
 
-            // Тут определяем нового хоста 
-            var minConnectionId = InstanceFinder.ClientManager.Clients.Keys.Min();
-
-            if (minConnectionId != InstanceFinder.ClientManager.Connection.ClientId)
-                return;
-
+            Debug.Log("[LobbyCode] OnNextHostDisconnected");
             var lobby = LobbyVariables.Instance.currentLobby;
-            if (lobby == null) return;
-
             var lobbyId = lobby.lobbyId;
-
-            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", LobbyVariables.Instance.productUserId);
+            
+            var nextHostMember = lobby.lobbyMembers.FirstOrDefault();
+            if (nextHostMember == null)
+                return;
+            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.productUserId);
+            
         }
 
         #region InternalClasses
