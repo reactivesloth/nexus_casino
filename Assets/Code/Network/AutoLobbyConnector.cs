@@ -363,6 +363,9 @@ namespace Code.Network
                 });
             }
 
+            if(lobby.attributeKeys == null)
+                return;
+            
             var isCanGetNextHostAttr = lobby.attributeKeys.Contains("NEXT_HOST_ID");
             var nextHostId = string.Empty;
             if (isCanGetNextHostAttr)
