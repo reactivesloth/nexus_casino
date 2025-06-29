@@ -1,4 +1,5 @@
 ﻿using Cinemachine;
+using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM 
@@ -160,6 +161,17 @@ namespace StarterAssets
             // reset our timeouts on start
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+        }
+
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        {
+            base.OnOwnershipClient(prevOwner);
+            
+            if (!IsOwner)
+                return;
+            
+            _cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            SetCamera();
         }
 
         private void Update()
