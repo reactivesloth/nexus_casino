@@ -362,22 +362,23 @@ namespace Code.Network
                     attributeValues = allAttributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray()
                 });
             }
-            
-            if(!InstanceFinder.NetworkManager.IsServerStarted)
+
+            if (!InstanceFinder.NetworkManager.IsServerStarted)
                 return;
-            
+
             Debug.Log("OnMembersUpdate");
-            
-            if(lobby.attributeKeys == null)
+
+            if (lobby.attributeKeys == null)
                 return;
-            
+
             var isCanGetNextHostAttr = lobby.attributeKeys.Contains("NEXT_HOST_ID");
             var nextHostId = string.Empty;
-            
+
             if (isCanGetNextHostAttr)
                 nextHostId = lobby.attributeValues[Array.IndexOf(lobby.attributeKeys, "NEXT_HOST_ID")];
-            
-            var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == nextHostId);
+
+            var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
+                m.productUserId == nextHostId && m.productUserId != LobbyVariables.Instance.productUserId);
             if (nextHostMember == null)
                 OnNextHostDisconnected();
         }
@@ -385,19 +386,19 @@ namespace Code.Network
         private void OnNextHostDisconnected()
         {
             var members = LobbyVariables.Instance.currentLobby.lobbyMembers;
-            var currentHostMember = members.FirstOrDefault(m => m.productUserId == LobbyVariables.Instance.productUserId);
+            var currentHostMember =
+                members.FirstOrDefault(m => m.productUserId == LobbyVariables.Instance.productUserId);
             if (currentHostMember != null)
                 members.Remove(currentHostMember);
 
             Debug.Log("[LobbyCode] OnNextHostDisconnected");
             var lobby = LobbyVariables.Instance.currentLobby;
             var lobbyId = lobby.lobbyId;
-            
+
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault();
             if (nextHostMember == null)
                 return;
             LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.productUserId);
-            
         }
 
         #region InternalClasses
