@@ -51,7 +51,7 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: InputMagnitude
+  - m_Name: MotionSpeed
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -81,13 +81,13 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: IsFalling
+  - m_Name: FreeFall
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-  - m_Name: IsJump
+  - m_Name: Jump
     m_Type: 4
     m_DefaultFloat: 0
     m_DefaultInt: 0
@@ -607,7 +607,7 @@ BlendTree:
     m_DirectBlendParameter: 
     m_Mirror: 0
   m_BlendParameter: WalkStartAngle
-  m_BlendParameterY: InputMagnitude
+  m_BlendParameterY: MotionSpeed
   m_MinThreshold: -180
   m_MaxThreshold: 495
   m_UseAutomaticThresholds: 0
@@ -1354,7 +1354,7 @@ BlendTree:
     m_CycleOffset: 0
     m_DirectBlendParameter: 
     m_Mirror: 0
-  m_BlendParameter: InputMagnitude
+  m_BlendParameter: MotionSpeed
   m_BlendParameterY: InputMagnitude
   m_MinThreshold: 0
   m_MaxThreshold: 0
@@ -3105,7 +3105,7 @@ BlendTree:
     m_DirectBlendParameter: 
     m_Mirror: 0
   m_BlendParameter: WalkStartAngle
-  m_BlendParameterY: InputMagnitude
+  m_BlendParameterY: MotionSpeed
   m_MinThreshold: -180
   m_MaxThreshold: 90
   m_UseAutomaticThresholds: 0
@@ -4555,7 +4555,7 @@ BlendTree:
     m_DirectBlendParameter: 
     m_Mirror: 0
   m_BlendParameter: InputAngle
-  m_BlendParameterY: InputMagnitude
+  m_BlendParameterY: MotionSpeed
   m_MinThreshold: 0
   m_MaxThreshold: 1
   m_UseAutomaticThresholds: 1
@@ -5609,7 +5609,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -5684,7 +5684,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -5906,7 +5906,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110235125}
@@ -6081,10 +6081,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110258803}
@@ -6228,10 +6228,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110237886}
@@ -6359,7 +6359,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -6434,7 +6434,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110220750}
@@ -6615,7 +6615,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsFalling
+    m_ConditionEvent: FreeFall
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110250626}
@@ -6984,7 +6984,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110257322}
@@ -7084,10 +7084,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110257322}
@@ -7184,10 +7184,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110257322}
@@ -7237,7 +7237,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -7831,7 +7831,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110235125}
@@ -7981,10 +7981,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -8306,13 +8306,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110244379}
@@ -8716,7 +8716,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110220750}
@@ -8791,7 +8791,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -8841,10 +8841,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110217679}
@@ -8941,13 +8941,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110257322}
@@ -8972,10 +8972,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110257322}
@@ -9313,10 +9313,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110267768}
@@ -9413,7 +9413,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -9507,10 +9507,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -9560,7 +9560,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110235125}
@@ -9766,7 +9766,7 @@ AnimatorStateTransition:
     m_ConditionEvent: InputAngle
     m_EventTreshold: -7
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.87
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110205514}
@@ -10320,10 +10320,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110256014}
@@ -10542,7 +10542,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -10761,7 +10761,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -11061,10 +11061,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110244356}
@@ -11114,10 +11114,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110215848}
@@ -11142,7 +11142,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110220750}
@@ -11217,7 +11217,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -11242,7 +11242,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -11442,13 +11442,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110257322}
@@ -11876,7 +11876,7 @@ AnimatorStateTransition:
     m_ConditionEvent: InputAngle
     m_EventTreshold: 7
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.87
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110243660}
@@ -11976,7 +11976,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsFalling
+    m_ConditionEvent: FreeFall
     m_EventTreshold: -2.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110250626}
@@ -12001,10 +12001,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -12730,7 +12730,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.1
   - m_ConditionMode: 4
     m_ConditionEvent: IsRU
@@ -12858,10 +12858,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -12886,10 +12886,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110232848}
@@ -12986,7 +12986,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -13355,10 +13355,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110299608}
@@ -13602,7 +13602,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -13627,10 +13627,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -13755,10 +13755,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -14102,7 +14102,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -14221,13 +14221,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110244379}
@@ -14743,10 +14743,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110248024}
@@ -14871,13 +14871,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110258803}
@@ -15196,7 +15196,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsFalling
+    m_ConditionEvent: FreeFall
     m_EventTreshold: -0.05
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110282285}
@@ -15421,10 +15421,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110244379}
@@ -15618,10 +15618,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsFalling
+    m_ConditionEvent: FreeFall
     m_EventTreshold: -0.05
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.5
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110201180}
@@ -15693,7 +15693,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsFalling
+    m_ConditionEvent: FreeFall
     m_EventTreshold: 0
   - m_ConditionMode: 3
     m_ConditionEvent: FallingTime
@@ -16184,10 +16184,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -16378,7 +16378,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.1
   - m_ConditionMode: 4
     m_ConditionEvent: IsRU
@@ -16406,7 +16406,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -16531,7 +16531,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -16556,7 +16556,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -16656,7 +16656,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.1
   - m_ConditionMode: 3
     m_ConditionEvent: IsRU
@@ -16734,7 +16734,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -16759,10 +16759,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110244379}
@@ -16959,7 +16959,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsFalling
+    m_ConditionEvent: FreeFall
     m_EventTreshold: -2.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110250626}
@@ -17009,7 +17009,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.1
   - m_ConditionMode: 3
     m_ConditionEvent: IsRU
@@ -17331,13 +17331,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110299608}
@@ -17387,10 +17387,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110277065}
@@ -17956,10 +17956,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110299608}
@@ -18018,7 +18018,7 @@ AnimatorStateTransition:
     m_ConditionEvent: InputAngle
     m_EventTreshold: -7
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.87
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110246090}
@@ -18375,7 +18375,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110235125}
@@ -18584,7 +18584,7 @@ AnimatorStateTransition:
     m_ConditionEvent: InputAngle
     m_EventTreshold: 7
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.87
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110204374}
@@ -18959,13 +18959,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110299608}
@@ -19059,10 +19059,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -19162,7 +19162,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -19212,10 +19212,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 2
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110210093}
@@ -19240,13 +19240,13 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
     m_ConditionEvent: IsRU
     m_EventTreshold: 0.97
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.7
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110258803}
@@ -19368,10 +19368,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110258803}
@@ -19396,7 +19396,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
@@ -19421,10 +19421,10 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 1
-    m_ConditionEvent: IsJump
+    m_ConditionEvent: Jump
     m_EventTreshold: 0
   - m_ConditionMode: 4
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.2
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110212288}
@@ -24597,7 +24597,7 @@ AnimatorStateTransition:
   m_Name: 
   m_Conditions:
   - m_ConditionMode: 3
-    m_ConditionEvent: InputMagnitude
+    m_ConditionEvent: MotionSpeed
     m_EventTreshold: 0.49
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 110223806}
