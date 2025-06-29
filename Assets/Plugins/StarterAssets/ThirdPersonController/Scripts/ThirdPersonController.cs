@@ -101,6 +101,8 @@ namespace StarterAssets
         private int _animIDJump;
         private int _animIDFreeFall;
         private int _animIDMotionSpeed;
+        private int _animIDVertical;
+        private int _animIDHorizontal;
 
 #if ENABLE_INPUT_SYSTEM 
         private PlayerInput _playerInput;
@@ -192,6 +194,8 @@ namespace StarterAssets
             _animIDJump = Animator.StringToHash("Jump");
             _animIDFreeFall = Animator.StringToHash("FreeFall");
             _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            _animIDVertical = Animator.StringToHash("Vertical");
+            _animIDHorizontal = Animator.StringToHash("Horizontal");
         }
 
         private void SwitchCamera()
@@ -247,7 +251,8 @@ namespace StarterAssets
         private void Move()
         {
             // set target speed based on move speed, sprint speed and if sprint is pressed
-            float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+            var canSprint = !FirstPersonView || (Mathf.Abs(_input.move.x) < 0.1f && _input.move.y > 0.1f);
+            float targetSpeed = _input.sprint && canSprint ? SprintSpeed : MoveSpeed;
 
             // a simplistic acceleration and deceleration designed to be easy to remove, replace, or iterate upon
 
@@ -286,16 +291,19 @@ namespace StarterAssets
 
             // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
             // if there is a move input rotate player when the player is moving
-            if (_input.move != Vector2.zero)
-            {
+            //if (_input.move != Vector2.zero)
+            //{
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg +
                                   _mainCamera.transform.eulerAngles.y;
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity,
                     RotationSmoothTime);
 
-                // rotate to face input direction relative to camera position
-                transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
-            }
+                if (FirstPersonView)
+                    transform.rotation = Quaternion.Euler(0.0f, _mainCamera.transform.eulerAngles.y, 0.0f);
+                else    
+                    transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
+
+            //}
 
 
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
@@ -309,6 +317,17 @@ namespace StarterAssets
             {
                 _animator.SetFloat(_animIDSpeed, _animationBlend);
                 _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+
+                if (FirstPersonView)
+                {
+                    _animator.SetFloat(_animIDVertical, inputDirection.z);
+                    _animator.SetFloat(_animIDHorizontal, inputDirection.x);
+                }
+                else
+                {
+                //    _animator.SetFloat(_animIDVertical, Mathf.Lerp(_animator.GetFloat(_animIDVertical), 0.0f, Time.deltaTime));
+                //    _animator.SetFloat(_animIDHorizontal, Mathf.Lerp(_animator.GetFloat(_animIDHorizontal), 0.0f, Time.deltaTime));
+                }
             }
         }
 
