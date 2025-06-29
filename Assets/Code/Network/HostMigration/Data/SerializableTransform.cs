@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Code.Network.HostMigration.Data
@@ -10,9 +11,9 @@ namespace Code.Network.HostMigration.Data
         public Quaternion rotation;
         public Vector3 scale;
         
-        public UnityEngine.Vector3 GetUnityPosition => new(position.x, position.y, position.z);
-        public UnityEngine.Quaternion GetUnityRotation => new(rotation.x, rotation.y, rotation.z, rotation.w);
-        public UnityEngine.Vector3 GetUnityScale => new(scale.x, scale.y, scale.z);
+        [JsonIgnore] public UnityEngine.Vector3 GetUnityPosition => new(position.x, position.y, position.z);
+        [JsonIgnore] public UnityEngine.Quaternion GetUnityRotation => new(rotation.x, rotation.y, rotation.z, rotation.w);
+        [JsonIgnore] public UnityEngine.Vector3 GetUnityScale => new(scale.x, scale.y, scale.z);
 
         public static SerializableTransform SetFromUnityTransform(Transform fromTransform)
         {

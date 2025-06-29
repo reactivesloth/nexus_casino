@@ -391,7 +391,7 @@ namespace Code.Network
             Debug.Log("[LobbyCode] OnNextHostDisconnected");
             var lobbyId = lobby.lobbyId;
 
-            var nextHostMember = members.FirstOrDefault();
+            var nextHostMember = members.FirstOrDefault(m => m.productUserId != LobbyVariables.Instance.productUserId);
             if (nextHostMember == null)
                 return;
             LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.productUserId);
