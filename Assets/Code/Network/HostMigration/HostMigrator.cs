@@ -17,6 +17,8 @@ namespace Code.Network.HostMigration
 {
     public class HostMigrator : MonoBehaviour
     {
+        public static HostMigrator Instance;
+        
         private ServerManager _serverManager;
         private ClientManager _clientManager;
 
@@ -30,6 +32,8 @@ namespace Code.Network.HostMigration
 
         private void Awake()
         {
+            Instance = this;
+            
             _serverManager = InstanceFinder.ServerManager;
             _clientManager = InstanceFinder.ClientManager;
         }
@@ -112,6 +116,7 @@ namespace Code.Network.HostMigration
                     prefabId = currentGameObject.PrefabId,
                     ownerId = currentGameObject.OwnerId,
                     isSceneObject = currentGameObject.IsSceneObject,
+                    transformData = SerializableTransform.SetFromUnityTransform(currentGameObject.transform),
                     componentsData = new List<MigratableComponentData>()
                 };
 
@@ -123,13 +128,11 @@ namespace Code.Network.HostMigration
                     var migratableComponentData = new MigratableComponentData
                     {
                         componentName = migratableComponent.GetType().FullName,
-                        json = migratableComponent.GetJson(componentAbstractData)
+                        jsonData = migratableComponent.GetJson(componentAbstractData)
                     };
                     migrateObject.componentsData.Add(migratableComponentData);
                 }
             }
-            
-            //Debug.Log(JsonConvert.SerializeObject(_migrateData, Formatting.Indented));
         }
     }
 }

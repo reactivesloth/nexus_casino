@@ -5,12 +5,12 @@ using UnityEngine;
 namespace Code.Network.HostMigration.Data
 {
     [Serializable]
-    public class SerializableTransform
+    public struct SerializableTransform
     {
         public Vector3 position;
         public Quaternion rotation;
         public Vector3 scale;
-        
+
         [JsonIgnore] public UnityEngine.Vector3 GetUnityPosition => new(position.x, position.y, position.z);
         [JsonIgnore] public UnityEngine.Quaternion GetUnityRotation => new(rotation.x, rotation.y, rotation.z, rotation.w);
         [JsonIgnore] public UnityEngine.Vector3 GetUnityScale => new(scale.x, scale.y, scale.z);

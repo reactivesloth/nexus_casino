@@ -41,7 +41,9 @@ namespace Code.Network.HostMigration.Utility
             Debug.Log($"[HostSessionRestorer] Process {networkObjectData.objectName}");
 
             var prefab = SpawnablePrefabs.GetObject(true, networkObjectData.prefabId);
-            var nob = NetworkManager.GetPooledInstantiated(prefab, true);
+            var objectTransformData = networkObjectData.transformData;
+            var nob = NetworkManager.GetPooledInstantiated(prefab, objectTransformData.GetUnityPosition,
+                objectTransformData.GetUnityRotation, true);
             ServerManager.Spawn(nob, sender);
             Debug.Log($"[HostSessionRestorer] {nob.name} Spawned");
 
@@ -62,7 +64,7 @@ namespace Code.Network.HostMigration.Utility
                     continue;
                 }
 
-                migratableComponent.OnMigrateDataReceived(data.json);
+                migratableComponent.OnMigrateDataReceived(data.jsonData);
             }
         }
     }

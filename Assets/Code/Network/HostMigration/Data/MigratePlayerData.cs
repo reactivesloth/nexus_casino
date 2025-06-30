@@ -21,6 +21,9 @@ namespace Code.Network.HostMigration.Data
         public int networkObjectId;
         public int prefabId; // Для динамических объектов
         public int ownerId; // Владелец (игрок)
+        
+        public SerializableTransform transformData;
+        
         public List<MigratableComponentData> componentsData;
     }
 
@@ -28,6 +31,6 @@ namespace Code.Network.HostMigration.Data
     public struct MigratableComponentData: IBroadcast
     {
         public string componentName;
-        public string json;
+        public string jsonData;
     }
 }
