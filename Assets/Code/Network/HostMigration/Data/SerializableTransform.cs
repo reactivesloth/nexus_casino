@@ -25,6 +25,11 @@ namespace Code.Network.HostMigration.Data
                 scale = new Vector3(fromTransform.localScale.x, fromTransform.localScale.y, fromTransform.localScale.z)
             };
         }
+
+        public override string ToString()
+        {
+            return $"{GetUnityPosition}.{GetUnityRotation}";
+        }
     }
 
     public struct Vector3
