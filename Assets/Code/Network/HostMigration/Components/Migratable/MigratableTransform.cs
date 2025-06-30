@@ -13,7 +13,7 @@ namespace Code.Network.HostMigration.Components
     {
         public void OnMigrateDataReceived(SerializableTransform data)
         {
-            Debug.Log($"[HostSessionRestorer] OnMigrateDataReceived Transform. Set {data.ToString()}");
+            Debug.Log($"[HostSessionRestorer] OnMigrateDataReceived Transform. Set {data}");
             
             transform.position = new Vector3(data.position.x, data.position.y, data.position.z);
             transform.rotation = new Quaternion(data.rotation.x, data.rotation.y, data.rotation.z, data.rotation.w);

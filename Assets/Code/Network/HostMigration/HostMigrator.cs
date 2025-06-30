@@ -129,7 +129,7 @@ namespace Code.Network.HostMigration
                 }
             }
             
-            Debug.Log(JsonConvert.SerializeObject(_migrateData, Formatting.Indented));
+            //Debug.Log(JsonConvert.SerializeObject(_migrateData, Formatting.Indented));
         }
     }
 }
