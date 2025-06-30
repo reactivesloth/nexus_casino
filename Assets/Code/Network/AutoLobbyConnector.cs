@@ -262,7 +262,9 @@ namespace Code.Network
                 LobbyVariables.Instance.AuthData.loginCredentialType == LoginCredentialType.Developer
                     ? ""
                     : LobbyVariables.Instance.AuthData.displayName;
+            
             fishyEOS.gameObject.SetActive(true);
+            
             networkManager.ClientManager.StartConnection();
 
             LobbyVariables.Instance.lobbyGameUI.SetActive(true);
@@ -329,6 +331,9 @@ namespace Code.Network
             if (isCanGetHostAttr)
                 newHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
 
+            
+            Debug.Log($"[LobbyCode] New host id: {newHostId} | Old HostId: {oldHostId}");
+            
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
                 InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
@@ -383,7 +388,7 @@ namespace Code.Network
                 OnNextHostDisconnected();
         }
 
-        private void OnNextHostDisconnected()
+        public static void OnNextHostDisconnected()
         {
             var lobby = LobbyVariables.Instance.currentLobby;
             var members = lobby.lobbyMembers;

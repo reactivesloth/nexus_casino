@@ -69,6 +69,7 @@ namespace Code.Network
             if (updateLobbyHostId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning(
                     $"[HostMigrator] Failed to set lobby member host id: {updateLobbyHostId.CallbackInfo?.ResultCode}");
+            AutoLobbyConnector.OnNextHostDisconnected();
         }
 
         private bool HasCurrentClientIsNewHost()
