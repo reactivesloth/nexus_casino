@@ -2,7 +2,6 @@ using Code.Network.HostMigration;
 using Code.Network.HostMigration.Data;
 using FishNet.Connection;
 using FishNet.Object;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Code.Network.Player
@@ -21,18 +20,18 @@ namespace Code.Network.Player
         public void OnMigrateDataReceived(CharacterMigrateData data)
         {
             if(NetworkManager.IsServerStarted)
-                SetPlayerState(Owner, JsonConvert.SerializeObject(data));
+                SetPlayerState(Owner, data);
         }
 
         [TargetRpc]
-        private void SetPlayerState(NetworkConnection conn, string jsonData)
+        private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
         {
-            var data = JsonConvert.DeserializeObject<CharacterMigrateData>(jsonData);
-            thirdPersonController.FirstPersonView = data.isFirstPersonView;
-            thirdPersonController.SetCamera();
+            //thirdPersonController.FirstPersonView = data.isFirstPersonView;
+            //thirdPersonController.SetCamera();
 
+            /*
             thirdPersonController.CinemachineCameraTarget.transform.SetPositionAndRotation(
-                data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);
+                data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);*/
         }
 
         public CharacterMigrateData GetMigrateData()
