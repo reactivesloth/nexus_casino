@@ -1,23 +1,20 @@
-using System;
 using Code.Network.HostMigration;
 using Code.Network.HostMigration.Data;
 using FishNet.Connection;
 using FishNet.Object;
-using StarterAssets;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 namespace Code.Network.Player
 {
-    [RequireComponent(typeof(ThirdPersonController))]
+    [RequireComponent(typeof(PlayerMovementController))]
     public class MigratablePlayer : NetworkBehaviour, IMigratable<CharacterMigrateData>
     {
-        [SerializeField] private ThirdPersonController thirdPersonController;
+        [SerializeField] private PlayerMovementController thirdPersonController;
 
         protected override void OnValidate()
         {
             base.OnValidate();
-            thirdPersonController = GetComponent<ThirdPersonController>();
+            thirdPersonController = GetComponent<PlayerMovementController>();
         }
 
         public void OnMigrateDataReceived(CharacterMigrateData data)
