@@ -5,7 +5,7 @@ using Code.Network.HostMigration.Data;
 namespace Code.Network.Player
 {
     [Serializable]
-    public class CharacterMigrateData
+    public struct CharacterMigrateData
     {
         public SerializableTransform cameraRootTransformData;
         public bool isFirstPersonView;

@@ -25,6 +25,17 @@ namespace Code.Network.HostMigration.Data
                 scale = new Vector3(fromTransform.localScale.x, fromTransform.localScale.y, fromTransform.localScale.z)
             };
         }
+        
+        public static SerializableTransform SetFromUnityTransformLocal(Transform fromTransform)
+        {
+            return new SerializableTransform()
+            {
+                position = new Vector3(fromTransform.localPosition.x, fromTransform.localPosition.y, fromTransform.localPosition.z),
+                rotation = new Quaternion(fromTransform.localRotation.x, fromTransform.localRotation.y, fromTransform.localRotation.z,
+                    fromTransform.localRotation.w),
+                scale = new Vector3(fromTransform.localScale.x, fromTransform.localScale.y, fromTransform.localScale.z)
+            };
+        }
 
         public override string ToString()
         {

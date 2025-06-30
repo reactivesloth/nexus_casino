@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Code.Network.Player
 {
     [RequireComponent(typeof(PlayerMovementController))]
-    public class MigratablePlayer : NetworkBehaviour, IMigratable<CharacterMigrateData>
+    public class MigratableCharacter : NetworkBehaviour, IMigratable<CharacterMigrateData>
     {
         [SerializeField] private PlayerMovementController thirdPersonController;
 
@@ -26,12 +26,12 @@ namespace Code.Network.Player
         [TargetRpc]
         private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
         {
-            //thirdPersonController.FirstPersonView = data.isFirstPersonView;
-            //thirdPersonController.SetCamera();
+            thirdPersonController.FirstPersonView = data.isFirstPersonView;
+            thirdPersonController.SetCamera();
 
-            /*
-            thirdPersonController.CinemachineCameraTarget.transform.SetPositionAndRotation(
-                data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);*/
+            
+            thirdPersonController.CinemachineCameraTarget.transform.SetLocalPositionAndRotation(
+                data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);
         }
 
         public CharacterMigrateData GetMigrateData()
@@ -39,8 +39,7 @@ namespace Code.Network.Player
             return new CharacterMigrateData
             {
                 cameraRootTransformData =
-                    SerializableTransform.SetFromUnityTransform(thirdPersonController.CinemachineCameraTarget
-                        .transform),
+                    SerializableTransform.SetFromUnityTransformLocal(thirdPersonController.CinemachineCameraTarget.transform),
                 isFirstPersonView = thirdPersonController.FirstPersonView
             };
         }
