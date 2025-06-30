@@ -27,12 +27,14 @@ namespace Code.Network
         {
             LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyUpdateHost);
             LobbyEvents.Instance.LobbyMemberUpdateReceived.AddListener(OnMembersUpdate);
+            LobbyEvents.Instance.LobbyMemberStatusReceived.AddPersistentListener(OnLobbyMemberStatusReceived);
         }
 
         private void OnDisable()
         {
             LobbyEvents.Instance.LobbyUpdateReceived.RemoveListener(OnLobbyUpdateHost);
             LobbyEvents.Instance.LobbyMemberUpdateReceived.RemoveListener(OnMembersUpdate);
+            LobbyEvents.Instance.LobbyMemberStatusReceived.RemoveListener(OnLobbyMemberStatusReceived);
         }
 
         private void StartPollingLobbies()
@@ -265,6 +267,8 @@ namespace Code.Network
             
             fishyEOS.gameObject.SetActive(true);
             
+            if(networkManager.IsClientStarted)
+                networkManager.ClientManager.StopConnection();
             networkManager.ClientManager.StartConnection();
 
             LobbyVariables.Instance.lobbyGameUI.SetActive(true);
@@ -339,9 +343,21 @@ namespace Code.Network
                 InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
                 StartClientConnection();
             }
+            
+            UpdateMembers();
         }
 
+        private void OnLobbyMemberStatusReceived(LobbyMemberStatusReceivedCallbackInfo arg0)
+        {
+            UpdateMembers();
+        }
+        
         private void OnMembersUpdate(LobbyMemberUpdateReceivedCallbackInfo e)
+        {
+            UpdateMembers();
+        }
+
+        private void UpdateMembers()
         {
             var lobby = LobbyVariables.Instance.currentLobby;
             if (lobby == null) return;
