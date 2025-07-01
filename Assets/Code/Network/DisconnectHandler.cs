@@ -18,7 +18,7 @@ namespace Code.Network
     {
         private ServerManager _serverManager;
         private ClientManager _clientManager;
-        private HostMigrationManager _hostMigrationManager;
+        private HostMigrator _hostMigrator;
         
         private bool _isUserInitiatedDisconnect = false;
         
@@ -28,7 +28,7 @@ namespace Code.Network
             
             _serverManager = InstanceFinder.ServerManager;
             _clientManager = InstanceFinder.ClientManager;
-            _hostMigrationManager = InstanceFinder.NetworkManager.GetComponent<HostMigrationManager>();
+            _hostMigrator = InstanceFinder.NetworkManager.GetComponent<HostMigrator>();
         }
 
         private void OnEnable()
@@ -45,7 +45,7 @@ namespace Code.Network
 
         private void Migrate()
         {
-            _hostMigrationManager.MarkMigrating();
+            _hostMigrator.MarkMigrating();
             if (HasCurrentClientIsNewHost())
                 StartCoroutine(MigrateAsHost());
         }

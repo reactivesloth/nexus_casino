@@ -31,27 +31,41 @@ namespace Code.Network.HostMigration.Utility
             }
         }
 
-        private static void ProcessSceneObject(MigratableObjectData migratableObjectData, NetworkConnection sender)
+        private static void ProcessSceneObject(NetworkObjectData networkObjectData, NetworkConnection sender)
         {
-            var migratableObject = MigratableObject.FindSceneObject(migratableObjectData.sceneObjectId);
-            
-            migratableObject.NetworkObject.GiveOwnership(sender);
-            
-            migratableObject.RestoreData(migratableObjectData);
+            throw new NotImplementedException();
         }
 
-        private static void ProcessSpawnedObject(MigratableObjectData migratableObjectData, NetworkConnection sender)
+        private static void ProcessSpawnedObject(NetworkObjectData networkObjectData, NetworkConnection sender)
         {
-            Debug.Log($"[HostSessionRestorer] Process {migratableObjectData.objectName}");
+            Debug.Log($"[HostSessionRestorer] Process {networkObjectData.objectName}");
 
-            var prefab = SpawnablePrefabs.GetObject(true, migratableObjectData.prefabId);
-            var objectTransformData = migratableObjectData.transformData;
+            var prefab = SpawnablePrefabs.GetObject(true, networkObjectData.prefabId);
+            var objectTransformData = networkObjectData.transformData;
             var nob = NetworkManager.GetPooledInstantiated(prefab, objectTransformData.GetUnityPosition,
                 objectTransformData.GetUnityRotation, true);
             ServerManager.Spawn(nob, sender);
             Debug.Log($"[HostSessionRestorer] {nob.name} Spawned");
 
-            nob.GetComponent<MigratableObject>().RestoreData(migratableObjectData);
+            NetworkManager.SceneManager.AddOwnerToDefaultScene(nob);
+
+            ProcessComponents(networkObjectData, nob);
+        }
+
+        private static void ProcessComponents(NetworkObjectData networkObjectData, NetworkObject networkObject)
+        {
+            foreach (var data in networkObjectData.componentsData)
+            {
+                Debug.Log($"[HostSessionRestorer] Process {data.componentName} component");
+
+                if (networkObject.GetComponent(data.componentName) is not IMigratableBase migratableComponent)
+                {
+                    Debug.LogError($"Component {data.componentName} not found on {networkObject.name}");
+                    continue;
+                }
+
+                migratableComponent.OnMigrateDataReceived(data.jsonData);
+            }
         }
     }
 }

@@ -340,7 +340,7 @@ namespace Code.Network
             
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
-                InstanceFinder.NetworkManager.GetComponent<HostMigrationManager>().MarkMigrating();
+                InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
                 StartClientConnection();
             }
             
@@ -366,8 +366,6 @@ namespace Code.Network
             var lobbyMembers = lobby.lobbyMembers;
             var localUserId = LobbyVariables.Instance.ProductUserId;
             Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
-            if(lobbyDetails == null)
-                return;
             lobbyMembers.Clear();
             foreach (var productUserId in Lobby.GetMembers(lobbyDetails))
             {
