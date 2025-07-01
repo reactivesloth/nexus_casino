@@ -7,7 +7,7 @@ using UnityEngine;
 namespace Code.Network.Player
 {
     [RequireComponent(typeof(PlayerMovementController))]
-    public class MigratableCharacter : NetworkBehaviour, IMigratable<CharacterMigrateData>
+    public class MigratableComponentComponentCharacter : NetworkBehaviour, IMigratableComponentComponent<CharacterMigrateData>
     {
         [SerializeField] private PlayerMovementController thirdPersonController;
 

@@ -245,7 +245,7 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      propertyPath: m_BlendShapeWeights.Array.data[41]
+      propertyPath: 'm_BlendShapeWeights.Array.data[41]'
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -6234591296559379751, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
@@ -566,9 +566,6 @@ PrefabInstance:
       addedObject: {fileID: 8013488042586796887}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6401111505703537928}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -1098754589221922584}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
@@ -576,6 +573,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4572378555792315357}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -9033301711867385924}
     - targetCorrespondingSourceObject: {fileID: -5823106577872157028, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7889299020810858274}
@@ -661,7 +661,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 6bc1aaf4-b110-4ff7-891e-5b9fe6f32c4d
-    m_ActionName: Player/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Keyboard/upArrow,/Keyboard/downArrow,/Keyboard/leftArrow,/Keyboard/rightArrow,/XInputControllerWindows/leftStick]
+    m_ActionName: 'Player/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Keyboard/upArrow,/Keyboard/downArrow,/Keyboard/leftArrow,/Keyboard/rightArrow,/XInputControllerWindows/leftStick]'
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -677,7 +677,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 2690c379-f54d-45be-a724-414123833eb4
-    m_ActionName: Player/Look[/Mouse/delta,/XInputControllerWindows/rightStick]
+    m_ActionName: 'Player/Look[/Mouse/delta,/XInputControllerWindows/rightStick]'
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -693,7 +693,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 8c4abdf8-4099-493a-aa1a-129acec7c3df
-    m_ActionName: Player/Jump[/Keyboard/space,/XInputControllerWindows/buttonSouth]
+    m_ActionName: 'Player/Jump[/Keyboard/space,/XInputControllerWindows/buttonSouth]'
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -709,7 +709,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 980e881e-182c-404c-8cbf-3d09fdb48fef
-    m_ActionName: Player/Sprint[/Keyboard/leftShift,/XInputControllerWindows/leftTrigger]
+    m_ActionName: 'Player/Sprint[/Keyboard/leftShift,/XInputControllerWindows/leftTrigger]'
   - m_PersistentCalls:
       m_Calls: []
     m_ActionId: e4ce1614-c754-48c1-9103-33130441661f
@@ -1045,18 +1045,6 @@ MonoBehaviour:
   _interpolation: 2
   _clientAuthoritative: 1
   _sendToOwner: 0
---- !u!114 &6401111505703537928
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f6bcc688e9644ba8ea811f4f8bf6ca5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &-1098754589221922584
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1069,6 +1057,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0c29c524e52480baccdf189e7d36635, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 5084366635518163755}
+  _networkObjectCache: {fileID: 0}
   moveSpeed: 2
   rotateSpeed: 5
   sitKey: 101
@@ -1084,12 +1075,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0eaa394fea4a4bb8abe925d3f4bb43b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 5084366635518163755}
+  _networkObjectCache: {fileID: 0}
   hintUI: {fileID: 0}
   detectDistance: 1.5
   benchLayer:
     serializedVersion: 2
     m_Bits: 512
-  playerCamera: {fileID: 0}
 --- !u!114 &4572378555792315357
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1106,6 +1099,26 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 5084366635518163755}
   _networkObjectCache: {fileID: 0}
   thirdPersonController: {fileID: 6472889869485083012}
+--- !u!114 &-9033301711867385924
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2095315197724490687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e08adfa4e8f4d4098500fb733912383, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 5084366635518163755}
+  _networkObjectCache: {fileID: 0}
+  registerType: 1
+  isSceneObject: 0
+  sceneObjectId: 
+  migratableComponents:
+  - {fileID: 4572378555792315357}
 --- !u!137 &3903605093316825880 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}

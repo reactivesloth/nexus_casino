@@ -7,22 +7,18 @@ namespace Code.Network.HostMigration.Data
     [Serializable]
     public struct MigratePlayerData: IBroadcast
     {
-        public List<NetworkObjectData> objects;
+        public List<MigratableObjectData> objects;
     }
 
     [Serializable]
-    public struct NetworkObjectData: IBroadcast
+    public struct MigratableObjectData: IBroadcast
     {
         public string objectName;
         
         public bool isSceneObject;
-        public bool isNetworkObject;
-        
-        public int networkObjectId;
-        public int prefabId; // Для динамических объектов
-        public int ownerId; // Владелец (игрок)
-        
-        public SerializableTransform transformData;
+        public string sceneObjectId; //Use if isSceneObject == true
+        public int prefabId; //Use if isSceneObject == false
+        public SerializableTransform transformData; //For spawn non-scene objects
         
         public List<MigratableComponentData> componentsData;
     }
