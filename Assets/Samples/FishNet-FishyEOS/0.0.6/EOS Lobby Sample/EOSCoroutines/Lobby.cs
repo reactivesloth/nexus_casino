@@ -43,7 +43,7 @@ public class Lobby
     public static List<ProductUserId> GetMembers(LobbyDetails lobbyDetails)
         {
             var lobbyDetailsGetMemberCountOptions = new LobbyDetailsGetMemberCountOptions();
-            var memberCount = lobbyDetails.GetMemberCount(ref lobbyDetailsGetMemberCountOptions);
+            var memberCount = lobbyDetails?.GetMemberCount(ref lobbyDetailsGetMemberCountOptions);
             var members = new List<ProductUserId>();
             for (uint i = 0; i < memberCount; i++)
             {
