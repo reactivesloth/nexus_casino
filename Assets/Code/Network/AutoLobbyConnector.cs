@@ -20,7 +20,7 @@ namespace Code.Network
 
         private void Start()
         {
-            StartPollingLobbies();
+            //StartPollingLobbies();
         }
 
         private void OnEnable()
@@ -37,12 +37,12 @@ namespace Code.Network
             LobbyEvents.Instance.LobbyMemberStatusReceived.RemoveListener(OnLobbyMemberStatusReceived);
         }
 
-        private void StartPollingLobbies()
+        public void StartPollingLobbies()
         {
             _pollCoroutine = StartCoroutine(PollLobbiesRoutine());
         }
 
-        private void StopPollingLobbies()
+        public void StopPollingLobbies()
         {
             if (_pollCoroutine != null) StopCoroutine(_pollCoroutine);
         }
