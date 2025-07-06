@@ -27,8 +27,6 @@ namespace Code.Network.Player
         private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
         {
             thirdPersonController.FirstPersonView = data.isFirstPersonView;
-            thirdPersonController.SetCamera();
-
             
             thirdPersonController.CinemachineCameraTarget.transform.SetLocalPositionAndRotation(
                 data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);

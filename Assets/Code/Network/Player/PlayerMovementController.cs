@@ -31,6 +31,13 @@ namespace Code.Network.Player
         public GameObject CinemachineCameraTarget;
         public bool FirstPersonView = true;
         public GameObject[] HideForFirstPersonViewLocal;
+        public float MinCameraDistance = 1f;
+        public float MaxCameraDistance = 4f;
+        private float cameraDistance = 3f;
+        private float savedDistance = 3f;
+        public float MinFOV = 40;
+        public float MaxFOV = 65;
+        private float fov = 35;
         public float TopClamp = 70.0f;
         public float BottomClamp = -30.0f;
         public float CameraAngleOverride = 0.0f;
@@ -96,6 +103,9 @@ namespace Code.Network.Player
 
             _jumpTimeoutDelta = JumpTimeout;
             _fallTimeoutDelta = FallTimeout;
+
+            cameraDistance = 0.5f;
+            savedDistance = 0.5f;
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
@@ -106,23 +116,15 @@ namespace Code.Network.Player
                 return;
             
             _cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
-            SetCamera();
         }
 
         private void Update()
         {
             if(!IsOwner) return;
-
-            //if (_input.cameraSwitch)
-            if (Input.GetKeyDown(KeyCode.C))
-            {
-                SwitchCamera();
-            }
             
             if (_cinemachineVirtualCamera == null)
             {
                 _cinemachineVirtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
-                SwitchCamera();
             }
 
             _hasAnimator = TryGetComponent(out _animator);
@@ -137,18 +139,18 @@ namespace Code.Network.Player
         private void LateUpdate()
         {
             if(!IsOwner) return;
-            
+
+            if (CanMove)
+                UpdateCameraDistance();
+
             if (CanMove || !FirstPersonView)
                 CameraRotation();
             else
             {
-                if (FirstPersonView)
-                {
-                    _cinemachineTargetPitch =
-                        CinemachineCameraTarget.transform.rotation.eulerAngles.x - CameraAngleOverride;
-                    _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
-                    CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(0, 0, 0);
-                }
+                if (!FirstPersonView) return;
+                _cinemachineTargetPitch = CinemachineCameraTarget.transform.rotation.eulerAngles.x - CameraAngleOverride;
+                _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
+                CinemachineCameraTarget.transform.localRotation = Quaternion.Euler(0, 0, 0);
             }
         }
 
@@ -164,19 +166,36 @@ namespace Code.Network.Player
             _animIDTurn = Animator.StringToHash("TurnAngle");
         }
 
-        private void SwitchCamera()
+        private void UpdateCameraDistance ()
         {
-            FirstPersonView = !FirstPersonView;
-        
-            SetCamera();
-        }
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                if (FirstPersonView)
+                {
+                    cameraDistance = savedDistance;
+                }
+                else
+                {
+                    savedDistance = cameraDistance;
+                    cameraDistance = 0;
+                }
+            }
 
-        public void SetCamera()
-        {
+            cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100;
+            cameraDistance = Mathf.Clamp(cameraDistance, 0, 1);
+
+            FirstPersonView = cameraDistance switch
+            {
+                < 0.1f when !FirstPersonView => true,
+                > 0.1f when FirstPersonView => false,
+                _ => FirstPersonView
+            };
+
             Cinemachine3rdPersonFollow follow = _cinemachineVirtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
             _cinemachineVirtualCamera.Follow = CinemachineCameraTarget.transform;
-            follow.CameraDistance = FirstPersonView ? 0 : 3;
-
+            follow.ShoulderOffset = new Vector3(0, FirstPersonView ? 0 : -0.15f, 0);
+            follow.CameraDistance = Mathf.Lerp(follow.CameraDistance, FirstPersonView ? 0 : Mathf.Lerp(MinCameraDistance, MaxCameraDistance, cameraDistance), Time.deltaTime * 3);
+            _cinemachineVirtualCamera.m_Lens.FieldOfView = Mathf.Lerp(_cinemachineVirtualCamera.m_Lens.FieldOfView, Mathf.Lerp(MinFOV + (_speed > MoveSpeed ? 15 : 0), MaxFOV + (_speed > MoveSpeed ? 15 : 0), cameraDistance), Time.deltaTime * 3);
             foreach (var o in HideForFirstPersonViewLocal)
             {
                 o.SetActive(!FirstPersonView);
