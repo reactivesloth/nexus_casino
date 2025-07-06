@@ -1066,13 +1066,10 @@ PrefabInstance:
       addedObject: {fileID: 8380620837345130814}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 7971929965706423297}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -3890596719274478774}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 6578084794376562952}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2375218669794436234}
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8509050154869065461}
@@ -1231,13 +1228,31 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 3901444026938387538}
   _networkObjectCache: {fileID: 3901444026938387538}
-  CanMove: 1
-  MoveSpeed: 2
-  SprintSpeed: 5.335
-  RotationSmoothTime: 0.12
-  SpeedChangeRate: 10
-  LandingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
-  FootstepAudioClips:
+  moveSpeed: 2
+  sprintSpeed: 5.335
+  rotationSmoothTime: 0.12
+  speedChangeRate: 10
+  jumpHeight: 1.2
+  gravity: -15
+  jumpTimeout: 0.5
+  fallTimeout: 0.15
+  groundedOffset: -0.14
+  groundedRadius: 0.28
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 1
+  terminalVelocity: 53
+  cinemachineCameraTarget: {fileID: 7731021001863789818}
+  hideForFirstPersonViewLocal: []
+  minCameraDistance: 1
+  maxCameraDistance: 4
+  minFOV: 40
+  maxFOV: 65
+  topClamp: 70
+  bottomClamp: -30
+  cameraAngleOverride: 0
+  landingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
+  footstepAudioClips:
   - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
   - {fileID: 8300000, guid: 85016e0f2b01da248b9663dd49a161b0, type: 3}
   - {fileID: 8300000, guid: 186de84b3207156479abe98f4958fed0, type: 3}
@@ -1248,28 +1263,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 67c8b33e424ccdc4486edf538ab91c5a, type: 3}
   - {fileID: 8300000, guid: 274649b0e221539409070ebf6c18918b, type: 3}
   - {fileID: 8300000, guid: a3194b8bbc96ef84fab1f98f4b7dae3e, type: 3}
-  FootstepAudioVolume: 0.3
-  JumpHeight: 1.2
-  Gravity: -15
-  JumpTimeout: 0.3
-  FallTimeout: 0.15
-  Grounded: 1
-  GroundedOffset: -0.14
-  GroundedRadius: 0.25
-  GroundLayers:
-    serializedVersion: 2
-    m_Bits: 1
-  CinemachineCameraTarget: {fileID: 7731021001863789818}
-  FirstPersonView: 0
-  HideForFirstPersonViewLocal: []
-  MinCameraDistance: 1
-  MaxCameraDistance: 4
-  MinFOV: 40
-  MaxFOV: 65
-  TopClamp: 60
-  BottomClamp: -80
-  CameraAngleOverride: 0
+  footstepAudioVolume: 0.5
+  CanMove: 1
   LockCameraPosition: 0
+  FirstPersonView: 0
 --- !u!114 &27739964326571005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1313,9 +1310,8 @@ MonoBehaviour:
   - {fileID: 7829295031069457331}
   - {fileID: 1574228643798062135}
   - {fileID: 8380620837345130814}
-  - {fileID: 7971929965706423297}
-  - {fileID: -3890596719274478774}
   - {fileID: 6578084794376562952}
+  - {fileID: -2375218669794436234}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -1549,44 +1545,6 @@ MonoBehaviour:
   _interpolation: 2
   _clientAuthoritative: 1
   _sendToOwner: 0
---- !u!114 &7971929965706423297
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0c29c524e52480baccdf189e7d36635, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 4
-  _addedNetworkObject: {fileID: 3901444026938387538}
-  _networkObjectCache: {fileID: 3901444026938387538}
-  moveSpeed: 2
-  rotateSpeed: 5
-  sitKey: 101
---- !u!114 &-3890596719274478774
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0eaa394fea4a4bb8abe925d3f4bb43b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 5
-  _addedNetworkObject: {fileID: 3901444026938387538}
-  _networkObjectCache: {fileID: 3901444026938387538}
-  hintUI: {fileID: 0}
-  detectDistance: 1.5
-  benchLayer:
-    serializedVersion: 2
-    m_Bits: 512
 --- !u!114 &6578084794376562952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1599,10 +1557,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68cebc4cbc3d439ca304b76a3daee372, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 6
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 3901444026938387538}
   _networkObjectCache: {fileID: 3901444026938387538}
   thirdPersonController: {fileID: 2573045833460620576}
+--- !u!114 &-2375218669794436234
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2302545898316884715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188f87c970204124b28e52a171bbb2f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 5
+  _addedNetworkObject: {fileID: 3901444026938387538}
+  _networkObjectCache: {fileID: 3901444026938387538}
+  interactableMask:
+    serializedVersion: 2
+    m_Bits: 512
+  detectionDistance: 5
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}

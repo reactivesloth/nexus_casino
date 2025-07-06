@@ -1,5 +1,6 @@
 ﻿using System;
 using Code.Network.Player;
+using Code.Player;
 using FishNet.Object;
 using TMPro;
 using UnityEngine;

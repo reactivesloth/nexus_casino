@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Code.Network.Player;
+using Code.Player;
 using FishNet.Object;
 
 namespace Code.Network.PlayerSitInteraction
