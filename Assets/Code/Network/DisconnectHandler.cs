@@ -1,10 +1,8 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using Code.Network.HostMigration;
-using Code.Network.HostMigration.Utility;
-using EOSLobby;
+using Code.Network.Lobby;
+using Code.Network.Lobby.EOSCoroutines;
 using Epic.OnlineServices;
 using FishNet;
 using FishNet.Managing.Client;
@@ -62,14 +60,14 @@ namespace Code.Network
         {
             var productId = LobbyVariables.Instance.ProductUserId.ToString();
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
-
-            AutoLobbyConnector.StartHostConnection();
+            
+            // LobbyController.StartHostConnection();
             
             yield return LobbyUpdateLobby.Run(out var updateLobbyHostId, lobbyId, "HOST_ID", productId);
             if (updateLobbyHostId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning(
                     $"[HostMigrator] Failed to set lobby member host id: {updateLobbyHostId.CallbackInfo?.ResultCode}");
-            AutoLobbyConnector.OnNextHostDisconnected();
+            LobbyController.OnNextHostDisconnected();
         }
 
         private bool HasCurrentClientIsNewHost()

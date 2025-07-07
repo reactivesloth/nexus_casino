@@ -3,44 +3,46 @@ using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using FishNet.Plugins.FishyEOS.Util;
 
-public class Lobby
+namespace Code.Network.Lobby.EOSCoroutines
 {
-    public static Result GetLobbyDetails(out LobbyDetails lobbyDetailsHandle, Utf8String lobbyId,
-        ProductUserId localUserId)
+    public class Lobby
     {
-        var copyLobbyDetailsHandleOptions = new CopyLobbyDetailsHandleOptions
+        public static Result GetLobbyDetails(out LobbyDetails lobbyDetailsHandle, Utf8String lobbyId,
+            ProductUserId localUserId)
         {
-            LobbyId = lobbyId,
-            LocalUserId = localUserId,
-        };
-        var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
-        return lobbyInterface.CopyLobbyDetailsHandle(ref copyLobbyDetailsHandleOptions, out lobbyDetailsHandle);
-    }
+            var copyLobbyDetailsHandleOptions = new CopyLobbyDetailsHandleOptions
+            {
+                LobbyId = lobbyId,
+                LocalUserId = localUserId,
+            };
+            var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
+            return lobbyInterface.CopyLobbyDetailsHandle(ref copyLobbyDetailsHandleOptions, out lobbyDetailsHandle);
+        }
     
-    public static Result GetLobbyInfo(LobbyDetails lobbyDetail, out LobbyDetailsInfo? lobbyInfo)
-    {
-        var lobbyDetailsCopyInfoOptions = new LobbyDetailsCopyInfoOptions();
-        return lobbyDetail.CopyInfo(ref lobbyDetailsCopyInfoOptions, out lobbyInfo);
-    }
-
-    public static Result GetAttribute(LobbyDetails lobbyDetail, string attrKey, out Attribute? lobbyAttribute)
-    {
-        var lobbyCopyAttributeByKeyOptions = new LobbyDetailsCopyAttributeByKeyOptions { AttrKey = attrKey };
-        return lobbyDetail.CopyAttributeByKey(ref lobbyCopyAttributeByKeyOptions, out lobbyAttribute);
-    }
-
-    public static Result GetMemberAttribute(LobbyDetails lobbyDetail, ProductUserId productUserId, string attrKey,
-        out Attribute? lobbyAttribute)
-    {
-        var lobbyCopyMemberAttributeByKeyOptions = new LobbyDetailsCopyMemberAttributeByKeyOptions
+        public static Result GetLobbyInfo(LobbyDetails lobbyDetail, out LobbyDetailsInfo? lobbyInfo)
         {
-            AttrKey = attrKey,
-            TargetUserId = productUserId
-        };
-        return lobbyDetail.CopyMemberAttributeByKey(ref lobbyCopyMemberAttributeByKeyOptions, out lobbyAttribute);
-    }
+            var lobbyDetailsCopyInfoOptions = new LobbyDetailsCopyInfoOptions();
+            return lobbyDetail.CopyInfo(ref lobbyDetailsCopyInfoOptions, out lobbyInfo);
+        }
+
+        public static Result GetAttribute(LobbyDetails lobbyDetail, string attrKey, out Attribute? lobbyAttribute)
+        {
+            var lobbyCopyAttributeByKeyOptions = new LobbyDetailsCopyAttributeByKeyOptions { AttrKey = attrKey };
+            return lobbyDetail.CopyAttributeByKey(ref lobbyCopyAttributeByKeyOptions, out lobbyAttribute);
+        }
+
+        public static Result GetMemberAttribute(LobbyDetails lobbyDetail, ProductUserId productUserId, string attrKey,
+            out Attribute? lobbyAttribute)
+        {
+            var lobbyCopyMemberAttributeByKeyOptions = new LobbyDetailsCopyMemberAttributeByKeyOptions
+            {
+                AttrKey = attrKey,
+                TargetUserId = productUserId
+            };
+            return lobbyDetail.CopyMemberAttributeByKey(ref lobbyCopyMemberAttributeByKeyOptions, out lobbyAttribute);
+        }
     
-    public static List<ProductUserId> GetMembers(LobbyDetails lobbyDetails)
+        public static List<ProductUserId> GetMembers(LobbyDetails lobbyDetails)
         {
             var lobbyDetailsGetMemberCountOptions = new LobbyDetailsGetMemberCountOptions();
             var memberCount = lobbyDetails?.GetMemberCount(ref lobbyDetailsGetMemberCountOptions);
@@ -97,4 +99,5 @@ public class Lobby
 
             return attributes;
         }
+    }
 }

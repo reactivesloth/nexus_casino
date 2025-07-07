@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using EOSLobby.EOSCoroutines;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
 using Epic.OnlineServices.Connect;
@@ -10,7 +9,7 @@ using Credentials = Epic.OnlineServices.Connect.Credentials;
 using LoginCallbackInfo = Epic.OnlineServices.Connect.LoginCallbackInfo;
 using LoginOptions = Epic.OnlineServices.Connect.LoginOptions;
 
-namespace EOSLobby
+namespace Code.Network.Lobby.EOSCoroutines
 {
     public class ConnectLogin
     {

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Code.Network.Lobby;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace EOSLobby

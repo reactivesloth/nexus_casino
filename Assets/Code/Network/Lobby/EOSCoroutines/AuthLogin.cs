@@ -4,7 +4,7 @@ using Epic.OnlineServices.Auth;
 using FishNet.Plugins.FishyEOS.Util;
 using UnityEngine;
 
-namespace EOSLobby.EOSCoroutines
+namespace Code.Network.Lobby.EOSCoroutines
 {
     public class AuthLogin
     {

@@ -5,7 +5,7 @@ using FishNet.Plugins.FishyEOS.Util;
 using UnityEngine;
 using SystemInfo = UnityEngine.Device.SystemInfo;
 
-namespace EOSLobby
+namespace Code.Network.Lobby.EOSCoroutines
 {
     public class ConnectCreateDeviceId
     {

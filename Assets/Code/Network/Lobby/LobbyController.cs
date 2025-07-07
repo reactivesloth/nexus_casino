@@ -2,32 +2,31 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Code.API;
 using Code.Network.HostMigration;
-using EOSLobby;
+using Code.Network.Lobby.EOSCoroutines;
 using Epic.OnlineServices;
-using Epic.OnlineServices.Auth;
 using Epic.OnlineServices.Lobby;
 using FishNet;
-using FishNet.Transporting.FishyEOSPlugin;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Code.Network.Lobby.Data;
 
-namespace Code.Network
+namespace Code.Network.Lobby
 {
-    public class AutoLobbyConnector : MonoBehaviour
+    public class LobbyController : MonoBehaviour
     {
         private Coroutine _pollCoroutine;
 
-        private void Start()
-        {
-            //StartPollingLobbies();
-        }
+        // События для внешнего запуска сетевого соединения
+        public event Action OnHostReady;
+        public event Action OnClientReady;
 
         private void OnEnable()
         {
             LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyUpdateHost);
             LobbyEvents.Instance.LobbyMemberUpdateReceived.AddListener(OnMembersUpdate);
-            LobbyEvents.Instance.LobbyMemberStatusReceived.AddPersistentListener(OnLobbyMemberStatusReceived);
+            LobbyEvents.Instance.LobbyMemberStatusReceived.AddListener(OnLobbyMemberStatusReceived);
         }
 
         private void OnDisable()
@@ -55,12 +54,15 @@ namespace Code.Network
                 LobbyVariables.Instance.lobbyPopupUI.Show("Searching lobby...", "");
                 yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
 
+                // Обновляем массив найденных лобби
+                LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
+
                 var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
 
                 for (var i = 0; i < lobbyList.Count; i++)
                 {
                     var lobby = lobbyList[i];
-                    var lobbyVersionRequest = Lobby.GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttribute);
+                    var lobbyVersionRequest = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttribute);
                     if (lobbyVersionRequest != Result.Success || !versionAttribute.HasValue ||
                         versionAttribute?.Data?.Value.AsUtf8 != Application.version)
                         lobbyList.Remove(lobby);
@@ -76,9 +78,9 @@ namespace Code.Network
                     {
                         var randomLobby = lobies[Random.Range(0, lobies.Count)];
 
-                        Lobby.GetLobbyInfo(randomLobby, out var info);
+                        global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(randomLobby, out var info);
                         var maxMembers = info.Value.MaxMembers;
-                        var memberCount = Lobby.GetMembers(randomLobby).Count;
+                        var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(randomLobby).Count;
                         if (memberCount >= maxMembers)
                         {
                             lobies.Remove(randomLobby);
@@ -104,8 +106,8 @@ namespace Code.Network
         {
             StopPollingLobbies();
 
-            LobbyVariables.Instance.displayName.Value = $"Player{Random.Range(0, 1000):000}";
-            LobbyVariables.Instance.hostLobbyName.Value = $"Lobby{Random.Range(0, 1000):000}";
+            LobbyVariables.Instance.displayName.Value = GetPlayerName();
+            LobbyVariables.Instance.hostLobbyName.Value = GenerateRandomLobbyName();
 
             LobbyVariables.Instance.AuthData.displayName = LobbyVariables.Instance.displayName;
             var lobbyName = LobbyVariables.Instance.hostLobbyName;
@@ -135,7 +137,7 @@ namespace Code.Network
             if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
 
-            var result = Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
+            var result = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
             if (result != Result.Success)
             {
                 Debug.LogWarning($"[LobbyCode] Failed to get lobby details: {result}");
@@ -164,21 +166,17 @@ namespace Code.Network
 
             LobbyVariables.Instance.lobbyPopupUI.Hide();
 
-            var attributes = Lobby.GetAttributes(lobbyDetails);
-            currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
-            currentLobby.attributeValues =
-                attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
-
+            SetLobbyAttributes(currentLobby, lobbyDetails);
             lobbyDetails.Release();
 
-            StartHostConnection();
+            OnHostConnectionReady();
         }
 
         private IEnumerator OnJoinLobbyClickedRoutine(LobbyDetails lobbyDetails)
         {
             StopPollingLobbies();
             if (string.IsNullOrEmpty(LobbyVariables.Instance.displayName))
-                LobbyVariables.Instance.displayName.Value = $"Player{Random.Range(0, 1000):000}";
+                LobbyVariables.Instance.displayName.Value = GetPlayerName();
 
             yield return LocalUser.Get(out var localUser);
             var localUserId = localUser.Id;
@@ -202,7 +200,7 @@ namespace Code.Network
             }
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Info...");
-            var getLobbyInfoResult = Lobby.GetLobbyInfo(lobbyDetails, out var lobbyInfo);
+            var getLobbyInfoResult = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobbyDetails, out var lobbyInfo);
             if (getLobbyInfoResult != Result.Success)
             {
                 yield return LobbyVariables.Instance.lobbyPopupUI.PromptCoroutine(out _, "Error",
@@ -214,7 +212,7 @@ namespace Code.Network
             var lobbyId = lobbyInfo?.LobbyId;
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Name...");
-            var getAttributeResult = Lobby.GetAttribute(lobbyDetails, "NAME", out var lobbyNameAttribute);
+            var getAttributeResult = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobbyDetails, "NAME", out var lobbyNameAttribute);
             if (getAttributeResult != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to get lobby name: {getAttributeResult}");
             LobbyVariables.Instance.hostLobbyName.Value = lobbyNameAttribute?.Data?.Value.AsUtf8;
@@ -229,72 +227,11 @@ namespace Code.Network
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...");
-            var attributes = Lobby.GetAttributes(lobbyDetails);
-            currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
-            currentLobby.attributeValues =
-                attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
+            SetLobbyAttributes(currentLobby, lobbyDetails);
 
             LobbyVariables.Instance.lobbyPopupUI.Hide();
 
-            StartClientConnection();
-        }
-
-        public static void StartClientConnection()
-        {
-            var currentLobby = LobbyVariables.Instance.currentLobby;
-
-            var hostIdIndex = Array.IndexOf(currentLobby.attributeKeys, "HOST_ID");
-            if (hostIdIndex == -1)
-            {
-                Debug.LogWarning("[LobbyCode] Failed to get host id.");
-                return;
-            }
-
-            var hostId = currentLobby.attributeValues[hostIdIndex];
-
-            var networkManager = InstanceFinder.NetworkManager;
-            var fishyEOS = networkManager.GetComponent<FishyEOS>();
-            fishyEOS.RemoteProductUserId = hostId;
-            fishyEOS.AuthConnectData.loginCredentialType = LobbyVariables.Instance.AuthData.loginCredentialType;
-            fishyEOS.AuthConnectData.externalCredentialType =
-                LobbyVariables.Instance.AuthData.externalCredentialType;
-            fishyEOS.AuthConnectData.id = LobbyVariables.Instance.AuthData.id;
-            fishyEOS.AuthConnectData.token = LobbyVariables.Instance.AuthData.token;
-            fishyEOS.AuthConnectData.displayName =
-                LobbyVariables.Instance.AuthData.loginCredentialType == LoginCredentialType.Developer
-                    ? ""
-                    : LobbyVariables.Instance.AuthData.displayName;
-            
-            fishyEOS.gameObject.SetActive(true);
-            
-            if(networkManager.IsClientStarted)
-                networkManager.ClientManager.StopConnection();
-            networkManager.ClientManager.StartConnection();
-
-            LobbyVariables.Instance.lobbyGameUI.SetActive(true);
-            LobbyVariables.Instance.lobbyGame.SetActive(true);
-        }
-
-        public static void StartHostConnection()
-        {
-            var networkManager = InstanceFinder.NetworkManager;
-            var localUserId = LobbyVariables.Instance.ProductUserId;
-            var fishyEOS = networkManager.GetComponent<FishyEOS>();
-            fishyEOS.RemoteProductUserId = localUserId.ToString();
-            fishyEOS.AuthConnectData.loginCredentialType = LobbyVariables.Instance.AuthData.loginCredentialType;
-            fishyEOS.AuthConnectData.externalCredentialType = LobbyVariables.Instance.AuthData.externalCredentialType;
-            fishyEOS.AuthConnectData.id = LobbyVariables.Instance.AuthData.id;
-            fishyEOS.AuthConnectData.token = LobbyVariables.Instance.AuthData.token;
-            fishyEOS.AuthConnectData.displayName =
-                LobbyVariables.Instance.AuthData.loginCredentialType == LoginCredentialType.Developer
-                    ? ""
-                    : LobbyVariables.Instance.AuthData.displayName;
-            fishyEOS.gameObject.SetActive(true);
-            networkManager.ServerManager.StartConnection();
-            networkManager.ClientManager.StartConnection();
-
-            LobbyVariables.Instance.lobbyGameUI.SetActive(true);
-            LobbyVariables.Instance.lobbyGame.SetActive(true);
+            OnClientConnectionReady();
         }
 
         private void OnLobbyUpdateHost(LobbyUpdateReceivedCallbackInfo e)
@@ -304,7 +241,7 @@ namespace Code.Network
             if (currentLobby == null)
                 return;
 
-            var result = Lobby.GetLobbyDetails(out var lobbyDetails, e.LobbyId, localUserId);
+            var result = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyDetails(out var lobbyDetails, e.LobbyId, localUserId);
 
             if (result != Result.Success)
             {
@@ -314,12 +251,10 @@ namespace Code.Network
 
             if (currentLobby.attributeKeys == null)
                 return;
-            var isCanGetHostAttr = currentLobby.attributeKeys.Contains("HOST_ID");
-            var oldHostId = string.Empty;
-            if (isCanGetHostAttr)
-                oldHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
 
-            var attributes = Lobby.GetAttributes(lobbyDetails);
+            var oldHostId = currentLobby.Attributes.TryGetValue("HOST_ID", out var oldHostIdValue) ? oldHostIdValue : string.Empty;
+
+            var attributes = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttributes(lobbyDetails);
             lobbyDetails.Release();
             currentLobby.attributeKeys = new string[attributes.Count];
             currentLobby.attributeValues = new string[attributes.Count];
@@ -330,20 +265,16 @@ namespace Code.Network
                 currentLobby.attributeValues[i] = attributes[i]?.Data?.Value.AsUtf8;
             }
 
-            isCanGetHostAttr = currentLobby.attributeKeys.Contains("HOST_ID");
-            var newHostId = string.Empty;
-            if (isCanGetHostAttr)
-                newHostId = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "HOST_ID")];
+            var newHostId = currentLobby.Attributes.TryGetValue("HOST_ID", out var newHostIdValue) ? newHostIdValue : string.Empty;
 
-            
             Debug.Log($"[LobbyCode] New host id: {newHostId} | Old HostId: {oldHostId}");
-            
+
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
                 InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
-                StartClientConnection();
+                OnClientConnectionReady();
             }
-            
+
             UpdateMembers();
         }
 
@@ -365,23 +296,24 @@ namespace Code.Network
             var lobbyId = lobby.lobbyId;
             var lobbyMembers = lobby.lobbyMembers;
             var localUserId = LobbyVariables.Instance.ProductUserId;
-            Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
+            global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
             lobbyMembers.Clear();
-            foreach (var productUserId in Lobby.GetMembers(lobbyDetails))
+            foreach (var productUserId in global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(lobbyDetails))
             {
                 var getMemberAttributeResult =
-                    Lobby.GetMemberAttribute(lobbyDetails, productUserId, "NAME", out var memberName);
+                    global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMemberAttribute(lobbyDetails, productUserId, "NAME", out var memberName);
                 if (getMemberAttributeResult != Result.Success)
                     Debug.LogWarning(
                         $"[LobbyCode] Failed to get member name. {getMemberAttributeResult} - {productUserId}");
-                var allAttributes = Lobby.GetMemberAttributes(lobbyDetails, productUserId);
-                lobbyMembers.Add(new LobbyData.LobbyMember
+                var allAttributes = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMemberAttributes(lobbyDetails, productUserId);
+                var member = new LobbyData.LobbyMember
                 {
                     displayName = memberName?.Data?.Value.AsUtf8,
                     ProductUserId = productUserId,
                     attributeKeys = allAttributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray(),
                     attributeValues = allAttributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray()
-                });
+                };
+                lobbyMembers.Add(member);
             }
 
             if (!InstanceFinder.NetworkManager.IsServerStarted)
@@ -392,14 +324,11 @@ namespace Code.Network
             if (lobby.attributeKeys == null)
                 return;
 
-            var isCanGetNextHostAttr = lobby.attributeKeys.Contains("NEXT_HOST_ID");
-            var nextHostId = string.Empty;
-
-            if (isCanGetNextHostAttr)
-                nextHostId = lobby.attributeValues[Array.IndexOf(lobby.attributeKeys, "NEXT_HOST_ID")];
+            if (!lobby.Attributes.TryGetValue("NEXT_HOST_ID", out var nextHostId))
+                nextHostId = string.Empty;
 
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
-                m.productUserId == nextHostId && m.productUserId != LobbyVariables.Instance.productUserId);
+                m.Attributes.TryGetValue("productUserId", out var id) && id == nextHostId && id != LobbyVariables.Instance.productUserId);
             if (nextHostMember == null)
                 OnNextHostDisconnected();
         }
@@ -415,8 +344,28 @@ namespace Code.Network
             var nextHostMember = members.FirstOrDefault(m => m.productUserId != LobbyVariables.Instance.productUserId);
             if (nextHostMember == null)
                 return;
-            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.productUserId);
+            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.ProductUserId.ToString());
         }
+
+        private void OnHostConnectionReady()
+        {
+            OnHostReady?.Invoke();
+        }
+
+        private void OnClientConnectionReady()
+        {
+            OnClientReady?.Invoke();
+        }
+
+        private void SetLobbyAttributes(LobbyData currentLobby, LobbyDetails lobbyDetails)
+        {
+            var attributes = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttributes(lobbyDetails);
+            currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
+            currentLobby.attributeValues = attributes.Select(x => x?.Data?.Value.AsUtf8).Select(x => (string)x).ToArray();
+        }
+
+        private string GetPlayerName() => ClientDataStorage.UserData.username;
+        private string GenerateRandomLobbyName() => $"Lobby{Random.Range(0, 1000):000}";
 
         #region InternalClasses
 

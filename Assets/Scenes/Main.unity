@@ -2501,7 +2501,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 202534970}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc8254f485e1402d868827a6ce2bd17b, type: 3}
+  m_Script: {fileID: 11500000, guid: 0338c2a73f37273458f8bad6bae54add, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   displayName:
@@ -2509,19 +2509,9 @@ MonoBehaviour:
   productUserId: 
   hostLobbyName:
     value: 
-  maxLobbyUsers: 64
+  maxLobbyUsers: 5
   bucketId: MyBucket
-  editorAuthData:
-    loginCredentialType: 3
-    externalCredentialType: 10
-    id: 
-    token: 
-    displayName: FishyEOS
-    automaticallyCreateDeviceId: 1
-    automaticallyCreateConnectAccount: 1
-    authScopeFlags: 0
-    timeout: 30
-  buildAuthData:
+  authData:
     loginCredentialType: 3
     externalCredentialType: 10
     id: 
@@ -2534,23 +2524,12 @@ MonoBehaviour:
   currentLobby:
     lobbyId: 
     lobbyName: 
-    maxPlayers: 64
+    maxPlayers: 0
     lobbyMembers: []
     attributeKeys: []
     attributeValues: []
-  pollLobbiesInterval: 2
-  lobbyChatMessages: []
-  lobbyBrowserUI: {fileID: 0}
-  lobbyRoomUI: {fileID: 0}
-  lobbyGameUI: {fileID: 1857053249}
-  lobbyGame: {fileID: 97996624}
+  pollLobbiesInterval: 5
   lobbyPopupUI: {fileID: 50506566}
-  lobbyListContent: {fileID: 0}
-  userListContent: {fileID: 0}
-  hostStartGameButton: {fileID: 0}
-  selfReadyToggle: {fileID: 0}
-  chatInputField: {fileID: 0}
-  chatText: {fileID: 0}
 --- !u!1001 &204342542
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4541,7 +4520,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a300d010f57451488aa99000126fbd5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  starterAssetsInputs: {fileID: 0}
 --- !u!1001 &384109784
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5841,50 +5819,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scrollSpeed: {x: 0.01, y: 0}
   materialID: 0
---- !u!1 &508018332
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 508018334}
-  - component: {fileID: 508018333}
-  m_Layer: 0
-  m_Name: LobbyCode
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!114 &508018333
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 508018332}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 04e1d0c646a4f044fae90cc0af973d18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &508018334
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 508018332}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &513490097
 GameObject:
   m_ObjectHideFlags: 0
@@ -10649,7 +10583,7 @@ GameObject:
   - component: {fileID: 1002821651}
   - component: {fileID: 1002821652}
   m_Layer: 0
-  m_Name: AutoLobby
+  m_Name: LobbyController
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -18233,7 +18167,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737779939}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
@@ -22879,6 +22813,51 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -2708398550796609408, guid: efb4101d4450de544bdaedf929245ac5, type: 3}
+--- !u!1 &2093711695
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2093711697}
+  - component: {fileID: 2093711696}
+  m_Layer: 0
+  m_Name: FishNetConnecter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &2093711696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2093711695}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a04206ebef9e4c147abfe7d8a0fadfda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyController: {fileID: 1002821652}
+--- !u!4 &2093711697
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2093711695}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2097799839 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6675782819818290665, guid: 386c2019f6b111b4d94da8fa67a2e697, type: 3}
@@ -23644,10 +23623,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 448cd6d8e2f2cb04096e777d99974bc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonStateOutputEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - {m_Target: {fileID: 383302920}, m_TargetAssemblyTypeName: StarterAssets.UICanvasControllerInput, Assembly-CSharp: }
 --- !u!1 &194445529210882481
 GameObject:
   m_ObjectHideFlags: 0
@@ -25032,16 +25007,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2cb8c4d669392748bb924209de33b85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  containerRect: {fileID: 4700314799255779358}
-  handleRect: {fileID: 9139165771172205728}
-  joystickRange: 100
-  magnitudeMultiplier: 1
-  invertXOutputValue: 0
-  invertYOutputValue: 0
-  joystickOutputEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - {m_Target: {fileID: 383302920}, m_TargetAssemblyTypeName: StarterAssets.UICanvasControllerInput, Assembly-CSharp: }
 --- !u!23 &5983508487663374635
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -25297,16 +25262,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f2cb8c4d669392748bb924209de33b85, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  containerRect: {fileID: 8160084293297639839}
-  handleRect: {fileID: 5679172027798666529}
-  joystickRange: 60
-  magnitudeMultiplier: 30
-  invertXOutputValue: 0
-  invertYOutputValue: 1
-  joystickOutputEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - {m_Target: {fileID: 383302920}, m_TargetAssemblyTypeName: StarterAssets.UICanvasControllerInput, Assembly-CSharp: }
 --- !u!224 &7113428976884232718
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25597,10 +25552,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 448cd6d8e2f2cb04096e777d99974bc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  buttonStateOutputEvent:
-    m_PersistentCalls:
-      m_Calls:
-      - {m_Target: {fileID: 383302920}, m_TargetAssemblyTypeName: StarterAssets.UICanvasControllerInput, Assembly-CSharp: }
 --- !u!224 &8734538515461244056
 RectTransform:
   m_ObjectHideFlags: 0
@@ -25911,9 +25862,9 @@ SceneRoots:
   - {fileID: 50506565}
   - {fileID: 1737779943}
   - {fileID: 873410246}
+  - {fileID: 2093711697}
   - {fileID: 386071122}
   - {fileID: 202534971}
-  - {fileID: 508018334}
   - {fileID: 1002821651}
   - {fileID: 323944153}
   - {fileID: 597308371062931948}

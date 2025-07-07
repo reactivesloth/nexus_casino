@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using Code.Network.Lobby;
+using TMPro;
 using UnityEngine;
 
 namespace EOSLobby

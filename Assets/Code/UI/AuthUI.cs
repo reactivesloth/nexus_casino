@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Code.API;
 using Code.API.Models;
 using Code.Network;
+using Code.Network.Lobby;
 using Proyecto26;
 using Proyecto26.Helper;
 using TMPro;
@@ -326,7 +327,7 @@ namespace Code.UI
 
         private void OnUserCanStartGame()
         {
-            var lobbyController = FindAnyObjectByType<AutoLobbyConnector>();
+            var lobbyController = FindAnyObjectByType<LobbyController>();
             lobbyController.StartPollingLobbies();
             gameObject.SetActive(false);
             //TODO: Start Game

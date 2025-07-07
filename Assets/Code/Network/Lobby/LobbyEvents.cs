@@ -1,11 +1,12 @@
-﻿using EOSLobby.EOSCoroutines;
+﻿using Code.Network.Lobby.EOSCoroutines;
+using EOSLobby;
 using Epic.OnlineServices.Lobby;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-namespace EOSLobby
+namespace Code.Network.Lobby
 {
     [DefaultExecutionOrder(-20)]
     public class LobbyEvents : MonoBehaviour

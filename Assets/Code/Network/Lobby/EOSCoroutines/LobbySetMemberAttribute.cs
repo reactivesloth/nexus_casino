@@ -4,7 +4,7 @@ using Epic.OnlineServices.Lobby;
 using FishNet.Plugins.FishyEOS.Util;
 using UnityEngine;
 
-namespace EOSLobby
+namespace Code.Network.Lobby.EOSCoroutines
 {
     public class LobbySetMemberAttribute
     {
