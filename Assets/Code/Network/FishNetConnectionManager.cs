@@ -103,7 +103,9 @@ namespace Code.Network
         private void OnLocalHost()
         {
             Debug.Log("I am a new host!");
+            
             StartHostConnection();
+            lobbyController.UpdateHost(LobbyVariables.Instance.productUserId);
         }
         
         private void OnRemoteHost(string newHostId)

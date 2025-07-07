@@ -506,6 +506,20 @@ namespace Code.Network.Lobby
             return all.Where(filter).ToArray();
         }
 
+        public void UpdateHost(string newHostId)
+        {
+            StartCoroutine(UpdateHostCoroutine(newHostId));
+        }
+
+        private IEnumerator UpdateHostCoroutine(string newHostId)
+        {
+            yield return LobbyUpdateLobby.Run(out var updateLobbyHostId, LobbyVariables.Instance.currentLobby.lobbyId,
+                "HOST_ID", newHostId);
+            if (updateLobbyHostId.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogError(
+                    $"[HostMigrator] Failed to set lobby member host id: {updateLobbyHostId.CallbackInfo?.ResultCode}");
+        }
+
         #region InternalClasses
 
         private class LocalUser
