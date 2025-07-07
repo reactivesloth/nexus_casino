@@ -95,13 +95,14 @@ namespace Code.Network
         
         private void OnCurrentHostDisconnected(string newHostId)
         {
+            Debug.Log($"I am a new host {newHostId}?");
             if (newHostId == LobbyVariables.Instance.productUserId)
                 OnLocalHost();
         }
         
         private void OnLocalHost()
         {
-            Debug.Log("I am a new host");
+            Debug.Log("I am a new host!");
             StartHostConnection();
         }
         

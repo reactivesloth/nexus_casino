@@ -318,6 +318,16 @@ namespace Code.Network.Lobby
                 lobbyMembers.Add(member);
             }
 
+            if (!lobby.Attributes.TryGetValue("NEXT_HOST_ID", out var nextHostId))
+                nextHostId = string.Empty;
+            
+            if (!lobby.Attributes.TryGetValue("HOST_ID", out var currentHostId))
+                currentHostId = string.Empty;
+            var currentHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == currentHostId);
+            Debug.Log(currentHostMember?.productUserId);
+            if (currentHostMember == null)
+                OnCurrentHostDisconnected?.Invoke(nextHostId);
+            
             if (!InstanceFinder.NetworkManager.IsServerStarted)
                 return;
 
@@ -326,19 +336,10 @@ namespace Code.Network.Lobby
             if (lobby.attributeKeys == null)
                 return;
 
-            if (!lobby.Attributes.TryGetValue("NEXT_HOST_ID", out var nextHostId))
-                nextHostId = string.Empty;
-
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
                 m.Attributes.TryGetValue("productUserId", out var id) && id == nextHostId && id != LobbyVariables.Instance.productUserId);
             if (nextHostMember == null || nextHostMember.productUserId == lobby.Attributes["HOST_ID"])
                 OnNextHostDisconnected();
-            
-            if (!lobby.Attributes.TryGetValue("HOST_ID", out var currentHostId))
-                currentHostId = string.Empty;
-            var currentHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == currentHostId);
-            if (currentHostMember == null)
-                OnCurrentHostDisconnected?.Invoke(nextHostId);
         }
 
         private void OnNextHostDisconnected()
