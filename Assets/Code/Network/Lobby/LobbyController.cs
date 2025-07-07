@@ -268,15 +268,12 @@ namespace Code.Network.Lobby
             }
 
             var newHostId = currentLobby.Attributes.TryGetValue("HOST_ID", out var newHostIdValue) ? newHostIdValue : string.Empty;
-
-            Debug.Log($"[LobbyCode] New host id: {newHostId} | Old HostId: {oldHostId}");
-
+            
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
                 // Вызываем событие смены хоста
                 OnHostChanged?.Invoke(newHostId);
                 InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
-                OnClientConnectionReady();
             }
 
             UpdateMembers();
@@ -333,7 +330,7 @@ namespace Code.Network.Lobby
 
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
                 m.Attributes.TryGetValue("productUserId", out var id) && id == nextHostId && id != LobbyVariables.Instance.productUserId);
-            if (nextHostMember == null)
+            if (nextHostMember == null || nextHostMember.productUserId == lobby.Attributes["HOST_ID"])
                 OnNextHostDisconnected();
         }
 
@@ -346,9 +343,8 @@ namespace Code.Network.Lobby
             var lobbyId = lobby.lobbyId;
 
             var nextHostMember = members.FirstOrDefault(m => m.productUserId != LobbyVariables.Instance.productUserId);
-            if (nextHostMember == null)
-                return;
-            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostMember.ProductUserId.ToString());
+            var nextHostId = nextHostMember == null ? string.Empty : nextHostMember.productUserId;
+            LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NEXT_HOST_ID", nextHostId);
         }
 
         private void OnHostConnectionReady()
