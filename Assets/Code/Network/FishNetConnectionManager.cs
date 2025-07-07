@@ -22,6 +22,7 @@ namespace Code.Network
                 lobbyController.OnHostReady += StartHostConnection;
                 lobbyController.OnClientReady += StartClientConnection;
                 lobbyController.OnHostChanged += OnHostChanged;
+                lobbyController.OnCurrentHostDisconnected += OnCurrentHostDisconnected;
             }
         }
 
@@ -32,6 +33,7 @@ namespace Code.Network
                 lobbyController.OnHostReady -= StartHostConnection;
                 lobbyController.OnClientReady -= StartClientConnection;
                 lobbyController.OnHostChanged -= OnHostChanged;
+                lobbyController.OnCurrentHostDisconnected -= OnCurrentHostDisconnected;
             }
         }
 
@@ -87,16 +89,20 @@ namespace Code.Network
         
         private void OnHostChanged(string newHostId)
         {
-            if (newHostId == LobbyVariables.Instance.productUserId)
-                OnLocalHost();
-            else
+            if (newHostId != LobbyVariables.Instance.productUserId)
                 OnRemoteHost(newHostId);
         }
-
+        
+        private void OnCurrentHostDisconnected(string newHostId)
+        {
+            if (newHostId == LobbyVariables.Instance.productUserId)
+                OnLocalHost();
+        }
+        
         private void OnLocalHost()
         {
             Debug.Log("I am a new host");
-            //StartHostConnection();
+            StartHostConnection();
         }
         
         private void OnRemoteHost(string newHostId)

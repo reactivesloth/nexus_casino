@@ -23,6 +23,7 @@ namespace Code.Network.Lobby
         public event Action OnClientReady;
         // Событие смены хоста
         public event Action<string> OnHostChanged;
+        public event Action<string> OnCurrentHostDisconnected;
 
         private void OnEnable()
         {
@@ -332,9 +333,15 @@ namespace Code.Network.Lobby
                 m.Attributes.TryGetValue("productUserId", out var id) && id == nextHostId && id != LobbyVariables.Instance.productUserId);
             if (nextHostMember == null || nextHostMember.productUserId == lobby.Attributes["HOST_ID"])
                 OnNextHostDisconnected();
+            
+            if (!lobby.Attributes.TryGetValue("HOST_ID", out var currentHostId))
+                currentHostId = string.Empty;
+            var currentHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == currentHostId);
+            if (currentHostMember == null)
+                OnCurrentHostDisconnected?.Invoke(nextHostId);
         }
 
-        public static void OnNextHostDisconnected()
+        private void OnNextHostDisconnected()
         {
             var lobby = LobbyVariables.Instance.currentLobby;
             var members = lobby.lobbyMembers;
