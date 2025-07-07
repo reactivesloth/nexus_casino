@@ -3,30 +3,24 @@ using System.Collections;
 using System.Linq;
 using FishNet.Object;
 using FishNet.Connection;
-using Code.Player; // Namespace containing PlayerMovementController
+using Code.Player;
 
 namespace Code.InteractionSystem
 {
-    /// <summary>
-    /// Abstract base class for all networked interactable objects with simple occupancy.
-    /// </summary>
-    
     public class SitInteractable : Interactable
     {
-        [Header("Sit Settings")]
-        [SerializeField, Tooltip("Speed of movement into sit position.")] private float moveSpeed = 2f;
-        [SerializeField, Tooltip("Delay before standing up.")] private float standUpDelay = 0.5f;
+        [Header("Sit Settings")] [SerializeField]
+        private Transform sitPoint;
 
-        [Header("Interaction Settings")]
-        [SerializeField, Tooltip("Transform specifying where the player should sit.")] private Transform sitPoint;
+        const string SIT_TRIGGER = "TriggerSit";
+        const string STAND_TRIGGER = "TriggerStand";
+        const string SIT_STATE = "Sitting";
+        const string STAND_STATE = "Movement";
 
-        // Client side state
-        private bool _isSitting = false;
-        private Vector3 _origPos;
-        private Quaternion _origRot;
-        private Coroutine _routine;
-
-        //public override string InteractionPrompt => !_isSitting && !IsOccupied ? "Sit" : _isSitting ? "Stand Up" : "Occupied";
+        private bool _isSitting;
+        private Coroutine _sitRoutine;
+        private Vector3 _savedPos;
+        private Quaternion _savedRot;
 
         private void Awake()
         {
@@ -36,74 +30,78 @@ namespace Code.InteractionSystem
 
         protected override void OnInteract(NetworkConnection conn)
         {
+            base.OnInteract(conn);
             TargetToggleSit(conn);
         }
 
         protected override void OnEndInteract(NetworkConnection conn)
         {
+            base.OnEndInteract(conn);
             TargetToggleSit(conn);
         }
-        
+
         [TargetRpc]
-        private void TargetToggleSit(NetworkConnection connection)
+        private void TargetToggleSit(NetworkConnection conn)
         {
-            // Retrieve the local player's movement controller by ownership
             var movement = FindObjectsOfType<PlayerMovementController>()
                 .First(m => m.Owner.IsLocalClient);
-            var controller = movement.GetComponent<CharacterController>();
-            var animator = movement.GetComponent<Animator>();
-            var playerTf = movement.transform;
+            var cc = movement.GetComponent<CharacterController>();
+            var anim = movement.GetComponent<Animator>();
+            var tf = movement.transform;
 
-            if (_routine != null)
-                StopCoroutine(_routine);
+            if (_sitRoutine != null)
+                StopCoroutine(_sitRoutine);
 
-            if (_isSitting)
-                _routine = StartCoroutine(StandUp(controller, movement, animator, playerTf));
-            else
-                _routine = StartCoroutine(SitDown(controller, movement, animator, playerTf));
+            _sitRoutine = StartCoroutine(
+                _isSitting
+                    ? StandUpFlow(movement, anim, cc, tf)
+                    : SitDownFlow(movement, anim, cc, tf)
+            );
         }
 
-        private IEnumerator SitDown(CharacterController controller, PlayerMovementController movement,
-            Animator animator, Transform playerTf)
+        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
         {
             _isSitting = true;
-            _origPos = playerTf.position;
-            _origRot = playerTf.rotation;
-            controller.enabled = false;
-            movement.CanMove = false;
+            move.CanMove = false;
+            cc.enabled = false;
+            anim.applyRootMotion = true;
+            anim.SetTrigger(SIT_TRIGGER);
 
-            float t = 0f;
-            Vector3 start = _origPos;
-            Quaternion rotStart = _origRot;
-            Vector3 end = sitPoint.position;
-            Quaternion rotEnd = sitPoint.rotation;
+            _savedPos = tf.position;
+            _savedRot = tf.rotation;
+            tf.position = sitPoint.position;
+            tf.rotation = sitPoint.rotation;
 
-            while (t < 1f)
-            {
-                t += Time.deltaTime * moveSpeed;
-                playerTf.position = Vector3.Lerp(start, end, t);
-                playerTf.rotation = Quaternion.Slerp(rotStart, rotEnd, t);
-                yield return null;
-            }
+            yield return new WaitUntil(() =>
+                anim.GetCurrentAnimatorStateInfo(0).IsName(SIT_STATE)
+            );
 
-            animator.SetBool("IsSitting", true);
+            // lock into chair
+            //tf.SetParent(sitPoint, false);
+            anim.applyRootMotion = false;
+            _sitRoutine = null;
         }
 
-        private IEnumerator StandUp(CharacterController controller, PlayerMovementController movement,
-            Animator animator, Transform playerTf)
+        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
         {
-            animator.SetBool("IsSitting", false);
-            yield return new WaitForSeconds(standUpDelay);
-
-            playerTf.position = _origPos;
-            playerTf.rotation = _origRot;
-            controller.enabled = true;
-            movement.CanMove = true;
             _isSitting = false;
-            _routine = null;
+            anim.applyRootMotion = true;
+            anim.SetTrigger(STAND_TRIGGER);
 
-            // Release occupancy on server
-            ReleaseInteractable();
+            yield return new WaitUntil(() =>
+                anim.GetCurrentAnimatorStateInfo(0).IsName(STAND_STATE)
+            );
+
+            tf.position = _savedPos;
+            tf.rotation = _savedRot;
+            anim.applyRootMotion = false;
+            cc.enabled = true;
+            move.CanMove = true;
+
+            // server-side release happens via base.OnEndInteract called earlier
+            _sitRoutine = null;
         }
     }
 }

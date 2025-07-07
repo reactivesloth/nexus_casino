@@ -5,6 +5,7 @@ using FishNet.Object.Synchronizing;
 
 namespace Code.InteractionSystem
 {
+    [RequireComponent(typeof(NetworkObject))]
     public abstract class Interactable : NetworkBehaviour
     {
         [Header("Interaction Settings")]
@@ -74,7 +75,7 @@ namespace Code.InteractionSystem
 
         /// <summary>Releases occupancy, making object free again.</summary>
         [Server]
-        protected void ReleaseInteractable()
+        public void ReleaseInteractable()
         {
             _isOccupied.Value = false;
         }
@@ -87,7 +88,7 @@ namespace Code.InteractionSystem
         }
 
         // Override for custom logic on start
-        protected abstract void OnInteract(NetworkConnection conn);
+        protected virtual void OnInteract(NetworkConnection conn) {}
         // Override for custom logic on end (for manualRelease)
         protected virtual void OnEndInteract(NetworkConnection conn) { }
     }
