@@ -10,10 +10,9 @@ namespace Code.Network
     {
         [SerializeField] private LobbyController lobbyController;
 
-        private void Awake()
+        private void OnValidate()
         {
-            if (lobbyController == null)
-                lobbyController = FindObjectOfType<LobbyController>();
+            lobbyController ??= FindAnyObjectByType<LobbyController>();
         }
 
         private void OnEnable()
@@ -22,6 +21,7 @@ namespace Code.Network
             {
                 lobbyController.OnHostReady += StartHostConnection;
                 lobbyController.OnClientReady += StartClientConnection;
+                lobbyController.OnHostChanged += OnHostChanged;
             }
         }
 
@@ -31,10 +31,11 @@ namespace Code.Network
             {
                 lobbyController.OnHostReady -= StartHostConnection;
                 lobbyController.OnClientReady -= StartClientConnection;
+                lobbyController.OnHostChanged -= OnHostChanged;
             }
         }
 
-        private void StartHostConnection()
+        public static void StartHostConnection()
         {
             var networkManager = InstanceFinder.NetworkManager;
             var localUserId = LobbyVariables.Instance.ProductUserId;
@@ -45,7 +46,8 @@ namespace Code.Network
             fishyEOS.AuthConnectData.id = LobbyVariables.Instance.AuthData.id;
             fishyEOS.AuthConnectData.token = LobbyVariables.Instance.AuthData.token;
             fishyEOS.AuthConnectData.displayName =
-                LobbyVariables.Instance.AuthData.loginCredentialType == Epic.OnlineServices.Auth.LoginCredentialType.Developer
+                LobbyVariables.Instance.AuthData.loginCredentialType ==
+                Epic.OnlineServices.Auth.LoginCredentialType.Developer
                     ? ""
                     : LobbyVariables.Instance.AuthData.displayName;
             fishyEOS.gameObject.SetActive(true);
@@ -55,7 +57,7 @@ namespace Code.Network
             // UI/game activation можно оставить на стороне LobbyController
         }
 
-        private void StartClientConnection()
+        public static void StartClientConnection()
         {
             var currentLobby = LobbyVariables.Instance.currentLobby;
             if (currentLobby == null || !currentLobby.Attributes.TryGetValue("HOST_ID", out var hostId))
@@ -72,7 +74,8 @@ namespace Code.Network
             fishyEOS.AuthConnectData.id = LobbyVariables.Instance.AuthData.id;
             fishyEOS.AuthConnectData.token = LobbyVariables.Instance.AuthData.token;
             fishyEOS.AuthConnectData.displayName =
-                LobbyVariables.Instance.AuthData.loginCredentialType == Epic.OnlineServices.Auth.LoginCredentialType.Developer
+                LobbyVariables.Instance.AuthData.loginCredentialType ==
+                Epic.OnlineServices.Auth.LoginCredentialType.Developer
                     ? ""
                     : LobbyVariables.Instance.AuthData.displayName;
             fishyEOS.gameObject.SetActive(true);
@@ -81,5 +84,25 @@ namespace Code.Network
                 networkManager.ClientManager.StopConnection();
             networkManager.ClientManager.StartConnection();
         }
+        
+        private void OnHostChanged(string newHostId)
+        {
+            if (newHostId == LobbyVariables.Instance.productUserId)
+                OnLocalHost();
+            else
+                OnRemoteHost(newHostId);
+        }
+
+        private void OnLocalHost()
+        {
+            Debug.Log("I am a new host");
+            //StartHostConnection();
+        }
+        
+        private void OnRemoteHost(string newHostId)
+        {
+            Debug.Log($"Connect to new host. ID: {newHostId}");
+            StartClientConnection();
+        }
     }
-} 
+}

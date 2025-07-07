@@ -14,7 +14,6 @@ namespace Code.Network
 {
     public class DisconnectHandler : MonoBehaviour
     {
-        private ServerManager _serverManager;
         private ClientManager _clientManager;
         private HostMigrator _hostMigrator;
         
@@ -24,7 +23,6 @@ namespace Code.Network
         {
             InstanceFinder.RegisterInstance(this);
             
-            _serverManager = InstanceFinder.ServerManager;
             _clientManager = InstanceFinder.ClientManager;
             _hostMigrator = InstanceFinder.NetworkManager.GetComponent<HostMigrator>();
         }
@@ -39,6 +37,9 @@ namespace Code.Network
             _clientManager.OnClientConnectionState -= ClientManagerOnOnClientConnectionState;
         }
         
+        /// <summary>
+        /// Must be executed when a user initiates disconnect
+        /// </summary>
         public void MarkAsUserInitiatedDisconnect() => _isUserInitiatedDisconnect = true;
 
         private void Migrate()
@@ -54,6 +55,7 @@ namespace Code.Network
             if(obj.ConnectionState == LocalConnectionState.Stopped) 
                 if(!_isUserInitiatedDisconnect)
                     Migrate();
+            _isUserInitiatedDisconnect = false;
         }
         
         private IEnumerator MigrateAsHost()
@@ -61,7 +63,7 @@ namespace Code.Network
             var productId = LobbyVariables.Instance.ProductUserId.ToString();
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
             
-            // LobbyController.StartHostConnection();
+            FishNetConnectionManager.StartHostConnection();
             
             yield return LobbyUpdateLobby.Run(out var updateLobbyHostId, lobbyId, "HOST_ID", productId);
             if (updateLobbyHostId.CallbackInfo?.ResultCode != Result.Success)
@@ -73,15 +75,13 @@ namespace Code.Network
         private bool HasCurrentClientIsNewHost()
         {
             var currentLobby = LobbyVariables.Instance.currentLobby;
-            var lobbyMembers = currentLobby.lobbyMembers;
-            
-            var next = currentLobby.attributeValues[Array.IndexOf(currentLobby.attributeKeys, "NEXT_HOST_ID")];
-            var ownId = LobbyVariables.Instance.productUserId;
 
-            if (lobbyMembers.Count == 0)
+            if (!currentLobby.Attributes.TryGetValue("NEXT_HOST_ID", out var value))
                 return false;
             
-            return next == ownId;
+            var ownId = LobbyVariables.Instance.productUserId;
+            
+            return value == ownId;
         }
     }
 }

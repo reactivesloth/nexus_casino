@@ -21,6 +21,8 @@ namespace Code.Network.Lobby
         // События для внешнего запуска сетевого соединения
         public event Action OnHostReady;
         public event Action OnClientReady;
+        // Событие смены хоста
+        public event Action<string> OnHostChanged;
 
         private void OnEnable()
         {
@@ -271,6 +273,8 @@ namespace Code.Network.Lobby
 
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
+                // Вызываем событие смены хоста
+                OnHostChanged?.Invoke(newHostId);
                 InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
                 OnClientConnectionReady();
             }
@@ -366,6 +370,113 @@ namespace Code.Network.Lobby
 
         private string GetPlayerName() => ClientDataStorage.UserData.username;
         private string GenerateRandomLobbyName() => $"Lobby{Random.Range(0, 1000):000}";
+
+        // === Ручное создание лобби ===
+        public void CreateLobbyManual(string lobbyName, uint maxPlayers, string bucketId = null)
+        {
+            StartCoroutine(OnManualLobbyCreateRoutine(lobbyName, maxPlayers, bucketId ?? LobbyVariables.Instance.bucketId));
+        }
+
+        private IEnumerator OnManualLobbyCreateRoutine(string lobbyName, uint maxPlayers, string bucketId)
+        {
+            StopPollingLobbies();
+
+            LobbyVariables.Instance.displayName.Value = GetPlayerName();
+            LobbyVariables.Instance.hostLobbyName.Value = lobbyName;
+
+            LobbyVariables.Instance.AuthData.displayName = LobbyVariables.Instance.displayName;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Logging in...");
+            yield return LocalUser.Get(out var localUser);
+            var localUserId = localUser.Id;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Creating Lobby...");
+            yield return LobbyCreateLobby.Run(out var createLobby, localUserId, maxPlayers, bucketId);
+            if (createLobby.CallbackInfo?.ResultCode != Result.Success)
+            {
+                LobbyVariables.Instance.hostLobbyName.Value = string.Empty;
+                yield return LobbyVariables.Instance.lobbyPopupUI.PromptCoroutine(out _, "Error",
+                    createLobby.CallbackInfo?.ResultCode.ToString());
+                yield break;
+            }
+
+            var lobbyId = createLobby.CallbackInfo?.LobbyId;
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
+            yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, "PRODUCT_VERSION",
+                Application.version);
+            yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName);
+            if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
+
+            var result = Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyDetails(out var lobbyDetails, lobbyId, localUserId);
+            if (result != Result.Success)
+            {
+                Debug.LogWarning($"[LobbyCode] Failed to get lobby details: {result}");
+            }
+
+            var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxPlayers };
+            LobbyVariables.Instance.currentLobby = currentLobby;
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...");
+            yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, "NAME",
+                LobbyVariables.Instance.displayName);
+            if (setName.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Ready...");
+            yield return LobbySetMemberAttribute.Run(out var setReady, lobbyId, localUserId, "READY",
+                "Ready");
+            if (setReady.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to set lobby member ready: {setReady.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...");
+            yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID",
+                localUserId.ToString());
+            if (setId.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
+
+            LobbyVariables.Instance.lobbyPopupUI.Hide();
+
+            SetLobbyAttributes(currentLobby, lobbyDetails);
+            lobbyDetails.Release();
+
+            OnHostConnectionReady();
+        }
+
+        // === Ручное подключение к лобби по HOST_ID ===
+        public void JoinLobbyByHostId(string hostId)
+        {
+            StartCoroutine(OnJoinLobbyByHostIdRoutine(hostId));
+        }
+
+        private IEnumerator OnJoinLobbyByHostIdRoutine(string hostId)
+        {
+            yield return LocalUser.Get(out var localUser);
+            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+
+            var lobby = searchLobbies.LobbyDetailsArray
+                .FirstOrDefault(l =>
+                    Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "HOST_ID", out var attr) == Epic.OnlineServices.Result.Success &&
+                    attr?.Data.Value.Value.AsUtf8 == hostId);
+
+            if (lobby != null)
+                StartCoroutine(OnJoinLobbyClickedRoutine(lobby));
+            else
+                Debug.LogWarning($"[LobbyController] Lobby with HOST_ID {hostId} not found.");
+        }
+
+        // === Возврат всех лобби ===
+        public LobbyDetails[] GetAllLobbies()
+        {
+            return LobbyVariables.Instance.searchResults ?? Array.Empty<LobbyDetails>();
+        }
+
+        // === Возврат списка лобби по фильтру ===
+        public LobbyDetails[] GetLobbiesByFilter(Func<LobbyDetails, bool> filter)
+        {
+            var all = GetAllLobbies();
+            return all.Where(filter).ToArray();
+        }
 
         #region InternalClasses
 
