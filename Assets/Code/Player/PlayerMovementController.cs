@@ -55,6 +55,18 @@ namespace Code.Player
         
         public GameObject CinemachineCameraTarget => cinemachineCameraTarget;
         
+        [Header("IK Settings")]
+        [SerializeField, Tooltip("Скорость перехода веса IK (1 = за 1 секунду)")]
+        private float ikTransitionSpeed = 5f;
+        [SerializeField, Tooltip("Скорость сглаживания позиции точки взгляда")]
+        private float lookAtSmoothSpeed = 5f;
+        [SerializeField, Range(0f,1f), Tooltip("Насколько жёстко ограничивать поворот головы")]
+        private float lookAtClampWeight = 0.5f;
+
+        private float currentIkWeight = 0f;
+        private Vector3 currentLookAtPos;
+        
+        
         private bool grounded;
         private float cameraDistance = 0.5f;
         private float savedDistance = 0.5f;
@@ -92,6 +104,7 @@ namespace Code.Player
         private int animIDFPV;
         
         private const float Threshold = 0.01f;
+        private bool smoothedFirstPerson;
 
         private void Awake()
         {
@@ -108,6 +121,12 @@ namespace Code.Player
 
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
+            
+            if (animator != null)
+            {
+                var head = animator.GetBoneTransform(HumanBodyBones.Head);
+                currentLookAtPos = head.position + cinemachineCameraTarget.transform.forward * 10f;
+            }
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
@@ -209,7 +228,10 @@ namespace Code.Player
             cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100;
             cameraDistance = Mathf.Clamp(cameraDistance, 0, 1);
 
-            FirstPersonView = cameraDistance < 0.1f;
+            if (cameraDistance < 0.05f) smoothedFirstPerson = true;
+            else if (cameraDistance > 0.15f) smoothedFirstPerson = false;
+
+            FirstPersonView = smoothedFirstPerson;
 
             var follow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
             follow.ShoulderOffset = new Vector3(0, FirstPersonView ? 0 : -0.2f, 0);
@@ -371,20 +393,33 @@ namespace Code.Player
         {
             if (animator == null) return;
 
-            if (FirstPersonView)
-            {
-                // Включаем IK на 100%
-                // Параметры: (overallWeight, bodyWeight, headWeight, eyesWeight, clampWeight)
-                animator.SetLookAtWeight(1f, 0f, 1f, 1f, 0f);
+            // Плавно двигаем вес IK к 1 (FPV) или к 0 (3PV)
+            float targetWeight = FirstPersonView ? 1f : 0f;
+            currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
 
-                // Точка, в которую будем смотреть — чуть вперед от камеры
-                Vector3 lookAtPoint = mainCamera.transform.position + mainCamera.transform.forward * 10f;
-                animator.SetLookAtPosition(lookAtPoint);
-            }
-            else
+            // Устанавливаем вес, включая clampWeight
+            animator.SetLookAtWeight(
+                currentIkWeight,       // overall
+                0f,                    // body
+                currentIkWeight,       // head
+                currentIkWeight,       // eyes
+                lookAtClampWeight      // clamp
+            );
+
+            if (currentIkWeight > 0.01f)
             {
-                // Отключаем IK, когда не в первом лице
-                animator.SetLookAtWeight(0f);
+                // Считаем цель взгляда от кости головы
+                Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
+                Vector3 targetPos = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
+
+                // Сглаживаем переход позиции
+                currentLookAtPos = Vector3.Lerp(
+                    currentLookAtPos,
+                    targetPos,
+                    Time.deltaTime * lookAtSmoothSpeed
+                );
+
+                animator.SetLookAtPosition(currentLookAtPos);
             }
         }
     }
