@@ -1,4 +1,5 @@
 using System;
+using Code.Network.HostMigration;
 using Code.Network.Lobby;
 using FishNet;
 using FishNet.Transporting.FishyEOSPlugin;
@@ -9,6 +10,8 @@ namespace Code.Network
     public class FishNetConnectionManager : MonoBehaviour
     {
         [SerializeField] private LobbyController lobbyController;
+
+        private HostMigrator HostMigrator => HostMigrator.Instance;
 
         private void OnValidate()
         {
@@ -22,7 +25,7 @@ namespace Code.Network
                 lobbyController.OnHostReady += StartHostConnection;
                 lobbyController.OnClientReady += StartClientConnection;
                 lobbyController.OnHostChanged += OnHostChanged;
-                lobbyController.OnCurrentHostDisconnected += OnCurrentHostDisconnected;
+                lobbyController.OnCurrentHostDisconnected += OnHostChanged;
             }
         }
 
@@ -33,7 +36,7 @@ namespace Code.Network
                 lobbyController.OnHostReady -= StartHostConnection;
                 lobbyController.OnClientReady -= StartClientConnection;
                 lobbyController.OnHostChanged -= OnHostChanged;
-                lobbyController.OnCurrentHostDisconnected -= OnCurrentHostDisconnected;
+                lobbyController.OnCurrentHostDisconnected -= OnHostChanged;
             }
         }
 
@@ -89,15 +92,16 @@ namespace Code.Network
         
         private void OnHostChanged(string newHostId)
         {
+            HostMigrator.MarkMigrating();
+            
             if (newHostId != LobbyVariables.Instance.productUserId)
+            {
                 OnRemoteHost(newHostId);
-        }
-        
-        private void OnCurrentHostDisconnected(string newHostId)
-        {
-            Debug.Log($"I am a new host {newHostId}?");
-            if (newHostId == LobbyVariables.Instance.productUserId)
+            }
+            else
+            {
                 OnLocalHost();
+            }
         }
         
         private void OnLocalHost()
