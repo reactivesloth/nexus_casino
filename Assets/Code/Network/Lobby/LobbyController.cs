@@ -345,7 +345,9 @@ namespace Code.Network.Lobby
             if (lobby.attributeKeys == null)
                 return;
             
-            CheckCurrentHostDisconnected();
+            var currentHostId = lobby.Attributes.TryGetValue("HOST_ID", out var currentHostIdResult) ? currentHostIdResult : string.Empty;
+            if(!string.IsNullOrEmpty(currentHostId))
+                CheckCurrentHostDisconnected();
 
             if (!InstanceFinder.NetworkManager.IsServerStarted)
                 return;
@@ -354,7 +356,7 @@ namespace Code.Network.Lobby
             
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
                 m.productUserId == nextHostId && m.productUserId != LobbyVariables.Instance.productUserId);
-            if (nextHostMember == null || nextHostMember.productUserId == lobby.Attributes["HOST_ID"])
+            if ((nextHostMember == null || nextHostMember.productUserId == lobby.Attributes["HOST_ID"]) && lobby.lobbyMembers.Count > 0)
                 OnNextHostDisconnected();
         }
 
