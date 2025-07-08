@@ -4,6 +4,7 @@ using System.Linq;
 using FishNet.Object;
 using FishNet.Connection;
 using Code.Player;
+using FishNet.Component.Animating;
 
 namespace Code.InteractionSystem
 {
@@ -14,7 +15,7 @@ namespace Code.InteractionSystem
 
         [SerializeField] private bool allowRotateCamera = true;
         [SerializeField] private bool useRightMouseButtonToRotate = false;
-        
+
         const string SIT_TRIGGER = "TriggerSit";
         const string STAND_TRIGGER = "TriggerStand";
         const string SIT_STATE = "Sitting";
@@ -24,7 +25,7 @@ namespace Code.InteractionSystem
         private Coroutine _sitRoutine;
         private Vector3 _savedPos;
         private Quaternion _savedRot;
-        
+
         private void Awake()
         {
             if (sitPoint == null)
@@ -42,7 +43,7 @@ namespace Code.InteractionSystem
             base.OnEndInteract(conn);
             TargetToggleSit(conn);
         }
-        
+
         [TargetRpc]
         private void TargetToggleSit(NetworkConnection conn)
         {
@@ -50,6 +51,7 @@ namespace Code.InteractionSystem
                 .First(m => m.Owner.IsLocalClient);
             var cc = movement.GetComponent<CharacterController>();
             var anim = movement.GetComponent<Animator>();
+            var networkAnimator = movement.GetComponent<NetworkAnimator>();
             var tf = movement.transform;
 
             if (_sitRoutine != null)
@@ -57,24 +59,24 @@ namespace Code.InteractionSystem
 
             _sitRoutine = StartCoroutine(
                 _isSitting
-                    ? StandUpFlow(movement, anim, cc, tf)
-                    : SitDownFlow(movement, anim, cc, tf)
+                    ? StandUpFlow(movement, anim, networkAnimator, cc, tf)
+                    : SitDownFlow(movement, anim, networkAnimator, cc, tf)
             );
         }
 
-        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
-            Transform tf)
+        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
+            CharacterController cc, Transform tf)
         {
             move.CanMove = false;
             cc.enabled = false;
             anim.applyRootMotion = true;
-            anim.SetTrigger(SIT_TRIGGER);
+            networkAnim.SetTrigger(SIT_TRIGGER);
 
             _savedPos = tf.position;
             _savedRot = tf.rotation;
             tf.position = sitPoint.position;
             tf.rotation = sitPoint.rotation;
-            
+
             yield return new WaitUntil(() =>
                 anim.GetCurrentAnimatorStateInfo(0).IsName(SIT_STATE)
             );
@@ -83,7 +85,7 @@ namespace Code.InteractionSystem
             //tf.SetParent(sitPoint, false);
             anim.applyRootMotion = false;
             _sitRoutine = null;
-            
+
             _isSitting = true;
             if (allowRotateCamera)
             {
@@ -96,16 +98,16 @@ namespace Code.InteractionSystem
                 }
             }
 
-            move.sitBaseYaw   = move.cinemachineTargetYaw;
+            move.sitBaseYaw = move.cinemachineTargetYaw;
             move.sitBasePitch = move.cinemachineTargetPitch;
         }
 
-        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, CharacterController cc,
-            Transform tf)
+        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
+            CharacterController cc, Transform tf)
         {
             _isSitting = false;
             anim.applyRootMotion = true;
-            anim.SetTrigger(STAND_TRIGGER);
+            networkAnim.SetTrigger(STAND_TRIGGER);
 
             yield return new WaitUntil(() =>
                 anim.GetCurrentAnimatorStateInfo(0).IsName(STAND_STATE)
@@ -116,7 +118,7 @@ namespace Code.InteractionSystem
             anim.applyRootMotion = false;
             cc.enabled = true;
             move.CanMove = true;
-            
+
             if (allowRotateCamera)
             {
                 move.LookCameraLimitRotation = false;
