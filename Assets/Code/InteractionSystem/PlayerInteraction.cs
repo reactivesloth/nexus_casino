@@ -66,7 +66,7 @@ namespace Code.Player
         {
             var target = _active != null ? _active : _hovered;
             
-            if (outlineGameObjects != (target != null ? target.outlineGameObjects : null))
+            if (outlineGameObjects != (target != null && !target.IsOccupied ? target.outlineGameObjects : null))
             {
                 if (outlineGameObjects != null)
                 {
@@ -84,7 +84,7 @@ namespace Code.Player
                         var o = go.GetOrAddComponent<Outline>();
                         o.OutlineColor = Color.yellow;
                         o.OutlineWidth = 10;
-                        o.OutlineMode = Outline.Mode.OutlineAll;
+                        o.OutlineMode = Outline.Mode.OutlineVisible;
                     }
                 }
             }
