@@ -702,15 +702,15 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5881952520674979508}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.5000642, y: 0.4999356, z: 0.49993598, w: 0.5000643}
-  m_LocalPosition: {x: -0.027616518, y: 0.00069855724, z: 0.008541182}
+  m_LocalRotation: {x: 0.4981264, y: 0.5018664, z: 0.50186664, w: 0.4981266}
+  m_LocalPosition: {x: -0.02782, y: 0.00018, z: 0.00854}
   m_LocalScale: {x: 0.015354619, y: 0.0153546175, z: 0.015354619}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 529016852795394641}
   - {fileID: 2979073438785143030}
   m_Father: {fileID: 8644183361535207060}
-  m_LocalEulerAnglesHint: {x: 0, y: 145, z: 0}
+  m_LocalEulerAnglesHint: {x: -0.429, y: 90, z: 90}
 --- !u!65 &948646988870431862
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1227,7 +1227,7 @@ MonoBehaviour:
   _componentIndexCache: 255
   _addedNetworkObject: {fileID: 917537226020073404}
   _networkObjectCache: {fileID: 0}
-  rawImage: {fileID: 0}
+  rawImage: {fileID: 6864593338270589140}
   computerMeshRenderer: {fileID: 5685628468096169762}
   materialIndex: 3
   fps: 15
@@ -1971,14 +1971,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: CurvedCanvas
       objectReference: {fileID: 0}
-    - target: {fileID: 189006, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 189006, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 123
-      objectReference: {fileID: 0}
     - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2010,18 +2002,6 @@ PrefabInstance:
     - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
       propertyPath: m_SizeDelta.y
       value: 1400
-      objectReference: {fileID: 0}
-    - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.00064888253
-      objectReference: {fileID: 0}
-    - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.00064888207
-      objectReference: {fileID: 0}
-    - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.00064888207
       objectReference: {fileID: 0}
     - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2098,14 +2078,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: CurvedCanvas
       objectReference: {fileID: 0}
-    - target: {fileID: 189006, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 189006, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_StaticEditorFlags
-      value: 123
-      objectReference: {fileID: 0}
     - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -2137,18 +2109,6 @@ PrefabInstance:
     - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
       propertyPath: m_SizeDelta.y
       value: 1400
-      objectReference: {fileID: 0}
-    - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.00064888253
-      objectReference: {fileID: 0}
-    - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.00064888207
-      objectReference: {fileID: 0}
-    - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.00064888207
       objectReference: {fileID: 0}
     - target: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2213,3 +2173,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 22493858, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
   m_PrefabInstance: {fileID: 6786910271875320188}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6864593338270589140 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 102489509026179496, guid: 132e7f65a3fd16f48bb0cfcc88ef5e27, type: 3}
+  m_PrefabInstance: {fileID: 6786910271875320188}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
