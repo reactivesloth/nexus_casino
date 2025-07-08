@@ -21,6 +21,10 @@ namespace Code.Network
         /* ──────────── Инспектор ──────────── */
 
         [SerializeField] private RawImage rawImage;
+        [Header("Render to Settings")]
+        [SerializeField] private MeshRenderer computerMeshRenderer;
+        [SerializeField] private int materialIndex;
+        
         [Header("Idle State")]
         [SerializeField] private Texture2D idleTexture;
 
@@ -182,7 +186,7 @@ namespace Code.Network
         {
             var tex = new Texture2D(2, 2, TextureFormat.RGB24, false);
             tex.LoadImage(bytes, false);
-            rawImage.texture = tex;
+            computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", tex);
         }
 
         /* ========= Helper ========= */
