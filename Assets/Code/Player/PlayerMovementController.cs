@@ -89,7 +89,8 @@ namespace Code.Player
         private int animIDVertical;
         private int animIDHorizontal;
         private int animIDTurn;
-
+        private int animIDFPV;
+        
         private const float Threshold = 0.01f;
 
         private void Awake()
@@ -189,6 +190,7 @@ namespace Code.Player
             animIDVertical = Animator.StringToHash("Vertical");
             animIDHorizontal = Animator.StringToHash("Horizontal");
             animIDTurn = Animator.StringToHash("TurnAngle");
+            animIDFPV = Animator.StringToHash("FirstPerson");
         }
 
         private void UpdateCameraDistance()
@@ -210,15 +212,10 @@ namespace Code.Player
             FirstPersonView = cameraDistance < 0.1f;
 
             var follow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
-            follow.ShoulderOffset = new Vector3(0, FirstPersonView ? 0 : -0.15f, 0);
-            follow.CameraDistance = Mathf.Lerp(follow.CameraDistance,
-                FirstPersonView ? 0 : Mathf.Lerp(minCameraDistance, maxCameraDistance, cameraDistance),
-                Time.deltaTime * 3);
-
+            follow.ShoulderOffset = new Vector3(0, FirstPersonView ? 0 : -0.2f, 0);
+            follow.CameraDistance = FirstPersonView ? 0 : Mathf.Lerp(follow.CameraDistance, Mathf.Lerp(minCameraDistance, maxCameraDistance, cameraDistance), Time.deltaTime * 3);
             virtualCamera.Follow = cinemachineCameraTarget.transform;
-            virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(virtualCamera.m_Lens.FieldOfView,
-                Mathf.Lerp(minFOV + (speed > moveSpeed ? 15 : 0), maxFOV + (speed > moveSpeed ? 15 : 0), cameraDistance),
-                Time.deltaTime * 3);
+            virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(virtualCamera.m_Lens.FieldOfView, Mathf.MoveTowards(minFOV, maxFOV, (cameraDistance * 0.7f) + (controller.velocity.normalized.magnitude * 0.3f)), Time.deltaTime * 15);
 
             foreach (var o in hideForFirstPersonViewLocal)
                 o.SetActive(!FirstPersonView);
@@ -285,6 +282,7 @@ namespace Code.Player
                 animator.SetFloat(animIDMotionSpeed, inputMagnitude);
                 animator.SetFloat(animIDVertical, vertical);
                 animator.SetFloat(animIDHorizontal, horizontal);
+                animator.SetFloat(animIDFPV, FirstPersonView ? 1 : 0);
             }
         }
 
@@ -366,6 +364,27 @@ namespace Code.Player
             if (evt.animatorClipInfo.weight > 0.5f)
             {
                 AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center), footstepAudioVolume);
+            }
+        }
+        
+        private void OnAnimatorIK(int layerIndex)
+        {
+            if (animator == null) return;
+
+            if (FirstPersonView)
+            {
+                // Включаем IK на 100%
+                // Параметры: (overallWeight, bodyWeight, headWeight, eyesWeight, clampWeight)
+                animator.SetLookAtWeight(1f, 0f, 1f, 1f, 0f);
+
+                // Точка, в которую будем смотреть — чуть вперед от камеры
+                Vector3 lookAtPoint = mainCamera.transform.position + mainCamera.transform.forward * 10f;
+                animator.SetLookAtPosition(lookAtPoint);
+            }
+            else
+            {
+                // Отключаем IK, когда не в первом лице
+                animator.SetLookAtWeight(0f);
             }
         }
     }
