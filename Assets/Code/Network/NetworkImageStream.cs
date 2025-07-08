@@ -182,13 +182,23 @@ namespace Code.Network
 
         private void ApplyImage(byte[] bytes)
         {
-            // Загружаем изображение в исходную текстуру
             var originalTex = new Texture2D(2, 2, TextureFormat.RGB24, false);
             originalTex.LoadImage(bytes, false);
 
-            // Устанавливаем перевёрнутое изображение в материал
+            var width = originalTex.width;
+            var height = originalTex.height;
+            var flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+
+            for (int y = 0; y < height; y++)
+            {
+                Color[] row = originalTex.GetPixels(0, y, width, 1);
+                flippedTex.SetPixels(0, height - y - 1, width, 1, row);
+            }
+
+            flippedTex.Apply();
+
             var mat = computerMeshRenderer.materials[materialIndex];
-            mat.SetTexture("_BaseMap", originalTex);
+            mat.SetTexture("_BaseMap", flippedTex);
             mat.SetColor("_BaseColor", Color.white);
         }
 
