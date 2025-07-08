@@ -11,16 +11,17 @@ namespace Code.InteractionSystem
         [Header("Children to interact with")]
         [SerializeField, Tooltip("Все дочерние Interactable, которые нужно задействовать за одно нажатие.")]
         private Interactable[] children;
-
+        
         // Вспомогательное поле для авто-сгенерированного коллайдера
         private BoxCollider _compositeCollider;
-
+        [SerializeField] private bool generateColliderFromChildren = true;
         private void Awake()
         {
             // Настраиваем свой BoxCollider-триггер
             _compositeCollider = GetComponent<BoxCollider>();
             _compositeCollider.isTrigger = true;
-            UpdateCompositeColliderBounds();
+            if (generateColliderFromChildren)
+                UpdateCompositeColliderBounds();
         }
 
 #if UNITY_EDITOR

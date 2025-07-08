@@ -38,6 +38,19 @@ namespace Code.InteractionSystem
             }
         }
 
+        #if UNITY_EDITOR
+        private void OnValidate()
+        {
+            NetworkObject no = GetComponent<NetworkObject>();
+            if (no != null)
+                no.SetIsSpawnable(false);
+            
+            Collider collider = GetComponent<Collider>();
+            if (collider != null)
+                collider.isTrigger = true;
+        }
+        #endif
+
         /// <summary>Client-side call to request interaction start.</summary>
         public void RequestInteract()
         {
