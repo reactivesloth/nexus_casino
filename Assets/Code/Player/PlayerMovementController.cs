@@ -411,7 +411,10 @@ namespace Code.Player
             {
                 // Считаем цель взгляда от кости головы
                 Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
-                var targetPos = headTarget.position = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
+
+                if (IsOwner)
+                    headTarget.position = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
+                var targetPos = headTarget.position;
 
                 // Сглаживаем переход позиции
                 currentLookAtPos = Vector3.Lerp(
