@@ -82,6 +82,8 @@ namespace Code.Network
         {
             bool iAmOwner   = Owner == NetworkManager.ClientManager.Connection;
             bool iWasOwner  = prev == NetworkManager.ClientManager.Connection;
+            
+            Debug.Log($"[NetworkImageStream] {Owner}]");
 
             if (iWasOwner && !iAmOwner && _sendLoop != null)
             {
@@ -93,8 +95,15 @@ namespace Code.Network
                 _sendLoop = StartCoroutine(SendLoop());
             }
 
-            if (Owner == null)
+            if (Owner == null || OwnerId == -1)
+            {
                 ShowIdleTexture();
+                if(_sendLoop != null)
+                {
+                    StopCoroutine(_sendLoop);
+                    _sendLoop = null;
+                }
+            }
         }
 
         /* ========= Unity ========= */
