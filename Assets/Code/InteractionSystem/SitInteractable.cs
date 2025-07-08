@@ -1,0 +1,107 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.Linq;
+using FishNet.Object;
+using FishNet.Connection;
+using Code.Player;
+
+namespace Code.InteractionSystem
+{
+    public class SitInteractable : Interactable
+    {
+        [Header("Sit Settings")] [SerializeField]
+        private Transform sitPoint;
+
+        const string SIT_TRIGGER = "TriggerSit";
+        const string STAND_TRIGGER = "TriggerStand";
+        const string SIT_STATE = "Sitting";
+        const string STAND_STATE = "Movement";
+
+        private bool _isSitting;
+        private Coroutine _sitRoutine;
+        private Vector3 _savedPos;
+        private Quaternion _savedRot;
+
+        private void Awake()
+        {
+            if (sitPoint == null)
+                sitPoint = transform.Find("SitPoint");
+        }
+
+        protected override void OnInteract(NetworkConnection conn)
+        {
+            base.OnInteract(conn);
+            TargetToggleSit(conn);
+        }
+
+        protected override void OnEndInteract(NetworkConnection conn)
+        {
+            base.OnEndInteract(conn);
+            TargetToggleSit(conn);
+        }
+
+        [TargetRpc]
+        private void TargetToggleSit(NetworkConnection conn)
+        {
+            var movement = FindObjectsOfType<PlayerMovementController>()
+                .First(m => m.Owner.IsLocalClient);
+            var cc = movement.GetComponent<CharacterController>();
+            var anim = movement.GetComponent<Animator>();
+            var tf = movement.transform;
+
+            if (_sitRoutine != null)
+                StopCoroutine(_sitRoutine);
+
+            _sitRoutine = StartCoroutine(
+                _isSitting
+                    ? StandUpFlow(movement, anim, cc, tf)
+                    : SitDownFlow(movement, anim, cc, tf)
+            );
+        }
+
+        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
+        {
+            _isSitting = true;
+            move.CanMove = false;
+            cc.enabled = false;
+            anim.applyRootMotion = true;
+            anim.SetTrigger(SIT_TRIGGER);
+
+            _savedPos = tf.position;
+            _savedRot = tf.rotation;
+            tf.position = sitPoint.position;
+            tf.rotation = sitPoint.rotation;
+
+            yield return new WaitUntil(() =>
+                anim.GetCurrentAnimatorStateInfo(0).IsName(SIT_STATE)
+            );
+
+            // lock into chair
+            //tf.SetParent(sitPoint, false);
+            anim.applyRootMotion = false;
+            _sitRoutine = null;
+        }
+
+        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
+        {
+            _isSitting = false;
+            anim.applyRootMotion = true;
+            anim.SetTrigger(STAND_TRIGGER);
+
+            yield return new WaitUntil(() =>
+                anim.GetCurrentAnimatorStateInfo(0).IsName(STAND_STATE)
+            );
+
+            tf.position = _savedPos;
+            tf.rotation = _savedRot;
+            anim.applyRootMotion = false;
+            cc.enabled = true;
+            move.CanMove = true;
+
+            // server-side release happens via base.OnEndInteract called earlier
+            _sitRoutine = null;
+        }
+    }
+}

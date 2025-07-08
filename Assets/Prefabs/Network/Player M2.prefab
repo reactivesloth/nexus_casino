@@ -245,7 +245,7 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      propertyPath: m_BlendShapeWeights.Array.data[41]
+      propertyPath: 'm_BlendShapeWeights.Array.data[41]'
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -6234591296559379751, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
@@ -566,16 +566,10 @@ PrefabInstance:
       addedObject: {fileID: 8013488042586796887}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6401111505703537928}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -1098754589221922584}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8061612496996457971}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 4572378555792315357}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6006401730760851951}
     - targetCorrespondingSourceObject: {fileID: -5823106577872157028, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7889299020810858274}
@@ -661,7 +655,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 6bc1aaf4-b110-4ff7-891e-5b9fe6f32c4d
-    m_ActionName: Player/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Keyboard/upArrow,/Keyboard/downArrow,/Keyboard/leftArrow,/Keyboard/rightArrow,/XInputControllerWindows/leftStick]
+    m_ActionName: 'Player/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d,/Keyboard/upArrow,/Keyboard/downArrow,/Keyboard/leftArrow,/Keyboard/rightArrow,/XInputControllerWindows/leftStick]'
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -677,7 +671,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 2690c379-f54d-45be-a724-414123833eb4
-    m_ActionName: Player/Look[/Mouse/delta,/XInputControllerWindows/rightStick]
+    m_ActionName: 'Player/Look[/Mouse/delta,/XInputControllerWindows/rightStick]'
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -693,7 +687,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 8c4abdf8-4099-493a-aa1a-129acec7c3df
-    m_ActionName: Player/Jump[/Keyboard/space,/XInputControllerWindows/buttonSouth]
+    m_ActionName: 'Player/Jump[/Keyboard/space,/XInputControllerWindows/buttonSouth]'
   - m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 0}
@@ -709,7 +703,7 @@ MonoBehaviour:
           m_BoolArgument: 0
         m_CallState: 2
     m_ActionId: 980e881e-182c-404c-8cbf-3d09fdb48fef
-    m_ActionName: Player/Sprint[/Keyboard/leftShift,/XInputControllerWindows/leftTrigger]
+    m_ActionName: 'Player/Sprint[/Keyboard/leftShift,/XInputControllerWindows/leftTrigger]'
   - m_PersistentCalls:
       m_Calls: []
     m_ActionId: e4ce1614-c754-48c1-9103-33130441661f
@@ -734,13 +728,31 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 5084366635518163755}
   _networkObjectCache: {fileID: 5084366635518163755}
-  CanMove: 1
-  MoveSpeed: 2
-  SprintSpeed: 5.335
-  RotationSmoothTime: 0.12
-  SpeedChangeRate: 10
-  LandingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
-  FootstepAudioClips:
+  moveSpeed: 2
+  sprintSpeed: 5.335
+  rotationSmoothTime: 0.12
+  speedChangeRate: 10
+  jumpHeight: 1.2
+  gravity: -15
+  jumpTimeout: 0.5
+  fallTimeout: 0.15
+  groundedOffset: -0.14
+  groundedRadius: 0.28
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 1
+  terminalVelocity: 53
+  cinemachineCameraTarget: {fileID: 1824112052846923371}
+  hideForFirstPersonViewLocal: []
+  minCameraDistance: 1
+  maxCameraDistance: 4
+  minFOV: 40
+  maxFOV: 65
+  topClamp: 70
+  bottomClamp: -30
+  cameraAngleOverride: 0
+  landingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
+  footstepAudioClips:
   - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
   - {fileID: 8300000, guid: 85016e0f2b01da248b9663dd49a161b0, type: 3}
   - {fileID: 8300000, guid: 186de84b3207156479abe98f4958fed0, type: 3}
@@ -751,24 +763,10 @@ MonoBehaviour:
   - {fileID: 8300000, guid: 67c8b33e424ccdc4486edf538ab91c5a, type: 3}
   - {fileID: 8300000, guid: 274649b0e221539409070ebf6c18918b, type: 3}
   - {fileID: 8300000, guid: a3194b8bbc96ef84fab1f98f4b7dae3e, type: 3}
-  FootstepAudioVolume: 0.3
-  JumpHeight: 1.2
-  Gravity: -15
-  JumpTimeout: 0.3
-  FallTimeout: 0.15
-  Grounded: 1
-  GroundedOffset: -0.14
-  GroundedRadius: 0.25
-  GroundLayers:
-    serializedVersion: 2
-    m_Bits: 1
-  CinemachineCameraTarget: {fileID: 1824112052846923371}
-  FirstPersonView: 0
-  HideForFirstPersonViewLocal: []
-  TopClamp: 60
-  BottomClamp: -80
-  CameraAngleOverride: 0
+  footstepAudioVolume: 0.5
+  CanMove: 1
   LockCameraPosition: 0
+  FirstPersonView: 0
 --- !u!114 &4250282582304474929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -812,6 +810,8 @@ MonoBehaviour:
   - {fileID: 3089256175066004713}
   - {fileID: 6626438044635640616}
   - {fileID: 8013488042586796887}
+  - {fileID: 4572378555792315357}
+  - {fileID: -6006401730760851951}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -1045,51 +1045,6 @@ MonoBehaviour:
   _interpolation: 2
   _clientAuthoritative: 1
   _sendToOwner: 0
---- !u!114 &6401111505703537928
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1f6bcc688e9644ba8ea811f4f8bf6ca5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &-1098754589221922584
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c0c29c524e52480baccdf189e7d36635, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  moveSpeed: 2
-  rotateSpeed: 5
-  sitKey: 101
---- !u!114 &8061612496996457971
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0eaa394fea4a4bb8abe925d3f4bb43b0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  hintUI: {fileID: 0}
-  detectDistance: 1.5
-  benchLayer:
-    serializedVersion: 2
-    m_Bits: 512
-  playerCamera: {fileID: 0}
 --- !u!114 &4572378555792315357
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1102,10 +1057,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 68cebc4cbc3d439ca304b76a3daee372, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 5084366635518163755}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 5084366635518163755}
   thirdPersonController: {fileID: 6472889869485083012}
+--- !u!114 &-6006401730760851951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2095315197724490687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 188f87c970204124b28e52a171bbb2f4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 5
+  _addedNetworkObject: {fileID: 5084366635518163755}
+  _networkObjectCache: {fileID: 5084366635518163755}
+  interactableMask:
+    serializedVersion: 2
+    m_Bits: 512
+  detectionDistance: 5
 --- !u!137 &3903605093316825880 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}

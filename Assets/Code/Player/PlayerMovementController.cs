@@ -1,0 +1,320 @@
+﻿using Cinemachine;
+using FishNet.Connection;
+using FishNet.Object;
+using UnityEngine;
+using UnityEngine.Serialization;
+
+namespace Code.Player
+{
+    [RequireComponent(typeof(CharacterController))]
+    public class PlayerMovementController : NetworkBehaviour
+    {
+        [Header("Settings")]
+        [SerializeField] private float moveSpeed = 2.0f;
+        [SerializeField] private float sprintSpeed = 5.335f;
+        [SerializeField] private float rotationSmoothTime = 0.12f;
+        [SerializeField] private float speedChangeRate = 10.0f;
+        [SerializeField] private float jumpHeight = 1.2f;
+        [SerializeField] private float gravity = -15.0f;
+        [SerializeField] private float jumpTimeout = 0.5f;
+        [SerializeField] private float fallTimeout = 0.15f;
+        [SerializeField] private float groundedOffset = -0.14f;
+        [SerializeField] private float groundedRadius = 0.28f;
+        [SerializeField] private LayerMask groundLayers;
+        [SerializeField] private float terminalVelocity = 53.0f;
+
+        [Header("Camera")]
+        [SerializeField] private GameObject cinemachineCameraTarget;
+        [SerializeField] private GameObject[] hideForFirstPersonViewLocal;
+        [SerializeField] private float minCameraDistance = 1f;
+        [SerializeField] private float maxCameraDistance = 4f;
+        [SerializeField] private float minFOV = 40;
+        [SerializeField] private float maxFOV = 65;
+        [SerializeField] private float topClamp = 70f;
+        [SerializeField] private float bottomClamp = -30f;
+        [SerializeField] private float cameraAngleOverride = 0f;
+
+        [Header("Audio")]
+        [SerializeField] private AudioClip landingAudioClip;
+        [SerializeField] private AudioClip[] footstepAudioClips;
+        [Range(0, 1)] [SerializeField] private float footstepAudioVolume = 0.5f;
+
+        public bool CanMove = true;
+        public bool LockCameraPosition = true;
+        public bool FirstPersonView = true;
+
+        public GameObject CinemachineCameraTarget => cinemachineCameraTarget;
+        
+        private bool grounded;
+        private float cameraDistance = 0.5f;
+        private float savedDistance = 0.5f;
+        private float verticalVelocity;
+        private float jumpTimeoutDelta;
+        private float fallTimeoutDelta;
+
+        private float speed;
+        private float animationBlend;
+        private float targetRotation;
+        private float rotationVelocity;
+        private float cinemachineTargetYaw;
+        private float cinemachineTargetPitch;
+
+        private float vertical;
+        private float horizontal;
+
+        private GameObject mainCamera;
+        private PlayerInput input;
+        private Animator animator;
+        private CharacterController controller;
+        private CinemachineVirtualCamera virtualCamera;
+
+        private int animIDSpeed;
+        private int animIDGrounded;
+        private int animIDJump;
+        private int animIDFreeFall;
+        private int animIDMotionSpeed;
+        private int animIDVertical;
+        private int animIDHorizontal;
+        private int animIDTurn;
+
+        private const float Threshold = 0.01f;
+
+        private void Awake()
+        {
+            mainCamera = Camera.main?.gameObject;
+            input = GetComponent<PlayerInput>();
+        }
+
+        private void Start()
+        {
+            cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            controller = GetComponent<CharacterController>();
+            animator = GetComponent<Animator>();
+            AssignAnimationIDs();
+
+            jumpTimeoutDelta = jumpTimeout;
+            fallTimeoutDelta = fallTimeout;
+        }
+
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        {
+            base.OnOwnershipClient(prevOwner);
+            if (IsOwner)
+                virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+        }
+
+        private void Update()
+        {
+            if (!IsOwner || !CanMove) return;
+
+            virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
+
+            GroundedCheck();
+            JumpAndGravity();
+            Move();
+        }
+
+        private void LateUpdate()
+        {
+            if (!IsOwner) return;
+
+            if (CanMove)
+                UpdateCameraDistance();
+
+            if (CanMove || !FirstPersonView)
+                CameraRotation();
+            else
+                ResetFirstPersonViewRotation();
+        }
+
+        private void AssignAnimationIDs()
+        {
+            animIDSpeed = Animator.StringToHash("Speed");
+            animIDGrounded = Animator.StringToHash("Grounded");
+            animIDJump = Animator.StringToHash("Jump");
+            animIDFreeFall = Animator.StringToHash("FreeFall");
+            animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
+            animIDVertical = Animator.StringToHash("Vertical");
+            animIDHorizontal = Animator.StringToHash("Horizontal");
+            animIDTurn = Animator.StringToHash("TurnAngle");
+        }
+
+        private void UpdateCameraDistance()
+        {
+            if (Input.GetKeyDown(KeyCode.C))
+            {
+                if (FirstPersonView)
+                    cameraDistance = savedDistance;
+                else
+                {
+                    savedDistance = cameraDistance;
+                    cameraDistance = 0;
+                }
+            }
+
+            cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100;
+            cameraDistance = Mathf.Clamp(cameraDistance, 0, 1);
+
+            FirstPersonView = cameraDistance < 0.1f;
+
+            var follow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+            follow.ShoulderOffset = new Vector3(0, FirstPersonView ? 0 : -0.15f, 0);
+            follow.CameraDistance = Mathf.Lerp(follow.CameraDistance,
+                FirstPersonView ? 0 : Mathf.Lerp(minCameraDistance, maxCameraDistance, cameraDistance),
+                Time.deltaTime * 3);
+
+            virtualCamera.Follow = cinemachineCameraTarget.transform;
+            virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(virtualCamera.m_Lens.FieldOfView,
+                Mathf.Lerp(minFOV + (speed > moveSpeed ? 15 : 0), maxFOV + (speed > moveSpeed ? 15 : 0), cameraDistance),
+                Time.deltaTime * 3);
+
+            foreach (var o in hideForFirstPersonViewLocal)
+                o.SetActive(!FirstPersonView);
+        }
+
+        private void ResetFirstPersonViewRotation()
+        {
+            if (!FirstPersonView) return;
+
+            cinemachineTargetPitch = cinemachineCameraTarget.transform.rotation.eulerAngles.x - cameraAngleOverride;
+            cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            cinemachineCameraTarget.transform.localRotation = Quaternion.identity;
+        }
+
+        private void GroundedCheck()
+        {
+            Vector3 spherePosition = transform.position + Vector3.down * groundedOffset;
+            grounded = Physics.CheckSphere(spherePosition, groundedRadius, groundLayers, QueryTriggerInteraction.Ignore);
+
+            animator?.SetBool(animIDGrounded, grounded);
+        }
+
+        private void Move()
+        {
+            bool canSprint = !FirstPersonView || (Mathf.Abs(input.move.x) < 0.1f && input.move.y > 0.1f);
+            float targetSpeed = input.sprint && canSprint ? sprintSpeed : moveSpeed;
+
+            if (input.move == Vector2.zero) targetSpeed = 0;
+
+            float currentSpeed = new Vector3(controller.velocity.x, 0, controller.velocity.z).magnitude;
+            float inputMagnitude = input.analogMovement ? input.move.magnitude : 1f;
+
+            if (Mathf.Abs(currentSpeed - targetSpeed) > 0.1f)
+                speed = Mathf.Round(Mathf.Lerp(currentSpeed, targetSpeed * inputMagnitude, Time.deltaTime * speedChangeRate) * 1000f) / 1000f;
+            else
+                speed = targetSpeed;
+
+            animationBlend = Mathf.Lerp(animationBlend, targetSpeed, Time.deltaTime * speedChangeRate);
+            if (animationBlend < 0.01f) animationBlend = 0f;
+
+            Vector3 inputDir = new Vector3(input.move.x, 0, input.move.y).normalized;
+            targetRotation = Mathf.Atan2(inputDir.x, inputDir.z) * Mathf.Rad2Deg + mainCamera.transform.eulerAngles.y;
+
+            if (input.move != Vector2.zero)
+            {
+                float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
+                if (!FirstPersonView)
+                    transform.rotation = Quaternion.Euler(0, rotation, 0);
+            }
+
+            if (FirstPersonView)
+                transform.rotation = Quaternion.Euler(0, mainCamera.transform.eulerAngles.y, 0);
+
+            Vector3 moveDir = Quaternion.Euler(0, targetRotation, 0) * Vector3.forward;
+            controller.Move(moveDir.normalized * (speed * Time.deltaTime) + Vector3.up * verticalVelocity * Time.deltaTime);
+
+            if (animator)
+            {
+                Vector3 velocity = transform.InverseTransformDirection(controller.velocity);
+                vertical = Mathf.Lerp(vertical, velocity.normalized.z * (speed > moveSpeed ? 2 : 1), Time.deltaTime * 5);
+                horizontal = Mathf.Lerp(horizontal, velocity.normalized.x, Time.deltaTime * 5);
+
+                animator.SetFloat(animIDSpeed, animationBlend);
+                animator.SetFloat(animIDMotionSpeed, inputMagnitude);
+                animator.SetFloat(animIDVertical, vertical);
+                animator.SetFloat(animIDHorizontal, horizontal);
+            }
+        }
+
+        private void JumpAndGravity()
+        {
+            if (grounded)
+            {
+                fallTimeoutDelta = fallTimeout;
+
+                animator?.SetBool(animIDJump, false);
+                animator?.SetBool(animIDFreeFall, false);
+
+                if (verticalVelocity < 0) verticalVelocity = -2f;
+
+                if (input.jump && jumpTimeoutDelta <= 0)
+                {
+                    verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+                    animator?.SetBool(animIDJump, true);
+                }
+
+                if (jumpTimeoutDelta > 0) jumpTimeoutDelta -= Time.deltaTime;
+            }
+            else
+            {
+                jumpTimeoutDelta = jumpTimeout;
+
+                if (fallTimeoutDelta > 0)
+                    fallTimeoutDelta -= Time.deltaTime;
+                else
+                    animator?.SetBool(animIDFreeFall, true);
+
+                input.jump = false;
+            }
+
+            if (verticalVelocity < terminalVelocity)
+                verticalVelocity += gravity * Time.deltaTime;
+        }
+
+        private void CameraRotation()
+        {
+            if (input.look.sqrMagnitude >= Threshold && !LockCameraPosition)
+            {
+                float multiplier = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
+                cinemachineTargetYaw += input.look.x * multiplier;
+                cinemachineTargetPitch += input.look.y * multiplier;
+            }
+
+            cinemachineTargetYaw = ClampAngle(cinemachineTargetYaw, float.MinValue, float.MaxValue);
+            cinemachineTargetPitch = ClampAngle(cinemachineTargetPitch, bottomClamp, topClamp);
+
+            cinemachineCameraTarget.transform.rotation =
+                Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride, cinemachineTargetYaw, 0);
+        }
+        
+        private static float ClampAngle(float angle, float min, float max)
+        {
+            if (angle < -360f) angle += 360f;
+            if (angle > 360f) angle -= 360f;
+            return Mathf.Clamp(angle, min, max);
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = grounded ? new Color(0, 1, 0, 0.35f) : new Color(1, 0, 0, 0.35f);
+            Gizmos.DrawSphere(transform.position + Vector3.down * groundedOffset, groundedRadius);
+        }
+
+        private void OnFootstep(AnimationEvent evt)
+        {
+            if (evt.animatorClipInfo.weight > 0.5f && footstepAudioClips.Length > 0)
+            {
+                int index = Random.Range(0, footstepAudioClips.Length);
+                AudioSource.PlayClipAtPoint(footstepAudioClips[index], transform.TransformPoint(controller.center), footstepAudioVolume);
+            }
+        }
+
+        private void OnLand(AnimationEvent evt)
+        {
+            if (evt.animatorClipInfo.weight > 0.5f)
+            {
+                AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center), footstepAudioVolume);
+            }
+        }
+    }
+}
