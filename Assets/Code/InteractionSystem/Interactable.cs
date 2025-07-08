@@ -12,6 +12,8 @@ namespace Code.InteractionSystem
         [SerializeField, Tooltip("Max distance for interaction.")] private float _interactionDistance = 3f;
         public float InteractionDistance => _interactionDistance;
 
+        public GameObject[] outlineGameObjects;
+        
         [Header("Enable/Disable")]
         [SerializeField, Tooltip("Enable or disable this interactable.")] private bool _interactableEnabled = true;
         public bool IsEnabled => _interactableEnabled;
@@ -20,6 +22,7 @@ namespace Code.InteractionSystem
         [SerializeField, Tooltip("If true, requires manual EndInteract to free the interactable.")] private bool _manualRelease = false;
         public bool ManualRelease => _manualRelease;
 
+        
         // Synchronize occupied state across clients using SyncVar
         protected readonly SyncVar<bool> _isOccupied = new SyncVar<bool>(new SyncTypeSettings()
         {

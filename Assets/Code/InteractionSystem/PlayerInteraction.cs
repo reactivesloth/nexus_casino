@@ -1,6 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using FishNet.Object;
 using Code.InteractionSystem;
+using SRF;
+using Unity.VisualScripting;
 
 namespace Code.Player
 {
@@ -12,8 +15,8 @@ namespace Code.Player
 
         private Interactable _hovered;
         private Interactable _active;
-        //private GameObject _currentOutline;
-
+        private GameObject[] outlineGameObjects;
+        
         private void Update()
         {
             if (!IsOwner) return;
@@ -61,24 +64,30 @@ namespace Code.Player
 
         private void UpdateOutline()
         {
-            // disable previous outline
-            // if (_currentOutline != null)
-            // {
-            //     _currentOutline.SetActive(false);
-            //     _currentOutline = null;
-            // }
+            var target = _active != null ? _active : _hovered;
+            
+            if (outlineGameObjects != (target != null ? target.outlineGameObjects : null))
+            {
+                if (outlineGameObjects != null)
+                {
+                    foreach (var go in outlineGameObjects)
+                    {
+                        go.RemoveComponentIfExists<Outline>();
+                    }
+                }
 
-            // determine target for outline
-            // var target = _active != null ? _active : _hovered;
-            // if (target != null)
-            // {
-            //     var outline = target.GetComponent<GameObject>();
-            //     if (outline != null)
-            //     {
-            //         outline.SetActive(true);
-            //         _currentOutline = outline;
-            //     }
-            // }
+                outlineGameObjects = target != null ? target.outlineGameObjects : null;
+                if (outlineGameObjects != null)
+                {
+                    foreach (var go in outlineGameObjects)
+                    {
+                        var o = go.GetOrAddComponent<Outline>();
+                        o.OutlineColor = Color.yellow;
+                        o.OutlineWidth = 10;
+                        o.OutlineMode = Outline.Mode.OutlineAll;
+                    }
+                }
+            }
         }
 
         private void UpdateUI()

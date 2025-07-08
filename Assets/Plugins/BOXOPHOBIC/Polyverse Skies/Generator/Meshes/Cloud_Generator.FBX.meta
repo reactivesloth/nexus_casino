@@ -1,24 +1,63 @@
 fileFormatVersion: 2
 guid: 3dbe3438ed8abc34db005a02edff095e
+AssetOrigin:
+  serializedVersion: 1
+  productId: 104017
+  packageName: Polyverse Skies | Low Poly Skybox Shaders
+  packageVersion: 3.5.0
+  assetPath: Assets/BOXOPHOBIC/Polyverse Skies/Generator/Meshes/Cloud_Generator.FBX
+  uploadId: 756276
 ModelImporter:
-  serializedVersion: 23
-  fileIDToRecycleName:
-    100000: //RootNode
-    100002: Cloud_Generator_Bottom
-    100004: Cloud_Generator_Top
-    400000: //RootNode
-    400002: Cloud_Generator_Bottom
-    400004: Cloud_Generator_Top
-    2300000: //RootNode
-    2300002: Cloud_Generator_Bottom
-    2300004: Cloud_Generator_Top
-    3300000: //RootNode
-    3300002: Cloud_Generator_Bottom
-    3300004: Cloud_Generator_Top
-    4300000: Cloud_Generator
-    4300002: Cloud_Generator_Bottom
-    4300004: Cloud_Generator_Top
-    9500000: //RootNode
+  serializedVersion: 22200
+  internalIDToNameTable:
+  - first:
+      1: 100000
+    second: //RootNode
+  - first:
+      1: 100002
+    second: Cloud_Generator_Bottom
+  - first:
+      1: 100004
+    second: Cloud_Generator_Top
+  - first:
+      4: 400000
+    second: //RootNode
+  - first:
+      4: 400002
+    second: Cloud_Generator_Bottom
+  - first:
+      4: 400004
+    second: Cloud_Generator_Top
+  - first:
+      23: 2300000
+    second: //RootNode
+  - first:
+      23: 2300002
+    second: Cloud_Generator_Bottom
+  - first:
+      23: 2300004
+    second: Cloud_Generator_Top
+  - first:
+      33: 3300000
+    second: //RootNode
+  - first:
+      33: 3300002
+    second: Cloud_Generator_Bottom
+  - first:
+      33: 3300004
+    second: Cloud_Generator_Top
+  - first:
+      43: 4300000
+    second: Cloud_Generator
+  - first:
+      43: 4300002
+    second: Cloud_Generator_Bottom
+  - first:
+      43: 4300004
+    second: Cloud_Generator_Top
+  - first:
+      95: 9500000
+    second: //RootNode
   externalObjects:
   - first:
       type: UnityEngine:Material
@@ -26,7 +65,7 @@ ModelImporter:
       name: No Name
     second: {fileID: 2100000, guid: 36bd922f28a2f0749ba9f66ca5ee7263, type: 2}
   materials:
-    importMaterials: 0
+    materialImportMode: 0
     materialName: 0
     materialSearch: 1
     materialLocation: 0
@@ -35,9 +74,8 @@ ModelImporter:
     bakeSimulation: 0
     resampleCurves: 1
     optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
     motionNodeName: 
-    rigImportErrors: 
-    rigImportWarnings: 
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -59,25 +97,36 @@ ModelImporter:
     meshCompression: 0
     addColliders: 0
     useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
     importVisibility: 1
     importBlendShapes: 1
     importCameras: 1
     importLights: 1
+    nodeNameCollisionStrategy: 0
+    fileIdsGeneration: 1
     swapUVChannels: 0
     generateSecondaryUV: 0
     useFileUnits: 1
-    optimizeMeshForGPU: 1
     keepQuads: 0
     weldVertices: 1
+    bakeAxisConversion: 0
     preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
     indexFormat: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 0
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
     secondaryUVPackMargin: 4
     useFileScale: 1
-    previousCalculatedGlobalScale: 0.01
-    hasPreviousCalculatedGlobalScale: 1
+    strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -86,10 +135,10 @@ ModelImporter:
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 1
     blendShapeNormalImportMode: 1
     normalSmoothingSource: 0
+  referencedClips: []
   importAnimation: 0
-  copyAvatar: 0
   humanDescription:
-    serializedVersion: 2
+    serializedVersion: 3
     human: []
     skeleton: []
     armTwist: 0.5
@@ -99,21 +148,20 @@ ModelImporter:
     armStretch: 0.05
     legStretch: 0.05
     feetSpacing: 0
+    globalScale: 1
     rootMotionBoneName: 
     hasTranslationDoF: 0
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
   animationType: 0
   humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 0
+  importBlendShapeDeformPercent: 0
+  remapMaterialsIfMaterialImportModeIsNone: 1
   additionalBone: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 104017
-  packageName: Polyverse Skies | Low Poly Skybox Shaders
-  packageVersion: 3.5.0
-  assetPath: Assets/BOXOPHOBIC/Polyverse Skies/Generator/Meshes/Cloud_Generator.FBX
-  uploadId: 756276
