@@ -24,9 +24,6 @@ namespace Code.Network
         [Header("Render to Settings")]
         [SerializeField] private MeshRenderer computerMeshRenderer;
         [SerializeField] private int materialIndex;
-        
-        [Header("Idle State")]
-        [SerializeField] private Texture2D idleTexture;
 
         [Header("Stream Quality")]
         [SerializeField, Min(0.1f)] private float fps = 24f;
@@ -119,7 +116,8 @@ namespace Code.Network
 
         private void ShowIdleTexture()
         {
-            if (rawImage) rawImage.texture = idleTexture;
+            computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", null);
+            computerMeshRenderer.materials[materialIndex].SetColor("_BaseMap", Color.black);
         }
 
         /* ========= Send ========= */
@@ -184,9 +182,28 @@ namespace Code.Network
 
         private void ApplyImage(byte[] bytes)
         {
-            var tex = new Texture2D(2, 2, TextureFormat.RGB24, false);
-            tex.LoadImage(bytes, false);
-            computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", tex);
+            // Загружаем изображение в исходную текстуру
+            var originalTex = new Texture2D(2, 2, TextureFormat.RGB24, false);
+            originalTex.LoadImage(bytes, false);
+
+            // Создаём новую текстуру такого же размера
+            var width = originalTex.width;
+            var height = originalTex.height;
+            var flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+
+            // Копируем и переворачиваем пиксели по вертикали
+            for (int y = 0; y < height; y++)
+            {
+                Color[] row = originalTex.GetPixels(0, y, width, 1);
+                flippedTex.SetPixels(0, height - y - 1, width, 1, row);
+            }
+
+            flippedTex.Apply();
+
+            // Устанавливаем перевёрнутое изображение в материал
+            var mat = computerMeshRenderer.materials[materialIndex];
+            mat.SetTexture("_BaseMap", flippedTex);
+            mat.SetColor("_BaseMap", Color.white);
         }
 
         /* ========= Helper ========= */
