@@ -187,6 +187,7 @@ namespace Code.Network
 
         /* ========= Receive ========= */
 
+        private Texture2D _flippedTex;
         private void ApplyImage(byte[] bytes)
         {
             var originalTex = new Texture2D(2, 2, TextureFormat.RGB24, false);
@@ -194,19 +195,29 @@ namespace Code.Network
 
             var width = originalTex.width;
             var height = originalTex.height;
-            var flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+
+            // Переиспользуем flippedTex, если возможно
+            if (!_flippedTex || _flippedTex.width != width || _flippedTex.height != height)
+            {
+                if (_flippedTex)
+                    Destroy(_flippedTex);
+                _flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            }
 
             for (int y = 0; y < height; y++)
             {
                 Color[] row = originalTex.GetPixels(0, y, width, 1);
-                flippedTex.SetPixels(0, height - y - 1, width, 1, row);
+                _flippedTex.SetPixels(0, height - y - 1, width, 1, row);
             }
 
-            flippedTex.Apply();
+            _flippedTex.Apply();
 
             var mat = computerMeshRenderer.materials[materialIndex];
-            mat.SetTexture("_BaseMap", flippedTex);
+            mat.SetTexture("_BaseMap", _flippedTex);
             mat.SetColor("_BaseColor", Color.white);
+
+            // Уничтожаем временную текстуру, чтобы не было утечек памяти
+            Destroy(originalTex);
         }
 
         /* ========= Helper ========= */
