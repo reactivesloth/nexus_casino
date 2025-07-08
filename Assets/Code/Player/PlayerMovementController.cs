@@ -43,6 +43,16 @@ namespace Code.Player
         public bool LockCameraPosition = true;
         public bool FirstPersonView = true;
 
+        public bool LookCameraLimitRotation { get; set; } = false; // по умолчанию не сидит
+        public bool LookCameraLimitRotationRKM { get; set; } = false;
+
+        public bool LockCursor { get; set; } = true;
+        
+        [Header("Sit Camera Limits")]
+        [SerializeField] private float sitYawRange = 45f;      // ±45° по горизонтали
+        [SerializeField] private float sitMinPitch = -10f;     // минимальный подъём
+        [SerializeField] private float sitMaxPitch = 30f;      // максимальный подъём
+        
         public GameObject CinemachineCameraTarget => cinemachineCameraTarget;
         
         private bool grounded;
@@ -56,9 +66,12 @@ namespace Code.Player
         private float animationBlend;
         private float targetRotation;
         private float rotationVelocity;
-        private float cinemachineTargetYaw;
-        private float cinemachineTargetPitch;
+        public float cinemachineTargetYaw;
+        public float cinemachineTargetPitch;
 
+        public float sitBaseYaw;
+        public float sitBasePitch;
+        
         private float vertical;
         private float horizontal;
 
@@ -117,14 +130,53 @@ namespace Code.Player
         private void LateUpdate()
         {
             if (!IsOwner) return;
-
-            if (CanMove)
+            
+            Cursor.lockState = LockCursor ? CursorLockMode.Locked : CursorLockMode.None;
+            Cursor.visible = !LockCursor;
+            
+            if (CanMove || LookCameraLimitRotation)
                 UpdateCameraDistance();
-
-            if (CanMove || !FirstPersonView)
+            
+            if (LookCameraLimitRotation && FirstPersonView)
+                SitCameraRotation();
+            else if (CanMove || !FirstPersonView)
                 CameraRotation();
             else
                 ResetFirstPersonViewRotation();
+        }
+        
+        private void SitCameraRotation()
+        {
+            if (LookCameraLimitRotationRKM)
+                if (!Input.GetMouseButton(1))
+                {
+                    return;
+                }
+            
+            if (input.look.sqrMagnitude >= Threshold)
+            {
+                float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
+                cinemachineTargetYaw   += input.look.x * mul;
+                cinemachineTargetPitch += input.look.y * mul;
+            }
+
+            // ОГРАНИЧЕНИЕ ОТ БАЗОВОГО УГЛА
+            cinemachineTargetYaw   = Mathf.Clamp(
+                cinemachineTargetYaw,
+                sitBaseYaw - sitYawRange,
+                sitBaseYaw + sitYawRange
+            );
+            cinemachineTargetPitch = Mathf.Clamp(
+                cinemachineTargetPitch,
+                sitBasePitch + sitMinPitch,
+                sitBasePitch + sitMaxPitch
+            );
+
+            // Только меняем ТАРГЕТ, НИКОГДА transform игрока
+            cinemachineCameraTarget.transform.rotation =
+                Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride,
+                    cinemachineTargetYaw,
+                    0f);
         }
 
         private void AssignAnimationIDs()

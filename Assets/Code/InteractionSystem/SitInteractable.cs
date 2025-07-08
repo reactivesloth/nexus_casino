@@ -12,6 +12,9 @@ namespace Code.InteractionSystem
         [Header("Sit Settings")] [SerializeField]
         private Transform sitPoint;
 
+        [SerializeField] private bool allowRotateCamera = true;
+        [SerializeField] private bool useRightMouseButtonToRotate = false;
+        
         const string SIT_TRIGGER = "TriggerSit";
         const string STAND_TRIGGER = "TriggerStand";
         const string SIT_STATE = "Sitting";
@@ -21,7 +24,7 @@ namespace Code.InteractionSystem
         private Coroutine _sitRoutine;
         private Vector3 _savedPos;
         private Quaternion _savedRot;
-
+        
         private void Awake()
         {
             if (sitPoint == null)
@@ -39,7 +42,7 @@ namespace Code.InteractionSystem
             base.OnEndInteract(conn);
             TargetToggleSit(conn);
         }
-
+        
         [TargetRpc]
         private void TargetToggleSit(NetworkConnection conn)
         {
@@ -62,7 +65,6 @@ namespace Code.InteractionSystem
         private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
             Transform tf)
         {
-            _isSitting = true;
             move.CanMove = false;
             cc.enabled = false;
             anim.applyRootMotion = true;
@@ -72,7 +74,7 @@ namespace Code.InteractionSystem
             _savedRot = tf.rotation;
             tf.position = sitPoint.position;
             tf.rotation = sitPoint.rotation;
-
+            
             yield return new WaitUntil(() =>
                 anim.GetCurrentAnimatorStateInfo(0).IsName(SIT_STATE)
             );
@@ -81,6 +83,21 @@ namespace Code.InteractionSystem
             //tf.SetParent(sitPoint, false);
             anim.applyRootMotion = false;
             _sitRoutine = null;
+            
+            _isSitting = true;
+            if (allowRotateCamera)
+            {
+                move.LookCameraLimitRotation = true;
+
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = true;
+                    move.LockCursor = false;
+                }
+            }
+
+            move.sitBaseYaw   = move.cinemachineTargetYaw;
+            move.sitBasePitch = move.cinemachineTargetPitch;
         }
 
         private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, CharacterController cc,
@@ -99,6 +116,17 @@ namespace Code.InteractionSystem
             anim.applyRootMotion = false;
             cc.enabled = true;
             move.CanMove = true;
+            
+            if (allowRotateCamera)
+            {
+                move.LookCameraLimitRotation = false;
+
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = false;
+                    move.LockCursor = true;
+                }
+            }
 
             // server-side release happens via base.OnEndInteract called earlier
             _sitRoutine = null;

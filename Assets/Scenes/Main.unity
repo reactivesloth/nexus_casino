@@ -506,6 +506,11 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 2534964839176971238, guid: 4526c2f8a26c6e0438c76968884ffff0, type: 3}
+--- !u!23 &60108317 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 5685628468096169762, guid: 61e06e5d599dfa94990d978e27c75266, type: 3}
+  m_PrefabInstance: {fileID: 207382501}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &63434076
 GameObject:
   m_ObjectHideFlags: 0
@@ -3518,6 +3523,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &324335772
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3839,7 +3846,7 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   _interactionDistance: 3
   _interactableEnabled: 1
-  _manualRelease: 0
+  _manualRelease: 1
   children:
   - {fileID: 1549805468}
   - {fileID: 661491355}
@@ -3863,8 +3870,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 2.14, z: 0.2}
-  m_Center: {x: 0, y: 0.818, z: 0.922}
+  m_Size: {x: 1, y: 2.14, z: 0.41259885}
+  m_Center: {x: -0.00000067478584, y: 0.81799996, z: 0.8156983}
 --- !u!1001 &340503374
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6844,6 +6851,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &481009009
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -7062,6 +7071,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &493433230
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8214,6 +8225,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &590540334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8341,6 +8354,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &590942450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8790,6 +8805,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &653570249
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8969,6 +8986,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 1
 --- !u!114 &661491356
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9386,6 +9405,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &679627726
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9690,6 +9711,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &686205626
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10167,6 +10190,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &716342839
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11458,6 +11483,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &775706276
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20311,6 +20338,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &905604663
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -20469,6 +20498,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &906398843
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21653,6 +21684,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &931549624
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23022,6 +23055,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1046474059
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25099,6 +25134,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1148739495
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25759,6 +25796,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1188224415
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26736,6 +26775,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1281888364
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -28413,6 +28454,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1416925798
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -29297,6 +29340,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1484590572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30179,8 +30224,10 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   _interactionDistance: 3
   _interactableEnabled: 1
-  _manualRelease: 0
+  _manualRelease: 1
   computerCanvas: {fileID: 1757193333}
+  computerMeshRenderer: {fileID: 60108317}
+  materialIndex: 3
 --- !u!114 &1549805469
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -30424,6 +30471,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1567933058
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31371,6 +31420,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1609982085
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31692,6 +31743,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1646562031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -32370,6 +32423,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1686489118
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -33985,6 +34040,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1758471951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34878,6 +34935,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1799636506
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36044,6 +36103,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1879379963
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36261,6 +36322,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1892267943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36446,6 +36509,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &1897694849
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37671,6 +37736,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &2011851513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38635,6 +38702,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &2071615653
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -39273,6 +39342,8 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   sitPoint: {fileID: 0}
+  allowRotateCamera: 1
+  useRightMouseButtonToRotate: 0
 --- !u!114 &2110688627
 MonoBehaviour:
   m_ObjectHideFlags: 0
