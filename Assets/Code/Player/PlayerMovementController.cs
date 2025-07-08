@@ -33,6 +33,7 @@ namespace Code.Player
         [SerializeField] private float topClamp = 70f;
         [SerializeField] private float bottomClamp = -30f;
         [SerializeField] private float cameraAngleOverride = 0f;
+        [SerializeField] private Transform headTarget;
 
         [Header("Audio")]
         [SerializeField] private AudioClip landingAudioClip;
@@ -410,7 +411,7 @@ namespace Code.Player
             {
                 // Считаем цель взгляда от кости головы
                 Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
-                Vector3 targetPos = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
+                var targetPos = headTarget.position = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
 
                 // Сглаживаем переход позиции
                 currentLookAtPos = Vector3.Lerp(
