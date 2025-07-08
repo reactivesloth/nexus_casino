@@ -82,8 +82,6 @@ namespace Code.Network
         {
             bool iAmOwner   = Owner == NetworkManager.ClientManager.Connection;
             bool iWasOwner  = prev == NetworkManager.ClientManager.Connection;
-            
-            Debug.Log($"[NetworkImageStream] {Owner}]");
 
             if (iWasOwner && !iAmOwner && _sendLoop != null)
             {
