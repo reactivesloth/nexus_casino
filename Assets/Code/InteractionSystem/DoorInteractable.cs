@@ -31,11 +31,10 @@ namespace Code.InteractionSystem
         {
             // Отметить занятость и кикнуть клиентский RPC
             base.OnInteract(conn);
-            TargetToggleDoor(conn);
+            ToggleDoor();
         }
 
-        [TargetRpc]
-        private void TargetToggleDoor(NetworkConnection connection)
+        private void ToggleDoor()
         {
             // прервать текущую анимацию, если есть
             if (_doorRoutine != null)
