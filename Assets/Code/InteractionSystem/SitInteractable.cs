@@ -31,13 +31,13 @@ namespace Code.InteractionSystem
                 sitPoint = transform.Find("SitPoint");
         }
 
-        protected override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn)
         {
             base.OnInteract(conn);
             TargetToggleSit(conn);
         }
 
-        protected override void OnEndInteract(NetworkConnection conn)
+        protected internal override void OnEndInteract(NetworkConnection conn)
         {
             base.OnEndInteract(conn);
             TargetToggleSit(conn);

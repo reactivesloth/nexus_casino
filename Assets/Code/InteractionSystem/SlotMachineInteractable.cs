@@ -33,29 +33,28 @@ namespace Code.InteractionSystem
                 computerCanvas = GetComponentInChildren<Canvas>(true);
         }
         
-        protected override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn)
         {
             if (_isUsing) return;
 
             base.OnInteract(conn);
             _isUsing = true;
             TargetToggleComputerUI(conn, true);
-            GiveOwnership(conn);
         }
         
-        protected override void OnEndInteract(NetworkConnection conn)
+        protected internal override void OnEndInteract(NetworkConnection conn)
         {
             if (!_isUsing) return;
 
             base.OnEndInteract(conn);
             _isUsing = false;
             TargetToggleComputerUI(conn, false);
-            RemoveOwnership();
         }
 
         [TargetRpc]
         private void TargetToggleComputerUI(NetworkConnection conn, bool open)
         {
+            Debug.Log($"[ComputerInteractable] {conn}");
             Debug.Log($"[ComputerInteractable] TargetToggleComputerUI called -> open={open}");
             if (computerCanvas == null)
             {

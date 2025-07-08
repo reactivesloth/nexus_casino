@@ -27,7 +27,7 @@ namespace Code.InteractionSystem
                 doorTransform = transform;
         }
 
-        protected override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn)
         {
             // Отметить занятость и кикнуть клиентский RPC
             base.OnInteract(conn);
