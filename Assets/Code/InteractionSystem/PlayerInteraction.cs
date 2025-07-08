@@ -12,7 +12,7 @@ namespace Code.Player
 
         private Interactable _hovered;
         private Interactable _active;
-        private GameObject _currentOutline;
+        //private GameObject _currentOutline;
 
         private void Update()
         {
@@ -62,23 +62,23 @@ namespace Code.Player
         private void UpdateOutline()
         {
             // disable previous outline
-            if (_currentOutline != null)
-            {
-                _currentOutline.SetActive(false);
-                _currentOutline = null;
-            }
+            // if (_currentOutline != null)
+            // {
+            //     _currentOutline.SetActive(false);
+            //     _currentOutline = null;
+            // }
 
             // determine target for outline
-            var target = _active != null ? _active : _hovered;
-            if (target != null)
-            {
-                var outline = target.GetComponent<GameObject>();
-                if (outline != null)
-                {
-                    outline.SetActive(true);
-                    _currentOutline = outline;
-                }
-            }
+            // var target = _active != null ? _active : _hovered;
+            // if (target != null)
+            // {
+            //     var outline = target.GetComponent<GameObject>();
+            //     if (outline != null)
+            //     {
+            //         outline.SetActive(true);
+            //         _currentOutline = outline;
+            //     }
+            // }
         }
 
         private void UpdateUI()

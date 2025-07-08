@@ -5,6 +5,7 @@ using FishNet.Object.Synchronizing;
 
 namespace Code.InteractionSystem
 {
+    [RequireComponent(typeof(NetworkObject))]
     public abstract class Interactable : NetworkBehaviour
     {
         [Header("Interaction Settings")]
@@ -36,6 +37,19 @@ namespace Code.InteractionSystem
                 return _manualRelease ? "Press E to end" : "Occupied";
             }
         }
+
+        #if UNITY_EDITOR
+        private void OnValidate()
+        {
+            NetworkObject no = GetComponent<NetworkObject>();
+            if (no != null)
+                no.SetIsSpawnable(false);
+            
+            Collider collider = GetComponent<Collider>();
+            if (collider != null)
+                collider.isTrigger = true;
+        }
+        #endif
 
         /// <summary>Client-side call to request interaction start.</summary>
         public void RequestInteract()
@@ -74,7 +88,7 @@ namespace Code.InteractionSystem
 
         /// <summary>Releases occupancy, making object free again.</summary>
         [Server]
-        protected void ReleaseInteractable()
+        public void ReleaseInteractable()
         {
             _isOccupied.Value = false;
         }
@@ -87,7 +101,7 @@ namespace Code.InteractionSystem
         }
 
         // Override for custom logic on start
-        protected abstract void OnInteract(NetworkConnection conn);
+        protected virtual void OnInteract(NetworkConnection conn) {}
         // Override for custom logic on end (for manualRelease)
         protected virtual void OnEndInteract(NetworkConnection conn) { }
     }

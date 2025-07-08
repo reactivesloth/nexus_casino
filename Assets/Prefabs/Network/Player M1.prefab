@@ -1246,8 +1246,8 @@ MonoBehaviour:
   hideForFirstPersonViewLocal: []
   minCameraDistance: 1
   maxCameraDistance: 4
-  minFOV: 40
-  maxFOV: 65
+  minFOV: 55
+  maxFOV: 70
   topClamp: 70
   bottomClamp: -30
   cameraAngleOverride: 0
@@ -1267,6 +1267,13 @@ MonoBehaviour:
   CanMove: 1
   LockCameraPosition: 0
   FirstPersonView: 0
+  sitYawRange: 45
+  sitMinPitch: -30
+  sitMaxPitch: 30
+  cinemachineTargetYaw: -30
+  cinemachineTargetPitch: 30
+  sitBaseYaw: -30
+  sitBasePitch: 30
 --- !u!114 &27739964326571005
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1579,7 +1586,7 @@ MonoBehaviour:
   interactableMask:
     serializedVersion: 2
     m_Bits: 512
-  detectionDistance: 5
+  detectionDistance: 3
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
