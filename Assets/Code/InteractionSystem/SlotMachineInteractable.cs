@@ -54,7 +54,6 @@ namespace Code.InteractionSystem
         [TargetRpc]
         private void TargetToggleComputerUI(NetworkConnection conn, bool open)
         {
-            Debug.Log($"[ComputerInteractable] {conn}");
             Debug.Log($"[ComputerInteractable] TargetToggleComputerUI called -> open={open}");
             if (computerCanvas == null)
             {
