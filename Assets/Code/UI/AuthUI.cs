@@ -112,10 +112,10 @@ namespace Code.UI
         {
             phoneInput.interactable = true;
 
-            phoneInput.text = string.Empty;
+            phoneInput.text = PlayerPrefs.GetString("auth_phoneInput",  string.Empty);
             codeInput.text = string.Empty;
             if (nicknameInput != null)
-                nicknameInput.text = string.Empty;
+                nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput",  string.Empty);
 
             getConfirmCodeButton.gameObject.SetActive(true);
             authButton.gameObject.SetActive(false);
@@ -201,7 +201,11 @@ namespace Code.UI
                     HandleError(responseData.code, responseData.detail);
                     ToStartState();
                 }
-            }).Finally(() => authButton.interactable = true);
+            }).Finally(() =>
+            {
+                authButton.interactable = true;
+                PlayerPrefs.SetString("auth_phoneInput",  phoneInput.text);
+            });
         }
 
         private void PerformRegister()
@@ -232,7 +236,12 @@ namespace Code.UI
                     HandleError(responseData.code, responseData.detail);
                     ToStartState();
                 }
-            }).Finally(() => authButton.interactable = true);
+            }).Finally(() =>
+            {
+                authButton.interactable = true;
+                PlayerPrefs.SetString("auth_nicknameInput",  nicknameInput.text);
+                PlayerPrefs.SetString("auth_phoneInput",  phoneInput.text);
+            });
         }
 
         private void InitializeResendButton()
