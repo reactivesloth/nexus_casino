@@ -1,6 +1,7 @@
 ﻿using Cinemachine;
 using FishNet.Connection;
 using FishNet.Object;
+using SRF;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -128,6 +129,8 @@ namespace Code.Player
                 var head = animator.GetBoneTransform(HumanBodyBones.Head);
                 currentLookAtPos = head.position + cinemachineCameraTarget.transform.forward * 10f;
             }
+            
+            gameObject.SetLayerRecursive(LayerMask.NameToLayer("Player"));
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
