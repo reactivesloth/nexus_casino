@@ -17,8 +17,23 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Eye
+    second: {fileID: 2100000, guid: a9a96ccbdbd865a43a6d4db4ef90243f, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Eye.001
+    second: {fileID: 2100000, guid: 14b0404c271ec2447bae2f785743c0b9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Granite
     second: {fileID: 2100000, guid: c67ccd91166c2b9478e38d8e0623feda, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LightSpotEffect
+    second: {fileID: 2100000, guid: afe9bb9f72fcbbb408848245acc8bf8d, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -62,6 +77,21 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Poseidon1
+    second: {fileID: 2100000, guid: d49c9eb59b6f16745b92fc8d21a18bdb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Poseidon2.001
+    second: {fileID: 2100000, guid: c80a569866f051b4e8df38469ca7378e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: PoseidonPlatform
+    second: {fileID: 2100000, guid: 87140d62925f7cc4881edf45b856d0e8, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: ScreenHonorArea
     second: {fileID: 2100000, guid: 8e1afe9589991254cb02f98c661ac2e4, type: 2}
   - first:
@@ -95,130 +125,150 @@ ModelImporter:
       name: UVCrollMiddleRoom
     second: {fileID: 2100000, guid: b84ba42d4a01ce747bb71b47174edea4, type: 2}
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: _
-    second: {fileID: 2100000, guid: 43fe0b6fd444a524086a0e06f1b1e28d, type: 2}
+      name: LowPoly1_PlatformPoseidon_LOW_metallic
+    second: {fileID: 2800000, guid: a256329be20a8284ca85ea09b53d30d0, type: 3}
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: _.001
-    second: {fileID: 2100000, guid: 887ae71089725164a9723e3e4c816492, type: 2}
+      name: LowPoly1_PlatformPoseidon_LOW_normal
+    second: {fileID: 2800000, guid: 93d0115b496bfa943bdf9e9193089d6b, type: 3}
   - first:
-      type: UnityEngine:Material
+      type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: _.002
-    second: {fileID: 2100000, guid: e3924bc752855d743a3468f7ab58f4b4, type: 2}
+      name: LowPoly1_PlatformPoseidon_LOW_roughness
+    second: {fileID: 2800000, guid: 09868b0165916d641b41f0084928c380, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LowPoly_SPARTA_AUTO_LOW_metallic
+    second: {fileID: 2800000, guid: 517797689baab504e9cf97d431da9a6a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LowPoly_SPARTA_AUTO_LOW_normal
+    second: {fileID: 2800000, guid: 4ea8afb5a7ba3414cb04b213dcdb399e, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LowPoly_SPARTA_AUTO_LOW_roughness
+    second: {fileID: 2800000, guid: 5b8d7312ff12b284395f772c92b031ed, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: MarblEffects
-    second: {fileID: 2800000, guid: a3c11beaee417294f8a83ce46c2492a2, type: 3}
+    second: {fileID: 2800000, guid: eea9f86073a1c6849b016da2dfb8d705, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Marble-magic_diffuse
-    second: {fileID: 2800000, guid: 2e556798006360545be835cb90f06811, type: 3}
+    second: {fileID: 2800000, guid: 85d21978e5bc8334097dca46309b9505, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Marble-magic_diffuseMask
-    second: {fileID: 2800000, guid: 067b227a82e2ac045b9280d8dbd01493, type: 3}
+    second: {fileID: 2800000, guid: 998b63bbe3e67a34a9cdd8e885585f9e, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Marble-magic_normal
-    second: {fileID: 2800000, guid: fa07db4e806a7c34a98eabc4930adb90, type: 3}
+    second: {fileID: 2800000, guid: b4b2cb67e2d01fe4dbf48e684c613a67, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: PrunkvolleDecke
-    second: {fileID: 2800000, guid: 1cf0c0113ba18ca4681fb116550dfc16, type: 3}
+    second: {fileID: 2800000, guid: f93e19f963037ce4a9285b97b1c0b7d4, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: PrunkvolleDecke_normal
-    second: {fileID: 2800000, guid: f4f39a90feffe504cade88fb25469b39, type: 3}
+    second: {fileID: 2800000, guid: 4574c8a2d90bcdd4d82fa02637ca5241, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_diffuse
-    second: {fileID: 2800000, guid: 955e1ed3ad871bc4ba1f687448dac8f0, type: 3}
+    second: {fileID: 2800000, guid: 8ff7002ab7632044bb241e0332e2b96c, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_metallic
-    second: {fileID: 2800000, guid: da1c6aa57c6707448b2719fb2cb18c51, type: 3}
+    second: {fileID: 2800000, guid: 039f9bca9b363af4fa9af03668af2ce8, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_normal
-    second: {fileID: 2800000, guid: e2c88b755b20fae48b05ab43e96f085c, type: 3}
+    second: {fileID: 2800000, guid: d948e6e59992d224782e66fc33abb3df, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_diffuse
-    second: {fileID: 2800000, guid: 25b6ab2969955f04aae746b0cce2308f, type: 3}
+    second: {fileID: 2800000, guid: bead9916f68a4d44fae33576faf5fa58, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_metallic
-    second: {fileID: 2800000, guid: 3e2bff2499a2b9d4583ac94ffc6a768d, type: 3}
+    second: {fileID: 2800000, guid: d05d033db5167bd4ea640b2393711874, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_normal
-    second: {fileID: 2800000, guid: 579ecca35ca30aa4b80bc22b5e520327, type: 3}
+    second: {fileID: 2800000, guid: 0f27716f49779e84cb80df6ca124cd84, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: _Normal
-    second: {fileID: 2800000, guid: 1f8bee066a3fd5d4784dc65176ed816e, type: 3}
+      name: bake_Poseidon2_LOW.001_normal
+    second: {fileID: 2800000, guid: 2382563e6e31cfb4d98962613bd3c1d5, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: _Normal.0001
-    second: {fileID: 2800000, guid: 077df8082cb5d094ab995a3aab95106f, type: 3}
+      name: bake_Poseidon2_LOW.001_roughness
+    second: {fileID: 2800000, guid: b4401ff00d6a6f745a0d6b4b3ab7d33f, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
-      name: _Normal.0002
-    second: {fileID: 2800000, guid: ee95d2506f609b3448abf32f6d77ad4b, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: __Diffuse
-    second: {fileID: 2800000, guid: 670e845ea01d453499c4eb587846cc81, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: __Diffuse_0001
-    second: {fileID: 2800000, guid: 7de709d6175f373429c09b0da9feaa02, type: 3}
-  - first:
-      type: UnityEngine:Texture2D
-      assembly: UnityEngine.CoreModule
-      name: __Diffuse_0002
-    second: {fileID: 2800000, guid: e0a374b91ff6fed4f84a7a443eb4f07d, type: 3}
+      name: bake_Poseidon2_LOW.002_metallic
+    second: {fileID: 2800000, guid: 8225800245a30ec4d92a4744e4516d75, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: effectMiddleRoomTop
-    second: {fileID: 2800000, guid: 4edda39727894c24fba1218b9bf4aae2, type: 3}
+    second: {fileID: 2800000, guid: 39219e61604d4bf41892b8a494d4b168, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: faske_diffuse
-    second: {fileID: 2800000, guid: ca75eb606f49a82439f8084310ed09e3, type: 3}
+    second: {fileID: 2800000, guid: 28f0fd48fad04b24db393f8491ad18fe, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: faske_normal
-    second: {fileID: 2800000, guid: 31f68510b44c05946b6840221782478e, type: 3}
+    second: {fileID: 2800000, guid: 55acd2b7d2e959340b9ed108e9a2fc1a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: file_1b315362fdfe276c~
+    second: {fileID: 2800000, guid: fbeeee112d6a9d84b8401ed50ddef31d, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: gray-granite-flecks-Normal-ogl
-    second: {fileID: 2800000, guid: b41743b5626fcd7469ca9ef16be95400, type: 3}
+    second: {fileID: 2800000, guid: 8f68681333f70bf40baa4e6ffb2c3915, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: image (4)
+    second: {fileID: 2800000, guid: f01341051d0d31840a3955be33866559, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: photo_16_2025-05-04_22-32-41
+    second: {fileID: 2800000, guid: 07634df891b5f534482b8abcccfa74c9, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: shockwave02_01
+    second: {fileID: 2800000, guid: 8803f03072b8b434bb187928f0516619, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -245,7 +295,7 @@ ModelImporter:
     extraExposedTransformPaths: []
     extraUserProperties: []
     clipAnimations: []
-    isReadable: 1
+    isReadable: 0
   meshes:
     lODScreenPercentages: []
     globalScale: 1
@@ -260,7 +310,7 @@ ModelImporter:
     importLights: 1
     nodeNameCollisionStrategy: 1
     fileIdsGeneration: 2
-    swapUVChannels: 1
+    swapUVChannels: 0
     generateSecondaryUV: 1
     useFileUnits: 1
     keepQuads: 0
@@ -284,7 +334,7 @@ ModelImporter:
     strictVertexDataChecks: 0
   tangentSpace:
     normalSmoothAngle: 60
-    normalImportMode: 1
+    normalImportMode: 0
     tangentImportMode: 3
     normalCalculationMode: 4
     legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
