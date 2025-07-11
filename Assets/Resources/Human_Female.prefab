@@ -1525,6 +1525,9 @@ PrefabInstance:
       addedObject: {fileID: 3849972420961721490}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1343710114766049718}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 4352281537206514680}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
       insertIndex: -1
@@ -3368,7 +3371,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+  _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   moveSpeed: 2
   sprintSpeed: 5.335
@@ -3420,6 +3423,49 @@ MonoBehaviour:
   cinemachineTargetPitch: 30
   sitBaseYaw: -30
   sitBasePitch: 30
+--- !u!114 &1343710114766049718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1272060476704202414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 1
+  _addedNetworkObject: {fileID: 5084366635518163755, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
+  _networkObjectCache: {fileID: 5084366635518163755, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
+  _componentConfiguration: 1
+  _synchronizeParent: 0
+  _packing:
+    Position: 1
+    Rotation: 1
+    Scale: 0
+  _interpolation: 2
+  _extrapolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  _clientAuthoritative: 1
+  _sendToOwner: 1
+  _interval: 1
+  _synchronizePosition: 1
+  _positionSnapping:
+    X: 0
+    Y: 0
+    Z: 0
+  _synchronizeRotation: 1
+  _rotationSnapping:
+    X: 0
+    Y: 0
+    Z: 0
+  _synchronizeScale: 1
+  _scaleSnapping:
+    X: 0
+    Y: 0
+    Z: 0
 --- !u!114 &4352281537206514680
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3511,7 +3557,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+  _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   VoiceChatType: 0
   VoiceDetectionType: 0
@@ -3533,7 +3579,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 2
-  _addedNetworkObject: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+  _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   IgnoredParameters: []
   _animator: {fileID: 8152730912067525347}
@@ -3555,7 +3601,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 3
-  _addedNetworkObject: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+  _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   interactableMask:
     serializedVersion: 2
