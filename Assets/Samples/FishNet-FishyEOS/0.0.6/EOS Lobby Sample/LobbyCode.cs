@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Linq;
+using Code.Network.Lobby;
+using Code.Network.Lobby.EOSCoroutines;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Auth;
 using Epic.OnlineServices.Lobby;

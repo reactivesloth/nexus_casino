@@ -82,16 +82,16 @@ namespace Code.InteractionSystem
             }
         }
 
-        protected override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn)
         {
             foreach (var child in children)
-                child.RequestInteract();
+                child.OnInteract(conn);
         }
 
-        protected override void OnEndInteract(NetworkConnection conn)
+        protected internal override void OnEndInteract(NetworkConnection conn)
         {
             foreach (var child in children)
-                child.RequestEndInteract();
+                child.OnEndInteract(conn);
         }
 
         [Server]

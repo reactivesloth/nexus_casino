@@ -27,15 +27,14 @@ namespace Code.InteractionSystem
                 doorTransform = transform;
         }
 
-        protected override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn)
         {
             // Отметить занятость и кикнуть клиентский RPC
             base.OnInteract(conn);
-            TargetToggleDoor(conn);
+            ToggleDoor();
         }
 
-        [TargetRpc]
-        private void TargetToggleDoor(NetworkConnection connection)
+        private void ToggleDoor()
         {
             // прервать текущую анимацию, если есть
             if (_doorRoutine != null)

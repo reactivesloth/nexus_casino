@@ -21,8 +21,9 @@ namespace Code.Network
         /* ──────────── Инспектор ──────────── */
 
         [SerializeField] private RawImage rawImage;
-        [Header("Idle State")]
-        [SerializeField] private Texture2D idleTexture;
+        [Header("Render to Settings")]
+        [SerializeField] private MeshRenderer computerMeshRenderer;
+        [SerializeField] private int materialIndex;
 
         [Header("Stream Quality")]
         [SerializeField, Min(0.1f)] private float fps = 24f;
@@ -92,8 +93,15 @@ namespace Code.Network
                 _sendLoop = StartCoroutine(SendLoop());
             }
 
-            if (Owner == null)
+            if (Owner == null || OwnerId == -1)
+            {
                 ShowIdleTexture();
+                if(_sendLoop != null)
+                {
+                    StopCoroutine(_sendLoop);
+                    _sendLoop = null;
+                }
+            }
         }
 
         /* ========= Unity ========= */
@@ -115,7 +123,8 @@ namespace Code.Network
 
         private void ShowIdleTexture()
         {
-            if (rawImage) rawImage.texture = idleTexture;
+            computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", null);
+            computerMeshRenderer.materials[materialIndex].SetColor("_BaseColor", Color.black);
         }
 
         /* ========= Send ========= */
@@ -178,11 +187,37 @@ namespace Code.Network
 
         /* ========= Receive ========= */
 
+        private Texture2D _flippedTex;
         private void ApplyImage(byte[] bytes)
         {
-            var tex = new Texture2D(2, 2, TextureFormat.RGB24, false);
-            tex.LoadImage(bytes, false);
-            rawImage.texture = tex;
+            var originalTex = new Texture2D(2, 2, TextureFormat.RGB24, false);
+            originalTex.LoadImage(bytes, false);
+
+            var width = originalTex.width;
+            var height = originalTex.height;
+
+            // Переиспользуем flippedTex, если возможно
+            if (!_flippedTex || _flippedTex.width != width || _flippedTex.height != height)
+            {
+                if (_flippedTex)
+                    Destroy(_flippedTex);
+                _flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+            }
+
+            for (int y = 0; y < height; y++)
+            {
+                Color[] row = originalTex.GetPixels(0, y, width, 1);
+                _flippedTex.SetPixels(0, height - y - 1, width, 1, row);
+            }
+
+            _flippedTex.Apply();
+
+            var mat = computerMeshRenderer.materials[materialIndex];
+            mat.SetTexture("_BaseMap", _flippedTex);
+            mat.SetColor("_BaseColor", Color.white);
+
+            // Уничтожаем временную текстуру, чтобы не было утечек памяти
+            Destroy(originalTex);
         }
 
         /* ========= Helper ========= */

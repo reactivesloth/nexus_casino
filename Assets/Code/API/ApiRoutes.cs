@@ -1,0 +1,26 @@
+// Скрипт с константами для API путей
+
+namespace Code.API
+{
+    public static class ApiRoutes
+    {
+        public const string DOMAIN = "https://back.nexusmetaclub.com"; // Замените на актуальный домен
+
+        public const string SIGN_UP = "/api/client/auth/signUp";
+        public const string LOGIN = "/api/client/auth/login";
+        public const string UPDATE_TOKENS = "/api/client/auth/updateTokens";
+        public const string SEND_CODE = "/api/client/auth/sendCode";
+        public const string GET_ME = "/api/client/users/me";
+        public const string GET_OPERATORS = "/api/client/operators/";
+        public const string GET_OPERATOR_LOGIN_URL = "/api/client/operators/{0}/loginUrl"; // {0} - operator_id
+
+        // Методы для получения полного URL
+        public static string GetSignUpUrl() => DOMAIN.TrimEnd('/') + SIGN_UP;
+        public static string GetLoginUrl() => DOMAIN.TrimEnd('/') + LOGIN;
+        public static string GetUpdateTokensUrl() => DOMAIN.TrimEnd('/') + UPDATE_TOKENS;
+        public static string GetSendCodeUrl() => DOMAIN.TrimEnd('/') + SEND_CODE;
+        public static string GetMeUrl() => DOMAIN.TrimEnd('/') + GET_ME;
+        public static string GetOperatorsUrl() => DOMAIN.TrimEnd('/') + GET_OPERATORS;
+        public static string GetOperatorLoginUrl(int operatorId) => DOMAIN.TrimEnd('/') + string.Format(GET_OPERATOR_LOGIN_URL, operatorId);
+    }
+} 

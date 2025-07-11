@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
+using UnityEngine.UI;
 
 namespace Code.InteractionSystem
 {
@@ -31,25 +32,8 @@ namespace Code.InteractionSystem
             if (computerCanvas == null)
                 computerCanvas = GetComponentInChildren<Canvas>(true);
         }
-
-        private void Update()
-        {
-            if (_isUsing)
-            {
-                //тут нужно взять сначала текстуру с канваса, либо с WebView
-                //https://developer.vuplex.com/webview/IWebView#GetRawTextureData
-                //https://support.vuplex.com/articles/how-to-use-standard-material
-                
-                //разделяем логику приема передачи
-                
-                // на получаетеле задаем текстуру на "монитор"
-                var tex = new Texture2D(1, 1);
-                computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", tex);
-                // непонятно почему, но текстура не применяется на материале (даже если назначается, то материал в сцене не меняется
-            }
-        }
         
-        protected override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn)
         {
             if (_isUsing) return;
 
@@ -58,7 +42,7 @@ namespace Code.InteractionSystem
             TargetToggleComputerUI(conn, true);
         }
         
-        protected override void OnEndInteract(NetworkConnection conn)
+        protected internal override void OnEndInteract(NetworkConnection conn)
         {
             if (!_isUsing) return;
 

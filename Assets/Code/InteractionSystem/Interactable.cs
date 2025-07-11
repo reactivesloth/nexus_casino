@@ -104,8 +104,14 @@ namespace Code.InteractionSystem
         }
 
         // Override for custom logic on start
-        protected virtual void OnInteract(NetworkConnection conn) {}
+        protected internal virtual void OnInteract(NetworkConnection conn)
+        {
+            GiveOwnership(conn);
+        }
         // Override for custom logic on end (for manualRelease)
-        protected virtual void OnEndInteract(NetworkConnection conn) { }
+        protected internal virtual void OnEndInteract(NetworkConnection conn)
+        {
+            RemoveOwnership();
+        }
     }
 }

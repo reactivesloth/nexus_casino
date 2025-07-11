@@ -294,7 +294,7 @@ namespace CC
 #endif
         }
 
-        public void LoadFromJSON()
+        public void LoadFromJSON(string jsonString = "")
         {
             //Load if file exists, otherwise create a save file and rerun the function
             if (!File.Exists(SavePath)) createSaveFile();
@@ -303,6 +303,10 @@ namespace CC
             {
                 //Load CC_SaveData from JSON file
                 string jsonLoad = File.ReadAllText(SavePath);
+                
+                if (jsonString != "")
+                    jsonLoad = jsonString;
+                
                 CC_SaveData CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
                 //Find character index by CharacterName and load character data

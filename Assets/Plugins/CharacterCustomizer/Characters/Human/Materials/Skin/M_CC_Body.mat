@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 9
+  version: 10
 --- !u!114 &-4989217440900366068
 MonoBehaviour:
   m_ObjectHideFlags: 11
@@ -34,16 +34,15 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_CC_Body
-  m_Shader: {fileID: -6465566751694194690, guid: 2886a56cf83cd5946876389c522ff13b,
-    type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: 2886a56cf83cd5946876389c522ff13b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _BODY
-  - _DISABLE_SSR_TRANSPARENT
   - _SPECULAR_SETUP
   - _USE_FAKE_SPECULAR
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _DISABLE_SSR_TRANSPARENT
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -415,6 +414,7 @@ Material:
     - _Specular: {r: 0.34901962, g: 0.32156864, b: 0.30980393, a: 1}
     - _WorldSpaceLightPos0: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!114 &6132149964382370642
 MonoBehaviour:
   m_ObjectHideFlags: 11

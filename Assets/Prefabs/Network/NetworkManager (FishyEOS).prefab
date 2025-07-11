@@ -227,9 +227,9 @@ GameObject:
   - component: {fileID: 525029335073755469}
   - component: {fileID: 1714873521220585699}
   - component: {fileID: 8515350939450788961}
-  - component: {fileID: 8930818810712555327}
   - component: {fileID: 6416528979493729918}
   - component: {fileID: 6064849975517459838}
+  - component: {fileID: 7047908494159192036}
   m_Layer: 0
   m_Name: NetworkManager (FishyEOS)
   m_TagString: Untagged
@@ -443,18 +443,6 @@ MonoBehaviour:
   _tickRate: 50
   _pingInterval: 1
   _physicsMode: 1
---- !u!114 &8930818810712555327
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c6a405e22c584f00a3c940a592cef331, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &6416528979493729918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -495,6 +483,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &7047908494159192036
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a04206ebef9e4c147abfe7d8a0fadfda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  lobbyController: {fileID: 0}
 --- !u!1 &5109258346219524947
 GameObject:
   m_ObjectHideFlags: 0

@@ -684,6 +684,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Human_Male
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 962458069109010838, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       propertyPath: m_Layer
       value: 0
@@ -1738,7 +1742,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   CharacterName: Default_Male
   MainMesh: {fileID: 3226961578869652419}
-  UI: {fileID: 0}
+  UI: {fileID: 2396302900887007917, guid: 7f53815473a226f4ab8d64504846647a, type: 3}
   Autoload: 1
   LoadAsync: 0
   HairTables:
@@ -1829,9 +1833,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45ac6d9553a0d774c88a59058782b2d7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  animator: {fileID: 1327933454218635796}
+  animator: {fileID: 0}
   capsule: {fileID: 0}
-  useGravity: 0
+  useGravity: 1
   ragdolling: 0
   customizing: 0
 --- !u!114 &8807482833776830214
