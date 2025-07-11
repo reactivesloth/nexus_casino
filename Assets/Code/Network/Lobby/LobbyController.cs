@@ -64,43 +64,16 @@ namespace Code.Network.Lobby
 
                 var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
 
-                // === Фильтрация лобби: исключаем "пустые" и некорректные ===
-                for (int i = lobbyList.Count - 1; i >= 0; i--)
+                for (var i = 0; i < lobbyList.Count; i++)
                 {
                     var lobby = lobbyList[i];
-                    // Проверяем версию
-                    var versionResult = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttribute);
-                    if (versionResult != Result.Success || !versionAttribute.HasValue || versionAttribute?.Data?.Value.AsUtf8 != Application.version)
-                    {
-                        lobbyList.RemoveAt(i);
-                        continue;
-                    }
-
-                    // Проверяем наличие HOST_ID
-                    var hostIdResult = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "HOST_ID", out var hostIdAttribute);
-                    var hostId = hostIdAttribute?.Data?.Value.AsUtf8;
-                    if (hostIdResult != Result.Success || string.IsNullOrEmpty(hostId))
-                    {
-                        lobbyList.RemoveAt(i);
-                        continue;
-                    }
-
-                    // Проверяем, что хост есть среди участников
-                    var members = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(lobby);
-                    if (members == null || members.All(m => m.ToString() != hostId))
-                    {
-                        lobbyList.RemoveAt(i);
-                        continue;
-                    }
-
-                    // Проверяем, что в лобби есть хотя бы 1 участник (можно увеличить до 2, если нужно)
-                    if (members.Count < 1)
-                    {
-                        lobbyList.RemoveAt(i);
-                        continue;
-                    }
+                    var lobbyVersionRequest =
+                        global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "PRODUCT_VERSION",
+                            out var versionAttribute);
+                    if (lobbyVersionRequest != Result.Success || !versionAttribute.HasValue ||
+                        versionAttribute?.Data?.Value.AsUtf8 != Application.version)
+                        lobbyList.Remove(lobby);
                 }
-                // === Конец фильтрации ===
 
                 if (lobbyList == null || lobbyList.Count == 0)
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
