@@ -27,18 +27,19 @@ namespace Code.Network.Player
         [TargetRpc]
         private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
         {
+            /*Debug.Log($"[MigratableCharacter] Migrate");
             thirdPersonController.FirstPersonView = data.isFirstPersonView;
             thirdPersonController.CinemachineCameraTarget.transform.SetLocalPositionAndRotation(
-                data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);
+                data.cameraRootTransformData.GetUnityPosition, data.cameraRootTransformData.GetUnityRotation);*/
         }
 
         public CharacterMigrateData GetMigrateData()
         {
             return new CharacterMigrateData
             {
-                cameraRootTransformData =
+                /*cameraRootTransformData =
                     SerializableTransform.SetFromUnityTransformLocal(thirdPersonController.CinemachineCameraTarget.transform),
-                isFirstPersonView = thirdPersonController.FirstPersonView
+                isFirstPersonView = thirdPersonController.FirstPersonView*/
             };
         }
     }

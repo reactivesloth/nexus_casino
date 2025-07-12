@@ -1,14 +1,19 @@
 ﻿using Cinemachine;
+using Code.Network.HostMigration;
+using Code.Network.HostMigration.Data;
+using Code.Network.Player;
 using FishNet.Connection;
 using FishNet.Object;
 using SRF;
 using UnityEngine;
 using UnityEngine.Serialization;
+using Quaternion = UnityEngine.Quaternion;
+using Vector3 = UnityEngine.Vector3;
 
 namespace Code.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerMovementController : NetworkBehaviour
+    public class PlayerMovementController : NetworkBehaviour, IMigratable<CharacterMigrateData>
     {
         [Header("Settings")]
         [SerializeField] private float moveSpeed = 2.0f;
@@ -429,5 +434,39 @@ namespace Code.Player
                 animator.SetLookAtPosition(currentLookAtPos);
             }
         }
+
+        #region  Migration Logic 
+
+        public void OnMigrateDataReceived(CharacterMigrateData data)
+        {
+            if(NetworkManager.IsServerStarted)
+                SetPlayerState(Owner, data);
+        }
+
+        [TargetRpc]
+        private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
+        {
+            Debug.Log("[MigratableCharacter] Migrate");
+
+            cinemachineTargetPitch = data.cinemachineTargetPitch;
+            cinemachineTargetYaw = data.cinemachineTargetYaw;
+            
+            cameraDistance = data.cameraDistance;
+            FirstPersonView = data.isFirstPersonView;
+        }
+
+        public CharacterMigrateData GetMigrateData()
+        {
+            return new CharacterMigrateData
+            {
+                cinemachineTargetPitch = cinemachineTargetPitch,
+                cinemachineTargetYaw = cinemachineTargetYaw,
+                
+                cameraDistance = cameraDistance,
+                isFirstPersonView = FirstPersonView
+            };
+        }
+
+        #endregion
     }
 }
