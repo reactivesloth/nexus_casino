@@ -110,7 +110,9 @@ namespace Code.Network
                 return;
 
             HostMigrator.MarkMigrating();
-            OnRemoteHost(nextHostId);
+            
+            Debug.Log($"Connect to new host. ID: {nextHostId}");
+            StartClientConnection();
         }
 
         private void OnCurrentHostDisconnected(string newHostId)
@@ -119,21 +121,10 @@ namespace Code.Network
                 return;
 
             HostMigrator.MarkMigrating();
-            OnLocalHost();
-        }
-
-        private void OnLocalHost()
-        {
+            
             Debug.Log("I am a new host!");
-
             StartHostConnection();
             lobbyController.UpdateHost(LobbyVariables.Instance.productUserId);
-        }
-
-        private void OnRemoteHost(string newHostId)
-        {
-            Debug.Log($"Connect to new host. ID: {newHostId}");
-            StartClientConnection();
         }
     }
 }

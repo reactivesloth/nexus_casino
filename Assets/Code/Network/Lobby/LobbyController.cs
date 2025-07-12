@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
-using Code.Network.HostMigration;
 using Code.Network.Lobby.EOSCoroutines;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
@@ -348,26 +347,30 @@ namespace Code.Network.Lobby
             var currentHostId = lobby.Attributes.TryGetValue("HOST_ID", out var currentHostIdResult)
                 ? currentHostIdResult
                 : string.Empty;
+            var nextHostId = lobby.Attributes.TryGetValue("NEXT_HOST_ID", out var nextHostIdResult)
+                ? nextHostIdResult
+                : string.Empty;
+            
             if (!string.IsNullOrEmpty(currentHostId))
                 CheckCurrentHostDisconnected();
 
             // Остался только игрок
-            if (lobby.lobbyMembers.Count == 1 &&
-                lobby.lobbyMembers[0].productUserId == LobbyVariables.Instance.productUserId &&
-                !InstanceFinder.NetworkManager.IsServerStarted)
+            if (lobby.lobbyMembers.Count == 1 
+                && lobby.lobbyMembers[0].productUserId == LobbyVariables.Instance.productUserId 
+                && !InstanceFinder.NetworkManager.IsServerStarted
+                && string.IsNullOrEmpty(nextHostId))
             {
+                // TODO: ожиадние ответа от лобби.
+                
                 // Обновляем хост
                 LobbyUpdateLobby.Run(out var setId, lobby.lobbyId, "HOST_ID",
                     LobbyVariables.Instance.productUserId);
+                
                 OnHostConnectionReady();
             }
             
             if (!InstanceFinder.NetworkManager.IsServerStarted)
                 return;
-
-            var nextHostId = lobby.Attributes.TryGetValue("NEXT_HOST_ID", out var nextHostIdResult)
-                ? nextHostIdResult
-                : string.Empty;
 
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
                 m.productUserId == nextHostId && m.productUserId != LobbyVariables.Instance.productUserId);
