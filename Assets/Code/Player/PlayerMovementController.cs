@@ -433,7 +433,7 @@ namespace Code.Player
             }
         }
 
-        #region  Migration Logic 
+        #region IMigratable
 
         public void OnMigrateDataReceived(CharacterMigrateData data)
         {
