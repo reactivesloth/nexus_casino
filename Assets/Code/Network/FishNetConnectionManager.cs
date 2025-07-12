@@ -42,6 +42,7 @@ namespace Code.Network
 
         public static void StartHostConnection()
         {
+            ClearOldConnections();
             var networkManager = InstanceFinder.NetworkManager;
             var localUserId = LobbyVariables.Instance.ProductUserId;
             var fishyEOS = networkManager.GetComponent<FishyEOS>();
@@ -71,6 +72,8 @@ namespace Code.Network
                 return;
             }
 
+            ClearOldConnections();
+
             var networkManager = InstanceFinder.NetworkManager;
             var fishyEOS = networkManager.GetComponent<FishyEOS>();
             fishyEOS.RemoteProductUserId = hostId;
@@ -89,14 +92,23 @@ namespace Code.Network
                 networkManager.ClientManager.StopConnection();
             networkManager.ClientManager.StartConnection();
         }
-        
+
+        private static void ClearOldConnections()
+        {
+            var clientManager = InstanceFinder.ClientManager;
+            if (clientManager.Started)
+                clientManager.StopConnection();
+
+            var serverManager = InstanceFinder.ServerManager;
+            if (serverManager.Started)
+                serverManager.StopConnection(false);
+        }
+
         private void OnHostChanged(string nextHostId)
         {
-            
-            
             if (nextHostId == LobbyVariables.Instance.productUserId)
                 return;
-            
+
             HostMigrator.MarkMigrating();
             OnRemoteHost(nextHostId);
         }
@@ -105,19 +117,19 @@ namespace Code.Network
         {
             if (newHostId != LobbyVariables.Instance.productUserId)
                 return;
-            
+
             HostMigrator.MarkMigrating();
             OnLocalHost();
         }
-        
+
         private void OnLocalHost()
         {
             Debug.Log("I am a new host!");
-            
+
             StartHostConnection();
             lobbyController.UpdateHost(LobbyVariables.Instance.productUserId);
         }
-        
+
         private void OnRemoteHost(string newHostId)
         {
             Debug.Log($"Connect to new host. ID: {newHostId}");
