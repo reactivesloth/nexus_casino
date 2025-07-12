@@ -88,7 +88,7 @@ namespace Code.Network.Lobby
                         global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(randomLobby, out var info);
                         var maxMembers = info.Value.MaxMembers;
                         var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(randomLobby).Count;
-                        if (memberCount >= maxMembers)
+                        if (memberCount >= maxMembers || memberCount < 1)
                         {
                             lobies.Remove(randomLobby);
                             continue;
