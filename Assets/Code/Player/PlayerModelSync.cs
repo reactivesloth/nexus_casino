@@ -1,4 +1,3 @@
-using System;
 using CC;
 using FishNet.Connection;
 using FishNet.Object;
@@ -18,10 +17,7 @@ namespace Code.Player
             Invoke("TransmitLocalCharacter", 1);
         }
         
-        /// <summary>
-        /// Клиент → сервер: шлёт свой JSON
-        /// </summary>
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc]
         public void SendCharacterJsonServerRpc(string json, NetworkConnection sender = null)
         {
             // на сервере логируем и ретранслируем всем остальным
@@ -29,9 +25,6 @@ namespace Code.Player
             SendCharacterJsonObserversRpc(json);
         }
 
-        /// <summary>
-        /// Сервер → все клиенты (ObserversRpc автоматически шлёт всем, у кого есть этот NetworkBehaviour)
-        /// </summary>
         [ObserversRpc(BufferLast = true)]
         private void SendCharacterJsonObserversRpc(string json)
         {
@@ -40,9 +33,6 @@ namespace Code.Player
             _characterCustomization.LoadFromJSON(json);
         }
 
-        /// <summary>
-        /// Вызывается на клиенте, когда нужно отправить свой локальный JSON
-        /// </summary>
         public void TransmitLocalCharacter()
         {
             if (!IsOwner) return; 
