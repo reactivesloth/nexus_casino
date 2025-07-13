@@ -14,9 +14,10 @@ namespace Code.Player
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
+            
+            Invoke("TransmitLocalCharacter", 1);
         }
-
-
+        
         /// <summary>
         /// Клиент → сервер: шлёт свой JSON
         /// </summary>
@@ -44,6 +45,8 @@ namespace Code.Player
         /// </summary>
         public void TransmitLocalCharacter()
         {
+            if (!IsOwner) return; 
+            
             string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);
         }
