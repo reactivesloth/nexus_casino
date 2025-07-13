@@ -3,7 +3,7 @@ using Newtonsoft.Json;
 
 namespace Code.Network.HostMigration
 {
-    public interface IMigratable<TMigrateDataType> : IMigratableBase where TMigrateDataType : struct
+    public interface IMigratable<TMigrateDataType> : IMigratableBase
     {
         void OnMigrateDataReceived(TMigrateDataType data);
         new TMigrateDataType GetMigrateData();

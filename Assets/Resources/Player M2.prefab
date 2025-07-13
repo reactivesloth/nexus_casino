@@ -566,9 +566,6 @@ PrefabInstance:
       addedObject: {fileID: 8013488042586796887}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 4572378555792315357}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -6006401730760851951}
     - targetCorrespondingSourceObject: {fileID: -5823106577872157028, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
@@ -751,6 +748,7 @@ MonoBehaviour:
   topClamp: 70
   bottomClamp: -30
   cameraAngleOverride: 0
+  headTarget: {fileID: 0}
   landingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
   footstepAudioClips:
   - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
@@ -767,6 +765,16 @@ MonoBehaviour:
   CanMove: 1
   LockCameraPosition: 0
   FirstPersonView: 0
+  sitYawRange: 45
+  sitMinPitch: -10
+  sitMaxPitch: 30
+  ikTransitionSpeed: 5
+  lookAtSmoothSpeed: 5
+  lookAtClampWeight: 0.5
+  cinemachineTargetYaw: 0
+  cinemachineTargetPitch: 0
+  sitBaseYaw: 0
+  sitBasePitch: 0
 --- !u!114 &4250282582304474929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -810,7 +818,6 @@ MonoBehaviour:
   - {fileID: 3089256175066004713}
   - {fileID: 6626438044635640616}
   - {fileID: 8013488042586796887}
-  - {fileID: 4572378555792315357}
   - {fileID: -6006401730760851951}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -838,7 +845,7 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 1
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 6103801439275987240
+  <AssetPathHash>k__BackingField: 8660729257753279777
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: -5.992, y: 1.006, z: -0.486}
@@ -1045,22 +1052,6 @@ MonoBehaviour:
   _interpolation: 2
   _clientAuthoritative: 1
   _sendToOwner: 0
---- !u!114 &4572378555792315357
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68cebc4cbc3d439ca304b76a3daee372, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 4
-  _addedNetworkObject: {fileID: 5084366635518163755}
-  _networkObjectCache: {fileID: 5084366635518163755}
-  thirdPersonController: {fileID: 6472889869485083012}
 --- !u!114 &-6006401730760851951
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1073,7 +1064,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 188f87c970204124b28e52a171bbb2f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 5
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 5084366635518163755}
   _networkObjectCache: {fileID: 5084366635518163755}
   interactableMask:

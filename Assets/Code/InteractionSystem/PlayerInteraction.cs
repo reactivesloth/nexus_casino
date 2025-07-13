@@ -2,21 +2,24 @@
 using UnityEngine;
 using FishNet.Object;
 using Code.InteractionSystem;
+using Code.Network.HostMigration;
+using Code.Network.HostMigration.Components;
+using Code.Network.Player;
+using FishNet.Connection;
 using SRF;
 using Unity.VisualScripting;
 
 namespace Code.Player
 {
-    public class PlayerInteraction : NetworkBehaviour
+    public class PlayerInteraction : NetworkBehaviour, IMigratable<CharacterInteractableMigrateData>
     {
-        [Header("Detection")]
-        [SerializeField] private LayerMask interactableMask;
+        [Header("Detection")] [SerializeField] private LayerMask interactableMask;
         [SerializeField] private float detectionDistance = 3f;
 
         private Interactable _hovered;
         private Interactable _active;
         private GameObject[] outlineGameObjects;
-        
+
         private void Update()
         {
             if (!IsOwner) return;
@@ -59,13 +62,14 @@ namespace Code.Player
                     return;
                 }
             }
+
             _hovered = null;
         }
 
         private void UpdateOutline()
         {
             var target = _active != null ? _active : _hovered;
-            
+
             if (outlineGameObjects != (target != null && !target.IsOccupied ? target.outlineGameObjects : null))
             {
                 if (outlineGameObjects != null)
@@ -99,5 +103,40 @@ namespace Code.Player
             else
                 InteractionUIHint.Instance.HidePrompt();
         }
+
+        #region IMigratable
+
+        public void OnMigrateDataReceived(CharacterInteractableMigrateData data)
+        {
+            if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
+                return;
+
+            SetInteractableOnMigrate(Owner, data);
+        }
+
+        [TargetRpc]
+        public void SetInteractableOnMigrate(NetworkConnection conn, CharacterInteractableMigrateData data)
+        {
+            var sceneObject = SceneObject.GetObjectById(data.activeId);
+            if (!sceneObject)
+                return;
+            if (!sceneObject.TryGetComponent(out Interactable interactable))
+                return;
+
+            _active = interactable;
+            _active.RequestInteract();
+        }
+
+        public CharacterInteractableMigrateData GetMigrateData()
+        {
+            if (!_active || !_active.TryGetComponent<SceneObject>(out var sceneObject))
+                return default;
+            return new CharacterInteractableMigrateData
+            {
+                activeId = sceneObject.ObjectGuid.ToString()
+            };
+        }
+
+        #endregion
     }
 }

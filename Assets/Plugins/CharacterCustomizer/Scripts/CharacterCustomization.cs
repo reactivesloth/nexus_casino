@@ -324,6 +324,12 @@ namespace CC
             }
         }
 
+        public string GetJSON()
+        {
+            if (!File.Exists(SavePath)) createSaveFile();
+            return CharacterName != "" ? File.ReadAllText(SavePath) : string.Empty;
+        }
+
         public bool LoadFromPreset(string presetName)
         {
             if (GetPresetData(presetName, out var preset))

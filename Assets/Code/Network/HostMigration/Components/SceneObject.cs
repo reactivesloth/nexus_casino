@@ -25,5 +25,11 @@ namespace Code.Network.HostMigration.Components
 
             return allSceneObjects.Where(o => o != this).All(o => o.ObjectGuid != ObjectGuid);
         }
+
+        public static SceneObject GetObjectById(string objectId)
+        {
+            var objects = FindObjectsByType<SceneObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            return objects.FirstOrDefault(o => o.objectId == objectId);
+        }
     }
 }

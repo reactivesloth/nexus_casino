@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
-using Code.Network.HostMigration;
 using Code.Network.Lobby.EOSCoroutines;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
@@ -29,14 +28,14 @@ namespace Code.Network.Lobby
 
         private void OnEnable()
         {
-            LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyUpdateHost);
+            LobbyEvents.Instance.LobbyUpdateReceived.AddListener(OnLobbyAttributesUpdated);
             LobbyEvents.Instance.LobbyMemberUpdateReceived.AddListener(OnMembersUpdate);
             LobbyEvents.Instance.LobbyMemberStatusReceived.AddListener(OnLobbyMemberStatusReceived);
         }
 
         private void OnDisable()
         {
-            LobbyEvents.Instance.LobbyUpdateReceived.RemoveListener(OnLobbyUpdateHost);
+            LobbyEvents.Instance.LobbyUpdateReceived.RemoveListener(OnLobbyAttributesUpdated);
             LobbyEvents.Instance.LobbyMemberUpdateReceived.RemoveListener(OnMembersUpdate);
             LobbyEvents.Instance.LobbyMemberStatusReceived.RemoveListener(OnLobbyMemberStatusReceived);
         }
@@ -88,7 +87,7 @@ namespace Code.Network.Lobby
                         global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(randomLobby, out var info);
                         var maxMembers = info.Value.MaxMembers;
                         var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(randomLobby).Count;
-                        if (memberCount >= maxMembers)
+                        if (memberCount >= maxMembers || memberCount < 1)
                         {
                             lobies.Remove(randomLobby);
                             continue;
@@ -246,7 +245,7 @@ namespace Code.Network.Lobby
             OnClientConnectionReady();
         }
 
-        private void OnLobbyUpdateHost(LobbyUpdateReceivedCallbackInfo e)
+        private void OnLobbyAttributesUpdated(LobbyUpdateReceivedCallbackInfo e)
         {
             var localUserId = LobbyVariables.Instance.ProductUserId;
             var currentLobby = LobbyVariables.Instance.currentLobby;
@@ -288,8 +287,8 @@ namespace Code.Network.Lobby
             if (!string.IsNullOrEmpty(oldHostId) && newHostId != oldHostId)
             {
                 // Вызываем событие смены хоста
+                Debug.LogWarning($"[LobbyController] Host updated to {newHostId}");
                 OnHostChanged?.Invoke(newHostId);
-                InstanceFinder.NetworkManager.GetComponent<HostMigrator>().MarkMigrating();
             }
 
             UpdateMembers();
@@ -348,15 +347,30 @@ namespace Code.Network.Lobby
             var currentHostId = lobby.Attributes.TryGetValue("HOST_ID", out var currentHostIdResult)
                 ? currentHostIdResult
                 : string.Empty;
-            if (!string.IsNullOrEmpty(currentHostId))
-                CheckCurrentHostDisconnected();
-
-            if (!InstanceFinder.NetworkManager.IsServerStarted)
-                return;
-
             var nextHostId = lobby.Attributes.TryGetValue("NEXT_HOST_ID", out var nextHostIdResult)
                 ? nextHostIdResult
                 : string.Empty;
+            
+            if (!string.IsNullOrEmpty(currentHostId))
+                CheckCurrentHostDisconnected();
+
+            // Остался только игрок
+            if (lobby.lobbyMembers.Count == 1 
+                && lobby.lobbyMembers[0].productUserId == LobbyVariables.Instance.productUserId 
+                && !InstanceFinder.NetworkManager.IsServerStarted
+                && string.IsNullOrEmpty(nextHostId))
+            {
+                // TODO: ожиадние ответа от лобби.
+                
+                // Обновляем хост
+                LobbyUpdateLobby.Run(out var setId, lobby.lobbyId, "HOST_ID",
+                    LobbyVariables.Instance.productUserId);
+                
+                OnHostConnectionReady();
+            }
+            
+            if (!InstanceFinder.NetworkManager.IsServerStarted)
+                return;
 
             var nextHostMember = lobby.lobbyMembers.FirstOrDefault(m =>
                 m.productUserId == nextHostId && m.productUserId != LobbyVariables.Instance.productUserId);
