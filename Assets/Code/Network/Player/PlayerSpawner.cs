@@ -192,7 +192,7 @@ namespace Code.Network.Player
                 return;
 
             // читаем выбор из PlayerPrefs (или откуда угодно)
-            string gender = PlayerPrefs.GetString("PlayerGender", "Male");
+            string gender = PlayerPrefs.GetString("PlayerGender", "Female");
 
             // шлём Broadcast на сервер
             var msg = new GenderBroadcast { Gender = gender };
