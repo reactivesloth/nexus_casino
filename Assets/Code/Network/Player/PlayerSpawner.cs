@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using FishNet;
+using FishNet.Broadcast;
 using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Object;
@@ -9,6 +10,11 @@ using UnityEngine;
 
 namespace Code.Network.Player
 {
+    public struct GenderBroadcast : IBroadcast
+    {
+        public string Gender;
+    }
+    
     /// <summary>
     /// Spawns a player object for clients when they connect.
     /// </summary>
@@ -22,18 +28,11 @@ namespace Code.Network.Player
         #endregion
 
         #region Serialized.
-        /// <summary>
-        /// Prefab to spawn for the player.
-        /// </summary>
-        [Tooltip("Prefab to spawn for the player.")]
-        [SerializeField]
-        private NetworkObject _playerPrefab;
-
-        /// <summary>
-        /// Sets the PlayerPrefab to use.
-        /// </summary>
-        /// <param name="nob"></param>
-        public void SetPlayerPrefab(NetworkObject nob) => _playerPrefab = nob;
+        [Header("Player Prefabs")]
+        [Tooltip("Male player prefab")]
+        [SerializeField] private NetworkObject malePrefab;
+        [Tooltip("Female player prefab")]
+        [SerializeField] private NetworkObject femalePrefab;
 
         /// <summary>
         /// True to add player to the active scene when no global scenes are specified through the SceneManager.
@@ -59,6 +58,8 @@ namespace Code.Network.Player
         private int _nextSpawn;
         
         private List<NetworkConnection> _dontSpawn = new();
+        private readonly Dictionary<NetworkConnection, string> _genders = new();
+
         #endregion
 
         private void OnEnable()
@@ -73,8 +74,10 @@ namespace Code.Network.Player
                 return;
             }
 
+            InstanceFinder.ServerManager.RegisterBroadcast<GenderBroadcast>(OnGenderBroadcastReceived, true);
             _networkManager.SceneManager.OnClientLoadedStartScenes += SceneManager_OnClientLoadedStartScenes;
             _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnOnServerConnectionState;
+            InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
         }
 
         private void OnDisable()
@@ -82,8 +85,16 @@ namespace Code.Network.Player
             if (_networkManager == null)
                 return;
             
+            InstanceFinder.ServerManager.UnregisterBroadcast<GenderBroadcast>(OnGenderBroadcastReceived);
             _networkManager.SceneManager.OnClientLoadedStartScenes -= SceneManager_OnClientLoadedStartScenes;
             _networkManager.ServerManager.OnServerConnectionState -= ServerManagerOnOnServerConnectionState;
+            InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;
+        }
+        
+        private void OnGenderBroadcastReceived(NetworkConnection conn, GenderBroadcast msg, Channel channel)
+        {
+            _genders[conn] = msg.Gender;
+            Debug.Log($"[Server] Получен пол '{msg.Gender}' от клиента {conn.ClientId}");
         }
         
         private void ServerManagerOnOnServerConnectionState(ServerConnectionStateArgs obj)
@@ -101,17 +112,22 @@ namespace Code.Network.Player
                 return;
             if(_dontSpawn.Contains(conn))
                 return;
-            if (_playerPrefab == null)
+            
+            _genders.TryGetValue(conn, out string gender);
+            gender = string.IsNullOrEmpty(gender) ? "Male" : gender;
+            
+            NetworkObject prefab = gender == "Female" ? femalePrefab : malePrefab;
+            if (prefab == null)
             {
-                NetworkManagerExtensions.LogWarning($"Player prefab is empty and cannot be spawned for connection {conn.ClientId}.");
+                Debug.LogWarning($"[{nameof(PlayerSpawner)}] Нет префаба для пола '{gender}'");
                 return;
             }
 
             Vector3 position;
             Quaternion rotation;
-            SetSpawn(_playerPrefab.transform, out position, out rotation);
+            SetSpawn(prefab.transform, out position, out rotation);
 
-            NetworkObject nob = _networkManager.GetPooledInstantiated(_playerPrefab, position, rotation, true);
+            NetworkObject nob = _networkManager.GetPooledInstantiated(prefab, position, rotation, true);
             _networkManager.ServerManager.Spawn(nob, conn);
 
             //If there are no global scenes 
@@ -168,6 +184,21 @@ namespace Code.Network.Player
         {
             Debug.Log($"[DontSpawnOnConnect] {conn}");
             _dontSpawn.Add(conn);
+        }
+        
+        private void OnClientConnectionState(ClientConnectionStateArgs args)
+        {
+            if (args.ConnectionState != LocalConnectionState.Started)
+                return;
+
+            // читаем выбор из PlayerPrefs (или откуда угодно)
+            string gender = PlayerPrefs.GetString("PlayerGender", "Male");
+
+            // шлём Broadcast на сервер
+            var msg = new GenderBroadcast { Gender = gender };
+            InstanceFinder.ClientManager.Broadcast(msg);
+
+            Debug.Log($"[Client] Отправил Broadcast с полом '{gender}'");
         }
     }
 }

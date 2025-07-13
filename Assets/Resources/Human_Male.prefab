@@ -1608,9 +1608,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: -2968260864419366097}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 3968559222372352651}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8753856777003469895}
@@ -3210,7 +3207,7 @@ MonoBehaviour:
   - {fileID: -1646371719508509015}
   - {fileID: 5620196158516784120}
   - {fileID: -2968260864419366097}
-  - {fileID: 3968559222372352651}
+  - {fileID: 0}
   - {fileID: 8144962258630108305}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -3371,22 +3368,6 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   detectionDistance: 3
---- !u!114 &3968559222372352651
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1127680710956633387}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68cebc4cbc3d439ca304b76a3daee372, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 5
-  _addedNetworkObject: {fileID: 4352281537206514680, guid: 51ca181595adb9f4badfe0ef54b91255, type: 3}
-  _networkObjectCache: {fileID: 92631491164151932}
-  thirdPersonController: {fileID: 8802292562543951320}
 --- !u!1 &1148177878228989410 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8320365392235035240, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
