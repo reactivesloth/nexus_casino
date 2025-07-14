@@ -8,6 +8,7 @@ using Proyecto26;
 using Proyecto26.Helper;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Code.UI
@@ -336,10 +337,7 @@ namespace Code.UI
 
         private void OnUserCanStartGame()
         {
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-            lobbyController.StartPollingLobbies();
-            gameObject.SetActive(false);
-            //TODO: Start Game
+            SceneManager.LoadSceneAsync("Character Customization");
         }
 
         private void HandleError(string title, string errorMessage)

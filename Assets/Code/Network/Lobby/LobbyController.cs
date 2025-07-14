@@ -40,6 +40,11 @@ namespace Code.Network.Lobby
             LobbyEvents.Instance.LobbyMemberStatusReceived.RemoveListener(OnLobbyMemberStatusReceived);
         }
 
+        private void Start()
+        {
+            StartPollingLobbies();
+        }
+
         public void StartPollingLobbies()
         {
             _pollCoroutine = StartCoroutine(PollLobbiesRoutine());
