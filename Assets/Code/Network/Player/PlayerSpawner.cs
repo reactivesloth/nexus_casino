@@ -10,9 +10,15 @@ using UnityEngine;
 
 namespace Code.Network.Player
 {
-    public struct GenderBroadcast : IBroadcast
+    public struct PlayerTypeBroadcast : IBroadcast
     {
-        public string Gender;
+        public string PlayerType;
+    }
+    
+    [Serializable]
+    public class PlayerSpawnableModelKeyValuePair {
+        public string key;
+        public NetworkObject val;
     }
     
     /// <summary>
@@ -28,11 +34,6 @@ namespace Code.Network.Player
         #endregion
 
         #region Serialized.
-        [Header("Player Prefabs")]
-        [Tooltip("Male player prefab")]
-        [SerializeField] private NetworkObject malePrefab;
-        [Tooltip("Female player prefab")]
-        [SerializeField] private NetworkObject femalePrefab;
 
         /// <summary>
         /// True to add player to the active scene when no global scenes are specified through the SceneManager.
@@ -47,6 +48,16 @@ namespace Code.Network.Player
         public Transform[] Spawns = new Transform[0];
         #endregion
 
+        
+        [SerializeField] private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new List<PlayerSpawnableModelKeyValuePair>();
+        Dictionary<string, NetworkObject> playerSpawnables = new Dictionary<string, NetworkObject>();
+
+        void Awake() {
+            foreach (var kvp in playerPrefabs) {
+                playerSpawnables[kvp.key] = kvp.val;
+            }
+        }
+        
         #region Private.
         /// <summary>
         /// First instance of the NetworkManager found. This will be either the NetworkManager on or above this object, or InstanceFinder.NetworkManager.
@@ -58,7 +69,7 @@ namespace Code.Network.Player
         private int _nextSpawn;
         
         private List<NetworkConnection> _dontSpawn = new();
-        private readonly Dictionary<NetworkConnection, string> _genders = new();
+        private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
 
         #endregion
 
@@ -74,7 +85,7 @@ namespace Code.Network.Player
                 return;
             }
 
-            InstanceFinder.ServerManager.RegisterBroadcast<GenderBroadcast>(OnGenderBroadcastReceived, true);
+            InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnGenderBroadcastReceived, true);
             _networkManager.SceneManager.OnClientLoadedStartScenes += SceneManager_OnClientLoadedStartScenes;
             _networkManager.ServerManager.OnServerConnectionState += ServerManagerOnOnServerConnectionState;
             InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
@@ -85,16 +96,16 @@ namespace Code.Network.Player
             if (_networkManager == null)
                 return;
             
-            InstanceFinder.ServerManager.UnregisterBroadcast<GenderBroadcast>(OnGenderBroadcastReceived);
+            InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnGenderBroadcastReceived);
             _networkManager.SceneManager.OnClientLoadedStartScenes -= SceneManager_OnClientLoadedStartScenes;
             _networkManager.ServerManager.OnServerConnectionState -= ServerManagerOnOnServerConnectionState;
             InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;
         }
         
-        private void OnGenderBroadcastReceived(NetworkConnection conn, GenderBroadcast msg, Channel channel)
+        private void OnGenderBroadcastReceived(NetworkConnection conn, PlayerTypeBroadcast msg, Channel channel)
         {
-            _genders[conn] = msg.Gender;
-            Debug.Log($"[Server] Получен пол '{msg.Gender}' от клиента {conn.ClientId}");
+            _playerTypes[conn] = msg.PlayerType;
+            Debug.Log($"[Server] Получен пол '{msg.PlayerType}' от клиента {conn.ClientId}");
         }
         
         private void ServerManagerOnOnServerConnectionState(ServerConnectionStateArgs obj)
@@ -113,13 +124,14 @@ namespace Code.Network.Player
             if(_dontSpawn.Contains(conn))
                 return;
             
-            _genders.TryGetValue(conn, out string gender);
-            gender = string.IsNullOrEmpty(gender) ? "Male" : gender;
+            _playerTypes.TryGetValue(conn, out string playerModelType);
+            playerModelType = string.IsNullOrEmpty(playerModelType) ? "Male" : playerModelType;
+
+            playerSpawnables.TryGetValue(playerModelType, out NetworkObject prefab);
             
-            NetworkObject prefab = gender == "Female" ? femalePrefab : malePrefab;
             if (prefab == null)
             {
-                Debug.LogWarning($"[{nameof(PlayerSpawner)}] Нет префаба для пола '{gender}'");
+                Debug.LogWarning($"[{nameof(PlayerSpawner)}] Нет префаба для типа модели '{playerModelType}'");
                 return;
             }
 
@@ -192,13 +204,13 @@ namespace Code.Network.Player
                 return;
 
             // читаем выбор из PlayerPrefs (или откуда угодно)
-            string gender = PlayerPrefs.GetString("PlayerGender", "Female");
+            string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
 
             // шлём Broadcast на сервер
-            var msg = new GenderBroadcast { Gender = gender };
+            var msg = new PlayerTypeBroadcast { PlayerType = playerModelType };
             InstanceFinder.ClientManager.Broadcast(msg);
 
-            Debug.Log($"[Client] Отправил Broadcast с полом '{gender}'");
+            Debug.Log($"[Client] Отправил Broadcast с моделью игрока '{playerModelType}'");
         }
     }
 }
