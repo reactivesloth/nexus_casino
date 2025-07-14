@@ -122,9 +122,9 @@ namespace Code.Network
 
             HostMigrator.MarkMigrating();
             
-            Debug.Log("[FishNetConnectionManager] I am a new host!");
+            Debug.Log($"[FishNetConnectionManager] I am a new host! {newHostId}");
             StartHostConnection();
-            lobbyController.UpdateHost(LobbyVariables.Instance.productUserId);
+            lobbyController.UpdateHost(newHostId);
         }
     }
 }

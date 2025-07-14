@@ -20,6 +20,9 @@ namespace Code.Network.HostMigration.Utility
 
         public static void RestorePlayerData(MigratePlayerData state, NetworkConnection sender)
         {
+            if(state.objects == null)
+                return;
+                
             foreach (var networkObjectData in state.objects)
             {
                 Debug.Log(

@@ -27,6 +27,8 @@ namespace Code.Network.HostMigration
         private bool _isMigrating = false;
 
         public UnityEvent<NetworkConnection> hostMigrateProcessConnection;
+        
+        public bool IsHostMigrating => _isMigrating;
 
         #region Unity Callbacks
 
@@ -83,8 +85,11 @@ namespace Code.Network.HostMigration
         private void OnServerReceiveMigrateBroadcast(NetworkConnection connection, MigratePlayerData data,
             Channel channel)
         {
-            hostMigrateProcessConnection?.Invoke(connection);
             Debug.Log(JsonConvert.SerializeObject(data, Formatting.Indented));
+            if(data.objects == null)
+                return;
+            
+            hostMigrateProcessConnection?.Invoke(connection);
             HostSessionRestorer.RestorePlayerData(data, connection);
         }
         
