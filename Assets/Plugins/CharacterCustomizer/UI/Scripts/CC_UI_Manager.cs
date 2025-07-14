@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -48,7 +47,26 @@ namespace CC
 
         public void Start()
         {
-            SetActiveCharacter(0);
+            string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
+
+            switch (playerModelType)
+            {
+                case "Female":
+                    SetActiveCharacter(0);
+                    break;
+                case "Male":
+                    SetActiveCharacter(1);
+                    break;
+                case "PlayerM1":
+                    SetActiveCharacter(2);
+                    break;
+                case "PlayerM2":
+                    SetActiveCharacter(3);
+                    break;
+                default:
+                    SetActiveCharacter(1);
+                    break;
+            }
         }
 
         private void Update()
