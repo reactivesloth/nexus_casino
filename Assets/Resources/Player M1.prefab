@@ -186,7 +186,7 @@ Transform:
   m_GameObject: {fileID: 9079256719307716292}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -4.6786833, y: 5.80097, z: -4.108876}
+  m_LocalPosition: {x: -3.054688, y: 3.7605877, z: 5.182424}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1184,12 +1184,12 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1.8
-  m_Radius: 0.25
+  m_Radius: 0.3
   m_SlopeLimit: 45
   m_StepOffset: 0.25
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
-  m_Center: {x: 0, y: 0.93, z: 0}
+  m_Center: {x: 0, y: 0.93, z: 0.1}
 --- !u!114 &6249604213645723479
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1301,18 +1301,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 3901444026938387538}
-  _networkObjectCache: {fileID: 3901444026938387538}
-  moveSpeed: 2
-  sprintSpeed: 5.335
+  _addedNetworkObject: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
+  _networkObjectCache: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
+  moveSpeed: 1.5
+  sprintSpeed: 4
   rotationSmoothTime: 0.12
-  speedChangeRate: 10
-  jumpHeight: 1.2
-  gravity: -15
+  speedChangeRate: 25
+  jumpHeight: 0.3
+  gravity: -9.8
   jumpTimeout: 0.5
   fallTimeout: 0.15
-  groundedOffset: -0.14
-  groundedRadius: 0.28
+  groundedOffset: 0.15
+  groundedRadius: 0.2
   groundLayers:
     serializedVersion: 2
     m_Bits: 1
@@ -1349,8 +1349,8 @@ MonoBehaviour:
   ikTransitionSpeed: 5
   lookAtSmoothSpeed: 5
   lookAtClampWeight: 0.5
-  cinemachineTargetYaw: -30
-  cinemachineTargetPitch: 30
+  cinemachineTargetYaw: 66.750015
+  cinemachineTargetPitch: 11.499929
   sitBaseYaw: -30
   sitBasePitch: 30
 --- !u!114 &27739964326571005
