@@ -367,6 +367,7 @@ namespace Code.Network.Lobby
             {
                 // TODO: ожиадние ответа от лобби.
                 
+                Debug.Log($"[LobbyController] I am alone and not host in new lobby");
                 // Обновляем хост
                 LobbyUpdateLobby.Run(out var setId, lobby.lobbyId, "HOST_ID",
                     LobbyVariables.Instance.productUserId);
@@ -397,7 +398,10 @@ namespace Code.Network.Lobby
 
             var currentHostMember = lobby.lobbyMembers.FirstOrDefault(m => m.productUserId == currentHostId);
             if (currentHostMember == null)
+            {
+                Debug.Log($"[LobbyController] Current host disconnected, next is {nextHostId}");
                 OnCurrentHostDisconnected?.Invoke(nextHostId);
+            }
         }
 
         private void OnNextHostDisconnected(string currentHostId)
@@ -405,7 +409,7 @@ namespace Code.Network.Lobby
             var lobby = LobbyVariables.Instance.currentLobby;
             var members = lobby.lobbyMembers;
 
-            Debug.Log("[LobbyCode] OnNextHostDisconnected");
+            Debug.Log("[LobbyController] OnNextHostDisconnected");
             var lobbyId = lobby.lobbyId;
 
             var nextHostMember = members.FirstOrDefault(m => m.productUserId != LobbyVariables.Instance.productUserId);

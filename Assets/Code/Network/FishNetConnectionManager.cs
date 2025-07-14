@@ -111,7 +111,7 @@ namespace Code.Network
 
             HostMigrator.MarkMigrating();
             
-            Debug.Log($"Connect to new host. ID: {nextHostId}");
+            Debug.Log($"[FishNetConnectionManager] Connect to new host. ID: {nextHostId}");
             StartClientConnection();
         }
 
@@ -122,7 +122,7 @@ namespace Code.Network
 
             HostMigrator.MarkMigrating();
             
-            Debug.Log("I am a new host!");
+            Debug.Log("[FishNetConnectionManager] I am a new host!");
             StartHostConnection();
             lobbyController.UpdateHost(LobbyVariables.Instance.productUserId);
         }
