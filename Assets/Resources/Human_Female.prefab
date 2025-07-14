@@ -236,7 +236,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 5
+  _componentIndexCache: 6
   _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   _componentConfiguration: 0
@@ -3251,13 +3251,13 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 2
-  m_Radius: 0.3
+  m_Height: 1.8
+  m_Radius: 0.4
   m_SlopeLimit: 45
-  m_StepOffset: 0.3
-  m_SkinWidth: 0.08
-  m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1, z: 0}
+  m_StepOffset: 0.25
+  m_SkinWidth: 0.02
+  m_MinMoveDistance: 0
+  m_Center: {x: 0, y: 0.93, z: 0.1}
 --- !u!114 &3849972420961721490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3273,16 +3273,16 @@ MonoBehaviour:
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
-  moveSpeed: 2
-  sprintSpeed: 5.335
+  moveSpeed: 1.5
+  sprintSpeed: 4
   rotationSmoothTime: 0.12
-  speedChangeRate: 10
-  jumpHeight: 1.2
-  gravity: -15
+  speedChangeRate: 25
+  jumpHeight: 0.3
+  gravity: -9.8
   jumpTimeout: 0.5
   fallTimeout: 0.15
-  groundedOffset: 0.3
-  groundedRadius: 0.28
+  groundedOffset: 0.15
+  groundedRadius: 0.2
   groundLayers:
     serializedVersion: 2
     m_Bits: 1
@@ -3319,8 +3319,8 @@ MonoBehaviour:
   ikTransitionSpeed: 5
   lookAtSmoothSpeed: 5
   lookAtClampWeight: 0.5
-  cinemachineTargetYaw: -30
-  cinemachineTargetPitch: 30
+  cinemachineTargetYaw: 66.750015
+  cinemachineTargetPitch: 11.499929
   sitBaseYaw: -30
   sitBasePitch: 30
 --- !u!114 &4352281537206514680
@@ -3347,6 +3347,7 @@ MonoBehaviour:
   - {fileID: 6183654667939445624}
   - {fileID: -3019385570368759620}
   - {fileID: 858145957491498471}
+  - {fileID: -6820189403691583383}
   - {fileID: 4964559403302773656}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -3372,7 +3373,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 3
+  <PrefabId>k__BackingField: 4
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 9170617792454009809
   <SceneId>k__BackingField: 0
@@ -3519,9 +3520,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a055d70f678732b448d01e01e69c387c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 5
   _addedNetworkObject: {fileID: 4352281537206514680}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4352281537206514680}
 --- !u!1 &1292025462828639847 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8320365392235035240, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
