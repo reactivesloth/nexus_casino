@@ -45,9 +45,9 @@ namespace CC
             customizer.SaveToPreset(name);
         }
 
-        public void saveToJSON(string name)
+        public void saveToJSON()
         {
-            customizer.SaveToJSON(name);
+            customizer.SaveToJSON();
         }
 
         public void loadCharacter()
