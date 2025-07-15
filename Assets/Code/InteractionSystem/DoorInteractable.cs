@@ -25,7 +25,8 @@ namespace Code.InteractionSystem
         protected readonly SyncVar<float> _openDegree = new (new SyncTypeSettings()
         {
             WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
+            ReadPermission = ReadPermission.Observers,
+            SendRate = 1f/30f
         });
 
 

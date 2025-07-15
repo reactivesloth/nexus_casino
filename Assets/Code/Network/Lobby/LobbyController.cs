@@ -495,7 +495,7 @@ namespace Code.Network.Lobby
         
         public void LeaveLobby()
         {
-            EOS.GetManager().StartCoroutine(LeaveLobbyRoutine());
+            EOS.GetManager()?.StartCoroutine(LeaveLobbyRoutine());
         }
 
         private IEnumerator LeaveLobbyRoutine()
