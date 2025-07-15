@@ -36,16 +36,14 @@ namespace Code.Network
             lobbyController.OnCurrentHostDisconnected -= OnCurrentHostDisconnected;
         }
 
-        public static void StartHostConnection()
+        public void StartHostConnection()
         {
-            var networkObjectsInScene =
-                FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            
-            foreach (var networkObject in networkObjectsInScene)
-                networkObject.ResetState(true);
             
             Debug.Log("[LobbyPopup] Starting HostConnection");
+            
+            ResetAllNetworkObjectsInScene(true);
             ClearOldConnections();
+            
             var networkManager = InstanceFinder.NetworkManager;
             var localUserId = LobbyVariables.Instance.ProductUserId;
             var fishyEOS = networkManager.GetComponent<FishyEOS>();
@@ -69,8 +67,9 @@ namespace Code.Network
             // UI/game activation можно оставить на стороне LobbyController
         }
 
-        public static void StartClientConnection()
+        public void StartClientConnection()
         {
+            
             var currentLobby = LobbyVariables.Instance.currentLobby;
             if (currentLobby == null || !currentLobby.Attributes.TryGetValue("HOST_ID", out var hostId))
             {
@@ -78,6 +77,7 @@ namespace Code.Network
                 return;
             }
 
+            ResetAllNetworkObjectsInScene(false);
             ClearOldConnections();
 
             var networkManager = InstanceFinder.NetworkManager;
@@ -99,7 +99,7 @@ namespace Code.Network
             Debug.Log("[FishNetConnectionManager] Client started");
         }
 
-        private static void ClearOldConnections()
+        private void ClearOldConnections()
         {
             var clientManager = InstanceFinder.ClientManager;
             if (clientManager.Started)
@@ -108,6 +108,15 @@ namespace Code.Network
             var serverManager = InstanceFinder.ServerManager;
             if (serverManager.Started)
                 serverManager.StopConnection(false);
+        }
+
+        private void ResetAllNetworkObjectsInScene(bool asServer)
+        {
+            var networkObjectsInScene =
+                FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            
+            foreach (var networkObject in networkObjectsInScene)
+                networkObject.ResetState(asServer);
         }
 
         private void OnHostChanged(string nextHostId)
