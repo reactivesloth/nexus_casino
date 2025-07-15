@@ -2242,76 +2242,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 193257575}
   m_CullTransparentMesh: 1
---- !u!1 &202534970
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 202534971}
-  - component: {fileID: 202534972}
-  m_Layer: 0
-  m_Name: LobbyVariables
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &202534971
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 202534970}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &202534972
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 202534970}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0338c2a73f37273458f8bad6bae54add, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  displayName:
-    value: 
-  productUserId: 
-  hostLobbyName:
-    value: 
-  maxLobbyUsers: 5
-  bucketId: MyBucket
-  authData:
-    loginCredentialType: 3
-    externalCredentialType: 10
-    id: 
-    token: 
-    displayName: FishyEOS
-    automaticallyCreateDeviceId: 1
-    automaticallyCreateConnectAccount: 1
-    authScopeFlags: 0
-    timeout: 30
-  currentLobby:
-    lobbyId: 
-    lobbyName: 
-    maxPlayers: 0
-    lobbyMembers: []
-    attributeKeys: []
-    attributeValues: []
-  pollLobbiesInterval: 5
-  lobbyPopupUI: {fileID: 50506566}
 --- !u!1 &203610065 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -2362578065679795535, guid: 4526c2f8a26c6e0438c76968884ffff0, type: 3}
@@ -5772,7 +5702,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 386071121}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: 
         m_MethodName: 
         m_Mode: 1
@@ -5913,68 +5843,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3411867866854075438, guid: ca4cb3bc93015cd4d8bf52964a4a07c3, type: 3}
   m_PrefabInstance: {fileID: 384109784}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &386071121
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 386071122}
-  - component: {fileID: 386071123}
-  m_Layer: 0
-  m_Name: LobbyEvents
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &386071122
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 386071121}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &386071123
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 386071121}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f815a08d6b64498b65b0f0bea5885af, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ButtonClicked:
-    m_PersistentCalls:
-      m_Calls: []
-  InputFieldChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  ToggleValueChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  LobbyUpdateReceived:
-    m_PersistentCalls:
-      m_Calls: []
-  LobbyMemberStatusReceived:
-    m_PersistentCalls:
-      m_Calls: []
-  LobbyMemberUpdateReceived:
-    m_PersistentCalls:
-      m_Calls: []
 --- !u!1 &386596853
 GameObject:
   m_ObjectHideFlags: 0
@@ -23682,63 +23550,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 108929065853327307, guid: 7c851f14b28b1944aade98cfb8c0b45a, type: 3}
   m_PrefabInstance: {fileID: 999444059}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1002821650
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1002821651}
-  - component: {fileID: 1002821652}
-  - component: {fileID: 1002821653}
-  m_Layer: 0
-  m_Name: AutoLobby
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1002821651
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1002821650}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1002821652
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1002821650}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 243ebc9d4dfbf654dac9f95f3846fb41, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &1002821653
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1002821650}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 429dc5efc0fd42fab8c86e4d29a6e03e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1001 &1009161013
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -43250,10 +43061,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: NetworkManager (FishyEOS)
       objectReference: {fileID: 0}
-    - target: {fileID: 7047908494159192036, guid: 014f5b7eba6e81241b7b1042529e25b0, type: 3}
-      propertyPath: lobbyController
-      value: 
-      objectReference: {fileID: 1002821652}
     - target: {fileID: 7947594284464758584, guid: 014f5b7eba6e81241b7b1042529e25b0, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -43294,12 +43101,15 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8915904165044842815, guid: 014f5b7eba6e81241b7b1042529e25b0, type: 3}
+      propertyPath: lobbyPopupUI
+      value: 
+      objectReference: {fileID: 50506566}
     - target: {fileID: 9009099536143981849, guid: 014f5b7eba6e81241b7b1042529e25b0, type: 3}
       propertyPath: 'Spawns.Array.data[0]'
       value: 
       objectReference: {fileID: 1674668678}
-    m_RemovedComponents:
-    - {fileID: 0}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -44588,9 +44398,6 @@ SceneRoots:
   - {fileID: 50506565}
   - {fileID: 1737779943}
   - {fileID: 873410246}
-  - {fileID: 386071122}
-  - {fileID: 202534971}
-  - {fileID: 1002821651}
   - {fileID: 288472734194328518}
   - {fileID: 323944153}
   - {fileID: 8944336656349189700}

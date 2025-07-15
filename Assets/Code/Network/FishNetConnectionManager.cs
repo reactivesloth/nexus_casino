@@ -20,28 +20,24 @@ namespace Code.Network
 
         private void OnEnable()
         {
-            if (lobbyController)
-            {
-                lobbyController.OnHostReady += StartHostConnection;
-                lobbyController.OnClientReady += StartClientConnection;
-                lobbyController.OnHostChanged += OnHostChanged;
-                lobbyController.OnCurrentHostDisconnected += OnCurrentHostDisconnected;
-            }
+            Debug.Log("[FishNetConnectionManager] OnEnable");
+            lobbyController.OnHostReady += StartHostConnection;
+            lobbyController.OnClientReady += StartClientConnection;
+            lobbyController.OnHostChanged += OnHostChanged;
+            lobbyController.OnCurrentHostDisconnected += OnCurrentHostDisconnected;
         }
 
         private void OnDisable()
         {
-            if (lobbyController)
-            {
-                lobbyController.OnHostReady -= StartHostConnection;
-                lobbyController.OnClientReady -= StartClientConnection;
-                lobbyController.OnHostChanged -= OnHostChanged;
-                lobbyController.OnCurrentHostDisconnected -= OnCurrentHostDisconnected;
-            }
+            lobbyController.OnHostReady -= StartHostConnection;
+            lobbyController.OnClientReady -= StartClientConnection;
+            lobbyController.OnHostChanged -= OnHostChanged;
+            lobbyController.OnCurrentHostDisconnected -= OnCurrentHostDisconnected;
         }
 
         public static void StartHostConnection()
         {
+            Debug.Log("[LobbyPopup] Starting HostConnection");
             ClearOldConnections();
             var networkManager = InstanceFinder.NetworkManager;
             var localUserId = LobbyVariables.Instance.ProductUserId;
@@ -57,8 +53,11 @@ namespace Code.Network
                     ? ""
                     : LobbyVariables.Instance.AuthData.displayName;
             fishyEOS.gameObject.SetActive(true);
+
             networkManager.ServerManager.StartConnection();
             networkManager.ClientManager.StartConnection();
+
+            Debug.Log("[FishNetConnectionManager] Host started");
 
             // UI/game activation можно оставить на стороне LobbyController
         }
@@ -88,9 +87,9 @@ namespace Code.Network
                     : LobbyVariables.Instance.AuthData.displayName;
             fishyEOS.gameObject.SetActive(true);
 
-            if (networkManager.IsClientStarted)
-                networkManager.ClientManager.StopConnection();
             networkManager.ClientManager.StartConnection();
+
+            Debug.Log("[FishNetConnectionManager] Client started");
         }
 
         private static void ClearOldConnections()
@@ -109,9 +108,9 @@ namespace Code.Network
             if (nextHostId == LobbyVariables.Instance.productUserId)
                 return;
 
-            HostMigrator.MarkMigrating();
-            
             Debug.Log($"[FishNetConnectionManager] Connect to new host. ID: {nextHostId}");
+
+            HostMigrator.MarkMigrating();
             StartClientConnection();
         }
 
@@ -120,11 +119,11 @@ namespace Code.Network
             if (newHostId != LobbyVariables.Instance.productUserId)
                 return;
 
-            HostMigrator.MarkMigrating();
-            
             Debug.Log($"[FishNetConnectionManager] I am a new host! {newHostId}");
-            StartHostConnection();
+
+            HostMigrator.MarkMigrating();
             lobbyController.UpdateHost(newHostId);
+            StartHostConnection();
         }
     }
 }

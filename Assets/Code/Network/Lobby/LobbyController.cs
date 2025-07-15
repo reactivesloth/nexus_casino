@@ -142,6 +142,9 @@ namespace Code.Network.Lobby
             }
 
             var lobbyId = createLobby.CallbackInfo?.LobbyId;
+            var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxLobbyUsers };
+            LobbyVariables.Instance.currentLobby = currentLobby;
+            
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
             yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, "PRODUCT_VERSION",
                 Application.version);
@@ -156,21 +159,12 @@ namespace Code.Network.Lobby
             {
                 Debug.LogWarning($"[LobbyCode] Failed to get lobby details: {result}");
             }
-
-            var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxLobbyUsers };
-            LobbyVariables.Instance.currentLobby = currentLobby;
-
+            
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...");
             yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, "NAME",
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
-
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Ready...");
-            yield return LobbySetMemberAttribute.Run(out var setReady, lobbyId, localUserId, "READY",
-                "Ready");
-            if (setReady.CallbackInfo?.ResultCode != Result.Success)
-                Debug.LogWarning($"[LobbyCode] Failed to set lobby member ready: {setReady.CallbackInfo?.ResultCode}");
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...");
             yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID",
@@ -179,11 +173,12 @@ namespace Code.Network.Lobby
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
 
             LobbyVariables.Instance.lobbyPopupUI.Hide();
-
+            
             SetLobbyAttributes(currentLobby, lobbyDetails);
-            lobbyDetails.Release();
-
+            
             OnHostConnectionReady();
+            
+            lobbyDetails.Release();
         }
 
         private IEnumerator OnJoinLobbyClickedRoutine(LobbyDetails lobbyDetails)
