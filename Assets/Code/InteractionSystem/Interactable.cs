@@ -55,13 +55,6 @@ namespace Code.InteractionSystem
         }
         #endif
 
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            ResetState(true);
-            NetworkObject.ResetState(true);
-        }
-
         /// <summary>Client-side call to request interaction start.</summary>
         public void RequestInteract()
         {
