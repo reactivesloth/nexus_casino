@@ -2,6 +2,7 @@ using System;
 using Code.Network.HostMigration;
 using Code.Network.Lobby;
 using FishNet;
+using FishNet.Object;
 using FishNet.Transporting.FishyEOSPlugin;
 using UnityEngine;
 
@@ -37,6 +38,12 @@ namespace Code.Network
 
         public static void StartHostConnection()
         {
+            var networkObjectsInScene =
+                FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            
+            foreach (var networkObject in networkObjectsInScene)
+                networkObject.ResetState(true);
+            
             Debug.Log("[LobbyPopup] Starting HostConnection");
             ClearOldConnections();
             var networkManager = InstanceFinder.NetworkManager;
