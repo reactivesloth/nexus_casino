@@ -1,7 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using FishNet.Object;
 using FishNet.Connection;
+using FishNet.Object.Synchronizing;
 
 namespace Code.InteractionSystem
 {
@@ -19,12 +21,33 @@ namespace Code.InteractionSystem
 
         private bool _isOpen;
         private Coroutine _doorRoutine;
+        
+        protected readonly SyncVar<float> _openDegree = new (new SyncTypeSettings()
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
 
 
         private void Awake()
         {
             if (doorTransform == null)
                 doorTransform = transform;
+        }
+
+        private void OnEnable()
+        {
+            _openDegree.OnChange += OpenDegreeOnOnChange;
+        }
+
+        private void OnDisable()
+        {
+            _openDegree.OnChange -= OpenDegreeOnOnChange;
+        }
+
+        private void OpenDegreeOnOnChange(float prev, float next, bool asServer)
+        {
+            doorTransform.localRotation = Quaternion.Slerp(Quaternion.Euler(ClosedRot), Quaternion.Euler(OpenRot), next);
         }
 
         protected internal override void OnInteract(NetworkConnection conn)
@@ -55,7 +78,7 @@ namespace Code.InteractionSystem
             while (t < 1f)
             {
                 t += Time.deltaTime * animationSpeed;
-                doorTransform.localRotation = Quaternion.Slerp(Quaternion.Euler(ClosedRot), Quaternion.Euler(OpenRot), t);
+                _openDegree.Value = t;
                 yield return null;
             }
             _doorRoutine = null;
@@ -64,11 +87,11 @@ namespace Code.InteractionSystem
         private IEnumerator CloseDoorFlow()
         {
             _isOpen = false;
-            float t = 0f;
-            while (t < 1f)
+            float t = 1f;
+            while (t >= 0f)
             {
-                t += Time.deltaTime * animationSpeed;
-                doorTransform.localRotation = Quaternion.Slerp(Quaternion.Euler(OpenRot), Quaternion.Euler(ClosedRot), t);
+                t -= Time.deltaTime * animationSpeed;
+                _openDegree.Value = t;
                 yield return null;
             }
             _doorRoutine = null;
