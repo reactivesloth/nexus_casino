@@ -146,10 +146,18 @@ namespace CC
                     physicsManager.customizationSetup();
                 }
 
-                //Create UI
-                UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
-                if (UI_Instance.GetComponent<CC_UI_Util>() == null) { Debug.LogError("UI is missing CC_UI_Util script"); return; }
-                UI_Instance.GetComponent<CC_UI_Util>().Initialize(this);
+                if (UI_Instance == null)
+                {
+                    //Create UI
+                    UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
+                    if (UI_Instance.GetComponent<CC_UI_Util>() == null)
+                    {
+                        Debug.LogError("UI is missing CC_UI_Util script");
+                        return;
+                    }
+
+                    UI_Instance.GetComponent<CC_UI_Util>().Initialize(this);
+                }
             }
         }
 

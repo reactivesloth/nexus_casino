@@ -147,6 +147,8 @@ namespace CC
 
             currentCharacter = i;
 
+            SavePlayerModelType (i);
+
             for (int j = 0; j < CharacterParent.transform.childCount; j++)
             {
                 var character = CharacterParent.transform.GetChild(j).gameObject;
@@ -155,7 +157,8 @@ namespace CC
                 if (character.activeSelf && i != j)
                 {
                     var script = character.GetComponentInChildren<CharacterCustomization>();
-                    script.LoadFromPreset(script.CharacterName);
+                    //script?.LoadFromPreset(script.CharacterName);
+                    script?.LoadFromJSON();
                     character.SetActive(false);
                 }
                 //Enable selected character (its UI is automatically activated)
@@ -163,6 +166,28 @@ namespace CC
             }
         }
 
+        private void SavePlayerModelType(int index)
+        {
+            switch (index)
+            {
+                case 0:
+                    PlayerPrefs.SetString("PlayerModelType", "Female");
+                    break;
+                case 1:
+                    PlayerPrefs.SetString("PlayerModelType", "Male");
+                    break;
+                case 2:
+                    PlayerPrefs.SetString("PlayerModelType", "PlayerM1");
+                    break;
+                case 3:
+                    PlayerPrefs.SetString("PlayerModelType", "PlayerM2");
+                    break;
+                default:
+                    PlayerPrefs.SetString("PlayerModelType", "Male");
+                    break;
+            }
+        }
+        
         public void characterNext()
         {
             SetActiveCharacter(currentCharacter == CharacterParent.transform.childCount - 1 ? 0 : currentCharacter + 1);

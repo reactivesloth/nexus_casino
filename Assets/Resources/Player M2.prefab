@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _componentIndexCache: 5
   _addedNetworkObject: {fileID: 5084366635518163755}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 5084366635518163755}
   _componentConfiguration: 0
   _synchronizeParent: 0
   _packing:
@@ -318,6 +318,18 @@ PrefabInstance:
     - target: {fileID: -6370085079684087283, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: 'm_BlendShapeWeights.Array.data[0]'
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: 'm_BlendShapeWeights.Array.data[16]'
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: 'm_BlendShapeWeights.Array.data[32]'
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: 'm_BlendShapeWeights.Array.data[41]'
@@ -689,7 +701,7 @@ CharacterController:
   m_StepOffset: 0.25
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
-  m_Center: {x: 0, y: 0.93, z: 0.1}
+  m_Center: {x: 0, y: 0.9, z: 0.1}
 --- !u!114 &5190682865123656326
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -802,7 +814,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _componentIndexCache: 0
   _addedNetworkObject: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
-  _networkObjectCache: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
+  _networkObjectCache: {fileID: 5084366635518163755}
   moveSpeed: 1.5
   sprintSpeed: 4
   rotationSmoothTime: 0.12
@@ -897,6 +909,7 @@ MonoBehaviour:
   - {fileID: 6626438044635640616}
   - {fileID: 8013488042586796887}
   - {fileID: -6006401730760851951}
+  - {fileID: 2031047834234726918}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -2059,7 +2072,7 @@ MonoBehaviour:
   randomHoldDurationMax: 0.5
   configReady: 0
   warnOnNullRefs: 1
-  inspSalsaLinked: 0
+  inspSalsaLinked: 1
   inspStateFoldoutProcessing: 0
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0
