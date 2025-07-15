@@ -11,6 +11,8 @@ using FishNet;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Code.Network.Lobby.Data;
+using FishNet.Plugins.FishyEOS.Util;
+using PlayEveryWare.EpicOnlineServices;
 
 namespace Code.Network.Lobby
 {
@@ -490,6 +492,22 @@ namespace Code.Network.Lobby
                 Debug.LogError(
                     $"[HostMigrator] Failed to set lobby member host id: {updateLobbyHostId.CallbackInfo?.ResultCode}");
         }
+        
+        public void LeaveLobby()
+        {
+            EOS.GetManager().StartCoroutine(LeaveLobbyRoutine());
+        }
+
+        private IEnumerator LeaveLobbyRoutine()
+        {
+            var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
+            var userID = LobbyVariables.Instance.ProductUserId;
+            yield return LobbyLeaveLobby.Run(out var leaveLobbyResult, lobbyId, userID);
+            if(leaveLobbyResult.CallbackInfo?.ResultCode != Result.Success)
+                Debug.LogError($"[LobbyController] Failed to leave lobby: {leaveLobbyResult.CallbackInfo?.ResultCode}]");
+            else
+                Debug.Log($"[LobbyController] Successfully leave lobby {lobbyId}");
+        }
 
         #region InternalClasses
 
@@ -546,5 +564,7 @@ namespace Code.Network.Lobby
         }
 
         #endregion
+
+        
     }
 }
