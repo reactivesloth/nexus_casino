@@ -77,7 +77,7 @@ namespace Code.Network
                 return;
             }
 
-            ResetAllNetworkObjectsInScene(false);
+            ResetAllNetworkObjectsInScene(true);
             ClearOldConnections();
 
             var networkManager = InstanceFinder.NetworkManager;
