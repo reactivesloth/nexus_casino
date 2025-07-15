@@ -480,7 +480,7 @@ namespace Code.Network.Lobby
 
         public void UpdateHost(string newHostId)
         {
-            StartCoroutine(UpdateHostCoroutine(newHostId));
+            EOS.GetManager()?.StartCoroutine(UpdateHostCoroutine(newHostId));
         }
 
         private IEnumerator UpdateHostCoroutine(string newHostId)
