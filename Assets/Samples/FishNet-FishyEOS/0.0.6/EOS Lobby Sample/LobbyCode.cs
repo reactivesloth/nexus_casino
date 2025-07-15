@@ -254,7 +254,7 @@ namespace EOSLobby
             LobbyVariables.Instance.lobbyRoomUI.SetActive(true);
         }
 
-        private IEnumerator OnLeaveLobbyClickedRoutine()
+        public IEnumerator OnLeaveLobbyClickedRoutine()
         {
             var localUserId = LobbyVariables.Instance.ProductUserId;
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;

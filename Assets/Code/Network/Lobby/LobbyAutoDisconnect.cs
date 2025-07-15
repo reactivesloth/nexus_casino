@@ -1,23 +1,31 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using FishNet;
 using FishNet.Managing.Client;
+using PlayEveryWare.EpicOnlineServices;
 
 namespace Code.Network.Lobby
 {
     public class LobbyAutoDisconnect : MonoBehaviour
     {
         private ClientManager _clientManager;
+        private LobbyController _lobbyController;
 
         private void Awake()
         {
-            // Получаем ссылку на ClientManager
             _clientManager = InstanceFinder.ClientManager;
+            _lobbyController = _clientManager.GetComponent<LobbyController>();
         }
 
-        private void OnApplicationQuit()
+        private void OnDestroy()
         {
-            if (_clientManager != null)
+            if (_clientManager)
                 _clientManager.StopConnection();
+            if (_lobbyController)
+                _lobbyController.LeaveLobby();
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         private void OnApplicationPause(bool pause)
@@ -25,5 +33,6 @@ namespace Code.Network.Lobby
             if (pause && _clientManager != null)
                 _clientManager.StopConnection();
         }
+        
     }
 }

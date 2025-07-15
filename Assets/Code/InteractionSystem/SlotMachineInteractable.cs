@@ -32,7 +32,13 @@ namespace Code.InteractionSystem
             if (computerCanvas == null)
                 computerCanvas = GetComponentInChildren<Canvas>(true);
         }
-        
+
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            _isUsing = false;
+        }
+
         protected internal override void OnInteract(NetworkConnection conn)
         {
             if (_isUsing) return;

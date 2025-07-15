@@ -32,6 +32,14 @@ namespace Code.InteractionSystem
                 sitPoint = transform.Find("SitPoint");
         }
 
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            
+            _isSitting = false;
+            _sitRoutine = null;
+        }
+
         protected internal override void OnInteract(NetworkConnection conn)
         {
             base.OnInteract(conn);

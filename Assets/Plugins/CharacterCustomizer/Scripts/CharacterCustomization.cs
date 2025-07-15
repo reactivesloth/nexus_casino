@@ -146,10 +146,18 @@ namespace CC
                     physicsManager.customizationSetup();
                 }
 
-                //Create UI
-                UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
-                if (UI_Instance.GetComponent<CC_UI_Util>() == null) { Debug.LogError("UI is missing CC_UI_Util script"); return; }
-                UI_Instance.GetComponent<CC_UI_Util>().Initialize(this);
+                if (UI_Instance == null)
+                {
+                    //Create UI
+                    UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
+                    if (UI_Instance.GetComponent<CC_UI_Util>() == null)
+                    {
+                        Debug.LogError("UI is missing CC_UI_Util script");
+                        return;
+                    }
+
+                    UI_Instance.GetComponent<CC_UI_Util>().Initialize(this);
+                }
             }
         }
 
@@ -167,11 +175,14 @@ namespace CC
 
         #region Save & Load
 
-        public void SaveToJSON(string name)
+        public void SaveToJSON(string name = null)
         {
             //Save if file exists, otherwise create a save file
             if (!File.Exists(SavePath)) createSaveFile();
 
+            if (name == null)
+                name = CharacterName;
+            
             if (name != "")
             {
                 //Load CC_SaveData from JSON file
@@ -297,16 +308,21 @@ namespace CC
         public void LoadFromJSON(string jsonString = "")
         {
             //Load if file exists, otherwise create a save file and rerun the function
-            if (!File.Exists(SavePath)) createSaveFile();
-
+            if (!File.Exists(SavePath))
+            {
+                createSaveFile();
+            }
+            
             if (CharacterName != "")
             {
                 //Load CC_SaveData from JSON file
                 string jsonLoad = File.ReadAllText(SavePath);
-                
+
                 if (jsonString != "")
+                {
                     jsonLoad = jsonString;
-                
+                }
+
                 CC_SaveData CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
                 //Find character index by CharacterName and load character data
@@ -315,10 +331,12 @@ namespace CC
                 //If saved character was not found, load preset character
                 if (StoredCharacterData == null)
                 {
-                    if (!LoadFromPreset(CharacterName)) Debug.LogError("Failed to load character: No save data or presets found");
-                    return;
+                    //if (!LoadFromPreset(CharacterName)) Debug.LogError("Failed to load character: No save data or presets found");
+                    //return;
+                    randomizeAll();
+                    randomizeCharacterAndOutfit();
                 }
-
+                
                 //Apply stored data to character
                 ApplyCharacterVars(StoredCharacterData);
             }

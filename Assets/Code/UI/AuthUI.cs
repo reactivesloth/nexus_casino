@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Code.API;
 using Code.API.Models;
 using Code.Network;
@@ -8,6 +9,7 @@ using Proyecto26;
 using Proyecto26.Helper;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Code.UI
@@ -336,10 +338,23 @@ namespace Code.UI
 
         private void OnUserCanStartGame()
         {
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-            lobbyController.StartPollingLobbies();
-            gameObject.SetActive(false);
-            //TODO: Start Game
+            var savePath = "";
+            
+            savePath = Application.persistentDataPath + "/CharacterCustomizer.json";
+#if UNITY_EDITOR
+            savePath = Application.dataPath + "/CharacterCustomizer.json";
+#endif
+            
+            if (File.Exists(savePath)) {
+                string jsonLoad = File.ReadAllText(savePath);
+                if (jsonLoad.Length > 200)
+                {
+                    SceneManager.LoadSceneAsync("Main");
+                    return;
+                }
+            } 
+            
+            SceneManager.LoadSceneAsync("Character Customization");
         }
 
         private void HandleError(string title, string errorMessage)

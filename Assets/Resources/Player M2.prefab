@@ -1,5 +1,80 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &477178256647715830
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3873234049970767791}
+  - component: {fileID: 2031047834234726918}
+  m_Layer: 8
+  m_Name: HeadTargetPos
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3873234049970767791
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 477178256647715830}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 2.9373121, y: 2.7545877, z: 5.668424}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1612252102441574661}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2031047834234726918
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 477178256647715830}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 5
+  _addedNetworkObject: {fileID: 5084366635518163755}
+  _networkObjectCache: {fileID: 5084366635518163755}
+  _componentConfiguration: 0
+  _synchronizeParent: 0
+  _packing:
+    Position: 1
+    Rotation: 1
+    Scale: 0
+  _interpolation: 2
+  _extrapolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  _clientAuthoritative: 1
+  _sendToOwner: 1
+  _interval: 1
+  _synchronizePosition: 1
+  _positionSnapping:
+    X: 0
+    Y: 0
+    Z: 0
+  _synchronizeRotation: 1
+  _rotationSnapping:
+    X: 0
+    Y: 0
+    Z: 0
+  _synchronizeScale: 1
+  _scaleSnapping:
+    X: 0
+    Y: 0
+    Z: 0
 --- !u!1 &1824112052846923371
 GameObject:
   m_ObjectHideFlags: 0
@@ -243,6 +318,18 @@ PrefabInstance:
     - target: {fileID: -6370085079684087283, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: 'm_BlendShapeWeights.Array.data[0]'
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: 'm_BlendShapeWeights.Array.data[16]'
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: 'm_BlendShapeWeights.Array.data[32]'
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: 'm_BlendShapeWeights.Array.data[41]'
@@ -528,6 +615,9 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      insertIndex: 0
+      addedObject: {fileID: 3873234049970767791}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8198063563810720373}
     - targetCorrespondingSourceObject: {fileID: -3321919801592875672, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
@@ -606,12 +696,12 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1.8
-  m_Radius: 0.25
+  m_Radius: 0.3
   m_SlopeLimit: 45
   m_StepOffset: 0.25
   m_SkinWidth: 0.02
   m_MinMoveDistance: 0
-  m_Center: {x: 0, y: 0.93, z: 0}
+  m_Center: {x: 0, y: 0.9, z: 0.1}
 --- !u!114 &5190682865123656326
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -723,18 +813,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 5084366635518163755}
+  _addedNetworkObject: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
   _networkObjectCache: {fileID: 5084366635518163755}
-  moveSpeed: 2
-  sprintSpeed: 5.335
+  moveSpeed: 1.5
+  sprintSpeed: 4
   rotationSmoothTime: 0.12
-  speedChangeRate: 10
-  jumpHeight: 1.2
-  gravity: -15
+  speedChangeRate: 25
+  jumpHeight: 0.3
+  gravity: -9.8
   jumpTimeout: 0.5
   fallTimeout: 0.15
-  groundedOffset: -0.14
-  groundedRadius: 0.28
+  groundedOffset: 0.15
+  groundedRadius: 0.2
   groundLayers:
     serializedVersion: 2
     m_Bits: 1
@@ -743,12 +833,12 @@ MonoBehaviour:
   hideForFirstPersonViewLocal: []
   minCameraDistance: 1
   maxCameraDistance: 4
-  minFOV: 40
-  maxFOV: 65
+  minFOV: 55
+  maxFOV: 70
   topClamp: 70
   bottomClamp: -30
   cameraAngleOverride: 0
-  headTarget: {fileID: 0}
+  headTarget: {fileID: 3873234049970767791}
   landingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
   footstepAudioClips:
   - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
@@ -766,15 +856,15 @@ MonoBehaviour:
   LockCameraPosition: 0
   FirstPersonView: 0
   sitYawRange: 45
-  sitMinPitch: -10
+  sitMinPitch: -30
   sitMaxPitch: 30
   ikTransitionSpeed: 5
   lookAtSmoothSpeed: 5
   lookAtClampWeight: 0.5
-  cinemachineTargetYaw: 0
-  cinemachineTargetPitch: 0
-  sitBaseYaw: 0
-  sitBasePitch: 0
+  cinemachineTargetYaw: 66.750015
+  cinemachineTargetPitch: 11.499929
+  sitBaseYaw: -30
+  sitBasePitch: 30
 --- !u!114 &4250282582304474929
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -819,6 +909,7 @@ MonoBehaviour:
   - {fileID: 6626438044635640616}
   - {fileID: 8013488042586796887}
   - {fileID: -6006401730760851951}
+  - {fileID: 2031047834234726918}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -843,7 +934,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 1
+  <PrefabId>k__BackingField: 3
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 8660729257753279777
   <SceneId>k__BackingField: 0
@@ -1981,7 +2072,7 @@ MonoBehaviour:
   randomHoldDurationMax: 0.5
   configReady: 0
   warnOnNullRefs: 1
-  inspSalsaLinked: 0
+  inspSalsaLinked: 1
   inspStateFoldoutProcessing: 0
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0

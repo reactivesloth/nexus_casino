@@ -32,11 +32,13 @@ namespace CC
 
         public void characterNext()
         {
+            saveToJSON();
             CC_UI_Manager.instance.characterNext();
         }
 
         public void characterPrev()
         {
+            saveToJSON();
             CC_UI_Manager.instance.characterPrev();
         }
 
@@ -45,9 +47,9 @@ namespace CC
             customizer.SaveToPreset(name);
         }
 
-        public void saveToJSON(string name)
+        public void saveToJSON()
         {
-            customizer.SaveToJSON(name);
+            customizer?.SaveToJSON();
         }
 
         public void loadCharacter()
