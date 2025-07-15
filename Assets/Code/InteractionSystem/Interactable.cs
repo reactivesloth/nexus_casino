@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
@@ -53,6 +54,13 @@ namespace Code.InteractionSystem
                 collider.isTrigger = true;
         }
         #endif
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            ResetState(true);
+            NetworkObject.ResetState(true);
+        }
 
         /// <summary>Client-side call to request interaction start.</summary>
         public void RequestInteract()

@@ -23,7 +23,7 @@ namespace Code.InteractionSystem
         private Coroutine _doorRoutine;
         private Coroutine _interpolationRoutine;
 
-        protected readonly SyncVar<float> _openDegree = new(new SyncTypeSettings()
+        private readonly SyncVar<float> _openDegree = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
