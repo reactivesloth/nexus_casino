@@ -1,12 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.IO;
 using Code.API;
 using Code.API.Models;
-using Code.Network;
-using Code.Network.Lobby;
 using Proyecto26;
-using Proyecto26.Helper;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -14,12 +9,6 @@ using UnityEngine.UI;
 
 namespace Code.UI
 {
-    public enum AuthMode
-    {
-        Login,
-        Register
-    }
-
     public class AuthUI : MonoBehaviour
     {
         [Header("UI Elements")] public TMP_InputField nicknameInput;
@@ -29,17 +18,9 @@ namespace Code.UI
         public Button authButton;
         public Button resendCodeButton;
 
-        [Header("Mode Switching")] public Button switchModeButton;
-        public TMP_Text switchModeText;
+        [Header("Texts")] 
         public TMP_Text authButtonText;
         public TMP_Text titleText;
-
-        [Header("Mode Settings")] public string loginTitle = "Вход";
-        public string registerTitle = "Регистрация";
-        public string loginButtonText = "Войти";
-        public string registerButtonText = "Зарегистрироваться";
-        public string switchToLoginText = "Уже есть аккаунт? Войти";
-        public string switchToRegisterText = "Нет аккаунта? Зарегистрироваться";
 
         [Header("Resend Settings")] public int resendCooldownSeconds = 60;
         public string resendButtonText = "Отправить код повторно";
@@ -48,15 +29,14 @@ namespace Code.UI
         [Header("Results Handle")]
         public AuthPopupPanel popupPanel;
 
-        private AuthMode currentMode = AuthMode.Login;
-        private float resendTimer = 0f;
         private bool isResendTimerActive = false;
+        private float resendTimer = 0f;
+        private bool isRegistered = false; // Новый флаг: зарегистрирован ли номер
 
         private void OnEnable()
         {
             authButton.onClick.AddListener(OnAuthClicked);
             getConfirmCodeButton.onClick.AddListener(OnGetCodeClicked);
-            switchModeButton.onClick.AddListener(OnSwitchModeClicked);
             resendCodeButton.onClick.AddListener(OnResendCodeClicked);
         }
 
@@ -64,13 +44,12 @@ namespace Code.UI
         {
             authButton.onClick.RemoveListener(OnAuthClicked);
             getConfirmCodeButton.onClick.RemoveListener(OnGetCodeClicked);
-            switchModeButton.onClick.RemoveListener(OnSwitchModeClicked);
             resendCodeButton.onClick.RemoveListener(OnResendCodeClicked);
         }
 
         private void Start()
         {
-            SetMode(AuthMode.Login);
+            ToStartState();
             InitializeResendButton();
         }
 
@@ -79,51 +58,17 @@ namespace Code.UI
             UpdateResendTimer();
         }
 
-        private void SetMode(AuthMode mode)
-        {
-            currentMode = mode;
-
-            // Обновляем UI элементы в зависимости от режима
-            switch (mode)
-            {
-                case AuthMode.Login:
-                    titleText.text = loginTitle;
-                    authButtonText.text = loginButtonText;
-                    switchModeText.text = switchToRegisterText;
-                    nicknameInput.gameObject.SetActive(false);
-                    break;
-
-                case AuthMode.Register:
-                    titleText.text = registerTitle;
-                    authButtonText.text = registerButtonText;
-                    switchModeText.text = switchToLoginText;
-                    nicknameInput.gameObject.SetActive(true);
-                    break;
-            }
-
-            ToStartState();
-        }
-
-        private void OnSwitchModeClicked()
-        {
-            AuthMode newMode = currentMode == AuthMode.Login ? AuthMode.Register : AuthMode.Login;
-            SetMode(newMode);
-        }
-
         private void ToStartState()
         {
             phoneInput.interactable = true;
-
             phoneInput.text = PlayerPrefs.GetString("auth_phoneInput",  string.Empty);
             codeInput.text = string.Empty;
             if (nicknameInput != null)
                 nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput",  string.Empty);
-
             getConfirmCodeButton.gameObject.SetActive(true);
             authButton.gameObject.SetActive(false);
             codeInput.gameObject.SetActive(false);
-
-            // Скрываем кнопку повторной отправки при сбросе состояния
+            nicknameInput.gameObject.SetActive(false);
             resendCodeButton.gameObject.SetActive(false);
             isResendTimerActive = false;
         }
@@ -131,46 +76,63 @@ namespace Code.UI
         private void OnGetCodeClicked()
         {
             getConfirmCodeButton.interactable = false;
-
-            var sendCodeRequest = new SendCodeRequest
+            var phone = phoneInput.text;
+            var checkPhoneRequest = new CheckPhoneRequest()
             {
-                phone = phoneInput.text,
-                requested_by = ""
+                phone = phone
             };
-
-            RestClient.Post(ApiRoutes.GetSendCodeUrl(), sendCodeRequest).Then(response =>
+            RestClient.Post(ApiRoutes.GetCheckNumberUrl(), checkPhoneRequest).Then(checkResponse =>
             {
-                if (response.StatusCode != 200)
+                if (checkResponse.StatusCode != 200)
                 {
-                    HandleError(response.StatusCode.ToString(), response.Error);
+                    HandleError(checkResponse.StatusCode.ToString(), checkResponse.Error);
+                    getConfirmCodeButton.interactable = true;
                     return;
                 }
-
-                var responseData = JsonUtility.FromJson<SuccessResponse<object>>(response.Text);
-                if (responseData.success)
+                var checkResult = JsonUtility.FromJson<SuccessResponse<bool>>(checkResponse.Text);
+                if (!checkResult.success)
                 {
+                    HandleError(checkResult.code, checkResult.detail);
+                    getConfirmCodeButton.interactable = true;
+                    return;
+                }
+                isRegistered = checkResult.data;
+                // Теперь отправляем запрос на отправку кода
+                var sendCodeRequest = new SendCodeRequest
+                {
+                    phone = phone,
+                    requested_by = ""
+                };
+                RestClient.Post(ApiRoutes.GetSendCodeUrl(), sendCodeRequest).Then(sendCodeResponse =>
+                {
+                    if (sendCodeResponse.StatusCode != 200)
+                    {
+                        HandleError(sendCodeResponse.StatusCode.ToString(), sendCodeResponse.Error);
+                        getConfirmCodeButton.interactable = true;
+                        return;
+                    }
+                    var sendCodeResult = JsonUtility.FromJson<SuccessResponse<object>>(sendCodeResponse.Text);
+                    if (!sendCodeResult.success)
+                    {
+                        HandleError(sendCodeResult.code, sendCodeResult.detail);
+                        getConfirmCodeButton.interactable = true;
+                        return;
+                    }
+                    // Только после успешной отправки кода показываем поля
                     phoneInput.interactable = false;
-
                     codeInput.gameObject.SetActive(true);
-
                     getConfirmCodeButton.gameObject.SetActive(false);
                     authButton.gameObject.SetActive(true);
-
+                    nicknameInput.gameObject.SetActive(!isRegistered); // Показываем nickname только если не зарегистрирован
                     StartResendTimer();
-                }
-                else
-                {
-                    HandleError(responseData.code, responseData.detail);
-                    Debug.LogWarning(responseData.detail);
-                }
-            }).Finally(() => getConfirmCodeButton.interactable = true);
+                }).Finally(() => getConfirmCodeButton.interactable = true);
+            });
         }
 
         private void OnAuthClicked()
         {
             authButton.interactable = false;
-
-            if (currentMode == AuthMode.Login)
+            if (isRegistered)
                 PerformLogin();
             else
                 PerformRegister();
@@ -183,7 +145,6 @@ namespace Code.UI
                 phone = phoneInput.text,
                 confirmation_code = codeInput.text
             };
-
             RestClient.Post(ApiRoutes.GetLoginUrl(), loginRequest).Then(response =>
             {
                 if (response.StatusCode != 200)
@@ -191,11 +152,10 @@ namespace Code.UI
                     HandleError(response.StatusCode.ToString(), response.Error);
                     return;
                 }
-
                 var responseData = JsonUtility.FromJson<SuccessResponse<AuthResponse>>(response.Text);
                 if (responseData.success)
                 {
-                     OnAuthSuccess(responseData.data);
+                    OnAuthSuccess(responseData.data);
                 }
                 else
                 {
@@ -218,7 +178,6 @@ namespace Code.UI
                 phone = phoneInput.text,
                 confirmation_code = codeInput.text
             };
-
             RestClient.Post(ApiRoutes.GetSignUpUrl(), signUpRequest).Then(response =>
             {
                 if (response.StatusCode != 200)
@@ -226,7 +185,6 @@ namespace Code.UI
                     HandleError(response.StatusCode.ToString(), response.Error);
                     return;
                 }
-
                 var responseData = JsonUtility.FromJson<SuccessResponse<AuthResponse>>(response.Text);
                 if (responseData.success)
                 {
@@ -264,19 +222,15 @@ namespace Code.UI
         private void UpdateResendTimer()
         {
             if (!isResendTimerActive) return;
-
             resendTimer -= Time.deltaTime;
-
             if (resendTimer <= 0)
             {
-                // Таймер истек, активируем кнопку
                 resendCodeButton.interactable = true;
                 isResendTimerActive = false;
                 UpdateResendButtonText();
             }
             else
             {
-                // Обновляем текст кнопки с оставшимся временем
                 UpdateResendButtonText();
             }
         }
@@ -298,9 +252,7 @@ namespace Code.UI
         private void OnResendCodeClicked()
         {
             if (!resendCodeButton.interactable) return;
-
             resendCodeButton.interactable = false;
-
             OnGetCodeClicked();
         }
 
@@ -309,19 +261,15 @@ namespace Code.UI
             ClientDataStorage.AccessToken = authResponse.access_jwt;
             ClientDataStorage.RefreshToken = authResponse.refresh_jwt;
             Debug.Log(JsonUtility.ToJson(authResponse));
-            
             var userDataRequest = new RequestHelper { 
                 Uri = ApiRoutes.GetMeUrl(),
                 Headers = ClientDataStorage.GetJwtHeader()
             };
-            
             RestClient.Get(userDataRequest).Then(userDataResponse =>
             {
                 if (userDataResponse.StatusCode != 200)
                     return;
-
                 var successResponse = JsonUtility.FromJson<SuccessResponse<MeSchema>>(userDataResponse.Text);
-
                 if (successResponse.success)
                 {
                     ClientDataStorage.UserData = successResponse.data;
@@ -339,12 +287,10 @@ namespace Code.UI
         private void OnUserCanStartGame()
         {
             var savePath = "";
-            
             savePath = Application.persistentDataPath + "/CharacterCustomizer.json";
 #if UNITY_EDITOR
             savePath = Application.dataPath + "/CharacterCustomizer.json";
 #endif
-            
             if (File.Exists(savePath)) {
                 string jsonLoad = File.ReadAllText(savePath);
                 if (jsonLoad.Length > 200)
@@ -353,7 +299,6 @@ namespace Code.UI
                     return;
                 }
             } 
-            
             SceneManager.LoadSceneAsync("Character Customization");
         }
 

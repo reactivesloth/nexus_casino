@@ -6,6 +6,7 @@ namespace Code.API
     {
         public const string DOMAIN = "https://back.nexusmetaclub.com"; // Замените на актуальный домен
 
+        public const string CHECK_NUMBER = "/api/client/auth/checkPhone";
         public const string SIGN_UP = "/api/client/auth/signUp";
         public const string LOGIN = "/api/client/auth/login";
         public const string UPDATE_TOKENS = "/api/client/auth/updateTokens";
@@ -15,6 +16,7 @@ namespace Code.API
         public const string GET_OPERATOR_LOGIN_URL = "/api/client/operators/{0}/loginUrl"; // {0} - operator_id
 
         // Методы для получения полного URL
+        public static string GetCheckNumberUrl() => DOMAIN.TrimEnd('/') + CHECK_NUMBER;
         public static string GetSignUpUrl() => DOMAIN.TrimEnd('/') + SIGN_UP;
         public static string GetLoginUrl() => DOMAIN.TrimEnd('/') + LOGIN;
         public static string GetUpdateTokensUrl() => DOMAIN.TrimEnd('/') + UPDATE_TOKENS;

@@ -82,4 +82,10 @@ namespace Code.API.Models
         public string msg;
         public string type;
     }
+
+    [Serializable]
+    public class CheckPhoneRequest
+    {
+        public string phone;
+    }
 } 
