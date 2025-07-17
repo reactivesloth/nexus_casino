@@ -35092,6 +35092,7 @@ GameObject:
   - component: {fileID: 1716930835}
   - component: {fileID: 1716930834}
   - component: {fileID: 1716930833}
+  - component: {fileID: 1716930838}
   m_Layer: 9
   m_Name: Door Interactiable
   m_TagString: Untagged
@@ -35207,7 +35208,7 @@ MonoBehaviour:
   _interactionDistance: 3
   outlineGameObjects:
   - {fileID: 675357486}
-  _interactableEnabled: 1
+  _interactableEnabled: 0
   _manualRelease: 0
   children:
   - {fileID: 386596855}
@@ -35220,7 +35221,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1716930831}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
@@ -35268,6 +35269,28 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1716930831}
   m_Mesh: {fileID: 1296361992681007232, guid: d6a34004a2740464fbd2c5264ce18bfd, type: 3}
+--- !u!114 &1716930838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1716930831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c9de86042b941409b5cf66b4cb33bb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  closeDistance: 10
+  fullOpenDistance: 1
+  doorElementsSettings:
+  - doorTransform: {fileID: 1561188508}
+    closedRot: {x: 0, y: 0, z: 0}
+    openRot: {x: 0, y: 0, z: -90}
+  - doorTransform: {fileID: 1278681566}
+    closedRot: {x: 0, y: 0, z: 0}
+    openRot: {x: 0, y: 0, z: 90}
+  animationSpeed: 2
 --- !u!1 &1719820803 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -3145410376104319116, guid: 4526c2f8a26c6e0438c76968884ffff0, type: 3}
