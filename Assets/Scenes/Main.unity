@@ -35282,7 +35282,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   closeDistance: 10
-  fullOpenDistance: 1
+  fullOpenDistance: 2
   doorElementsSettings:
   - doorTransform: {fileID: 1561188508}
     closedRot: {x: 0, y: 0, z: 0}
@@ -35290,7 +35290,56 @@ MonoBehaviour:
   - doorTransform: {fileID: 1278681566}
     closedRot: {x: 0, y: 0, z: 0}
     openRot: {x: 0, y: 0, z: 90}
-  animationSpeed: 2
+  openCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  closeCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  sensitivity: 0.2
+  animationDuration: 0.5
 --- !u!1 &1719820803 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -3145410376104319116, guid: 4526c2f8a26c6e0438c76968884ffff0, type: 3}
