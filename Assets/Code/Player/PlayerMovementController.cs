@@ -139,12 +139,12 @@ namespace Code.Player
 
         private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         private readonly SyncVar<float>   networkIkWeight = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         
@@ -160,6 +160,8 @@ namespace Code.Player
         
         private const float Threshold = 0.01f;
         private bool smoothedFirstPerson;
+        private float _syncWeight;
+        private Vector3 _lookPos;
 
         private void Awake()
         {
@@ -486,15 +488,18 @@ namespace Code.Player
             }
             else
             {
+                _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.Value, Time.deltaTime * 5);
+                _lookPos = Vector3.Lerp(_lookPos,  networkLookAtPos.Value, Time.deltaTime * 5);
+                
                 // На наблюдающих просто применяем уже синхронизированные значения
                 animator.SetLookAtWeight(
-                    networkIkWeight.Value,
+                    _syncWeight,
                     0f,
-                    networkIkWeight.Value,
-                    networkIkWeight.Value,
+                    _syncWeight,
+                    _syncWeight,
                     lookAtClampWeight
                 );
-                animator.SetLookAtPosition(networkLookAtPos.Value);
+                animator.SetLookAtPosition(_lookPos);
             }
         }
 
