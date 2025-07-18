@@ -31,7 +31,17 @@ namespace CC
         public scrObj_Presets Presets; //Available presets
         public CC_CharacterData StoredCharacterData; //Current character data
 
-        private string SavePath;
+        private string SavePath
+        {
+            get
+            {
+#if UNITY_EDITOR
+                return Application.dataPath + "/CharacterCustomizer.json";
+#else
+                return Application.persistentDataPath + "/CharacterCustomizer.json";
+#endif
+            }
+        }
 
         //Event you can bind to notify when character has finished loading
         public delegate void OnCharacterLoaded(CharacterCustomization script);
@@ -52,11 +62,6 @@ namespace CC
             {
                 item.gameObject.SetActive(true);
             }
-
-            SavePath = Application.persistentDataPath + "/CharacterCustomizer.json";
-#if UNITY_EDITOR
-            SavePath = Application.dataPath + "/CharacterCustomizer.json";
-#endif
 
             if (CC_UI_Manager.instance != null)
             {

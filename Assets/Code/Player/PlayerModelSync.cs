@@ -18,7 +18,7 @@ namespace Code.Player
         public override void OnStartClient()
         {
             base.OnStartClient();
-            Invoke(nameof(TransmitLocalCharacter), 1f);
+            TransmitLocalCharacter();
         }
 
         [ServerRpc]
