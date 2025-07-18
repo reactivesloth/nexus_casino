@@ -46,9 +46,47 @@ namespace Code.Player
 
         public bool CanMove = true;
         public bool LockCameraPosition = true;
-        public bool FirstPersonView = true;
+// backing-field
+        private bool _firstPersonView = true;
+        public bool FirstPersonView
+        {
+            get => _firstPersonView;
+            set
+            {
+                if (_firstPersonView == value) return;
+                _firstPersonView = value;
 
-        public bool LookCameraLimitRotation { get; set; } = false; // по умолчанию не сидит
+                // если мы в режиме «сидя» и переключаемся в первый-лицо
+                if (value && LookCameraLimitRotation)
+                {
+                    // берём yaw из направления тела игрока
+                    float modelYaw = transform.eulerAngles.y;
+                    cinemachineTargetYaw = sitBaseYaw = modelYaw;
+
+                    // pitch можно оставить прежним или сбросить на ноль.
+                    // здесь обнулим — камера будет смотреть по горизонтали тела
+                    cinemachineTargetPitch = sitBasePitch = 0f;
+                }
+            }
+        }
+
+        public float CameraDistance => cameraDistance;
+        
+        private bool lookCameraLimitRotation = false;
+        public bool LookCameraLimitRotation
+        {
+            get => lookCameraLimitRotation;
+            set
+            {
+                if (value && !lookCameraLimitRotation)
+                {
+                    // при первом вхождении в режим «сидя» запоминаем базовые углы
+                    sitBaseYaw   = cinemachineTargetYaw;
+                    sitBasePitch = cinemachineTargetPitch;
+                }
+                lookCameraLimitRotation = value;
+            }
+        }
         public bool LookCameraLimitRotationRKM { get; set; } = false;
 
         public bool LockCursor { get; set; } = true;
@@ -174,14 +212,14 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            if (LookCameraLimitRotationRKM)
-                if (!Input.GetMouseButton(1))
-                {
-                    return;
-                }
-            
             if (input.look.sqrMagnitude >= Threshold)
             {
+                if (LookCameraLimitRotationRKM)
+                    if (!Input.GetMouseButton(1))
+                    {
+                        return;
+                    }
+                
                 float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
                 cinemachineTargetYaw   += input.look.x * mul;
                 cinemachineTargetPitch += input.look.y * mul;

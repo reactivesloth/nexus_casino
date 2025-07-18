@@ -75,6 +75,7 @@ namespace Code.InteractionSystem
         private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
             CharacterController cc, Transform tf)
         {
+            IsBusy = true;
             move.CanMove = false;
             cc.enabled = false;
             anim.applyRootMotion = true;
@@ -108,11 +109,13 @@ namespace Code.InteractionSystem
 
             move.sitBaseYaw = move.cinemachineTargetYaw;
             move.sitBasePitch = move.cinemachineTargetPitch;
+            IsBusy = false;
         }
 
         private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
             CharacterController cc, Transform tf)
         {
+            IsBusy = true;
             _isSitting = false;
             anim.applyRootMotion = true;
             networkAnim.SetTrigger(STAND_TRIGGER);
@@ -140,6 +143,7 @@ namespace Code.InteractionSystem
 
             // server-side release happens via base.OnEndInteract called earlier
             _sitRoutine = null;
+            IsBusy = false;
         }
     }
 }

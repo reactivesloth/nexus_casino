@@ -31,7 +31,8 @@ namespace Code.InteractionSystem
             ReadPermission = ReadPermission.Observers
         });
         public bool IsOccupied => _isOccupied.Value;
-
+        public bool IsBusy { get; set; }
+        
         public virtual string InteractionPrompt
         {
             get
