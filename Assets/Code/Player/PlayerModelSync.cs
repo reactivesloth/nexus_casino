@@ -13,10 +13,14 @@ namespace Code.Player
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
-            
-            Invoke("TransmitLocalCharacter", 1);
         }
-        
+
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+            TransmitLocalCharacter();
+        }
+
         [ServerRpc]
         public void SendCharacterJsonServerRpc(string json, NetworkConnection sender = null)
         {
