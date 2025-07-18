@@ -15,9 +15,9 @@ namespace Code.Player
             _characterCustomization = GetComponent<CharacterCustomization>();
         }
 
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        public override void OnStartClient()
         {
-            base.OnOwnershipClient(prevOwner);
+            base.OnStartClient();
             TransmitLocalCharacter();
         }
 
