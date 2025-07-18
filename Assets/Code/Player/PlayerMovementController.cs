@@ -139,12 +139,12 @@ namespace Code.Player
 
         private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ClientUnsynchronized,
+            WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
         private readonly SyncVar<float>   networkIkWeight = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ClientUnsynchronized,
+            WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
         
@@ -447,51 +447,61 @@ namespace Code.Player
                 AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center), footstepAudioVolume);
             }
         }
-        
+            
+            // RPC, который клиент вызывает для отправки данных на сервер.
+        [ServerRpc(RunLocally = true)]
+        private void SyncIKServerRpc(Vector3 lookPos, float weight)
+        {
+            // выполняется и на сервере, и сразу же локально (RunLocally = true)
+            networkLookAtPos.Value = lookPos;
+            networkIkWeight.Value  = weight;
+        }
+
         private void OnAnimatorIK(int layerIndex)
         {
             if (animator == null) return;
 
             if (IsOwner)
             {
-                // 1) Считаем целевой вес IK
+                // 1) считаем новый вес
                 float targetWeight = FirstPersonView ? 1f : 0f;
-                currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
+                currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight,
+                    Time.deltaTime * ikTransitionSpeed);
 
-                // 2) Если IK активен, пересчитываем точку взгляда
+                // 2) если вес > 0, обновляем точку взгляда
                 if (currentIkWeight > 0.01f)
                 {
                     Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
-                    // позиция вдоль текущего направления камеры
-                    headTarget.position = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
-                    // сглаживаем движение взгляда
-                    currentLookAtPos = Vector3.Lerp(
-                        currentLookAtPos,
-                        headTarget.position,
-                        Time.deltaTime * lookAtSmoothSpeed
-                    );
+                    Vector3 headWorldPos =
+                        headBone.position + cinemachineCameraTarget.transform.forward * 10f;
+                    currentLookAtPos = Vector3.Lerp(currentLookAtPos,
+                        headWorldPos,
+                        Time.deltaTime * lookAtSmoothSpeed);
                 }
 
-                // 3) Применяем IK на owner
+                // 3) шлём на сервер (и сразу себе) через RPC
+                SyncIKServerRpc(currentLookAtPos, currentIkWeight);
+
+                // 4) применяем к своему аниматору
                 animator.SetLookAtWeight(
-                    currentIkWeight,    // overall weight
-                    0f,                 // body weight
-                    currentIkWeight,    // head weight
-                    currentIkWeight,    // eyes weight
-                    lookAtClampWeight   // clamp
+                    currentIkWeight, // overall
+                    0f, // body
+                    currentIkWeight, // head
+                    currentIkWeight, // eyes
+                    lookAtClampWeight // clamp
                 );
                 animator.SetLookAtPosition(currentLookAtPos);
-
-                // 4) Синхронизируем результат
-                networkLookAtPos.Value  = currentLookAtPos;
-                networkIkWeight.Value   = currentIkWeight;
             }
             else
             {
-                _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.Value, Time.deltaTime * 5);
-                _lookPos = Vector3.Lerp(_lookPos,  networkLookAtPos.Value, Time.deltaTime * 5);
-                
-                // На наблюдающих просто применяем уже синхронизированные значения
+                // для наблюдателей — плавно интерполируем сетевые значения
+                _syncWeight = Mathf.Lerp(_syncWeight,
+                    networkIkWeight.Value,
+                    Time.deltaTime * 5f);
+                _lookPos = Vector3.Lerp(_lookPos,
+                    networkLookAtPos.Value,
+                    Time.deltaTime * 5f);
+
                 animator.SetLookAtWeight(
                     _syncWeight,
                     0f,
