@@ -5,7 +5,6 @@ using FishNet.Object;
 
 namespace Code.InteractionSystem
 {
-    [RequireComponent(typeof(BoxCollider))]
     public class CompositeInteractable : Interactable
     {
         [Header("Children to interact with")]
@@ -19,8 +18,10 @@ namespace Code.InteractionSystem
         {
             // Настраиваем свой BoxCollider-триггер
             _compositeCollider = GetComponent<BoxCollider>();
-            _compositeCollider.isTrigger = true;
-            if (generateColliderFromChildren)
+            if (_compositeCollider != null)
+                _compositeCollider.isTrigger = true;
+            
+            if (generateColliderFromChildren && _compositeCollider != null)
                 UpdateCompositeColliderBounds();
         }
 
