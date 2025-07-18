@@ -69,17 +69,9 @@ namespace Code.Player
         private void UpdateOutline()
         {
             var target = _active != null ? _active : _hovered;
-
-            if (outlineGameObjects != (target != null && !target.IsOccupied ? target.outlineGameObjects : null))
+            
+            if (target != null && !target.IsOccupied)
             {
-                if (outlineGameObjects != null)
-                {
-                    foreach (var go in outlineGameObjects)
-                    {
-                        go.RemoveComponentIfExists<Outline>();
-                    }
-                }
-
                 outlineGameObjects = target != null ? target.outlineGameObjects : null;
                 if (outlineGameObjects != null)
                 {
@@ -91,6 +83,17 @@ namespace Code.Player
                         o.OutlineMode = Outline.Mode.OutlineVisible;
                     }
                 }
+            }
+            else
+            {
+                if (outlineGameObjects != null)
+                {
+                    foreach (var go in outlineGameObjects)
+                    {
+                        go.RemoveComponentIfExists<Outline>();
+                    }
+                }
+
             }
         }
 
