@@ -1,4 +1,5 @@
 ﻿using System;
+using Cinemachine;
 using UnityEngine;
 using FishNet.Object;
 using Code.InteractionSystem;
@@ -20,14 +21,23 @@ namespace Code.Player
         private Interactable _active;
         private GameObject[] outlineGameObjects;
 
+        private Cinemachine3rdPersonFollow virtualCamera;
+        
+        private void Awake()
+        {
+            if (FindObjectOfType<CinemachineVirtualCamera>())
+                virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>().GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+        }
+
         private void Update()
         {
             if (!IsOwner) return;
 
+            
             if (_active == null)
             {
                 UpdateHover();
-                if (_hovered != null && Input.GetKeyDown(KeyCode.E))
+                if (_hovered != null && Input.GetKeyDown(KeyCode.E) && !_hovered.IsBusy)
                 {
                     _hovered.RequestInteract();
                     if (_hovered.ManualRelease)
@@ -36,7 +46,7 @@ namespace Code.Player
             }
             else
             {
-                if (Input.GetKeyDown(KeyCode.E))
+                if (Input.GetKeyDown(KeyCode.E) && !_active.IsBusy)
                 {
                     _active.RequestEndInteract();
                     _active = null;
@@ -53,10 +63,10 @@ namespace Code.Player
             if (cam == null) return;
 
             Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit, detectionDistance, interactableMask))
+            if (Physics.Raycast(ray, out RaycastHit hit, detectionDistance + virtualCamera.CameraDistance, interactableMask))
             {
                 var interactable = hit.collider.GetComponent<Interactable>();
-                if (interactable != null && interactable.IsEnabled && !interactable.IsOccupied)
+                if (interactable != null && interactable.IsEnabled && !interactable.IsOccupied && !interactable.IsBusy)
                 {
                     _hovered = interactable;
                     return;

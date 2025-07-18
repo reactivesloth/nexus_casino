@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using UnityEngine;
 using FishNet.Connection;
 using FishNet.Object;
@@ -93,6 +94,14 @@ namespace Code.InteractionSystem
         {
             foreach (var child in children)
                 child.OnEndInteract(conn);
+        }
+
+        private void Update()
+        {
+            IsBusy = false;
+            foreach (var child in children)
+                if (child.IsBusy)
+                    IsBusy = true;
         }
 
         [Server]

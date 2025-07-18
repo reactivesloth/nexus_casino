@@ -3,6 +3,7 @@ using Code.Network.HostMigration;
 using Code.Network.Player;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using SRF;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
@@ -46,9 +47,47 @@ namespace Code.Player
 
         public bool CanMove = true;
         public bool LockCameraPosition = true;
-        public bool FirstPersonView = true;
+// backing-field
+        private bool _firstPersonView = true;
+        public bool FirstPersonView
+        {
+            get => _firstPersonView;
+            set
+            {
+                if (_firstPersonView == value) return;
+                _firstPersonView = value;
 
-        public bool LookCameraLimitRotation { get; set; } = false; // по умолчанию не сидит
+                // если мы в режиме «сидя» и переключаемся в первый-лицо
+                if (value && LookCameraLimitRotation)
+                {
+                    // берём yaw из направления тела игрока
+                    float modelYaw = transform.eulerAngles.y;
+                    cinemachineTargetYaw = sitBaseYaw = modelYaw;
+
+                    // pitch можно оставить прежним или сбросить на ноль.
+                    // здесь обнулим — камера будет смотреть по горизонтали тела
+                    cinemachineTargetPitch = sitBasePitch = 0f;
+                }
+            }
+        }
+
+        public float CameraDistance => cameraDistance;
+        
+        private bool lookCameraLimitRotation = false;
+        public bool LookCameraLimitRotation
+        {
+            get => lookCameraLimitRotation;
+            set
+            {
+                if (value && !lookCameraLimitRotation)
+                {
+                    // при первом вхождении в режим «сидя» запоминаем базовые углы
+                    sitBaseYaw   = cinemachineTargetYaw;
+                    sitBasePitch = cinemachineTargetPitch;
+                }
+                lookCameraLimitRotation = value;
+            }
+        }
         public bool LookCameraLimitRotationRKM { get; set; } = false;
 
         public bool LockCursor { get; set; } = true;
@@ -98,6 +137,17 @@ namespace Code.Player
         private CharacterController controller;
         private CinemachineVirtualCamera virtualCamera;
 
+        private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+        private readonly SyncVar<float>   networkIkWeight = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+        
         private int animIDSpeed;
         private int animIDGrounded;
         private int animIDJump;
@@ -110,6 +160,8 @@ namespace Code.Player
         
         private const float Threshold = 0.01f;
         private bool smoothedFirstPerson;
+        private float _syncWeight;
+        private Vector3 _lookPos;
 
         private void Awake()
         {
@@ -174,14 +226,14 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            if (LookCameraLimitRotationRKM)
-                if (!Input.GetMouseButton(1))
-                {
-                    return;
-                }
-            
             if (input.look.sqrMagnitude >= Threshold)
             {
+                if (LookCameraLimitRotationRKM)
+                    if (!Input.GetMouseButton(1))
+                    {
+                        return;
+                    }
+                
                 float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
                 cinemachineTargetYaw   += input.look.x * mul;
                 cinemachineTargetPitch += input.look.y * mul;
@@ -395,41 +447,69 @@ namespace Code.Player
                 AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center), footstepAudioVolume);
             }
         }
-        
+            
+            // RPC, который клиент вызывает для отправки данных на сервер.
+        [ServerRpc(RunLocally = true)]
+        private void SyncIKServerRpc(Vector3 lookPos, float weight)
+        {
+            // выполняется и на сервере, и сразу же локально (RunLocally = true)
+            networkLookAtPos.Value = lookPos;
+            networkIkWeight.Value  = weight;
+        }
+
         private void OnAnimatorIK(int layerIndex)
         {
             if (animator == null) return;
 
-            // Плавно двигаем вес IK к 1 (FPV) или к 0 (3PV)
-            float targetWeight = FirstPersonView ? 1f : 0f;
-            currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
-
-            // Устанавливаем вес, включая clampWeight
-            animator.SetLookAtWeight(
-                currentIkWeight,       // overall
-                0f,                    // body
-                currentIkWeight,       // head
-                currentIkWeight,       // eyes
-                lookAtClampWeight      // clamp
-            );
-
-            if (currentIkWeight > 0.01f)
+            if (IsOwner)
             {
-                // Считаем цель взгляда от кости головы
-                Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
+                // 1) считаем новый вес
+                float targetWeight = FirstPersonView ? 1f : 0f;
+                currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight,
+                    Time.deltaTime * ikTransitionSpeed);
 
-                if (IsOwner)
-                    headTarget.position = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
-                var targetPos = headTarget.position;
+                // 2) если вес > 0, обновляем точку взгляда
+                if (currentIkWeight > 0.01f)
+                {
+                    Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
+                    Vector3 headWorldPos =
+                        headBone.position + cinemachineCameraTarget.transform.forward * 10f;
+                    currentLookAtPos = Vector3.Lerp(currentLookAtPos,
+                        headWorldPos,
+                        Time.deltaTime * lookAtSmoothSpeed);
+                }
 
-                // Сглаживаем переход позиции
-                currentLookAtPos = Vector3.Lerp(
-                    currentLookAtPos,
-                    targetPos,
-                    Time.deltaTime * lookAtSmoothSpeed
+                // 3) шлём на сервер (и сразу себе) через RPC
+                SyncIKServerRpc(currentLookAtPos, currentIkWeight);
+
+                // 4) применяем к своему аниматору
+                animator.SetLookAtWeight(
+                    currentIkWeight, // overall
+                    0f, // body
+                    currentIkWeight, // head
+                    currentIkWeight, // eyes
+                    lookAtClampWeight // clamp
                 );
-
                 animator.SetLookAtPosition(currentLookAtPos);
+            }
+            else
+            {
+                // для наблюдателей — плавно интерполируем сетевые значения
+                _syncWeight = Mathf.Lerp(_syncWeight,
+                    networkIkWeight.Value,
+                    Time.deltaTime * 5f);
+                _lookPos = Vector3.Lerp(_lookPos,
+                    networkLookAtPos.Value,
+                    Time.deltaTime * 5f);
+
+                animator.SetLookAtWeight(
+                    _syncWeight,
+                    0f,
+                    _syncWeight,
+                    _syncWeight,
+                    lookAtClampWeight
+                );
+                animator.SetLookAtPosition(_lookPos);
             }
         }
 
