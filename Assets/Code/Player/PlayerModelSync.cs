@@ -34,34 +34,22 @@ namespace Code.Player
         {
             _characterCustomizationJson.OnChange -= CharacterCustomizationJsonOnOnChange;
         }
-        
-        [ServerRpc]
-        public void SendCharacterJsonServerRpc(string json, NetworkConnection sender = null)
-        {
-            // на сервере логируем и ретранслируем всем остальным
-            Debug.Log($"[Server] Получен JSON ({json.Length} симв.) от {sender.ClientId}");
-            SendCharacterJsonObserversRpc(json);
-        }
 
-        [ObserversRpc(BufferLast = true)]
-        private void SendCharacterJsonObserversRpc(string json)
+        public override void OnStartClient()
         {
-            Debug.Log($"[Client] Получил JSON ({json.Length} симв.)");
-            // восстанавливаем из JSON
-            _characterCustomization.LoadFromJSON(json);
-        }
-
-        public void TransmitLocalCharacter()
-        {
-            if (!IsOwner) return; 
-            
-            string json = _characterCustomization.GetJSON();
-            SendCharacterJsonServerRpc(json);
+            base.OnStartClient();
+            Debug.Log($"OnStartClient: {Owner}. Is owner = {IsOwner}");
+            if (IsOwner)
+                _characterCustomizationJson.Value = _characterCustomization.GetJSON();
+            //TransmitLocalCharacter();
         }
         
         private void CharacterCustomizationJsonOnOnChange(string prev, string next, bool asServer)
         {
-            _characterCustomization.LoadFromJSON(next);
+            
+            Debug.Log($"Clent {Owner} recived:\n{next}");
+            if(!string.IsNullOrEmpty(next))
+                _characterCustomization.LoadFromJSON(next);
         }
     }
 }
