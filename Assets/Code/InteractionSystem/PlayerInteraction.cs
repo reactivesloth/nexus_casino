@@ -25,7 +25,8 @@ namespace Code.Player
         
         private void Awake()
         {
-            virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>().GetCinemachineComponent<Cinemachine3rdPersonFollow>();;
+            if (FindObjectOfType<CinemachineVirtualCamera>())
+                virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>().GetCinemachineComponent<Cinemachine3rdPersonFollow>();
         }
 
         private void Update()

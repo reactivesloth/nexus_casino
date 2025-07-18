@@ -3,6 +3,7 @@ using Code.Network.HostMigration;
 using Code.Network.Player;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using SRF;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
@@ -136,6 +137,17 @@ namespace Code.Player
         private CharacterController controller;
         private CinemachineVirtualCamera virtualCamera;
 
+        private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+        private readonly SyncVar<float>   networkIkWeight = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+        
         private int animIDSpeed;
         private int animIDGrounded;
         private int animIDJump;
@@ -438,36 +450,51 @@ namespace Code.Player
         {
             if (animator == null) return;
 
-            // Плавно двигаем вес IK к 1 (FPV) или к 0 (3PV)
-            float targetWeight = FirstPersonView ? 1f : 0f;
-            currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
-
-            // Устанавливаем вес, включая clampWeight
-            animator.SetLookAtWeight(
-                currentIkWeight,       // overall
-                0f,                    // body
-                currentIkWeight,       // head
-                currentIkWeight,       // eyes
-                lookAtClampWeight      // clamp
-            );
-
-            if (currentIkWeight > 0.01f)
+            if (IsOwner)
             {
-                // Считаем цель взгляда от кости головы
-                Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
+                // 1) Считаем целевой вес IK
+                float targetWeight = FirstPersonView ? 1f : 0f;
+                currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
 
-                if (IsOwner)
+                // 2) Если IK активен, пересчитываем точку взгляда
+                if (currentIkWeight > 0.01f)
+                {
+                    Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
+                    // позиция вдоль текущего направления камеры
                     headTarget.position = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
-                var targetPos = headTarget.position;
+                    // сглаживаем движение взгляда
+                    currentLookAtPos = Vector3.Lerp(
+                        currentLookAtPos,
+                        headTarget.position,
+                        Time.deltaTime * lookAtSmoothSpeed
+                    );
+                }
 
-                // Сглаживаем переход позиции
-                currentLookAtPos = Vector3.Lerp(
-                    currentLookAtPos,
-                    targetPos,
-                    Time.deltaTime * lookAtSmoothSpeed
+                // 3) Применяем IK на owner
+                animator.SetLookAtWeight(
+                    currentIkWeight,    // overall weight
+                    0f,                 // body weight
+                    currentIkWeight,    // head weight
+                    currentIkWeight,    // eyes weight
+                    lookAtClampWeight   // clamp
                 );
-
                 animator.SetLookAtPosition(currentLookAtPos);
+
+                // 4) Синхронизируем результат
+                networkLookAtPos.Value  = currentLookAtPos;
+                networkIkWeight.Value   = currentIkWeight;
+            }
+            else
+            {
+                // На наблюдающих просто применяем уже синхронизированные значения
+                animator.SetLookAtWeight(
+                    networkIkWeight.Value,
+                    0f,
+                    networkIkWeight.Value,
+                    networkIkWeight.Value,
+                    lookAtClampWeight
+                );
+                animator.SetLookAtPosition(networkLookAtPos.Value);
             }
         }
 
