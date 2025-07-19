@@ -29,6 +29,11 @@ namespace Code.Network.Lobby
             Disconnect();
         }
 
+        private void OnApplicationQuit()
+        {
+            Disconnect();
+        }
+
         private void OnApplicationPause(bool pause)
         {
             if (pause)
