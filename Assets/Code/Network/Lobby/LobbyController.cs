@@ -43,11 +43,6 @@ namespace Code.Network.Lobby
             LobbyEvents.Instance.LobbyMemberStatusReceived.RemoveListener(OnLobbyMemberStatusReceived);
         }
 
-        private void Start()
-        {
-            StartPollingLobbies();
-        }
-
         public void StartPollingLobbies()
         {
             _pollCoroutine = StartCoroutine(PollLobbiesRoutine());
@@ -501,6 +496,9 @@ namespace Code.Network.Lobby
         private IEnumerator LeaveLobbyRoutine()
         {
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
+            if(string.IsNullOrEmpty(lobbyId))
+                yield break;
+            
             var userID = LobbyVariables.Instance.ProductUserId;
             yield return LobbyLeaveLobby.Run(out var leaveLobbyResult, lobbyId, userID);
             if(leaveLobbyResult.CallbackInfo?.ResultCode != Result.Success)
