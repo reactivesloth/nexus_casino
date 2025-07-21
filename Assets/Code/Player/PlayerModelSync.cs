@@ -33,7 +33,7 @@ namespace Code.Player
         private void SendCharacterJsonObserversRpc(string json)
         {
             Debug.Log($"[Client] Получил JSON ({json.Length} симв.)");
-            // восстанавливаем из JSON
+            _characterCustomization.Initialize();
             _characterCustomization.LoadFromJSON(json);
         }
 
