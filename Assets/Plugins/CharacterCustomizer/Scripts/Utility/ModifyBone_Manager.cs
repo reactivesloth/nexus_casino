@@ -133,9 +133,9 @@ namespace CC
                     customizer.setBlendshapeByName("BodyCustomization_UpperArmScale", Mathf.Clamp(lerp2(0, 1, value), -0.5f, 0.75f), true);
                     customizer.setBlendshapeByName("BodyCustomization_LowerArmScale", Mathf.Clamp(lerp2(0, 1, value), -0.5f, 0.75f), true);
                     customizer.setBlendshapeByName("BodyCustomization_NeckScale", Mathf.Clamp(lerp2(0, 1, value), -0.25f, 0.75f), true);
-                    customizer.setBlendshapeByName("BodyCustomization_TorsoHeight", 0, true);
-                    customizer.setBlendshapeByName("BodyCustomization_BreastSize", 0, true);
-                    customizer.setBlendshapeByName("BodyCustomization_ButtSize", 0, true);
+                    // customizer.setBlendshapeByName("BodyCustomization_TorsoHeight", 0, true);
+                    // customizer.setBlendshapeByName("BodyCustomization_BreastSize", 0, true);
+                    // customizer.setBlendshapeByName("BodyCustomization_ButtSize", 0, true);
                     break;
 
                 default:
