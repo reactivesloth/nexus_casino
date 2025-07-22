@@ -10,8 +10,20 @@ namespace Code.Network.HostMigration.Components
 
         public Guid ObjectGuid => Guid.Parse(objectId);
 
+        #if UNITY_EDITOR
         private void OnValidate()
         {
+            GenId();
+        }
+
+        private void GenId()
+        {
+            if(!gameObject.scene.IsValid() || gameObject.scene.name == null)
+            {
+                objectId = string.Empty;
+                return;
+            }
+                
             if (!Guid.TryParse(objectId, out var guid))
                 objectId = Guid.NewGuid().ToString();
             
@@ -25,6 +37,7 @@ namespace Code.Network.HostMigration.Components
 
             return allSceneObjects.Where(o => o != this).All(o => o.ObjectGuid != ObjectGuid);
         }
+        #endif
 
         public static SceneObject GetObjectById(string objectId)
         {
