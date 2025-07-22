@@ -228,9 +228,15 @@ namespace CC
                     CC_SaveData.SavedCharacters.Add(characterDataCopy);
                 }
 
+                
+                
                 //Save to JSON
                 string jsonSave = JsonUtility.ToJson(CC_SaveData, true);
                 File.WriteAllText(SavePath, jsonSave);
+                
+                
+
+                ApplyCharacterVars(StoredCharacterData);
             }
         }
 
