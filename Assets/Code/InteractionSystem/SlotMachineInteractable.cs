@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using Code.Network;
+using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
-using UnityEngine.UI;
+using Vuplex.WebView;
 
 namespace Code.InteractionSystem
 {
@@ -10,23 +11,29 @@ namespace Code.InteractionSystem
         [Header("UI Settings")]
         [SerializeField, Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
         private Canvas computerCanvas;
+
+        [SerializeField] private CanvasWebViewPrefab webView;
+        [SerializeField] private NetworkImageStream networkImageStream;
         private bool _isUsing = false;
 
-        [Header("View Settings")]
-        [SerializeField] private MeshRenderer computerMeshRenderer;
-        [SerializeField] private int materialIndex = 0;
-        
         private Material _material;
-        
+
         public override string InteractionPrompt =>
             !_isUsing ? "Use Computer" : "Exit Computer";
-        
-        private void Start() {
-            
+
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            webView ??= GetComponentInChildren<CanvasWebViewPrefab>(true);
+            networkImageStream ??= GetComponentInChildren<NetworkImageStream>(true);
+        }
+
+        private void Start()
+        {
             if (computerCanvas != null)
                 computerCanvas.gameObject.SetActive(false);
         }
-        
+
         private void Reset()
         {
             if (computerCanvas == null)
@@ -47,7 +54,7 @@ namespace Code.InteractionSystem
             _isUsing = true;
             TargetToggleComputerUI(conn, true);
         }
-        
+
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
             if (!_isUsing) return;
@@ -68,6 +75,18 @@ namespace Code.InteractionSystem
             }
 
             computerCanvas.gameObject.SetActive(open);
+
+            if (!open)
+            {
+                webView.WebView?.GoBack(); // или другой метод, если нужно конкретное поведение
+                webView.WebView?.LoadUrl("about:blank"); // очищаем содержимое
+                //networkImageStream.StopStreaming();
+            }
+            else
+            {
+                webView.WebView?.LoadUrl(webView.InitialUrl);
+                //networkImageStream.StartStreaming();
+            }
         }
     }
 }

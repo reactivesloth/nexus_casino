@@ -25,6 +25,9 @@ namespace CC
                 hotSpot = new Vector2(cursorTexture.width / 2, cursorTexture.height / 2);
                 setDefaultCursor();
             }
+
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
         }
 
         public void setCursor(Texture2D texture)

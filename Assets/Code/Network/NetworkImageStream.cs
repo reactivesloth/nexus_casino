@@ -176,6 +176,12 @@ namespace Code.Network
         [ObserversRpc(ExcludeOwner = true)]
         private void RelayChunk(byte[] chunk, int offset, int total, int width, int height)
         {
+            if(Owner == null || OwnerId == -1)
+            {
+                ShowIdleTexture();
+                return;
+            }
+            
             _assembler ??= new FrameAssembler(total);
             _assembler.Add(chunk, offset);
             if (!_assembler.IsComplete) return;

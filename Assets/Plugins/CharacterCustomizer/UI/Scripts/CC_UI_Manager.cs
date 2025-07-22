@@ -63,6 +63,9 @@ namespace CC
                 case "PlayerM2":
                     SetActiveCharacter(3);
                     break;
+                case "PlayerM3":
+                    SetActiveCharacter(4);
+                    break;
                 default:
                     SetActiveCharacter(1);
                     break;
@@ -181,6 +184,9 @@ namespace CC
                     break;
                 case 3:
                     PlayerPrefs.SetString("PlayerModelType", "PlayerM2");
+                    break;
+                case 4:
+                    PlayerPrefs.SetString("PlayerModelType", "PlayerM3");
                     break;
                 default:
                     PlayerPrefs.SetString("PlayerModelType", "Male");
