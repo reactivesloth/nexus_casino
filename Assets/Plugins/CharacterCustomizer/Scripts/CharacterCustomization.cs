@@ -56,7 +56,7 @@ namespace CC
 
         #region Initialize script
 
-        private void Start()
+        private void Awake()
         {
             foreach (var item in GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
