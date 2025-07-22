@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
@@ -53,10 +54,23 @@ namespace CC
 
         //Async loading
         private Coroutine activeCoroutine;
+        [SerializeField] private bool initializeOnStartInsteadOfAwake;
 
         #region Initialize script
 
         private void Awake()
+        {
+            if (!initializeOnStartInsteadOfAwake)
+                InitializeScript();
+        }
+
+        private void Start()
+        {
+            if (initializeOnStartInsteadOfAwake)
+                InitializeScript();
+        }
+
+        private void InitializeScript ()
         {
             foreach (var item in GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {

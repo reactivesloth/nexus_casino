@@ -249,15 +249,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -5.992
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.006
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.486
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_LocalRotation.w
@@ -475,6 +475,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 1082271958561512970, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -566,7 +570,7 @@ PrefabInstance:
     - target: {fileID: 5866666021909216657, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_Controller
       value: 
-      objectReference: {fileID: 9100000, guid: 40db3173a05ae3242b1c182a09b0a183, type: 2}
+      objectReference: {fileID: 9100000, guid: 2cfefe692e1661b47ac4a0886f28a9eb, type: 2}
     - target: {fileID: 5866666021909216657, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       propertyPath: m_ApplyRootMotion
       value: 0
@@ -854,7 +858,6 @@ MonoBehaviour:
   footstepAudioVolume: 0.5
   CanMove: 1
   LockCameraPosition: 0
-  FirstPersonView: 0
   sitYawRange: 45
   sitMinPitch: -30
   sitMaxPitch: 30
@@ -934,12 +937,12 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 3
+  <PrefabId>k__BackingField: 4
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 8660729257753279777
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
-    Position: {x: -5.992, y: 1.006, z: -0.486}
+    Position: {x: 0, y: 0, z: 0}
     Rotation: {x: -0, y: -0, z: -0, w: 1}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1
@@ -2009,9 +2012,9 @@ MonoBehaviour:
   isDebug: 0
   useAudioAnalysis: 1
   needAudioSource: 1
-  inspStateFoldoutProcessing: 0
+  inspStateFoldoutProcessing: 1
   inspStateFoldoutSettings: 0
-  inspStateFoldoutVisemes: 0
+  inspStateFoldoutVisemes: 1
   inspCollectionDisplayMode: 0
   inspAnalysisDisplay: 0
   inspOverrideSecondaryMix: 0
