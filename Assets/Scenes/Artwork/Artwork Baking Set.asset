@@ -232,29 +232,29 @@ MonoBehaviour:
             elementCount: 2
         m_Asset: {fileID: 4900000, guid: 6fb4321ae7d12d547ba0dab682372dac, type: 3}
       cellProbeOcclusionDataAsset:
-        m_AssetGUID: f19a8bcab24122d48b3483868d678a2a
-        m_StreamableAssetPath: APVStreamingAssets\1c1cd124b77caaa47a0ceec8b6c006a4\f19a8bcab24122d48b3483868d678a2a.bytes
-        m_ElementSize: 0
+        m_AssetGUID: d352cda0521db9843bafa594b47d60a7
+        m_StreamableAssetPath: APVStreamingAssets\1c1cd124b77caaa47a0ceec8b6c006a4\d352cda0521db9843bafa594b47d60a7.bytes
+        m_ElementSize: 32768
         m_StreamableCellDescs:
           m_Keys: 0000000009000000030000000c000000010000000a000000040000000d000000
           m_Values:
           - offset: 0
             elementCount: 1
-          - offset: 0
+          - offset: 32768
             elementCount: 1
-          - offset: 0
+          - offset: 65536
             elementCount: 7
-          - offset: 0
+          - offset: 294912
             elementCount: 4
-          - offset: 0
+          - offset: 425984
             elementCount: 1
-          - offset: 0
+          - offset: 458752
             elementCount: 1
-          - offset: 0
+          - offset: 491520
             elementCount: 2
-          - offset: 0
+          - offset: 557056
             elementCount: 2
-        m_Asset: {fileID: 0}
+        m_Asset: {fileID: 4900000, guid: d352cda0521db9843bafa594b47d60a7, type: 3}
   cellBricksDataAsset:
     m_AssetGUID: f2a6c3ee578a4324db0e53d4a58aea05
     m_StreamableAssetPath: APVStreamingAssets\1c1cd124b77caaa47a0ceec8b6c006a4\f2a6c3ee578a4324db0e53d4a58aea05.bytes
@@ -311,7 +311,7 @@ MonoBehaviour:
     m_Extent: {x: 81, y: 81, z: 81}
   bakedSimplificationLevels: 3
   bakedMinDistanceBetweenProbes: 1
-  bakedProbeOcclusion: 0
+  bakedProbeOcclusion: 1
   bakedSkyOcclusionValue: 0
   bakedSkyShadingDirectionValue: 0
   bakedProbeOffset: {x: 0, y: 0, z: 0}
@@ -325,7 +325,7 @@ MonoBehaviour:
   L0ChunkSize: 65536
   L1ChunkSize: 32768
   L2TextureChunkSize: 32768
-  ProbeOcclusionChunkSize: 0
+  ProbeOcclusionChunkSize: 32768
   sharedValidityMaskChunkSize: 8192
   sharedSkyOcclusionL0L1ChunkSize: 0
   sharedSkyShadingDirectionIndicesChunkSize: 0
