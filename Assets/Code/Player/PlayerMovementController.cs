@@ -166,7 +166,7 @@ namespace Code.Player
         private void Awake()
         {
             mainCamera = Camera.main?.gameObject;
-            input = GetComponent<PlayerInput>();
+            input = PlayerInput.Instance;
         }
 
         private void Start()
@@ -198,8 +198,10 @@ namespace Code.Player
         private void Update()
         {
             if (!IsOwner || !CanMove) return;
+            Debug.Log($"IsOwner = {IsOwner}, CanMove = {CanMove}");
 
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
+            input ??= PlayerInput.Instance;
 
             GroundedCheck();
             JumpAndGravity();
