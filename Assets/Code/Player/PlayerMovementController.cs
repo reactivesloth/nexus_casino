@@ -139,12 +139,12 @@ namespace Code.Player
 
         private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         private readonly SyncVar<float>   networkIkWeight = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         
