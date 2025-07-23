@@ -198,7 +198,6 @@ namespace Code.Player
         private void Update()
         {
             if (!IsOwner || !CanMove) return;
-            Debug.Log($"IsOwner = {IsOwner}, CanMove = {CanMove}");
 
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
             input ??= PlayerInput.Instance;
