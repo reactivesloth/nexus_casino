@@ -13,7 +13,7 @@ namespace Code.Network
 
         private readonly SyncVar<string> _nickname = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         
@@ -42,18 +42,23 @@ namespace Code.Network
                 string newName = ClientDataStorage.UserData.username;
                 _nickname.Value = newName;
                 SetNicknameServerRpc(newName);
-                playerName.text = _nickname.Value;
             }
-            else
-            {
-                playerName.text = _nickname.Value;
-            }
+            
+            playerName.text = _nickname.Value;
         }
 
         [ServerRpc(RequireOwnership = true)]
         private void SetNicknameServerRpc(string newName)
         {
             _nickname.Value = newName;
+            playerName.text = _nickname.Value;
         }
+
+        // [ObserversRpc(BufferLast = true)]
+        // private void UpdateNicknames(string name)
+        // {
+        //     _nickname.Value = name;
+        //     playerName.text = _nickname.Value;
+        // }
     }
 }
