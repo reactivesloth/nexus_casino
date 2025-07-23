@@ -35,7 +35,7 @@ namespace Code.Network.Lobby
             if (_clientManager)
                 _clientManager.StopConnection();
             if (_serverManager)
-                _serverManager.StopConnection(true);
+                _serverManager.StopConnection(false);
             if (_lobbyController)
                 _lobbyController.LeaveLobby();
             
