@@ -10642,6 +10642,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8407480364570936113, guid: da62db48495706941a9ec75f0eb627bb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 426488531}
+    - targetCorrespondingSourceObject: {fileID: 8407480364570936113, guid: da62db48495706941a9ec75f0eb627bb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1046409434}
     - targetCorrespondingSourceObject: {fileID: -4794765558580911857, guid: da62db48495706941a9ec75f0eb627bb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1999164506}
@@ -29168,6 +29171,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1046409434
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 562799773}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad7b8279430e1a84fa93fe6a8e4fee7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scrollSpeed: {x: 0, y: -0.01}
+  materialID: 0
 --- !u!64 &1050637764
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -44409,11 +44426,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5015134916206618529, guid: 452c8309982b8774b8eba6ab796a43d4, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.4421263
+      value: 5.445
       objectReference: {fileID: 0}
     - target: {fileID: 5015134916206618529, guid: 452c8309982b8774b8eba6ab796a43d4, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 2.1957502
+      value: 2.284
       objectReference: {fileID: 0}
     - target: {fileID: 5015134916206618529, guid: 452c8309982b8774b8eba6ab796a43d4, type: 3}
       propertyPath: m_LocalRotation.w
