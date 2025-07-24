@@ -58,5 +58,28 @@ namespace Code.Utility
             tex.LoadImage(imageBytes, false);
             return tex;
         }
+        
+        public static Sprite CreateSpriteFromBytes(byte[] imageBytes)
+        {
+            if (imageBytes == null || imageBytes.Length == 0)
+            {
+                Debug.LogError("Invalid image byte array.");
+                return null;
+            }
+
+            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+            bool isLoaded = texture.LoadImage(imageBytes);
+            if (!isLoaded)
+            {
+                Debug.LogError("Failed to load image from bytes.");
+                return null;
+            }
+
+            return Sprite.Create(
+                texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f)
+            );
+        }
     }
 }
