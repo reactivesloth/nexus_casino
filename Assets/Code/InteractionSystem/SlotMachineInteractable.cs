@@ -26,14 +26,20 @@ namespace Code.InteractionSystem
             !_isUsing ? "Use Computer" : "Exit Computer";
 
         public int IDNumber;
+
         
+#if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
             webView ??= GetComponentInChildren<CanvasWebViewPrefab>(true);
             networkImageStream ??= GetComponentInChildren<NetworkImageStream>(true);
+            
+            if (idNumberText != null)
+                idNumberText.text = IDNumber.ToString();
         }
-
+#endif
+        
         private void Awake()
         {
             if (idNumberText != null)
