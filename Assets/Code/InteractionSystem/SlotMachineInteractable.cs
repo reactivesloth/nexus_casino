@@ -2,6 +2,7 @@
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
+using TMPro;
 using Vuplex.WebView;
 
 namespace Code.InteractionSystem
@@ -11,6 +12,8 @@ namespace Code.InteractionSystem
         [Header("UI Settings")]
         [SerializeField, Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
         private Canvas computerCanvas;
+        
+        [SerializeField] private TextMeshPro idNumberText;
 
         [SerializeField] private CanvasWebViewPrefab webView;
         [SerializeField] private NetworkImageStream networkImageStream;
@@ -21,6 +24,8 @@ namespace Code.InteractionSystem
         public override string InteractionPrompt =>
             !_isUsing ? "Use Computer" : "Exit Computer";
 
+        public int IDNumber;
+        
         protected override void OnValidate()
         {
             base.OnValidate();
@@ -32,6 +37,9 @@ namespace Code.InteractionSystem
         {
             if (computerCanvas != null)
                 computerCanvas.gameObject.SetActive(false);
+            
+            if (idNumberText != null)
+                idNumberText.text = IDNumber.ToString();
         }
 
         private void Reset()

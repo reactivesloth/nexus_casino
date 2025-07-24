@@ -94,7 +94,7 @@ LightmapSettings:
     m_TrainingDataDestination: TrainingData
     m_LightProbeSampleCountMultiplier: 4
   m_LightingDataAsset: {fileID: 112000000, guid: 1368072623d801f459128db9863909a8, type: 2}
-  m_LightingSettings: {fileID: 4890085278179872738, guid: 3b3f7400d3526e9429c39d03afb714b3, type: 2}
+  m_LightingSettings: {fileID: 4890085278179872738, guid: 619053ab8d12f4d4db334f32664f560a, type: 2}
 --- !u!196 &4
 NavMeshSettings:
   serializedVersion: 2
@@ -805,7 +805,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 5914279742607950016, guid: 76e30d04cc4630345b907c0e872821da, type: 3}
 --- !u!64 &542274029
@@ -1539,8 +1539,8 @@ ReflectionProbe:
   m_TimeSlicingMode: 0
   m_Resolution: 128
   m_UpdateFrequency: 0
-  m_BoxSize: {x: 15, y: 6, z: 15}
-  m_BoxOffset: {x: 0, y: 3, z: 0}
+  m_BoxSize: {x: 15, y: 4, z: 15}
+  m_BoxOffset: {x: 0, y: 2, z: 0}
   m_NearClip: 0.3
   m_FarClip: 1000
   m_ShadowDistance: 100
@@ -1552,7 +1552,7 @@ ReflectionProbe:
   m_IntensityMultiplier: 1
   m_BlendDistance: 1
   m_HDR: 1
-  m_BoxProjection: 1
+  m_BoxProjection: 0
   m_RenderDynamicObjects: 0
   m_UseOcclusionCulling: 1
   m_Importance: 1
@@ -2088,7 +2088,7 @@ MonoBehaviour:
     e00: -0.00000011920929
     e01: 0
     e02: 1.0000001
-    e03: 0
+    e03: 5.684342e-14
     e10: 0
     e11: 1
     e12: 0
@@ -2096,12 +2096,12 @@ MonoBehaviour:
     e20: -1.0000001
     e21: 0
     e22: -0.00000011920929
-    e23: 0
+    e23: 0.0000004768372
     e30: 0
     e31: 0
     e32: 0
     e33: 1
-  cachedHashCode: 1187115645
+  cachedHashCode: -1943932291
   fillEmptySpaces: 1
   version: 2
   globalVolume: 0
@@ -2114,7 +2114,7 @@ Transform:
   m_GameObject: {fileID: 1763429707}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.7071068, z: -0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 1.8337384, z: 0}
+  m_LocalPosition: {x: 0.00000047683716, y: 1.8337384, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2389,7 +2389,7 @@ Light:
   m_BounceIntensity: 1
   m_ColorTemperature: 6570
   m_UseColorTemperature: 0
-  m_BoundingSphereOverride: {x: 2.720083e+23, y: 2.720083e+23, z: 2.720083e+23, w: 2.720083e+23}
+  m_BoundingSphereOverride: {x: 1.00467e-40, y: 0, z: 0, w: 1.8395093e+25}
   m_UseBoundingSphereOverride: 0
   m_UseViewFrustumForShadowCasterCull: 1
   m_ForceVisible: 0
