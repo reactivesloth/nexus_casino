@@ -1,4 +1,5 @@
-﻿using Code.Network;
+﻿using System;
+using Code.Network;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
@@ -33,13 +34,16 @@ namespace Code.InteractionSystem
             networkImageStream ??= GetComponentInChildren<NetworkImageStream>(true);
         }
 
+        private void Awake()
+        {
+            if (idNumberText != null)
+                idNumberText.text = IDNumber.ToString();
+        }
+
         private void Start()
         {
             if (computerCanvas != null)
                 computerCanvas.gameObject.SetActive(false);
-            
-            if (idNumberText != null)
-                idNumberText.text = IDNumber.ToString();
         }
 
         private void Reset()
