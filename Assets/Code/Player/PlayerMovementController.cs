@@ -139,12 +139,12 @@ namespace Code.Player
 
         private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         private readonly SyncVar<float>   networkIkWeight = new(new SyncTypeSettings
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
         
@@ -166,7 +166,7 @@ namespace Code.Player
         private void Awake()
         {
             mainCamera = Camera.main?.gameObject;
-            input = GetComponent<PlayerInput>();
+            input = PlayerInput.Instance;
         }
 
         private void Start()
@@ -200,6 +200,7 @@ namespace Code.Player
             if (!IsOwner || !CanMove) return;
 
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
+            input ??= PlayerInput.Instance;
 
             GroundedCheck();
             JumpAndGravity();

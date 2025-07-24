@@ -1,4 +1,5 @@
 using System;
+using Code.Network.Lobby;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,6 +9,7 @@ namespace Code.Tests
     {
         public string sceneName = "Main";
         public KeyCode key = KeyCode.None;
+        public bool isDisconnect;
 
         private void Update()
         {
@@ -23,6 +25,8 @@ namespace Code.Tests
         public void Load(string sceneName)
         {
             SceneManager.LoadSceneAsync(sceneName);
+            if (isDisconnect)
+                LobbyAutoDisconnect.Disconnect();
         }
         
         public void Load(int id)

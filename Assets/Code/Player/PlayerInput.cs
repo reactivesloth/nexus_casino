@@ -5,6 +5,17 @@ namespace Code.Player
 {
     public class PlayerInput : MonoBehaviour
     {
+        private static PlayerInput _instance;
+        public static PlayerInput Instance
+        {
+            get
+            {
+                if (_instance == null)
+                    _instance = FindAnyObjectByType<PlayerInput>(FindObjectsInactive.Include);
+                return _instance;
+            }
+        }
+        
         [Header("Character Input Values")] public Vector2 move;
         public Vector2 look;
         public bool jump;

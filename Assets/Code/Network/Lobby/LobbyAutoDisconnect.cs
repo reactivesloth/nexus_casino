@@ -1,32 +1,22 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using FishNet;
 using FishNet.Managing.Client;
 using FishNet.Managing.Server;
-using FishNet.Transporting.FishyEOSPlugin;
-using PlayEveryWare.EpicOnlineServices;
 
 namespace Code.Network.Lobby
 {
     public class LobbyAutoDisconnect : MonoBehaviour
     {
-        private ClientManager _clientManager;
-        private ServerManager _serverManager;
-        private LobbyController _lobbyController;
-        private FishyEOS _fishyEos;
+        private static ServerManager _serverManager;
+        private static ClientManager _clientManager;
+        private static LobbyController _lobbyController;
 
         private void Awake()
         {
-            _clientManager = InstanceFinder.ClientManager;
             _serverManager = InstanceFinder.ServerManager;
+            _clientManager = InstanceFinder.ClientManager;
             _lobbyController = _clientManager.GetComponent<LobbyController>();
-            _fishyEos = _clientManager.GetComponent<FishyEOS>();
             
-        }
-
-        private void OnDestroy()
-        {
-            Disconnect();
         }
 
         private void OnApplicationQuit()
@@ -40,10 +30,12 @@ namespace Code.Network.Lobby
                 Disconnect();
         }
 
-        private void Disconnect()
+        public static void Disconnect()
         {
             if (_clientManager)
                 _clientManager.StopConnection();
+            if (_serverManager)
+                _serverManager.StopConnection(false);
             if (_lobbyController)
                 _lobbyController.LeaveLobby();
             
