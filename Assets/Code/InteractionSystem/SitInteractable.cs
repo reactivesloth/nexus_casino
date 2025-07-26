@@ -19,7 +19,6 @@ namespace Code.InteractionSystem
 
         [Header("Sit Settings")] 
         [SerializeField] private Transform sitPoint;
-        [SerializeField] private float sitBlendDuration = 1.0f;
         [SerializeField] private float sitAdjustHeight = 0.0f;
         [SerializeField] private bool allowRotateCamera = true;
         [SerializeField] private bool useRightMouseButtonToRotate = false;
@@ -134,7 +133,7 @@ namespace Code.InteractionSystem
 
             yield return null;
 
-            float duration = sitBlendDuration;
+            float duration = anim.GetAnimatorTransitionInfo(0).duration;
             float elapsed = 0f;
 
             Vector3 startPos = tf.position;
@@ -175,7 +174,7 @@ namespace Code.InteractionSystem
 
             IsBusy = false;
         }
-
+        
         private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
             CharacterController cc, Transform tf)
         {
@@ -186,7 +185,7 @@ namespace Code.InteractionSystem
             anim.SetFloat(SIT_STYLE, int.Parse(_selectedEntry.animationID));
             networkAnim.SetTrigger(STAND_TRIGGER);
 
-            float duration = 1.2f;
+            float duration = anim.GetAnimatorTransitionInfo(0).duration;
             float elapsed = 0f;
 
             Vector3 startPos = tf.position;
@@ -211,8 +210,6 @@ namespace Code.InteractionSystem
             );
 
             anim.applyRootMotion = false;
-            tf.position = targetPos;
-            tf.rotation = targetRot;
 
             cc.enabled = true;
             move.CanMove = true;
@@ -254,9 +251,9 @@ namespace Code.InteractionSystem
             return closest;
         }
 
-        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.15f, float maxDuration = 2f)
+        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.2f, float maxDuration = 2f)
         {
-            float walkSpeed = 2.0f;
+            float walkSpeed = 1.5f;
             float animBlendSpeed = 8f;
             float elapsed = 0f;
 
@@ -276,13 +273,11 @@ namespace Code.InteractionSystem
                     dir.Normalize();
                     tf.position += dir * walkSpeed * Time.deltaTime;
 
-                    // Плавно включаем "идти вперёд"
                     vertical = Mathf.MoveTowards(vertical, 1f, animBlendSpeed * Time.deltaTime);
                     horizontal = Mathf.MoveTowards(horizontal, 0f, animBlendSpeed * Time.deltaTime);
                 }
                 else
                 {
-                    // Плавный сброс
                     vertical = Mathf.MoveTowards(vertical, 0f, animBlendSpeed * Time.deltaTime);
                     horizontal = Mathf.MoveTowards(horizontal, 0f, animBlendSpeed * Time.deltaTime);
                 }
@@ -295,13 +290,10 @@ namespace Code.InteractionSystem
 
             tf.position = targetPos;
 
-            // Сброс
             anim.SetFloat("Vertical", 0f);
             anim.SetFloat("Horizontal", 0f);
         }
 
-
-        
         private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f, float maxDuration = 1f)
         {
             float elapsed = 0f;
@@ -315,7 +307,7 @@ namespace Code.InteractionSystem
 
             tf.rotation = targetRot;
         }
-        
+
         private IEnumerator RotateTowardPointIfNeeded(Transform tf, Vector3 targetPosition, float angleThreshold = 15f, float rotationSpeed = 360f)
         {
             Vector3 toTarget = (targetPosition - tf.position);
@@ -339,10 +331,6 @@ namespace Code.InteractionSystem
             tf.rotation = targetRotation;
         }
 
-        
-        /// <summary>
-        /// Возвращает вертикальное смещение, чтобы ступни касались пола при посадке.
-        /// </summary>
         private float ComputeFootOffset(Animator animator, Transform playerTf, Transform sitPoint)
         {
             var foot = animator.GetBoneTransform(HumanBodyBones.LeftFoot);
