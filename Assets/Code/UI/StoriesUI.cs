@@ -1,88 +1,83 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using Code.InteractionSystem;
 using Code.Stories;
-using FishNet;
+using CurvedUI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using System;
 
 namespace Code.UI
 {
     public class StoriesUI : MonoBehaviour
     {
-        [Header("UI References")]
-        [SerializeField] private Image image;
+        [Header("UI References")] [SerializeField]
+        private Image image;
+
         [SerializeField] private TMP_Text playerName;
         [SerializeField] private Transform progressBarContainer;
         [SerializeField] private GameObject progressBarPrefab;
 
-        [Header("Story Settings")]
-        [SerializeField] private int storiesPerCycle = 5; // Кол-во историй в одном круге
-        [SerializeField] private float storyDisplayTime = 3f; // Секунд на одну историю
+        [Header("Story Settings")] [SerializeField]
+        private int storiesPerCycle = 5;
+
+        [SerializeField] private float storyDisplayTime = 3f;
+
+        [Header("Additional settings")] [SerializeField]
+        private SlotMachineInteractable slotMachineInteractable;
 
         private List<Story> _stories = new();
-        private int _currentIndex = 0;
         private int _batchStartIndex = 0;
         private Coroutine _storyCoroutine;
+        private Coroutine _waitCoroutine;
         private List<Image> _progressBars = new();
+
+        private bool _isCurved;
+        
+        private void Awake()
+        {
+            _isCurved = TryGetComponent(out CurvedUIRaycaster _) || TryGetComponent(out CurvedUIVertexEffect _);
+        }
 
         private void OnEnable()
         {
-            InstanceFinder.ClientManager.OnAuthenticated += ClientManagerOnOnAuthenticated;
+            StartNewCycle();
         }
 
-        private void OnDisable()
+        private IEnumerator WaitForStoriesCoroutine()
         {
-            InstanceFinder.ClientManager.OnAuthenticated -= ClientManagerOnOnAuthenticated;
-            LocalStoriesStorage.Instance.StoriesUpdated -= OnStoriesUpdated;
-        }
-
-        private void ClientManagerOnOnAuthenticated()
-        {
-            _stories = LocalStoriesStorage.Instance.Stories.ToList();
-
-            if (_stories.Count == 0)
+            while (_stories.Count == 0)
             {
-                LocalStoriesStorage.Instance.StoriesUpdated += OnStoriesUpdated;
-                return;
+                _stories = LocalStoriesStorage.Instance.GetStories(storiesPerCycle,
+                    slotMachineInteractable ? slotMachineInteractable.IDNumber : -1);
+                if (_stories.Count > 0)
+                {
+                    StartNewCycle();
+                    yield break;
+                }
+
+                yield return new WaitForSeconds(storyDisplayTime);
             }
-
-            StartNewCycle();
-        }
-
-        private void OnStoriesUpdated(List<Story> updatedStories)
-        {
-            if (updatedStories == null || updatedStories.Count == 0)
-                return;
-
-            LocalStoriesStorage.Instance.StoriesUpdated -= OnStoriesUpdated;
-            _stories = updatedStories;
-            StartNewCycle();
         }
 
         private void StartNewCycle()
         {
+            _stories = LocalStoriesStorage.Instance.GetStories(storiesPerCycle,
+                slotMachineInteractable ? slotMachineInteractable.IDNumber : -1);
+
             if (_stories.Count == 0)
-                return;
-
-            var batch = new List<Story>();
-            int total = _stories.Count;
-            int count = Mathf.Min(storiesPerCycle, total);
-
-            for (int i = 0; i < count; i++)
             {
-                int index = total - 1 - ((_batchStartIndex + i) % total);
-                batch.Add(_stories[index]);
+                if (_waitCoroutine != null)
+                    StopCoroutine(_waitCoroutine);
+                _waitCoroutine = StartCoroutine(WaitForStoriesCoroutine());
+                return;
             }
-
-            _batchStartIndex = (_batchStartIndex + storiesPerCycle) % _stories.Count;
 
             if (_storyCoroutine != null)
                 StopCoroutine(_storyCoroutine);
 
-            _storyCoroutine = StartCoroutine(PlayStories(batch));
+            _storyCoroutine = StartCoroutine(PlayStories(_stories));
         }
 
         private IEnumerator PlayStories(List<Story> batch)
@@ -96,6 +91,13 @@ namespace Code.UI
             {
                 var go = Instantiate(progressBarPrefab, progressBarContainer);
                 var fillImage = go.transform.GetChild(0).GetComponent<Image>();
+                
+                if (_isCurved)
+                {
+                    go.AddComponentIfMissing<CurvedUIVertexEffect>();
+                    fillImage.AddComponentIfMissing<CurvedUIVertexEffect>();
+                }
+                
                 fillImage.fillAmount = 0f;
                 _progressBars.Add(fillImage);
             }
@@ -121,6 +123,7 @@ namespace Code.UI
                 t += Time.deltaTime;
                 yield return null;
             }
+
             bar.fillAmount = 1f;
         }
     }

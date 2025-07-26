@@ -23,8 +23,6 @@ namespace Code.Stories
 
         public event Action<List<Story>> StoriesUpdated;
 
-        public List<Story> Stories => _stories?.Collection;
-
         private void Awake()
         {
             Instance = this;
@@ -50,6 +48,22 @@ namespace Code.Stories
         {
             base.OnStopServer();
             ServerManager.UnregisterBroadcast<Story>(HandlerNewStory);
+        }
+
+        public List<Story> GetStories(int count = 30, int automatId = -1)
+        {
+            var result = new List<Story>();
+
+            for (int i = _stories.Count - 1; i >= 0 && result.Count < count; i--)
+            {
+                var story = _stories[i];
+                if (automatId < 0 || story.automatId == automatId)
+                {
+                    result.Add(story);
+                }
+            }
+
+            return result;
         }
 
         public void ScreenshotMake(byte[] screenshotBytes, int automatId = 0)

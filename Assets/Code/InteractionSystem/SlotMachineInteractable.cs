@@ -12,7 +12,8 @@ namespace Code.InteractionSystem
     {
         [Header("UI Settings")]
         [SerializeField, Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
-        private Canvas computerCanvas;
+        private Canvas computerCanvas, contentCanvas;
+        
         
         [SerializeField] private TextMeshPro idNumberText;
 
@@ -48,13 +49,13 @@ namespace Code.InteractionSystem
 
         private void Start()
         {
-            if (computerCanvas != null)
+            if (computerCanvas)
                 computerCanvas.gameObject.SetActive(false);
         }
 
         private void Reset()
         {
-            if (computerCanvas == null)
+            if (!computerCanvas)
                 computerCanvas = GetComponentInChildren<Canvas>(true);
         }
 
@@ -93,6 +94,7 @@ namespace Code.InteractionSystem
             }
 
             computerCanvas.gameObject.SetActive(open);
+            contentCanvas.gameObject.SetActive(open);
 
             if (!open)
             {
