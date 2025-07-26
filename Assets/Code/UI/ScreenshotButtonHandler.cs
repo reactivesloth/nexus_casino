@@ -1,4 +1,5 @@
-using System;
+using System.Collections;
+using Code.InteractionSystem;
 using Code.Stories;
 using UnityEngine;
 using UnityEngine.UI;
@@ -6,10 +7,14 @@ using Vuplex.WebView;
 
 namespace Code.UI
 {
-    public class ScreenshotButtonHandler: MonoBehaviour
+    public class ScreenshotButtonHandler : MonoBehaviour
     {
         [SerializeField] private Button screenshotButton;
         [SerializeField] private CanvasWebViewPrefab webView;
+        [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        [SerializeField] private float timeout = 10f;
+        
+        private Coroutine _timeoutCoroutine;
 
         private void OnEnable()
         {
@@ -19,22 +24,44 @@ namespace Code.UI
         private void OnDisable()
         {
             screenshotButton.onClick.RemoveListener(OnScreenshotClicked);
+
+            // Сброс таймера и разблокировка кнопки
+            if (_timeoutCoroutine != null)
+            {
+                StopCoroutine(_timeoutCoroutine);
+                _timeoutCoroutine = null;
+                screenshotButton.interactable = true;
+            }
         }
 
         private async void OnScreenshotClicked()
         {
+            // Деактивировать кнопку
+            screenshotButton.interactable = false;
+
             byte[] screenshotBytes = await webView.WebView.CaptureScreenshot();
             LocalHandle(screenshotBytes);
+
+            // Запустить таймер разблокировки
+            _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
+        }
+
+        private IEnumerator TimeoutRoutine()
+        {
+            yield return new WaitForSeconds(timeout);
+            screenshotButton.interactable = true;
+            _timeoutCoroutine = null;
         }
 
         private void LocalHandle(byte[] screenshotBytes)
         {
-            LocalStoriesStorage.Instance.ScreenshotMake(screenshotBytes);
+            var slotId = slotMachineInteractable ? slotMachineInteractable.IDNumber : -1;
+            LocalStoriesStorage.Instance.ScreenshotMake(screenshotBytes, slotId);
         }
 
         private void APIHandle(byte[] screenshotBytes)
         {
-            
+            // Реализация при необходимости
         }
     }
 }
