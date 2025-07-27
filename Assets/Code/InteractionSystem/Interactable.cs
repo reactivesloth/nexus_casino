@@ -97,6 +97,7 @@ namespace Code.InteractionSystem
         private void Server_HandleInteract(NetworkConnection conn)
         {
             if (!_interactableEnabled || _isOccupied.Value) return;
+            OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
             OnInteract(conn);
             if (!ManualRelease)
@@ -119,6 +120,7 @@ namespace Code.InteractionSystem
         public void ReleaseInteractable()
         {
             _isOccupied.Value = false;
+            OnEndInteract();
         }
 
         /// <summary>Optional server call to toggle enabled state.</summary>
@@ -134,8 +136,9 @@ namespace Code.InteractionSystem
             GiveOwnership(conn);
         }
         // Override for custom logic on end (for manualRelease)
-        protected internal virtual void OnEndInteract(NetworkConnection conn)
+        protected internal virtual void OnEndInteract(NetworkConnection conn = null)
         {
+            OccupiedConnectionId = -1;
             RemoveOwnership();
         }
     }
