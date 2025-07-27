@@ -155,14 +155,13 @@ namespace Code.Network
             UploadFrame(data);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(RequireOwnership = false, DataLength = 10_000)]
         private void UploadFrame(byte[] data)
         {
-            Debug.Log(data.Length);
             RelayFrame(data);
         }
 
-        [ObserversRpc(ExcludeOwner = true, BufferLast = true)]
+        [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 10_000)]
         private void RelayFrame(byte[] data)
         {
             if (Owner == null || OwnerId == -1)
