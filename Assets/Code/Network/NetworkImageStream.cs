@@ -208,13 +208,13 @@ namespace Code.Network
             UploadFrame(encoded, w, h);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(RequireOwnership = false, DataLength = 10_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
             RelayFrame(data, width, height);
         }
 
-        [ObserversRpc(ExcludeOwner = true, BufferLast = true)]
+        [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 10_000)]
         private void RelayFrame(byte[] data, int width, int height)
         {
             if (Owner == null || OwnerId == -1)
