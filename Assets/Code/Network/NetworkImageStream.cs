@@ -117,12 +117,29 @@ namespace Code.Network
             if (_sendLoop != null) StopCoroutine(_sendLoop);
             _sendLoop = null;
             _assembler = null;
+            
+            // Исправление: уничтожаем _flippedTex при отключении
+            if (_flippedTex != null)
+            {
+                Destroy(_flippedTex);
+                _flippedTex = null;
+            }
         }
 
         /* ========= Idle ========= */
 
         private void ShowIdleTexture()
         {
+            // Исправление: добавляем проверки на null
+            if (computerMeshRenderer == null || 
+                computerMeshRenderer.materials == null || 
+                materialIndex < 0 || 
+                materialIndex >= computerMeshRenderer.materials.Length)
+            {
+                Debug.LogWarning($"[NetworkImageStream] Invalid material index {materialIndex} or null renderer");
+                return;
+            }
+            
             computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", null);
             computerMeshRenderer.materials[materialIndex].SetColor("_BaseColor", Color.black);
         }
@@ -137,7 +154,9 @@ namespace Code.Network
 
         private void CaptureAndSend()
         {
-            if (rawImage.texture == null) return;
+            // Исправление: добавляем проверку на null
+            if (rawImage == null || rawImage.texture == null) return;
+            
             int w = Mathf.RoundToInt(rawImage.texture.width * downscale);
             int h = Mathf.RoundToInt(rawImage.texture.height * downscale);
             var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
@@ -150,11 +169,15 @@ namespace Code.Network
             if (skipDuplicateFrames)
             {
                 var hsh = Hash128.Compute(tex.GetRawTextureData());
-                if (hsh == _lastHash) { Destroy(tex); return; }
+                if (hsh == _lastHash) { 
+                    Destroy(tex); 
+                    return; 
+                }
                 _lastHash = hsh;
             }
 
             byte[] data = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
+            // Исправление: всегда уничтожаем текстуру
             Destroy(tex);
             if (lz4Compress) data = LZ4Pickler.Pickle(data, lz4Level);
             int total = data.Length;
@@ -196,8 +219,19 @@ namespace Code.Network
         private Texture2D _flippedTex;
         private void ApplyImage(byte[] bytes)
         {
+            if (bytes == null || bytes.Length == 0)
+            {
+                Debug.LogWarning("[NetworkImageStream] Received null or empty image data");
+                return;
+            }
+            
             var originalTex = new Texture2D(2, 2, TextureFormat.RGB24, false);
-            originalTex.LoadImage(bytes, false);
+            if (!originalTex.LoadImage(bytes, false))
+            {
+                Debug.LogWarning("[NetworkImageStream] Failed to load image data");
+                Destroy(originalTex);
+                return;
+            }
 
             var width = originalTex.width;
             var height = originalTex.height;
@@ -210,14 +244,27 @@ namespace Code.Network
                 _flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
             }
 
+            // Исправление: переиспользуем один массив для оптимизации
+            Color[] row = new Color[width];
             for (int y = 0; y < height; y++)
             {
-                Color[] row = originalTex.GetPixels(0, y, width, 1);
+                row = originalTex.GetPixels(0, y, width, 1);
                 _flippedTex.SetPixels(0, height - y - 1, width, 1, row);
             }
 
             _flippedTex.Apply();
 
+            // Исправление: добавляем проверки на null
+            if (computerMeshRenderer == null || 
+                computerMeshRenderer.materials == null || 
+                materialIndex < 0 || 
+                materialIndex >= computerMeshRenderer.materials.Length)
+            {
+                Debug.LogWarning($"[NetworkImageStream] Invalid material index {materialIndex} or null renderer");
+                Destroy(originalTex);
+                return;
+            }
+            
             var mat = computerMeshRenderer.materials[materialIndex];
             mat.SetTexture("_BaseMap", _flippedTex);
             mat.SetColor("_BaseColor", Color.white);
