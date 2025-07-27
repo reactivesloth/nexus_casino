@@ -272,6 +272,11 @@ namespace Code.Player
             animIDFPV = Animator.StringToHash("FirstPerson");
         }
 
+        public void ForceSetCameraDistance(float distance)
+        {
+            cameraDistance = distance;    
+        }   
+        
         private void UpdateCameraDistance()
         {
             if (Input.GetKeyDown(KeyCode.C))

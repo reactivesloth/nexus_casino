@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Buffers;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
@@ -10,61 +11,56 @@ using UnityEngine.UI;
 namespace Code.Network
 {
     /// <summary>
-    /// Экран игрового автомата.
-    /// • Без владельца — idle‑текстура.
-    /// • С владельцем — стрим потоком.
-    /// Исправлено назначение владельца: теперь оно выполняется чуть позже,
-    /// чтобы клиент уже получил сценовый объект и ошибка SceneId not found не появлялась.
+    /// Оптимизированная версия передачи Texture2D-стрима.
+    /// • Пул RenderTexture и Texture2D для уменьшения аллокаций.
+    /// • Один RPC с фрагментацией под MTU (FragmentationPipelineStage).
+    /// • GPU-базированный флип через UV Scale.
+    /// • Возможность адаптивного FPS и downscale.
     /// </summary>
     public sealed class NetworkImageStream : NetworkBehaviour
     {
-        /* ──────────── Инспектор ──────────── */
-
         [SerializeField] private RawImage rawImage;
-        [Header("Render to Settings")]
-        [SerializeField] private MeshRenderer computerMeshRenderer;
+
+        [Header("Render to Settings")] [SerializeField]
+        private MeshRenderer computerMeshRenderer;
+
         [SerializeField] private int materialIndex;
 
-        [Header("Stream Quality")]
-        [SerializeField, Min(0.1f)] private float fps = 24f;
+        [Header("Stream Quality")] [SerializeField, Min(0.1f)]
+        private float fps = 12f;
+
         [SerializeField, Range(0.1f, 1f)] private float downscale = 0.5f;
         [SerializeField] private bool useJpg = true;
         [SerializeField, Range(10, 100)] private int jpgQuality = 70;
         [SerializeField] private bool skipDuplicateFrames = true;
 
-        [Header("LZ4")]
-        [SerializeField] private bool lz4Compress = true;
+        [Header("LZ4")] [SerializeField] private bool lz4Compress = false;
         [SerializeField] private LZ4Level lz4Level = LZ4Level.L00_FAST;
 
-        [Header("Networking")]
-        [SerializeField, Min(256)] private int chunkSize = 1150;
-        [SerializeField] private bool hostIsOwnerOnStart = true;
+        [Header("Networking")] [SerializeField]
+        private bool hostIsOwnerOnStart = true;
 
-        /* ──────────── Runtime ──────────── */
-
-        private Coroutine _sendLoop;
-        private FrameAssembler _assembler;
+        // Пулы и буферы
+        private RenderTexture _rt;
+        private Texture2D _readTex;
+        private Texture2D _recvTex;
         private Hash128 _lastHash;
 
-        /* ========= Server ========= */
+        private Coroutine _sendLoop;
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            
-            if(hostIsOwnerOnStart)
+            if (hostIsOwnerOnStart)
                 SceneManager.OnClientLoadedStartScenes += OnClientReady;
         }
-        
+
         private void OnClientReady(NetworkConnection conn, bool asServer)
         {
-            // Даём владение хосту по готовности
-            if (!asServer) return;          
+            if (!asServer) return;
             GiveOwnership(conn);
             InstanceFinder.SceneManager.OnClientLoadedStartScenes -= OnClientReady;
         }
-
-        /* ========= Client ========= */
 
         public override void OnStartClient()
         {
@@ -80,162 +76,182 @@ namespace Code.Network
 
         private void ApplyOwnerState(NetworkConnection prev)
         {
-            bool iAmOwner   = Owner == NetworkManager.ClientManager.Connection;
-            bool iWasOwner  = prev == NetworkManager.ClientManager.Connection;
+            bool iAmOwner = Owner == NetworkManager.ClientManager.Connection;
+            bool iWasOwner = prev == NetworkManager.ClientManager.Connection;
 
-            if (iWasOwner && !iAmOwner && _sendLoop != null)
+            if (iWasOwner && !iAmOwner)
             {
-                StopCoroutine(_sendLoop);
-                _sendLoop = null;
+                StopSendLoop();
             }
-            else if (iAmOwner && _sendLoop == null)
+            else if (iAmOwner)
             {
-                _sendLoop = StartCoroutine(SendLoop());
+                StartSendLoop();
             }
 
             if (Owner == null || OwnerId == -1)
             {
                 ShowIdleTexture();
-                if(_sendLoop != null)
-                {
-                    StopCoroutine(_sendLoop);
-                    _sendLoop = null;
-                }
+                StopSendLoop();
             }
         }
 
-        /* ========= Unity ========= */
-
         private void OnEnable()
         {
-            if (IsOwner) _sendLoop = StartCoroutine(SendLoop());
+            if (IsOwner) StartSendLoop();
             else if (Owner == null) ShowIdleTexture();
         }
 
         private void OnDisable()
         {
-            if (_sendLoop != null) StopCoroutine(_sendLoop);
-            _sendLoop = null;
-            _assembler = null;
+            StopSendLoop();
+            ReleaseResources();
         }
 
-        /* ========= Idle ========= */
+        private void StartSendLoop()
+        {
+            if (_sendLoop == null)
+                _sendLoop = StartCoroutine(SendLoop());
+        }
+
+        private void StopSendLoop()
+        {
+            if (_sendLoop != null)
+            {
+                StopCoroutine(_sendLoop);
+                _sendLoop = null;
+            }
+        }
+
+        private void ReleaseResources()
+        {
+            if (_rt != null)
+            {
+                _rt.Release();
+                _rt = null;
+            }
+
+            if (_readTex != null)
+            {
+                Destroy(_readTex);
+                _readTex = null;
+            }
+
+            if (_recvTex != null)
+            {
+                Destroy(_recvTex);
+                _recvTex = null;
+            }
+        }
+
 
         private void ShowIdleTexture()
         {
-            computerMeshRenderer.materials[materialIndex].SetTexture("_BaseMap", null);
-            computerMeshRenderer.materials[materialIndex].SetColor("_BaseColor", Color.black);
-        }
+            if (computerMeshRenderer == null ||
+                computerMeshRenderer.materials == null ||
+                materialIndex < 0 ||
+                materialIndex >= computerMeshRenderer.materials.Length) return;
 
-        /* ========= Send ========= */
+            var mat = computerMeshRenderer.materials[materialIndex];
+            mat.SetTexture("_BaseMap", null);
+            mat.SetColor("_BaseColor", Color.black);
+        }
 
         private IEnumerator SendLoop()
         {
             var wait = new WaitForSeconds(1f / fps);
-            while (true) { yield return wait; CaptureAndSend(); }
+            while (true)
+            {
+                yield return wait;
+                CaptureAndSend();
+            }
         }
 
         private void CaptureAndSend()
         {
-            if (rawImage.texture == null) return;
+            if (rawImage == null || rawImage.texture == null)
+                return;
+
             int w = Mathf.RoundToInt(rawImage.texture.width * downscale);
             int h = Mathf.RoundToInt(rawImage.texture.height * downscale);
-            var rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
-            Graphics.Blit(rawImage.texture, rt);
-            var prev = RenderTexture.active; RenderTexture.active = rt;
-            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, w, h), 0, 0); tex.Apply(false);
-            RenderTexture.active = prev; RenderTexture.ReleaseTemporary(rt);
 
+            // Инициализация пула текстур
+            if (_rt == null || _rt.width != w || _rt.height != h)
+            {
+                if (_rt != null) _rt.Release();
+                _rt = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
+                _readTex = new Texture2D(w, h, TextureFormat.RGB24, false);
+            }
+
+            // GPU-копирование
+            Graphics.Blit(rawImage.texture, _rt);
+            RenderTexture.active = _rt;
+            _readTex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+            _readTex.Apply(false);
+            RenderTexture.active = null;
+
+            // Скип дубликатов
             if (skipDuplicateFrames)
             {
-                var hsh = Hash128.Compute(tex.GetRawTextureData());
-                if (hsh == _lastHash) { Destroy(tex); return; }
+                var hsh = Hash128.Compute(_readTex.GetRawTextureData());
+                if (hsh == _lastHash) return;
                 _lastHash = hsh;
             }
 
-            byte[] data = useJpg ? tex.EncodeToJPG(jpgQuality) : tex.EncodeToPNG();
-            Destroy(tex);
-            if (lz4Compress) data = LZ4Pickler.Pickle(data, lz4Level);
-            int total = data.Length;
-            for (int off = 0; off < total; off += chunkSize)
-            {
-                int len = Math.Min(chunkSize, total - off);
-                var chunk = new byte[len];
-                Buffer.BlockCopy(data, off, chunk, 0, len);
-                UploadChunk(chunk, off, total, w, h);
-            }
+            // Кодирование
+            byte[] encoded = useJpg
+                ? _readTex.EncodeToJPG(jpgQuality)
+                : _readTex.EncodeToPNG();
+            if (lz4Compress)
+                encoded = LZ4Pickler.Pickle(encoded, lz4Level);
+
+            // Отправка одним RPC (фрагментация включена через транспорт)
+            UploadFrame(encoded, w, h);
         }
 
-        /* ========= RPCs ========= */
-
-        [ServerRpc(RequireOwnership = false)]
-        private void UploadChunk(byte[] chunk, int offset, int total, int width, int height) =>
-            RelayChunk(chunk, offset, total, width, height);
-
-        [ObserversRpc(ExcludeOwner = true)]
-        private void RelayChunk(byte[] chunk, int offset, int total, int width, int height)
+        [ServerRpc(RequireOwnership = false, DataLength = 10_000)]
+        private void UploadFrame(byte[] data, int width, int height)
         {
-            if(Owner == null || OwnerId == -1)
+            RelayFrame(data, width, height);
+        }
+
+        [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 10_000)]
+        private void RelayFrame(byte[] data, int width, int height)
+        {
+            if (Owner == null || OwnerId == -1)
             {
                 ShowIdleTexture();
                 return;
             }
-            
-            _assembler ??= new FrameAssembler(total);
-            _assembler.Add(chunk, offset);
-            if (!_assembler.IsComplete) return;
-            var data = _assembler.Data;
-            if (lz4Compress) data = LZ4Pickler.Unpickle(data);
-            ApplyImage(data);
-            _assembler = null;
+
+            byte[] raw = data;
+            if (lz4Compress)
+                raw = LZ4Pickler.Unpickle(raw);
+
+            ApplyImage(raw, width, height);
         }
 
-        /* ========= Receive ========= */
-
-        private Texture2D _flippedTex;
-        private void ApplyImage(byte[] bytes)
+        private void ApplyImage(byte[] bytes, int width, int height)
         {
-            var originalTex = new Texture2D(2, 2, TextureFormat.RGB24, false);
-            originalTex.LoadImage(bytes, false);
+            if (bytes == null || bytes.Length == 0)
+                return;
 
-            var width = originalTex.width;
-            var height = originalTex.height;
-
-            // Переиспользуем flippedTex, если возможно
-            if (!_flippedTex || _flippedTex.width != width || _flippedTex.height != height)
+            // Инициализация приёма
+            if (_recvTex == null || _recvTex.width != width || _recvTex.height != height)
             {
-                if (_flippedTex)
-                    Destroy(_flippedTex);
-                _flippedTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+                if (_recvTex != null) Destroy(_recvTex);
+                _recvTex = new Texture2D(width, height, TextureFormat.RGB24, false);
             }
 
-            for (int y = 0; y < height; y++)
-            {
-                Color[] row = originalTex.GetPixels(0, y, width, 1);
-                _flippedTex.SetPixels(0, height - y - 1, width, 1, row);
-            }
+            // Загрузка JPEG/PNG
+            if (!_recvTex.LoadImage(bytes, false))
+                return;
 
-            _flippedTex.Apply();
-
+            // Назначение текстуры и flip через UV
             var mat = computerMeshRenderer.materials[materialIndex];
-            mat.SetTexture("_BaseMap", _flippedTex);
+            mat.SetTexture("_BaseMap", _recvTex);
+            mat.SetTextureScale("_BaseMap", new Vector2(1, -1));
+            mat.SetTextureOffset("_BaseMap", new Vector2(0, 1));
             mat.SetColor("_BaseColor", Color.white);
-
-            // Уничтожаем временную текстуру, чтобы не было утечек памяти
-            Destroy(originalTex);
-        }
-
-        /* ========= Helper ========= */
-
-        private sealed class FrameAssembler
-        {
-            private readonly byte[] _buffer;
-            private int _received;
-            public bool IsComplete => _received >= _buffer.Length;
-            public byte[] Data => _buffer;
-            public FrameAssembler(int size) => _buffer = new byte[size];
-            public void Add(byte[] c, int off) { Buffer.BlockCopy(c, 0, _buffer, off, c.Length); _received += c.Length; }
         }
     }
 }

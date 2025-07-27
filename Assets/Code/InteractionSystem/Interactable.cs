@@ -3,6 +3,7 @@ using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 
 namespace Code.InteractionSystem
 {
@@ -23,9 +24,9 @@ namespace Code.InteractionSystem
         [SerializeField, Tooltip("If true, requires manual EndInteract to free the interactable.")] private bool _manualRelease = false;
         public bool ManualRelease => _manualRelease;
 
-        
+        protected int OccupiedConnectionId;
         // Synchronize occupied state across clients using SyncVar
-        protected readonly SyncVar<bool> _isOccupied = new SyncVar<bool>(new SyncTypeSettings()
+        protected readonly SyncVar<bool> _isOccupied = new (new SyncTypeSettings()
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
@@ -43,9 +44,29 @@ namespace Code.InteractionSystem
             }
         }
 
-        #if UNITY_EDITOR
-        private void OnValidate()
+        public override void OnStartServer()
         {
+            base.OnStartServer();
+            ServerManager.OnRemoteConnectionState += ServerManagerOnOnRemoteConnectionState;
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
+        }
+
+        [Server]
+        private void ServerManagerOnOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
+        {
+            if (stateArgs.ConnectionId == OccupiedConnectionId || stateArgs.ConnectionState == RemoteConnectionState.Stopped)
+                ReleaseInteractable();
+        }
+
+#if UNITY_EDITOR
+        protected override void OnValidate()
+        {
+            base.OnValidate();
             NetworkObject no = GetComponent<NetworkObject>();
             if (no != null)
                 no.SetIsSpawnable(false);
@@ -55,25 +76,28 @@ namespace Code.InteractionSystem
                 collider.isTrigger = true;
         }
         #endif
+        
+        
 
         /// <summary>Client-side call to request interaction start.</summary>
         public void RequestInteract()
         {
             if (!_interactableEnabled || _isOccupied.Value) return;
-            Server_HandleInteract();
+            Server_HandleInteract(ClientManager.Connection);
         }
 
         /// <summary>Client-side call to request interaction end (for manualRelease).</summary>
         public void RequestEndInteract()
         {
             if (!_interactableEnabled || !_isOccupied.Value || !_manualRelease) return;
-            Server_HandleEndInteract();
+            Server_HandleEndInteract(ClientManager.Connection);
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleInteract(NetworkConnection conn = null)
+        private void Server_HandleInteract(NetworkConnection conn)
         {
             if (!_interactableEnabled || _isOccupied.Value) return;
+            OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
             OnInteract(conn);
             if (!ManualRelease)
@@ -84,7 +108,7 @@ namespace Code.InteractionSystem
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleEndInteract(NetworkConnection conn = null)
+        private void Server_HandleEndInteract(NetworkConnection conn)
         {
             if (!_manualRelease || !_isOccupied.Value) return;
             OnEndInteract(conn);
@@ -96,6 +120,7 @@ namespace Code.InteractionSystem
         public void ReleaseInteractable()
         {
             _isOccupied.Value = false;
+            OnEndInteract();
         }
 
         /// <summary>Optional server call to toggle enabled state.</summary>
@@ -111,8 +136,9 @@ namespace Code.InteractionSystem
             GiveOwnership(conn);
         }
         // Override for custom logic on end (for manualRelease)
-        protected internal virtual void OnEndInteract(NetworkConnection conn)
+        protected internal virtual void OnEndInteract(NetworkConnection conn = null)
         {
+            OccupiedConnectionId = -1;
             RemoveOwnership();
         }
     }
