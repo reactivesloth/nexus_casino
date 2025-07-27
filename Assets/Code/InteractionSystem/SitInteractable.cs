@@ -31,6 +31,8 @@ namespace Code.InteractionSystem
                  "")]
         [SerializeField] private EntryData[] entries;
 
+        [SerializeField] private bool forceFPV;
+        
         const string SIT_TRIGGER = "TriggerSit";
         const string STAND_TRIGGER = "TriggerStand";
         const string SIT_STATE = "Sitting";
@@ -42,7 +44,7 @@ namespace Code.InteractionSystem
         private Vector3 _savedPos;
         private Quaternion _savedRot;
         private EntryData _selectedEntry;
-
+        
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -88,7 +90,7 @@ namespace Code.InteractionSystem
             var anim = movement.GetComponent<Animator>();
             var networkAnim = movement.GetComponent<NetworkAnimator>();
             var tf = movement.transform;
-
+            
             if (_sitRoutine != null)
                 StopCoroutine(_sitRoutine);
 
@@ -104,6 +106,9 @@ namespace Code.InteractionSystem
         {
             IsBusy = true;
 
+            if (forceFPV)
+                move.ForceSetCameraDistance(0);
+            
             _savedPos = tf.position;
             _savedRot = tf.rotation;
 
