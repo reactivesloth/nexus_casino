@@ -59,8 +59,8 @@ namespace Code.InteractionSystem
         [Server]
         private void ServerManagerOnOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
         {
-            if(connection == OccupiedConnection || stateArgs.ConnectionState == RemoteConnectionState.Stopped)
-                OnEndInteract(connection);
+            if (connection == OccupiedConnection || stateArgs.ConnectionState == RemoteConnectionState.Stopped)
+                ReleaseInteractable();
         }
 
 #if UNITY_EDITOR
