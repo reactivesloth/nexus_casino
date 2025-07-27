@@ -1,4 +1,5 @@
 ﻿using System;
+using Code.API;
 using Code.Network;
 using UnityEngine;
 using FishNet.Object;
@@ -104,7 +105,7 @@ namespace Code.InteractionSystem
             }
             else
             {
-                webView.WebView?.LoadUrl(webView.InitialUrl);
+                webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
                 //networkImageStream.StartStreaming();
             }
         }
