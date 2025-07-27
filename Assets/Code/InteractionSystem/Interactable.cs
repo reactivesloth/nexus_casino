@@ -24,7 +24,7 @@ namespace Code.InteractionSystem
         [SerializeField, Tooltip("If true, requires manual EndInteract to free the interactable.")] private bool _manualRelease = false;
         public bool ManualRelease => _manualRelease;
 
-        protected NetworkConnection OccupiedConnection;
+        protected int OccupiedConnectionId;
         // Synchronize occupied state across clients using SyncVar
         protected readonly SyncVar<bool> _isOccupied = new (new SyncTypeSettings()
         {
@@ -59,13 +59,14 @@ namespace Code.InteractionSystem
         [Server]
         private void ServerManagerOnOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
         {
-            if (connection == OccupiedConnection || stateArgs.ConnectionState == RemoteConnectionState.Stopped)
+            if (stateArgs.ConnectionId == OccupiedConnectionId || stateArgs.ConnectionState == RemoteConnectionState.Stopped)
                 ReleaseInteractable();
         }
 
 #if UNITY_EDITOR
-        private void OnValidate()
+        protected override void OnValidate()
         {
+            base.OnValidate();
             NetworkObject no = GetComponent<NetworkObject>();
             if (no != null)
                 no.SetIsSpawnable(false);
