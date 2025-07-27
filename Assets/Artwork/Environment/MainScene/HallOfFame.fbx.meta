@@ -22,6 +22,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Diamond_BAKE
+    second: {fileID: 2100000, guid: b5a7afc5fd2718e44af9e246032422a6, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Eye.002
     second: {fileID: 2100000, guid: 3ef6efce9b91e8e4ba6072fa84e87804, type: 2}
   - first:
@@ -29,6 +34,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Granite
     second: {fileID: 2100000, guid: c67ccd91166c2b9478e38d8e0623feda, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: InterriorObjects
+    second: {fileID: 2100000, guid: 6d938556b31800b49990f4071d71dc39, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -64,6 +74,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: M_MainSceneAtlas3
     second: {fileID: 2100000, guid: 3d499b380b0d59d4498b88f3134a5b53, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: M_MainSceneAtlas5
+    second: {fileID: 2100000, guid: 845a22ff106f30049a1adb8bb76d72f6, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -137,6 +152,36 @@ ModelImporter:
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
+      name: ArchitectureTexture_diffuse
+    second: {fileID: 2800000, guid: da249f4ee33d5e245b52a9151c22929b, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ArchitectureTexture_metallic
+    second: {fileID: 2800000, guid: 4c469e5c899fd884981618c8296681b9, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: ArchitectureTexture_normal
+    second: {fileID: 2800000, guid: c6a3dfe74dcb66c48962eac4a35de8df, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: InterriorObjects_diffuse
+    second: {fileID: 2800000, guid: baf74b1419ca1f1428bd56e42f044b41, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: InterriorObjects_metallic
+    second: {fileID: 2800000, guid: cf6d185f9daac9f4ab2065af7b63e885, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: InterriorObjects_normal
+    second: {fileID: 2800000, guid: c910afd56d3e1cb41aeeda96c490e6c9, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
       name: MarblEffects
     second: {fileID: 2800000, guid: e807c51b48200fd4493f208da4fcf56e, type: 3}
   - first:
@@ -173,32 +218,42 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_diffuse
-    second: {fileID: 2800000, guid: edef2babe5fbc1640925b9e6f17dc2ee, type: 3}
+    second: {fileID: 2800000, guid: 9da3abb8e5ad8c54ab20ac01a8d04fc1, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_metallic
-    second: {fileID: 2800000, guid: f22b389cce3ddd9428bb4c03ed202326, type: 3}
+    second: {fileID: 2800000, guid: dee009c62764d154a964ae66da67e761, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_normal
-    second: {fileID: 2800000, guid: b1b8abd8a32ad0a43968b02393b8a59b, type: 3}
+    second: {fileID: 2800000, guid: a32fa6ed270fad94ab0170c6c51d10de, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_5_diffuse
+    second: {fileID: 2800000, guid: 24dc1512d30fadc48839f16383ac5a52, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_5_normal
+    second: {fileID: 2800000, guid: 22d311e68ed46d440a49910bbdd41de2, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_diffuse
-    second: {fileID: 2800000, guid: 8d12c3c7e71faf347b5fedc40570927a, type: 3}
+    second: {fileID: 2800000, guid: 60100fc93bf347f4e88e96eff707b76d, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_metallic
-    second: {fileID: 2800000, guid: 47ea67f6527265b4cac488920c7dddf0, type: 3}
+    second: {fileID: 2800000, guid: f96291a822c8c694cb37b7ce54f43716, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_normal
-    second: {fileID: 2800000, guid: 892279fcd88d7634ea2e99bfa639f86a, type: 3}
+    second: {fileID: 2800000, guid: 61f6ade4d7bec7c429476866e5879097, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -253,7 +308,7 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: effectMiddleRoomTop
-    second: {fileID: 2800000, guid: 65e5ba7f4bf56144787f87f653802c28, type: 3}
+    second: {fileID: 2800000, guid: 126a362b75d2eba4a97ab3b2ab9bdf03, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -268,7 +323,7 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: file_1b315362fdfe276c~
-    second: {fileID: 2800000, guid: b101114ac181cce459854ea4a2b59587, type: 3}
+    second: {fileID: 2800000, guid: 6211a66d558a7e84f8d11b53678af5af, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -278,17 +333,17 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: mask_yk_1
-    second: {fileID: 2800000, guid: 030338b7d4b8a2a498e6144c0e4c9d88, type: 3}
+    second: {fileID: 2800000, guid: 590921fc4196f684e8efca55a4c7914a, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: photo_16_2025-05-04_22-32-41
-    second: {fileID: 2800000, guid: c39542d080a686e4294e938f69399a9a, type: 3}
+    second: {fileID: 2800000, guid: 5af0ee1173a84ec48a127000456de58c, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: shockwave02_01
-    second: {fileID: 2800000, guid: 14f49ef1cfdef72419244efefd4042db, type: 3}
+    second: {fileID: 2800000, guid: 33d6616d567b7204fa33163cfc619a61, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0

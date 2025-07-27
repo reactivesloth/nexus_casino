@@ -7,13 +7,28 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Black
+    second: {fileID: 2100000, guid: 96c36d58366d5ce41a5fa2169567f71e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Black marble white veins
     second: {fileID: 2100000, guid: ed8b05704fff5e849ad547f3c5826193, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: FloorForMainScene
+    second: {fileID: 2100000, guid: ef61f375bfa03714c88292e440df9ff9, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: HologrammLogo
     second: {fileID: 2100000, guid: 4d3300549ea06034a8e80fb2fee1ac3e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: LVWall
+    second: {fileID: 2100000, guid: f8d66954ef8326e41a60208b82efe505, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -72,6 +87,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: M_MainSceneAtlas4
+    second: {fileID: 2100000, guid: 1aed9ef779909c743a39dcb847cc3a94, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: M_StairsGelender
     second: {fileID: 2100000, guid: 395bc7455f4d3184ebc62015a2498b5e, type: 2}
   - first:
@@ -84,6 +104,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: Marble003_1K-PNG
     second: {fileID: 2100000, guid: 2f1127aa8fb598a4ca43a6ba0f7072aa, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: ScreenHonorArea.002
+    second: {fileID: 2100000, guid: c0137f749bf63064c9fd84adde563cd8, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -113,22 +138,47 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: GoldMuster
-    second: {fileID: 2800000, guid: dc17e3de731f11c4892a661926e0f320, type: 3}
+    second: {fileID: 2800000, guid: 9a1a74523885c864382e6f6521e94708, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: GoldMuster_normal
-    second: {fileID: 2800000, guid: e565a8f2441e7334f9e4f68337e5234d, type: 3}
+    second: {fileID: 2800000, guid: 1daa63570f8500b4dbedb85bf7f9d2fd, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Hologramm_nexusLogo (2)
-    second: {fileID: 2800000, guid: 29a7e7031c0118b4688268507409e0f4, type: 3}
+    second: {fileID: 2800000, guid: 9f5cc1b9ad205c846bcbbdba7622e259, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LVWall_diffuse
+    second: {fileID: 2800000, guid: 22e9ba775829bee48ae396ada268403a, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LVWall_metallic
+    second: {fileID: 2800000, guid: 4e6b10f9a5622554fa3ebfde18652a02, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: LVWall_normal
+    second: {fileID: 2800000, guid: 95df66816c6d47f4cb0f4e167baad2d6, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: LamborginiLogo
     second: {fileID: 2800000, guid: b5f90f35039ff68498b16909bfa7d424, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: MainFloorTextur_diffuse (2)
+    second: {fileID: 2800000, guid: db3335e66afb4c143ba9fc453f142f9c, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: MainFloorTextur_normal
+    second: {fileID: 2800000, guid: 36e2d44915e9d17408361f9794089f9c, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -158,67 +208,82 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: StairsGoldTexture_diffuse
-    second: {fileID: 2800000, guid: b4cc0bad841553041be4863088f80000, type: 3}
+    second: {fileID: 2800000, guid: b72220cda205c254ca54b4cb1ee43797, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: StairsGoldTexture_metallic
-    second: {fileID: 2800000, guid: aaaf0d8e16271df46a00ba9608de84a7, type: 3}
+    second: {fileID: 2800000, guid: 62ed4b60a478aab48b1635d06ad5780b, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: StairsGoldTexture_normal
-    second: {fileID: 2800000, guid: 558a0b3f331e1a44c933971fe446f9e9, type: 3}
+    second: {fileID: 2800000, guid: 619003ea81e8ba744b1fd55b06d0adeb, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_2_diffuse
-    second: {fileID: 2800000, guid: 7c0eb77787fb5a64ba383efb8a99888c, type: 3}
+    second: {fileID: 2800000, guid: 22718e36751b7d841993e7860d8d682a, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_2_metallic
-    second: {fileID: 2800000, guid: fb714ad6e29588d419059dda92c99e67, type: 3}
+    second: {fileID: 2800000, guid: 45fb8a3b72975c54e83b9e7b04c012b0, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_2_normal
-    second: {fileID: 2800000, guid: ca1e38f9995826b48822f8c00680a6b3, type: 3}
+    second: {fileID: 2800000, guid: f0f2273425f6a0d4384f0e61e8e0d154, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_diffuse
-    second: {fileID: 2800000, guid: 3a7e337789fe93245bc00fc24706771d, type: 3}
+    second: {fileID: 2800000, guid: 963993468dfc5f541a8393f89bdb0fb4, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_metallic
-    second: {fileID: 2800000, guid: 2dd851ddc6b1ee840b11ceaed7530f7b, type: 3}
+    second: {fileID: 2800000, guid: 0b3852f9c4d5eab4dafb559926c88c87, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_3_normal
-    second: {fileID: 2800000, guid: dadb997175bf3a144831a3e8f52bfc83, type: 3}
+    second: {fileID: 2800000, guid: fbc969cf1a9a499409e2c9e0abc32aa0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_4_diffuse
+    second: {fileID: 2800000, guid: db57a3fc7f6372744ba92fd4896ea78f, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_4_metallic
+    second: {fileID: 2800000, guid: 98d22f0d7c7bf2a4d8ec519a2cc5383f, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_4_normal
+    second: {fileID: 2800000, guid: b296a3d4ed96985478b23cafc8e6000d, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_diffuse
-    second: {fileID: 2800000, guid: 7c8580fbe117ed147a4cd8aece53e3de, type: 3}
+    second: {fileID: 2800000, guid: f2d02157e52723f499fb9a5d6fad66d2, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_metallic
-    second: {fileID: 2800000, guid: 723d9de5c1d159f4786bccb9574a9114, type: 3}
+    second: {fileID: 2800000, guid: c8f56883d61230f4a83ff7eb8e5de869, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_normal
-    second: {fileID: 2800000, guid: ae4e9d6966f09274a9c64ce91438a17f, type: 3}
+    second: {fileID: 2800000, guid: f36db30e27df29e4c9306b8c750aa0c9, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Wood066_1K_Color
-    second: {fileID: 2800000, guid: 216a107949745334891a27540e26d5ee, type: 3}
+    second: {fileID: 2800000, guid: 29258f8d0864a2d42bdf760c35e0f9ae, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -242,13 +307,18 @@ ModelImporter:
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
+      name: photo_16_2025-05-04_22-32-41
+    second: {fileID: 2800000, guid: 6fc305d4671eb8540ba802853500081d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
       name: portalActiveSetEffect
-    second: {fileID: 2800000, guid: 1fb2fc11374b10f42a23b662e5524350, type: 3}
+    second: {fileID: 2800000, guid: 56c964b02ebfb564994d07ba61a8f788, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: shine-5562064_1920
-    second: {fileID: 2800000, guid: a1ce98170fb096e40825203fa96827c0, type: 3}
+    second: {fileID: 2800000, guid: db5c1e78fdcb9aa44921e9f138b49ab7, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
@@ -309,7 +379,7 @@ ModelImporter:
     secondaryUVMarginMethod: 0
     secondaryUVMinLightmapResolution: 40
     secondaryUVMinObjectScale: 1
-    secondaryUVPackMargin: 4
+    secondaryUVPackMargin: 6
     useFileScale: 1
     strictVertexDataChecks: 0
   tangentSpace:

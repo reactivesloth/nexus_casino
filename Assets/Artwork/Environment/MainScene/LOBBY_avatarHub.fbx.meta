@@ -7,6 +7,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Black
+    second: {fileID: 2100000, guid: 4d88657de53d481429a49e0caf3ef81c, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Couch-Long_LowPoly_Baked
     second: {fileID: 2100000, guid: 79fbd81da6071ff48ac85d56377e4c40, type: 2}
   - first:
@@ -27,6 +32,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: InterriorLOBBY
+    second: {fileID: 2100000, guid: 875d2433dbff796449f5b994cb7e52fb, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: Jackpot
     second: {fileID: 2100000, guid: 801663b6f10e5854bb26adf29e31186d, type: 2}
   - first:
@@ -37,6 +47,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: LobbyEmissiveSecundary
+    second: {fileID: 2100000, guid: 94d155575da490d49af1bb46d458e84d, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: M_Glass
     second: {fileID: 2100000, guid: 671c58bf567309c4f967857138025bff, type: 2}
   - first:
@@ -44,6 +59,11 @@ ModelImporter:
       assembly: UnityEngine.CoreModule
       name: M_MainSceneAtlas1
     second: {fileID: 2100000, guid: 4e4b37f6c8c352b4b83bdb6da40a2ed2, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: M_MainSceneAtlas5
+    second: {fileID: 2100000, guid: 845a22ff106f30049a1adb8bb76d72f6, type: 2}
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
@@ -77,6 +97,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: Sprite_Material.002
+    second: {fileID: 2100000, guid: d0dfa14a155d5bd42ab784873b1db8d5, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: UIInterfaceLobby
     second: {fileID: 2100000, guid: e90f5918e8a028a4da0e49b1a7ff6354, type: 2}
   - first:
@@ -92,13 +117,48 @@ ModelImporter:
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
+      name: FireLobbySprite1
+    second: {fileID: 2800000, guid: 784786eef42663d41bd8cc0b8b783f59, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
       name: Hologramm_nexusLogo (2)
-    second: {fileID: 2800000, guid: 1aa91dff56719044f94a7670b4cf67bd, type: 3}
+    second: {fileID: 2800000, guid: 5de9a01c8d1df214db90fdcac000b4e0, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: InterriorLOBBY_metallic
+    second: {fileID: 2800000, guid: 3536e7c6dad93db41bd000beabdfcfda, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: InterriorLOBBY_normal
+    second: {fileID: 2800000, guid: 867723a9b283ce248957690431b118fb, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Jackpot
+    second: {fileID: 2800000, guid: caca592fd3488b94f84a4ae1f0f2e05a, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: Marble015_1K-PNG_Color
-    second: {fileID: 2800000, guid: ef0f8315fca4f584bbfd57b9c123a2ed, type: 3}
+    second: {fileID: 2800000, guid: 239bbd09a4d519249ad7c3bbd69449ed, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Marble015_1K-PNG_Emissive
+    second: {fileID: 2800000, guid: 5a772225c49212341a2a8d4eb4ba3b4d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Marble015_1K-PNG_Metallic
+    second: {fileID: 2800000, guid: aacc06799f1977f4ab72eb8e8969703d, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: Marble015_1K-PNG_Normal
+    second: {fileID: 2800000, guid: 01bf1f64de604ec449d8e9e13d97283e, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -107,18 +167,28 @@ ModelImporter:
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_5_diffuse
+    second: {fileID: 2800000, guid: daf3bea7638972e479658ac2dec110a2, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
+      name: T_GamePlayAtlas_5_normal
+    second: {fileID: 2800000, guid: 787780e1d74d77443acd9f3c87a33eeb, type: 3}
+  - first:
+      type: UnityEngine:Texture2D
+      assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_diffuse
-    second: {fileID: 2800000, guid: 1e16d606558962d4686a2bd46a09243f, type: 3}
+    second: {fileID: 2800000, guid: 410f529b034b10e4494b30626cabc961, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_metallic
-    second: {fileID: 2800000, guid: 822bcb4e55e666041bb83ef7820078cf, type: 3}
+    second: {fileID: 2800000, guid: 0214173b4c082ad4696983354556a236, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: T_GamePlayAtlas_normal
-    second: {fileID: 2800000, guid: 4274b222fc6be034ba1e61d07e3d39e1, type: 3}
+    second: {fileID: 2800000, guid: 526b2b7a26af39547b696e4cc6a02e0f, type: 3}
   - first:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
@@ -163,7 +233,7 @@ ModelImporter:
       type: UnityEngine:Texture2D
       assembly: UnityEngine.CoreModule
       name: photo_16_2025-05-04_22-32-41
-    second: {fileID: 2800000, guid: 9c321f20cdf61cf4b90518f1901de759, type: 3}
+    second: {fileID: 2800000, guid: 48b51e38b74c4a74382c51373d764039, type: 3}
   materials:
     materialImportMode: 2
     materialName: 0
