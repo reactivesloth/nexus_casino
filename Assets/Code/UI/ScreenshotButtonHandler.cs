@@ -39,11 +39,15 @@ namespace Code.UI
             // Деактивировать кнопку
             screenshotButton.interactable = false;
 
-            byte[] screenshotBytes = await webView.WebView.CaptureScreenshot();
-            LocalHandle(screenshotBytes);
+            if (slotMachineInteractable != null)
+                if (slotMachineInteractable.WebView != null)
+                {
+                    byte[] screenshotBytes = await slotMachineInteractable.WebView.CaptureScreenshot();
+                    LocalHandle(screenshotBytes);
 
-            // Запустить таймер разблокировки
-            _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
+                    // Запустить таймер разблокировки
+                    _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
+                }
         }
 
         private IEnumerator TimeoutRoutine()

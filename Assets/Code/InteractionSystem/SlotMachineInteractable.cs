@@ -29,6 +29,7 @@ namespace Code.InteractionSystem
 
         public int IDNumber;
         private CanvasWebViewPrefab _webView;
+        public IWebView WebView => _webView.WebView;
         
 #if UNITY_EDITOR
         protected override void OnValidate()
