@@ -295,8 +295,8 @@ namespace Code.Player
             cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100;
             cameraDistance = Mathf.Clamp(cameraDistance, 0, 1);
 
-            if (cameraDistance < 0.01f) smoothedFirstPerson = true;
-            else if (cameraDistance > 0.02f) smoothedFirstPerson = false;
+            if (cameraDistance < 0.001f) smoothedFirstPerson = true;
+            else if (cameraDistance > 0.002f) smoothedFirstPerson = false;
 
             FirstPersonView = smoothedFirstPerson;
 
