@@ -105,7 +105,10 @@ namespace Code.InteractionSystem
             }
             else
             {
-                webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
+                if (webView.WebView == null)
+                    webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
+                else
+                    webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
                 //networkImageStream.StartStreaming();
             }
         }
