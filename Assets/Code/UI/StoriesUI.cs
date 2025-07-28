@@ -63,7 +63,7 @@ namespace Code.UI
 
         private void StartNewCycle()
         {
-            _stories = LocalStoriesStorage.Instance?.GetStories(storiesPerCycle,
+            _stories = LocalStoriesStorage.Instance.GetStories(storiesPerCycle,
                 slotMachineInteractable ? slotMachineInteractable.IDNumber : -1);
 
             if (_stories == null) return;
