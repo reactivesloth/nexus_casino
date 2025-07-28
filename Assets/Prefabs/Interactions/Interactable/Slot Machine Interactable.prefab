@@ -398,7 +398,6 @@ GameObject:
   - component: {fileID: 6668442221156157179}
   - component: {fileID: 8520151768570029552}
   - component: {fileID: 8690079509221083420}
-  - component: {fileID: 2377678613824972991}
   m_Layer: 9
   m_Name: Slot Interaction
   m_TagString: Untagged
@@ -421,6 +420,7 @@ Transform:
   m_Children:
   - {fileID: 9141442648583643534}
   - {fileID: 8031360426403040890}
+  - {fileID: 6796393656484491900}
   m_Father: {fileID: 2015657308730844265}
   m_LocalEulerAnglesHint: {x: 0, y: 98, z: 90}
 --- !u!114 &8520151768570029552
@@ -498,34 +498,8 @@ MonoBehaviour:
   contentCanvas: {fileID: 8031360426403005734}
   idNumberText: {fileID: 4658051661201525424}
   webView: {fileID: 9204667773248770826}
-  networkImageStream: {fileID: 2377678613824972991}
+  networkImageStream: {fileID: 7574782214953836375}
   IDNumber: 0
---- !u!114 &2377678613824972991
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3836657926655847833}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0758090cbad61244789897c18a7f3da6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 8520151768570029552}
-  _networkObjectCache: {fileID: 0}
-  rawImage: {fileID: 9201117979768369796}
-  computerMeshRenderer: {fileID: 0}
-  materialIndex: 4
-  fps: 12
-  downscale: 0.32
-  useJpg: 1
-  jpgQuality: 32
-  skipDuplicateFrames: 1
-  lz4Compress: 0
-  lz4Level: 0
-  hostIsOwnerOnStart: 0
 --- !u!1 &4666618633821540953
 GameObject:
   m_ObjectHideFlags: 0
@@ -702,6 +676,134 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_renderer: {fileID: 797672864888150047}
   m_maskType: 0
+--- !u!1 &5270207627710342174
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6796393656484491900}
+  - component: {fileID: 7574782214953836375}
+  - component: {fileID: 7912540830551954609}
+  - component: {fileID: 1831036248306957096}
+  m_Layer: 9
+  m_Name: ImageStream
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6796393656484491900
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5270207627710342174}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6668442221156157179}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &7574782214953836375
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5270207627710342174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0758090cbad61244789897c18a7f3da6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 8520151768570029552}
+  _networkObjectCache: {fileID: 0}
+  rawImage: {fileID: 9201117979768369796}
+  computerMeshRenderer: {fileID: 0}
+  materialIndex: 4
+  fps: 12
+  downscale: 0.32
+  useJpg: 1
+  jpgQuality: 32
+  skipDuplicateFrames: 1
+  lz4Compress: 0
+  lz4Level: 0
+  hostIsOwnerOnStart: 0
+--- !u!114 &7912540830551954609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5270207627710342174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 1
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours: []
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 1
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 65535
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 0
+  <SceneId>k__BackingField: 0
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    IsValid: 0
+--- !u!114 &1831036248306957096
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5270207627710342174}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _overrideType: 1
+  _updateHostVisibility: 1
+  _observerConditions:
+  - {fileID: 11400000, guid: bca8a42bbf67a0b4a834d30f2ee879fa, type: 2}
 --- !u!1 &6154966392846168794
 GameObject:
   m_ObjectHideFlags: 0
