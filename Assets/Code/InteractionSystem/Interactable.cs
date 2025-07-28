@@ -59,7 +59,7 @@ namespace Code.InteractionSystem
         [Server]
         private void ServerManagerOnOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
         {
-            if (stateArgs.ConnectionId == OccupiedConnectionId || stateArgs.ConnectionState == RemoteConnectionState.Stopped)
+            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped && stateArgs.ConnectionId == OccupiedConnectionId)
                 ReleaseInteractable();
         }
 
