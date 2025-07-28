@@ -227,15 +227,17 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
+            var delta = Input.mousePositionDelta.magnitude;
             if (input.look.sqrMagnitude >= Threshold)
             {
+                
                 if (LookCameraLimitRotationRKM)
                     if (!Input.GetMouseButton(1))
                     {
-                        return;
+                        delta = 0;
                     }
                 
-                float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
+                float mul = delta > 0 ? 1f : Time.deltaTime;
                 cinemachineTargetYaw   += input.look.x * mul;
                 cinemachineTargetPitch += input.look.y * mul;
             }
@@ -293,8 +295,8 @@ namespace Code.Player
             cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100;
             cameraDistance = Mathf.Clamp(cameraDistance, 0, 1);
 
-            if (cameraDistance < 0.05f) smoothedFirstPerson = true;
-            else if (cameraDistance > 0.15f) smoothedFirstPerson = false;
+            if (cameraDistance < 0.01f) smoothedFirstPerson = true;
+            else if (cameraDistance > 0.02f) smoothedFirstPerson = false;
 
             FirstPersonView = smoothedFirstPerson;
 
