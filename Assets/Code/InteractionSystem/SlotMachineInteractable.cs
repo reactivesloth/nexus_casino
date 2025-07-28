@@ -18,7 +18,7 @@ namespace Code.InteractionSystem
         
         [SerializeField] private TextMeshPro idNumberText;
 
-        [SerializeField] private CanvasWebViewPrefab webView;
+        [SerializeField] private CanvasWebViewPrefab webViewPrefab;
         [SerializeField] private NetworkImageStream networkImageStream;
         private bool _isUsing = false;
 
@@ -28,13 +28,13 @@ namespace Code.InteractionSystem
             !_isUsing ? "Use Computer" : "Exit Computer";
 
         public int IDNumber;
-
+        private CanvasWebViewPrefab _webView;
         
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
-            webView ??= GetComponentInChildren<CanvasWebViewPrefab>(true);
+            //webView ??= GetComponentInChildren<CanvasWebViewPrefab>(true);
             networkImageStream ??= GetComponentInChildren<NetworkImageStream>(true);
             
             if (idNumberText != null)
@@ -96,19 +96,24 @@ namespace Code.InteractionSystem
 
             computerCanvas.gameObject.SetActive(open);
             contentCanvas.gameObject.SetActive(open);
-
+            
             if (!open)
             {
-                webView.WebView?.GoBack(); // или другой метод, если нужно конкретное поведение
-                webView.WebView?.LoadUrl("about:blank"); // очищаем содержимое
+                _webView.WebView?.Dispose();
+                DestroyImmediate(_webView);
+                networkImageStream.ClearTexture();
                 //networkImageStream.StopStreaming();
             }
             else
             {
-                if (webView.WebView == null)
-                    webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
+                _webView = Instantiate(webViewPrefab, computerCanvas.transform);
+                _webView.transform.SetAsFirstSibling();
+                
+                if (_webView.WebView == null)
+                    _webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
                 else
-                    webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
+                    _webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
+                networkImageStream.SetTexture();
                 //networkImageStream.StartStreaming();
             }
         }

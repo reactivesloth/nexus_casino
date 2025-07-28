@@ -253,5 +253,15 @@ namespace Code.Network
             mat.SetTextureOffset("_BaseMap", new Vector2(0, 1));
             mat.SetColor("_BaseColor", Color.white);
         }
+
+        public void SetTexture()
+        {
+            rawImage = gameObject.GetComponentInChildren<RawImage>(true);
+        }
+
+        public void ClearTexture()
+        {
+            rawImage = null;
+        }
     }
 }
