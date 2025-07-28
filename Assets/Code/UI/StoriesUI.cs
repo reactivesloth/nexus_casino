@@ -47,11 +47,11 @@ namespace Code.UI
 
         private IEnumerator WaitForStoriesCoroutine()
         {
-            while (_stories.Count == 0)
+            while (_stories== null || _stories.Count == 0)
             {
-                _stories = LocalStoriesStorage.Instance.GetStories(storiesPerCycle,
+                _stories = LocalStoriesStorage.Instance?.GetStories(storiesPerCycle,
                     slotMachineInteractable ? slotMachineInteractable.IDNumber : -1);
-                if (_stories.Count > 0)
+                if (_stories is { Count: > 0 })
                 {
                     StartNewCycle();
                     yield break;
@@ -63,7 +63,7 @@ namespace Code.UI
 
         private void StartNewCycle()
         {
-            _stories = LocalStoriesStorage.Instance.GetStories(storiesPerCycle,
+            _stories = LocalStoriesStorage.Instance?.GetStories(storiesPerCycle,
                 slotMachineInteractable ? slotMachineInteractable.IDNumber : -1);
 
             if (_stories == null) return;

@@ -17,7 +17,7 @@ namespace Code.Stories
         
         private readonly SyncList<Story> _stories = new(new SyncTypeSettings()
         {
-            WritePermission = WritePermission.ServerOnly,
+            WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
 
@@ -36,18 +36,6 @@ namespace Code.Stories
         private void OnDisable()
         {
             _stories.OnChange -= StoriesOnOnChange;
-        }
-
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            ServerManager.RegisterBroadcast<Story>(HandlerNewStory);
-        }
-
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            ServerManager.UnregisterBroadcast<Story>(HandlerNewStory);
         }
 
         public List<Story> GetStories(int count = 30, int automatId = -1)
@@ -76,17 +64,13 @@ namespace Code.Stories
                 screenshotBytes = screenshotBytes
             };
             
-            ClientManager.Broadcast(story);
+            _stories.Add(story);
         }
         
         private void StoriesOnOnChange(SyncListOperation op, int index, Story oldItem, Story newItem, bool asServer)
         {
+            Debug.Log($"NEW STORY! Info: {newItem}");
             StoriesUpdated?.Invoke(_stories.Collection);
-        }
-        
-        private void HandlerNewStory(NetworkConnection con, Story storyData, Channel channel)
-        {
-            _stories.Add(storyData);
         }
     }
 
@@ -99,5 +83,10 @@ namespace Code.Stories
         public byte[] screenshotBytes;
 
         public Sprite ScreenshotSprite => ImageByteConverter.CreateSpriteFromBytes(screenshotBytes);
+
+        public override string ToString()
+        {
+            return $"PlayerName is {playerName}, automatId is {automatId}";
+        }
     }
 }
