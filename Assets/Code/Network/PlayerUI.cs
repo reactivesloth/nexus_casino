@@ -1,7 +1,6 @@
-using System;
 using Code.API;
+using FishNet.Connection;
 using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using TMPro;
 using UnityEngine;
 
@@ -11,54 +10,28 @@ namespace Code.Network
     {
         [SerializeField] private TextMeshProUGUI playerName;
 
-        private readonly SyncVar<string> _nickname = new(new SyncTypeSettings
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
-            WritePermission = WritePermission.ClientUnsynchronized,
-            ReadPermission = ReadPermission.Observers
-        });
-        
-        private void Start()
-        { 
-            Invoke("SetNickname", 1);
-        }
-        
-        private void OnNicknameChanged(string newName, bool asServer)
-        {
-            // Обновляем UI
-            if (playerName != null)
-                playerName.text = newName;
+            base.OnOwnershipClient(prevOwner);
+            TransmitLocalCharacter();
         }
 
-        public override void OnStartClient()
+        [ServerRpc]
+        public void SendCharacterNameServerRpc(string _nickname, NetworkConnection sender = null)
         {
-            base.OnStartClient();
-            OnNicknameChanged(_nickname.Value, false);
+            SendCharacterNameObserversRpc(_nickname);
         }
 
-        public void SetNickname()
+        [ObserversRpc(BufferLast = true)]
+        private void SendCharacterNameObserversRpc(string _nickname)
         {
-            if (IsOwner)
-            {
-                string newName = ClientDataStorage.UserData.username;
-                _nickname.Value = newName;
-                SetNicknameServerRpc(newName);
-            }
-            
-            playerName.text = _nickname.Value;
+            playerName.text = _nickname;
         }
 
-        [ServerRpc(RequireOwnership = true)]
-        private void SetNicknameServerRpc(string newName)
+        public void TransmitLocalCharacter()
         {
-            _nickname.Value = newName;
-            playerName.text = _nickname.Value;
+            if (!IsOwner) return;
+            SendCharacterNameServerRpc(ClientDataStorage.UserData.username);
         }
-
-        // [ObserversRpc(BufferLast = true)]
-        // private void UpdateNicknames(string name)
-        // {
-        //     _nickname.Value = name;
-        //     playerName.text = _nickname.Value;
-        // }
     }
 }
