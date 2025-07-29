@@ -18,13 +18,12 @@ namespace Code.Player
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            TransmitLocalCharacter();
+            Invoke(nameof(TransmitLocalCharacter), 1f);
         }
 
         [ServerRpc]
         public void SendCharacterJsonServerRpc(string json, NetworkConnection sender = null)
         {
-            // на сервере логируем и ретранслируем всем остальным
             Debug.Log($"[Server] Получен JSON ({json.Length} симв.) от {sender.ClientId}");
             SendCharacterJsonObserversRpc(json);
         }
