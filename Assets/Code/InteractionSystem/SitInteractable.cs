@@ -28,17 +28,13 @@ namespace Code.InteractionSystem
         [Tooltip("0 - Sit in place (back to sit, stand in entry point)" +
                  "1 - Sit with turn in place (front to sit, stand in entry point)" +
                  "2 - Sit from back-left" +
-                 "3 - Sit with back-right" +
-                 "" +
-                 "" +
-                 "")]
+                 "3 - Sit with back-right")]
         [SerializeField]
         private EntryData[] entries;
 
         [SerializeField] private bool forceFPV;
 
         const string SIT_TRIGGER = "TriggerSit";
-        const string STAND_TRIGGER = "TriggerStand";
         const string SIT_STATE = "Sitting";
         const string SIT_STYLE = "SitStyle";
         const string STAND_STATE = "Movement";
@@ -48,9 +44,6 @@ namespace Code.InteractionSystem
         private Vector3 _savedPos;
         private Quaternion _savedRot;
         private EntryData _selectedEntry;
-
-        protected readonly SyncVar<int> SitStatePlayerId =
-            new(new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
 
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -70,28 +63,6 @@ namespace Code.InteractionSystem
             sitPoint ??= transform.Find("SitPoint");
         }
 
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-
-            if (SitStatePlayerId.Value == -1)
-                return;
-
-            var sitPlayer = FindObjectsOfType<PlayerMovementController>().FirstOrDefault(m => m.OwnerId == SitStatePlayerId.Value);
-            if (!sitPlayer)
-                return;
-
-            var cc = sitPlayer.GetComponent<CharacterController>();
-            var anim = sitPlayer.GetComponent<Animator>();
-            var networkAnim = sitPlayer.GetComponent<NetworkAnimator>();
-            var tf = sitPlayer.transform;
-            
-            if (_sitRoutine != null)
-                StopCoroutine(_sitRoutine);
-            
-            _sitRoutine = StartCoroutine(SitDownFlow(sitPlayer, anim, networkAnim, cc, tf));
-        }
-
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
@@ -102,14 +73,12 @@ namespace Code.InteractionSystem
         protected internal override void OnInteract(NetworkConnection conn)
         {
             base.OnInteract(conn);
-            SitStatePlayerId.Value = conn.ClientId;
             TargetToggleSit(conn);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
             base.OnEndInteract(conn);
-            SitStatePlayerId.Value = -1;
             TargetToggleSit(conn);
         }
 
@@ -120,7 +89,6 @@ namespace Code.InteractionSystem
                 .First(m => m.Owner.IsLocalClient);
             var cc = movement.GetComponent<CharacterController>();
             var anim = movement.GetComponent<Animator>();
-            var networkAnim = movement.GetComponent<NetworkAnimator>();
             var tf = movement.transform;
 
             if (_sitRoutine != null)
@@ -128,12 +96,12 @@ namespace Code.InteractionSystem
 
             _sitRoutine = StartCoroutine(
                 _isSitting
-                    ? StandUpFlow(movement, anim, networkAnim, cc, tf)
-                    : SitDownFlow(movement, anim, networkAnim, cc, tf)
+                    ? StandUpFlow(movement, anim, cc, tf)
+                    : SitDownFlow(movement, anim, cc, tf)
             );
         }
 
-        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
+        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim,
             CharacterController cc, Transform tf)
         {
             IsBusy = true;
@@ -162,7 +130,7 @@ namespace Code.InteractionSystem
 
             anim.applyRootMotion = true;
             anim.SetFloat(SIT_STYLE, int.Parse(_selectedEntry.animationID));
-            networkAnim.SetTrigger(SIT_TRIGGER);
+            anim.SetBool(SIT_TRIGGER, true);
 
             yield return new WaitUntil(() =>
                 anim.GetCurrentAnimatorStateInfo(0).IsName(SIT_STATE)
@@ -212,7 +180,7 @@ namespace Code.InteractionSystem
             IsBusy = false;
         }
 
-        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
+        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim,
             CharacterController cc, Transform tf)
         {
             IsBusy = true;
@@ -220,7 +188,7 @@ namespace Code.InteractionSystem
 
             anim.applyRootMotion = true;
             anim.SetFloat(SIT_STYLE, int.Parse(_selectedEntry.animationID));
-            networkAnim.SetTrigger(STAND_TRIGGER);
+            anim.SetBool(SIT_TRIGGER, false);
 
             float duration = anim.GetAnimatorTransitionInfo(0).duration;
             float elapsed = 0f;
