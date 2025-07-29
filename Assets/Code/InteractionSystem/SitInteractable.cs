@@ -5,6 +5,7 @@ using FishNet.Object;
 using FishNet.Connection;
 using Code.Player;
 using FishNet.Component.Animating;
+using FishNet.Object.Synchronizing;
 
 namespace Code.InteractionSystem
 {
@@ -17,11 +18,13 @@ namespace Code.InteractionSystem
             public string animationID;
         }
 
-        [Header("Sit Settings")] 
-        [SerializeField] private Transform sitPoint;
+        [Header("Sit Settings")] [SerializeField]
+        private Transform sitPoint;
+
         [SerializeField] private float sitAdjustHeight = 0.0f;
         [SerializeField] private bool allowRotateCamera = true;
         [SerializeField] private bool useRightMouseButtonToRotate = false;
+
         [Tooltip("0 - Sit in place (back to sit, stand in entry point)" +
                  "1 - Sit with turn in place (front to sit, stand in entry point)" +
                  "2 - Sit from back-left" +
@@ -29,10 +32,11 @@ namespace Code.InteractionSystem
                  "" +
                  "" +
                  "")]
-        [SerializeField] private EntryData[] entries;
+        [SerializeField]
+        private EntryData[] entries;
 
         [SerializeField] private bool forceFPV;
-        
+
         const string SIT_TRIGGER = "TriggerSit";
         const string STAND_TRIGGER = "TriggerStand";
         const string SIT_STATE = "Sitting";
@@ -44,12 +48,16 @@ namespace Code.InteractionSystem
         private Vector3 _savedPos;
         private Quaternion _savedRot;
         private EntryData _selectedEntry;
-        
+
+        protected readonly SyncVar<int> SitStatePlayerId =
+            new(new SyncTypeSettings(WritePermission.ServerOnly, ReadPermission.Observers));
+
 #if UNITY_EDITOR
-        private void OnValidate()
+        protected override void OnValidate()
         {
+            base.OnValidate();
             SetupSitPoints();
-        }   
+        }
 #endif
 
         private void Awake()
@@ -62,6 +70,29 @@ namespace Code.InteractionSystem
             sitPoint ??= transform.Find("SitPoint");
         }
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+            if (SitStatePlayerId.Value == -1)
+                return;
+
+            var sitPlayer = FindObjectsOfType<PlayerMovementController>()
+                .First(m => m.OwnerId == SitStatePlayerId.Value);
+            if (!sitPlayer)
+                return;
+
+            var cc = sitPlayer.GetComponent<CharacterController>();
+            var anim = sitPlayer.GetComponent<Animator>();
+            var networkAnim = sitPlayer.GetComponent<NetworkAnimator>();
+            var tf = sitPlayer.transform;
+            
+            if (_sitRoutine != null)
+                StopCoroutine(_sitRoutine);
+            
+            _sitRoutine = StartCoroutine(SitDownFlow(sitPlayer, anim, networkAnim, cc, tf));
+        }
+
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
@@ -72,12 +103,14 @@ namespace Code.InteractionSystem
         protected internal override void OnInteract(NetworkConnection conn)
         {
             base.OnInteract(conn);
+            SitStatePlayerId.Value = conn.ClientId;
             TargetToggleSit(conn);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
             base.OnEndInteract(conn);
+            SitStatePlayerId.Value = -1;
             TargetToggleSit(conn);
         }
 
@@ -90,7 +123,7 @@ namespace Code.InteractionSystem
             var anim = movement.GetComponent<Animator>();
             var networkAnim = movement.GetComponent<NetworkAnimator>();
             var tf = movement.transform;
-            
+
             if (_sitRoutine != null)
                 StopCoroutine(_sitRoutine);
 
@@ -108,7 +141,7 @@ namespace Code.InteractionSystem
 
             if (forceFPV)
                 move.ForceSetCameraDistance(0);
-            
+
             _savedPos = tf.position;
             _savedRot = tf.rotation;
 
@@ -179,7 +212,7 @@ namespace Code.InteractionSystem
 
             IsBusy = false;
         }
-        
+
         private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, NetworkAnimator networkAnim,
             CharacterController cc, Transform tf)
         {
@@ -256,7 +289,8 @@ namespace Code.InteractionSystem
             return closest;
         }
 
-        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.2f, float maxDuration = 2f)
+        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.2f,
+            float maxDuration = 2f)
         {
             float walkSpeed = 1.5f;
             float animBlendSpeed = 8f;
@@ -299,7 +333,8 @@ namespace Code.InteractionSystem
             anim.SetFloat("Horizontal", 0f);
         }
 
-        private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f, float maxDuration = 1f)
+        private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f,
+            float maxDuration = 1f)
         {
             float elapsed = 0f;
 
@@ -313,7 +348,8 @@ namespace Code.InteractionSystem
             tf.rotation = targetRot;
         }
 
-        private IEnumerator RotateTowardPointIfNeeded(Transform tf, Vector3 targetPosition, float angleThreshold = 15f, float rotationSpeed = 360f)
+        private IEnumerator RotateTowardPointIfNeeded(Transform tf, Vector3 targetPosition, float angleThreshold = 15f,
+            float rotationSpeed = 360f)
         {
             Vector3 toTarget = (targetPosition - tf.position);
             toTarget.y = 0f;
