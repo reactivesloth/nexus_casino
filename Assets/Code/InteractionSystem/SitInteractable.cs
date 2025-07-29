@@ -77,8 +77,7 @@ namespace Code.InteractionSystem
             if (SitStatePlayerId.Value == -1)
                 return;
 
-            var sitPlayer = FindObjectsOfType<PlayerMovementController>()
-                .First(m => m.OwnerId == SitStatePlayerId.Value);
+            var sitPlayer = FindObjectsOfType<PlayerMovementController>().FirstOrDefault(m => m.OwnerId == SitStatePlayerId.Value);
             if (!sitPlayer)
                 return;
 
