@@ -77,7 +77,7 @@ namespace Code.Network
         public override void OnStopClient()
         {
             base.OnStopClient();
-            NetworkObject.ResetState(true);
+            NetworkObject.ResetState(false);
         }
 
         private void ApplyOwnerState(NetworkConnection prev)
