@@ -234,6 +234,7 @@ GameObject:
   - component: {fileID: 5991164112117390228}
   - component: {fileID: 8915904165044842815}
   - component: {fileID: 8050745850893541050}
+  - component: {fileID: 2107448067646664343}
   m_Layer: 0
   m_Name: NetworkManager (FishyEOS)
   m_TagString: Untagged
@@ -602,6 +603,25 @@ MonoBehaviour:
   LobbyMemberUpdateReceived:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2107448067646664343
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6d0962ead4b02a34aae248fccce671ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  WriteSceneObjectDetails: 1
+  ValidateRpcLengths: 0
+  DisableObserversRpcLinks: 0
+  DisableTargetRpcLinks: 0
+  DisableServerRpcLinks: 0
+  DisableReplicateRpcLinks: 0
+  DisableReconcileRpcLinks: 0
 --- !u!1 &5109258346219524947
 GameObject:
   m_ObjectHideFlags: 0
