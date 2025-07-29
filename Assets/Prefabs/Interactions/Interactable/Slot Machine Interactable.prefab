@@ -540,6 +540,7 @@ GameObject:
   - component: {fileID: 8520151768570029552}
   - component: {fileID: 8690079509221083420}
   - component: {fileID: 2377678613824972991}
+  - component: {fileID: 7128453315911807263}
   m_Layer: 9
   m_Name: Slot Interaction
   m_TagString: Untagged
@@ -667,6 +668,22 @@ MonoBehaviour:
   lz4Compress: 0
   lz4Level: 0
   hostIsOwnerOnStart: 0
+--- !u!114 &7128453315911807263
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3836657926655847833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _overrideType: 1
+  _updateHostVisibility: 1
+  _observerConditions:
+  - {fileID: 11400000, guid: 77980fe7b99a848428ea623c92c8f466, type: 2}
 --- !u!1 &4666618633821540953
 GameObject:
   m_ObjectHideFlags: 0

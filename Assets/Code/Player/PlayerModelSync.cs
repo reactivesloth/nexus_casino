@@ -40,6 +40,7 @@ namespace Code.Player
         {
             if (!IsOwner) return; 
             
+            Debug.Log($"[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);
         }
