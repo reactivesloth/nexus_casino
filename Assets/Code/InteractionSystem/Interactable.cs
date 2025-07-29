@@ -7,7 +7,6 @@ using FishNet.Transporting;
 
 namespace Code.InteractionSystem
 {
-    [RequireComponent(typeof(NetworkObject))]
     public abstract class Interactable : NetworkBehaviour
     {
         [Header("Interaction Settings")]
@@ -67,9 +66,6 @@ namespace Code.InteractionSystem
         protected override void OnValidate()
         {
             base.OnValidate();
-            NetworkObject no = GetComponent<NetworkObject>();
-            if (no != null)
-                no.SetIsSpawnable(false);
             
             Collider collider = GetComponent<Collider>();
             if (collider != null)
