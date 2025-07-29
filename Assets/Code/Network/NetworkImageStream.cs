@@ -73,13 +73,7 @@ namespace Code.Network
             base.OnOwnershipClient(prevOwner);
             ApplyOwnerState(prevOwner);
         }
-
-        public override void OnStopClient()
-        {
-            base.OnStopClient();
-            NetworkObject.ResetState(false);
-        }
-
+        
         private void ApplyOwnerState(NetworkConnection prev)
         {
             bool iAmOwner = Owner == NetworkManager.ClientManager.Connection;
