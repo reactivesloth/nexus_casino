@@ -575,9 +575,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01d5031605c34aacb6ca9fe18292cb67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 1
   _addedNetworkObject: {fileID: 791084595948481418}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 791084595948481418}
   _interactionDistance: 3
   outlineGameObjects: []
   _interactableEnabled: 1
@@ -600,9 +600,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0758090cbad61244789897c18a7f3da6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 2
   _addedNetworkObject: {fileID: 791084595948481418}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 791084595948481418}
   rawImage: {fileID: 0}
   computerMeshRenderer: {fileID: 0}
   materialIndex: 4
@@ -1038,13 +1038,16 @@ MonoBehaviour:
   <ComponentIndex>k__BackingField: 0
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
+  NetworkBehaviours:
+  - {fileID: 8199382324019828225}
+  - {fileID: 8690079509221083420}
+  - {fileID: 2377678613824972991}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
   RuntimeChildNetworkBehaviours: []
   _isNetworked: 1
-  _isSpawnable: 1
+  _isSpawnable: 0
   _isGlobal: 0
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
@@ -1063,15 +1066,15 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
+  <PrefabId>k__BackingField: 7
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 13064311267008439986
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
+    Rotation: {x: -0.7071068, y: -2.0800596e-16, z: 2.0800593e-16, w: 0.7071067}
+    Scale: {x: 65.12697, y: 65.12697, z: 65.126976}
+    IsValid: 1
 --- !u!114 &8199382324019828225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1084,9 +1087,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df978f810fd94054a08d206d3eb3d6e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 791084595948481418}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 791084595948481418}
   _interactionDistance: 3
   outlineGameObjects:
   - {fileID: 0}
