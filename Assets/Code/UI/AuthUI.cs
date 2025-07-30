@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using Code.API;
 using Code.API.Models;
 using Proyecto26;
+using Ricimi;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -17,17 +19,18 @@ namespace Code.UI
         public Button getConfirmCodeButton;
         public Button authButton;
         public Button resendCodeButton;
-
+        public GameObject termsAndConditions;
+        
         [Header("Texts")] 
         public TMP_Text authButtonText;
         public TMP_Text titleText;
 
         [Header("Resend Settings")] public int resendCooldownSeconds = 60;
-        public string resendButtonText = "Отправить код повторно";
-        public string resendButtonTextWithTimer = "Отправить код повторно ({0})";
+        public string resendButtonText = "Resend";
+        public string resendButtonTextWithTimer = "Resend ({0})";
         
         [Header("Results Handle")]
-        public AuthPopupPanel popupPanel;
+        public ModularPopupOpener popupPanel;
 
         private bool isResendTimerActive = false;
         private float resendTimer = 0f;
@@ -65,12 +68,16 @@ namespace Code.UI
             codeInput.text = string.Empty;
             if (nicknameInput != null)
                 nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput",  string.Empty);
+            
             getConfirmCodeButton.gameObject.SetActive(true);
             authButton.gameObject.SetActive(false);
-            codeInput.gameObject.SetActive(false);
+            //codeInput.gameObject.SetActive(false);
             nicknameInput.gameObject.SetActive(false);
             resendCodeButton.gameObject.SetActive(false);
             isResendTimerActive = false;
+            titleText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Welcome back" : "Welcome";
+            authButtonText.text = isRegistered ? "Login" : "Sign up";
+            termsAndConditions.SetActive(false);
         }
 
         private void OnGetCodeClicked()
@@ -124,6 +131,9 @@ namespace Code.UI
                     getConfirmCodeButton.gameObject.SetActive(false);
                     authButton.gameObject.SetActive(true);
                     nicknameInput.gameObject.SetActive(!isRegistered); // Показываем nickname только если не зарегистрирован
+                    titleText.text = isRegistered ? "Login" : "Sign up";
+                    authButtonText.text = isRegistered ? "Login" : "Sign up";
+                    termsAndConditions.SetActive(!isRegistered);
                     StartResendTimer();
                 }).Finally(() => getConfirmCodeButton.interactable = true);
             });
@@ -304,7 +314,9 @@ namespace Code.UI
 
         private void HandleError(string title, string errorMessage)
         {
-            popupPanel.Show(title, errorMessage);
+            popupPanel.Title = title;
+            popupPanel.Message = errorMessage;
+            popupPanel.OpenPopup();
         }
     }
 }
