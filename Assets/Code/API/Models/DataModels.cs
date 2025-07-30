@@ -88,4 +88,13 @@ namespace Code.API.Models
     {
         public string phone;
     }
+    
+    [Serializable]
+    public class MessageData    
+    {
+        public string username;
+        public string lobby;
+        public int type;
+        public string text;
+    }
 } 
