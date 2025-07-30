@@ -265,7 +265,7 @@ namespace Code.InteractionSystem
             return closest;
         }
 
-        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.2f,
+        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.25f,
             float maxDuration = 2f)
         {
             float walkSpeed = 1.5f;
