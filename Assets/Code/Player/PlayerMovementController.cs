@@ -227,14 +227,13 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            if (LookCameraLimitRotationRKM && !Input.GetMouseButton(1))
-                return;
+            var _input = LookCameraLimitRotationRKM && !Input.GetMouseButton(1) ? Vector2.zero : input.look;
             
-            if (input.look.sqrMagnitude >= Threshold)
+            if (_input.sqrMagnitude >= Threshold)
             {
                 float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
-                cinemachineTargetYaw   += input.look.x * mul;
-                cinemachineTargetPitch += input.look.y * mul;
+                cinemachineTargetYaw   += _input.x * mul;
+                cinemachineTargetPitch += _input.y * mul;
             }
 
             // ОГРАНИЧЕНИЕ ОТ БАЗОВОГО УГЛА
