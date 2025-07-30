@@ -183,6 +183,26 @@ namespace Code.InteractionSystem
         private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim,
             CharacterController cc, Transform tf)
         {
+            if (allowRotateCamera) 
+            {
+                // отключаем сидячие ограничения
+                move.LookCameraLimitRotation = false; 
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = false;
+                    move.LockCursor = true;
+                }
+                
+                float preservedPitch = 0;
+                float preservedYaw   = move.cinemachineTargetYaw;
+                var camT = move.CinemachineCameraTarget.transform;
+                camT.rotation = Quaternion.Euler(
+                    preservedPitch + move.cameraAngleOverride,
+                    preservedYaw,
+                    0f
+                    );
+            }
+            
             IsBusy = true;
             _isSitting = false;
 
@@ -218,18 +238,7 @@ namespace Code.InteractionSystem
 
             cc.enabled = true;
             move.CanMove = true;
-
-            if (allowRotateCamera)
-            {
-                move.LookCameraLimitRotation = false;
-
-                if (useRightMouseButtonToRotate)
-                {
-                    move.LookCameraLimitRotationRKM = false;
-                    move.LockCursor = true;
-                }
-            }
-
+            
             _sitRoutine = null;
             IsBusy = false;
         }
@@ -256,7 +265,7 @@ namespace Code.InteractionSystem
             return closest;
         }
 
-        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.2f,
+        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.25f,
             float maxDuration = 2f)
         {
             float walkSpeed = 1.5f;

@@ -192,6 +192,16 @@ namespace CC
 
         #endregion Initialize script
 
+        public void SwitchHead(bool value)
+        { 
+            MainMesh.enabled = value;
+            foreach (var hairObject in HairObjects)
+            {
+                hairObject.GetComponentInChildren<Renderer>().enabled = value;
+            }
+        }
+        
+        
         #region Save & Load
 
         public void SaveToJSON(string name = null)

@@ -1,4 +1,5 @@
-﻿using Cinemachine;
+﻿using CC;
+using Cinemachine;
 using Code.Network.HostMigration;
 using Code.Network.Player;
 using FishNet.Connection;
@@ -39,7 +40,7 @@ namespace Code.Player
         [SerializeField] private float maxFOV = 65;
         [SerializeField] private float topClamp = 70f;
         [SerializeField] private float bottomClamp = -30f;
-        [SerializeField] private float cameraAngleOverride = 0f;
+        [SerializeField] public float cameraAngleOverride = 0f;
         [SerializeField] private Transform headTarget;
 
         [Header("Audio")]
@@ -233,19 +234,13 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            var delta = Input.mousePositionDelta.magnitude;
-            if (input.look.sqrMagnitude >= Threshold)
+            var _input = LookCameraLimitRotationRKM && !Input.GetMouseButton(1) ? Vector2.zero : input.look;
+            
+            if (_input.sqrMagnitude >= Threshold)
             {
-                
-                if (LookCameraLimitRotationRKM)
-                    if (!Input.GetMouseButton(1))
-                    {
-                        delta = 0;
-                    }
-                
-                float mul = delta > 0 ? 1f : Time.deltaTime;
-                cinemachineTargetYaw   += input.look.x * mul;
-                cinemachineTargetPitch += input.look.y * mul;
+                float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
+                cinemachineTargetYaw   += _input.x * mul;
+                cinemachineTargetPitch += _input.y * mul;
             }
 
             // ОГРАНИЧЕНИЕ ОТ БАЗОВОГО УГЛА
@@ -304,6 +299,22 @@ namespace Code.Player
             if (cameraDistance < 0.001f) smoothedFirstPerson = true;
             else if (cameraDistance > 0.002f) smoothedFirstPerson = false;
 
+            if (_firstPersonView != smoothedFirstPerson)
+            {
+                CharacterCustomization cc = gameObject.GetComponent<CharacterCustomization>();
+                if (cc != null)
+                {
+                    cc.SwitchHead(!smoothedFirstPerson);    
+                }
+
+                else
+                {
+                    foreach (var o in hideForFirstPersonViewLocal)
+                        if (o.GetComponent<Renderer>())
+                            o.GetComponent<Renderer>().enabled = !smoothedFirstPerson;
+                }
+            }
+            
             FirstPersonView = smoothedFirstPerson;
 
             var follow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
@@ -311,9 +322,6 @@ namespace Code.Player
             follow.CameraDistance = FirstPersonView ? 0 : Mathf.Lerp(follow.CameraDistance, Mathf.Lerp(minCameraDistance, maxCameraDistance, cameraDistance), Time.deltaTime * 3);
             virtualCamera.Follow = cinemachineCameraTarget.transform;
             virtualCamera.m_Lens.FieldOfView = Mathf.Lerp(virtualCamera.m_Lens.FieldOfView, Mathf.MoveTowards(minFOV, maxFOV, (cameraDistance * 0.7f) + (controller.velocity.normalized.magnitude * 0.3f)), Time.deltaTime * 15);
-
-            foreach (var o in hideForFirstPersonViewLocal)
-                o.SetActive(!FirstPersonView);
         }
 
         private void ResetFirstPersonViewRotation()

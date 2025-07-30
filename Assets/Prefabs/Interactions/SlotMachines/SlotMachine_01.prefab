@@ -60,6 +60,14 @@ PrefabInstance:
       propertyPath: computerMeshRenderer
       value: 
       objectReference: {fileID: 7828402647810297779}
+    - target: {fileID: 2452543488078972824, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: m_Convex
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2452543488078972824, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6154966392846168794, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: m_Name
       value: Slot Machine Interactable
@@ -272,7 +280,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 1
+  m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -1220941457093099319, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
 --- !u!23 &7828402647810297779 stripped
