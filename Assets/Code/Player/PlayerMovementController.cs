@@ -37,7 +37,7 @@ namespace Code.Player
         [SerializeField] private float maxFOV = 65;
         [SerializeField] private float topClamp = 70f;
         [SerializeField] private float bottomClamp = -30f;
-        [SerializeField] private float cameraAngleOverride = 0f;
+        [SerializeField] public float cameraAngleOverride = 0f;
         [SerializeField] private Transform headTarget;
 
         [Header("Audio")]
@@ -227,17 +227,12 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            var delta = Input.mousePositionDelta.magnitude;
+            if (LookCameraLimitRotationRKM && !Input.GetMouseButton(1))
+                return;
+            
             if (input.look.sqrMagnitude >= Threshold)
             {
-                
-                if (LookCameraLimitRotationRKM)
-                    if (!Input.GetMouseButton(1))
-                    {
-                        delta = 0;
-                    }
-                
-                float mul = delta > 0 ? 1f : Time.deltaTime;
+                float mul = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
                 cinemachineTargetYaw   += input.look.x * mul;
                 cinemachineTargetPitch += input.look.y * mul;
             }

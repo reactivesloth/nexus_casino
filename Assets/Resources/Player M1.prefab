@@ -420,6 +420,10 @@ PrefabInstance:
       value: 8
       objectReference: {fileID: 0}
     - target: {fileID: -4396642182433536433, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -4396642182433536433, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       propertyPath: m_AABB.m_Center.x
       value: 0
       objectReference: {fileID: 0}
@@ -1220,7 +1224,8 @@ MonoBehaviour:
     m_Bits: 1
   terminalVelocity: 53
   cinemachineCameraTarget: {fileID: 7731021001863789818}
-  hideForFirstPersonViewLocal: []
+  hideForFirstPersonViewLocal:
+  - {fileID: 8021267353867592598}
   minCameraDistance: 1
   maxCameraDistance: 4
   minFOV: 55
@@ -2179,7 +2184,7 @@ MonoBehaviour:
   randomHoldDurationMax: 0.5
   configReady: 0
   warnOnNullRefs: 1
-  inspSalsaLinked: 0
+  inspSalsaLinked: 1
   inspStateFoldoutProcessing: 1
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 1

@@ -119,7 +119,7 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 1
+  m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 4135973481488687693, guid: 7f7800c6eda820f438fa12eee7cb9de0, type: 3}
 --- !u!1 &3424704299282089801 stripped
@@ -372,6 +372,10 @@ PrefabInstance:
       propertyPath: m_Mesh
       value: 
       objectReference: {fileID: 4135973481488687693, guid: 7f7800c6eda820f438fa12eee7cb9de0, type: 3}
+    - target: {fileID: 2452543488078972824, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2928854265349077119, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: savedColor.b
       value: 1
