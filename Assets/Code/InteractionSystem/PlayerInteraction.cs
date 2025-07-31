@@ -22,11 +22,13 @@ namespace Code.Player
         private GameObject[] outlineGameObjects;
 
         private Cinemachine3rdPersonFollow virtualCamera;
-        
+        private PlayerInput input;
+
         private void Awake()
         {
             if (FindObjectOfType<CinemachineVirtualCamera>())
                 virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>().GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+            input = PlayerInput.Instance;
         }
 
         private void Update()
@@ -37,7 +39,7 @@ namespace Code.Player
             if (_active == null)
             {
                 UpdateHover();
-                if (_hovered != null && Input.GetKeyDown(KeyCode.E) && !_hovered.IsBusy)
+                if (_hovered != null && input.InteractDown && !input.ForceCursorHeld && !_hovered.IsBusy)
                 {
                     _hovered.RequestInteract();
                     if (_hovered.ManualRelease)
@@ -46,7 +48,7 @@ namespace Code.Player
             }
             else
             {
-                if (Input.GetKeyDown(KeyCode.E) && !_active.IsBusy)
+                if (input.InteractDown && !input.ForceCursorHeld && !_active.IsBusy)
                 {
                     _active.RequestEndInteract();
                     _active = null;

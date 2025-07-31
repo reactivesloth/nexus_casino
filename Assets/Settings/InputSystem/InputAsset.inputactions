@@ -43,8 +43,26 @@
                 },
                 {
                     "name": "CameraSwitch",
-                    "type": "PassThrough",
+                    "type": "Button",
                     "id": "84cb9c4c-abb9-41f7-9eba-300e362ea5c0",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Interact",
+                    "type": "Button",
+                    "id": "950ad78e-b671-424d-8e0b-9db5c01ff620",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ForceCursor",
+                    "type": "Button",
+                    "id": "9a98da51-815b-4f7d-8502-60cf7d89c563",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -236,6 +254,28 @@
                     "processors": "",
                     "groups": ";KeyboardMouse",
                     "action": "CameraSwitch",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "163c7af2-1bd2-4984-b902-1cefb99df2b5",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardMouse",
+                    "action": "Interact",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "025dc09c-eaf1-40c4-bfbd-3f97f399aaf5",
+                    "path": "<Keyboard>/leftAlt",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";KeyboardMouse",
+                    "action": "ForceCursor",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

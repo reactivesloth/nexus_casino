@@ -204,7 +204,9 @@ namespace Code.Player
 
         private void Update()
         {
-            if (!IsOwner || !CanMove || IsInChat) return;
+            if (!IsOwner) return;
+            
+            if (!CanMove || IsInChat || input.ForceCursorHeld) return;
 
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
             input ??= PlayerInput.Instance;
@@ -216,10 +218,7 @@ namespace Code.Player
 
         private void LateUpdate()
         {
-            if (!IsOwner) return;
-            
-            Cursor.lockState = LockCursor ? CursorLockMode.Locked : CursorLockMode.None;
-            Cursor.visible = !LockCursor;
+            if (!IsOwner || IsInChat || input.ForceCursorHeld) return;
             
             if (CanMove || LookCameraLimitRotation )
                 UpdateCameraDistance();
@@ -234,7 +233,7 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            var _input = LookCameraLimitRotationRKM && !Input.GetMouseButton(1) ? Vector2.zero : input.look;
+            var _input = LookCameraLimitRotationRKM && !Input.GetMouseButton(1) ? Vector2.zero : input.Look;
             
             if (_input.sqrMagnitude >= Threshold)
             {
@@ -282,7 +281,7 @@ namespace Code.Player
         
         private void UpdateCameraDistance()
         {
-            if (Input.GetKeyDown(KeyCode.C))
+            if (input.CameraSwitchDown)
             {
                 if (FirstPersonView)
                     cameraDistance = savedDistance;
@@ -342,13 +341,13 @@ namespace Code.Player
 
         private void Move()
         {
-            bool canSprint = !FirstPersonView || (Mathf.Abs(input.move.x) < 0.1f && input.move.y > 0.1f);
-            float targetSpeed = input.sprint && canSprint ? sprintSpeed : moveSpeed;
+            bool canSprint = !FirstPersonView || (Mathf.Abs(input.Move.x) < 0.1f && input.Move.y > 0.1f);
+            float targetSpeed = input.SprintHeld && canSprint ? sprintSpeed : moveSpeed;
 
-            if (input.move == Vector2.zero) targetSpeed = 0;
+            if (input.Move == Vector2.zero) targetSpeed = 0;
 
             float currentSpeed = new Vector3(controller.velocity.x, 0, controller.velocity.z).magnitude;
-            float inputMagnitude = input.analogMovement ? input.move.magnitude : 1f;
+            float inputMagnitude = input.Move.magnitude;
 
             if (Mathf.Abs(currentSpeed - targetSpeed) > 0.1f)
                 speed = Mathf.Round(Mathf.Lerp(currentSpeed, targetSpeed * inputMagnitude, Time.deltaTime * speedChangeRate) * 1000f) / 1000f;
@@ -358,10 +357,10 @@ namespace Code.Player
             animationBlend = Mathf.Lerp(animationBlend, targetSpeed, Time.deltaTime * speedChangeRate);
             if (animationBlend < 0.01f) animationBlend = 0f;
 
-            Vector3 inputDir = new Vector3(input.move.x, 0, input.move.y).normalized;
+            Vector3 inputDir = new Vector3(input.Move.x, 0, input.Move.y).normalized;
             targetRotation = Mathf.Atan2(inputDir.x, inputDir.z) * Mathf.Rad2Deg + mainCamera.transform.eulerAngles.y;
 
-            if (input.move != Vector2.zero)
+            if (input.Move != Vector2.zero)
             {
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
                 if (!FirstPersonView)
@@ -399,7 +398,7 @@ namespace Code.Player
 
                 if (verticalVelocity < 0) verticalVelocity = -2f;
 
-                if (input.jump && jumpTimeoutDelta <= 0)
+                if (input.JumpDown && jumpTimeoutDelta <= 0)
                 {
                     verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
                     animator?.SetBool(animIDJump, true);
@@ -416,7 +415,7 @@ namespace Code.Player
                 else
                     animator?.SetBool(animIDFreeFall, true);
 
-                input.jump = false;
+                //input.jump = false;
             }
 
             if (verticalVelocity < terminalVelocity)
@@ -425,11 +424,11 @@ namespace Code.Player
 
         private void CameraRotation()
         {
-            if (input.look.sqrMagnitude >= Threshold && !LockCameraPosition)
+            if (input.Look.sqrMagnitude >= Threshold && !LockCameraPosition)
             {
                 float multiplier = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
-                cinemachineTargetYaw += input.look.x * multiplier;
-                cinemachineTargetPitch += input.look.y * multiplier;
+                cinemachineTargetYaw += input.Look.x * multiplier;
+                cinemachineTargetPitch += input.Look.y * multiplier;
             }
 
             cinemachineTargetYaw = ClampAngle(cinemachineTargetYaw, float.MinValue, float.MaxValue);
