@@ -1249,6 +1249,7 @@ MonoBehaviour:
   - {fileID: 8300000, guid: a3194b8bbc96ef84fab1f98f4b7dae3e, type: 3}
   footstepAudioVolume: 0.5
   CanMove: 1
+  IsInChat: 0
   LockCameraPosition: 0
   sitYawRange: 45
   sitMinPitch: -30
@@ -1553,7 +1554,8 @@ MonoBehaviour:
   _componentIndexCache: 5
   _addedNetworkObject: {fileID: 3901444026938387538}
   _networkObjectCache: {fileID: 3901444026938387538}
-  playerName: {fileID: 7157708354745321764}
+  playerName: {fileID: 303265969087272967}
+  playerRole: {fileID: 7157708354745321764}
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
@@ -2264,6 +2266,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+--- !u!114 &303265969087272967 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5525320800619895278, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+  m_PrefabInstance: {fileID: 5231084025345458665}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &1475476614557615911 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 6692763688823523022, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}

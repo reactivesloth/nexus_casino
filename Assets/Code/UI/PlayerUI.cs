@@ -4,11 +4,12 @@ using FishNet.Object;
 using TMPro;
 using UnityEngine;
 
-namespace Code.Network
+namespace Code.UI
 {
     public class PlayerUI : NetworkBehaviour
     {
         [SerializeField] private TextMeshProUGUI playerName;
+        [SerializeField] private TextMeshProUGUI playerRole;
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
@@ -17,21 +18,22 @@ namespace Code.Network
         }
 
         [ServerRpc]
-        public void SendCharacterNameServerRpc(string _nickname, NetworkConnection sender = null)
+        public void SendCharacterDataServerRpc(string _nickname, string _role, NetworkConnection sender = null)
         {
-            SendCharacterNameObserversRpc(_nickname);
+            SendCharacterDataObserversRpc(_nickname, _role);
         }
 
         [ObserversRpc(BufferLast = true)]
-        private void SendCharacterNameObserversRpc(string _nickname)
+        private void SendCharacterDataObserversRpc(string _nickname, string _role)
         {
             playerName.text = _nickname;
+            playerRole.text = _role;
         }
 
         public void TransmitLocalCharacter()
         {
             if (!IsOwner) return;
-            SendCharacterNameServerRpc(ClientDataStorage.UserData.username);
+            SendCharacterDataServerRpc(ClientDataStorage.UserData.username, ClientDataStorage.UserData.role);
         }
     }
 }
