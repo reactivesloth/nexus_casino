@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Code.API;
 using Code.API.Models;
@@ -7,19 +8,30 @@ using Code.Player;
 using NativeWebSocket;
 using TankAndHealerStudioAssets;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Code.Chat
 {
     public class ChatController : MonoBehaviour
     {
+        [SerializeField] private string systemName = "[SYSTEM]";
         [SerializeField] private UltimateChatBox lobbyChatBox;
         [SerializeField] private UltimateChatBox globalChatBox;
-        
+        [SerializeField] private List<CommandData> commands;
+
+        public readonly Dictionary<string, CommandData> CommandsDictionary = new();
         private PlayerMovementController PlayerMovementController => PlayerMovementController.Own;
         private WebSocket chatWebSocket;
 
-        private UltimateChatBox _currentChatBox;
+        public UltimateChatBox CurrentChatBox { get; private set; }
         private bool _isGlobalChatActive = false;
+        
+        public string SystemName => systemName;
+
+        private void Awake()
+        {
+            commands.ForEach(c => CommandsDictionary.Add(c.commandValue, c));
+        }
 
         private void Start()
         {
@@ -47,22 +59,44 @@ namespace Code.Chat
 
         private void ChangeChat()
         {
-            SetCurrentChat(_currentChatBox == lobbyChatBox ? globalChatBox : lobbyChatBox);
+            SetCurrentChat(CurrentChatBox == lobbyChatBox ? globalChatBox : lobbyChatBox);
         }
 
         private void SetCurrentChat(UltimateChatBox chatBox)
         {
-            if (_currentChatBox != null)
-                _currentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
+            if (CurrentChatBox != null)
+            {
+                CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
+                CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
+            }
             
-            _currentChatBox = chatBox;
-            _isGlobalChatActive = _currentChatBox == globalChatBox;
-            globalChatBox.gameObject.SetActive(_currentChatBox == globalChatBox);
-            lobbyChatBox.gameObject.SetActive(_currentChatBox == lobbyChatBox);
+            CurrentChatBox = chatBox;
+            _isGlobalChatActive = CurrentChatBox == globalChatBox;
+            globalChatBox.gameObject.SetActive(CurrentChatBox == globalChatBox);
+            lobbyChatBox.gameObject.SetActive(CurrentChatBox == lobbyChatBox);
             
-            _currentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
+            CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
+            CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
+            
         }
-        
+
+        private void ChatBoxOnOnInputFieldCommandSubmitted(string command, string message)
+        {
+            if (!CommandsDictionary.TryGetValue(command, out var commandData))
+            {
+                CurrentChatBox.RegisterChat(systemName, "command not found", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            if (commandData.requireMessageValue && string.IsNullOrEmpty(message))
+            {
+                CurrentChatBox.RegisterChat(systemName, "command need value", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+            
+            commandData.unityEvent?.Invoke(message);
+        }
+
         private void OnMessageRecived(byte[] byteData)
         {
             var dataText = System.Text.Encoding.UTF8.GetString(byteData);
@@ -77,7 +111,7 @@ namespace Code.Chat
 
         private void OnInputFieldSubmittedCurrentBox(string text)
         {
-            if (_currentChatBox.InputFieldContainsCommand)
+            if (CurrentChatBox.InputFieldContainsCommand)
                 return;
 
             var message = new MessageData
@@ -93,14 +127,24 @@ namespace Code.Chat
             HandleGlobalMassage(message, style);
         }
         
-        private void HandleGlobalMassage(MessageData message, UltimateChatBox.ChatStyle style)
+        public void HandleGlobalMassage(MessageData message, UltimateChatBox.ChatStyle style = null)
         {
             globalChatBox.RegisterChat($"[...{message.lobby.Substring(message.lobby.Length - 4)}]{message.username}", message.text, style);
         }
 
-        private void HandleLobbyMassage(MessageData message, UltimateChatBox.ChatStyle style)
+        public void HandleLobbyMassage(MessageData message, UltimateChatBox.ChatStyle style = null)
         {
             lobbyChatBox.RegisterChat($"{message.username}", message.text, style);
         }
+    }
+    
+    [Serializable]
+    public class CommandData
+    {
+        public string commandValue;
+        public bool requireMessageValue = false;
+        public UnityEvent<string> unityEvent;
+
+        [TextArea] public string description;
     }
 }

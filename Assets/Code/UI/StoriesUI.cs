@@ -157,15 +157,15 @@ namespace Code.UI
 
                 // var imageUrl = Uri.EscapeUriString("https://bobcares.com/wp-content/uploads/2021/03/bobcares-default-logo.png");
                 var imageUrl = Uri.EscapeUriString(story.image_url);
-                Debug.Log(imageUrl);
+                //Debug.Log(imageUrl);
                 using (var imageLoadRequest = UnityWebRequest.Get(imageUrl))
                 {
                     //imageLoadRequest.SetRequestHeader("Accept-Encoding", "identity");
                     yield return imageLoadRequest.SendWebRequest();
                     if (imageLoadRequest.result != UnityWebRequest.Result.Success)
                     {
-                        Debug.LogWarning($"Request failed: {imageLoadRequest.error}");
-                        Debug.LogWarning($"Download Handler error: {imageLoadRequest.downloadHandler.error}");
+                        //Debug.LogWarning($"Request failed: {imageLoadRequest.error}");
+                        //Debug.LogWarning($"Download Handler error: {imageLoadRequest.downloadHandler.error}");
                     }
                     else
                     {
@@ -176,7 +176,7 @@ namespace Code.UI
                     
                     
                     string contentType = imageLoadRequest.GetResponseHeader("Content-Encoding");
-                    Debug.Log($"Content-Encoding: {contentType}");
+                    //Debug.Log($"Content-Encoding: {contentType}");
                 }
                 
 
