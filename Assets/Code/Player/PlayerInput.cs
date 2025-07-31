@@ -1,83 +1,129 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace Code.Player
+[DefaultExecutionOrder(-100)]
+public class PlayerInput : MonoBehaviour
 {
-    public class PlayerInput : MonoBehaviour
+    public static PlayerInput Instance { get; private set; }
+
+    [Header("Look Settings")]
+    public float lookSensitivity = 1f;
+    public bool invertY = false;
+
+    // wrapper generated from .inputactions
+    private InputAsset _inputAsset;
+    private InputAsset.PlayerActions _player;
+
+    // cached underlying actions (for convenience / unsub)
+    private InputAction _interactAction;
+    private InputAction _cameraSwitchAction;
+
+    // events
+    public event Action OnInteract;
+    public event Action OnCameraSwitch;
+
+    // callbacks for unsubscribing
+    private Action<InputAction.CallbackContext> _interactCallback;
+    private Action<InputAction.CallbackContext> _cameraSwitchCallback;
+
+    private void Awake()
     {
-        private static PlayerInput _instance;
-        public static PlayerInput Instance
+        if (Instance != null && Instance != this)
         {
-            get
-            {
-                if (_instance == null)
-                    _instance = FindAnyObjectByType<PlayerInput>(FindObjectsInactive.Include);
-                return _instance;
-            }
+            Destroy(gameObject);
+            return;
         }
-        
-        [Header("Character Input Values")] public Vector2 move;
-        public Vector2 look;
-        public bool jump;
-        public bool sprint;
-        public bool cameraSwitch;
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
 
-        [Header("Movement Settings")] public bool analogMovement;
+        // Создаём input asset (внутри он десериализует JSON и создаёт карту "Player")
+        _inputAsset = new InputAsset();
+        _player = _inputAsset.Player;
 
-        [Header("Mouse Cursor Settings")] public bool cursorLocked = true;
-        public bool cursorInputForLook = true;
+        // Подписки на действия
+        _interactAction = _player.Interact;
+        _cameraSwitchAction = _player.CameraSwitch;
 
-        public void OnMove(InputValue value)
+        _interactCallback = ctx => OnInteract?.Invoke();
+        _cameraSwitchCallback = ctx => OnCameraSwitch?.Invoke();
+
+        if (_interactAction != null)
+            _interactAction.performed += _interactCallback;
+        if (_cameraSwitchAction != null)
+            _cameraSwitchAction.performed += _cameraSwitchCallback;
+
+        // Включаем
+        _player.Enable();
+    }
+
+    private void OnEnable()
+    {
+        _player.Enable();
+    }
+
+    private void OnDisable()
+    {
+        _player.Disable();
+    }
+
+    private void OnDestroy()
+    {
+        if (_interactAction != null)
+            _interactAction.performed -= _interactCallback;
+        if (_cameraSwitchAction != null)
+            _cameraSwitchAction.performed -= _cameraSwitchCallback;
+
+        // Dispose уничтожает внутренний asset object
+        _inputAsset?.Dispose();
+    }
+
+    // --- Публичные геттеры ---
+
+    public Vector2 Move => _player.Move.ReadValue<Vector2>();
+
+    public Vector2 LookRaw => _player.Look.ReadValue<Vector2>();
+
+    public Vector2 Look
+    {
+        get
         {
-            MoveInput(value.Get<Vector2>());
-        }
-
-        public void OnLook(InputValue value)
-        {
-            if (cursorInputForLook)
-            {
-                LookInput(value.Get<Vector2>());
-            }
-        }
-
-        public void OnJump(InputValue value)
-        {
-            JumpInput(value.isPressed);
-        }
-
-        public void OnSprint(InputValue value)
-        {
-            SprintInput(value.isPressed);
-        }
-
-        public void OnCameraSwitch(InputValue value)
-        {
-            CameraSwitch(value.isPressed);
-        }
-
-        public void MoveInput(Vector2 newMoveDirection)
-        {
-            move = newMoveDirection;
-        }
-
-        public void LookInput(Vector2 newLookDirection)
-        {
-            look = newLookDirection;
-        }
-
-        public void JumpInput(bool newJumpState)
-        {
-            jump = newJumpState;
-        }
-
-        public void SprintInput(bool newSprintState)
-        {
-            sprint = newSprintState;
-        }
-
-        public void CameraSwitch(bool newCameraSwitchState)
-        {
-            cameraSwitch = newCameraSwitchState;
+            Vector2 v = LookRaw;
+            if (invertY) v.y = -v.y;
+            return v * lookSensitivity;
         }
     }
+
+    public bool JumpDown => _player.Jump != null && _player.Jump.triggered;
+    public bool JumpHeld => _player.Jump != null && _player.Jump.ReadValue<float>() > 0.5f;
+    public bool SprintHeld => _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
+    public bool CameraSwitchDown => _player.CameraSwitch != null && _player.CameraSwitch.triggered;
+    public bool InteractDown => _player.Interact != null && _player.Interact.triggered;
+    public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
+
+    /// <summary>Включить/выключить ввод целиком (всей карты)</summary>
+    public void SetEnabled(bool enabled)
+    {
+        if (enabled)
+            _player.Enable();
+        else
+            _player.Disable();
+    }
+
+    /// <summary>Принудительно применить конкретную control scheme через binding mask (например, "Gamepad" или "KeyboardMouse")</summary>
+    public void SetControlScheme(InputControlScheme scheme)
+    {
+        if (_inputAsset == null) return;
+        _inputAsset.asset.bindingMask = InputBinding.MaskByGroup(scheme.bindingGroup);
+    }
+
+    /// <summary>Снять фильтр control scheme (использовать все)</summary>
+    public void ClearControlSchemeFilter()
+    {
+        if (_inputAsset == null) return;
+        _inputAsset.asset.bindingMask = null;
+    }
+
+    /// <summary>Доступ к самому PlayerActions на случай расширения</summary>
+    public InputAsset.PlayerActions PlayerActions => _player;
 }
