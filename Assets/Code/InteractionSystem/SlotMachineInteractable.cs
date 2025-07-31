@@ -21,6 +21,7 @@ namespace Code.InteractionSystem
         [SerializeField] private CanvasWebViewPrefab webViewPrefab;
         [SerializeField] private NetworkImageStream networkImageStream;
         private bool _isUsing = false;
+        public bool IsUsing => _isUsing;
 
         private Material _material;
 

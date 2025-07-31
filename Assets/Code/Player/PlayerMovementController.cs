@@ -15,6 +15,8 @@ namespace Code.Player
     [RequireComponent(typeof(CharacterController))]
     public class PlayerMovementController : NetworkBehaviour, IMigratable<CharacterMigrateData>
     {
+        public static PlayerMovementController Own { get; private set; }
+        
         [Header("Settings")]
         [SerializeField] private float moveSpeed = 2.0f;
         [SerializeField] private float sprintSpeed = 5.335f;
@@ -47,6 +49,7 @@ namespace Code.Player
         [Range(0, 1)] [SerializeField] private float footstepAudioVolume = 0.5f;
 
         public bool CanMove = true;
+        public bool IsInChat = false;
         public bool LockCameraPosition = true;
 // backing-field
         private bool _firstPersonView = true;
@@ -192,13 +195,16 @@ namespace Code.Player
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            if (IsOwner)
-                virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            if (!IsOwner)
+                return;
+            
+            Own = this;
+            virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
         }
 
         private void Update()
         {
-            if (!IsOwner || !CanMove) return;
+            if (!IsOwner || !CanMove || IsInChat) return;
 
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
             input ??= PlayerInput.Instance;
@@ -215,7 +221,7 @@ namespace Code.Player
             Cursor.lockState = LockCursor ? CursorLockMode.Locked : CursorLockMode.None;
             Cursor.visible = !LockCursor;
             
-            if (CanMove || LookCameraLimitRotation)
+            if (CanMove || LookCameraLimitRotation )
                 UpdateCameraDistance();
             
             if (LookCameraLimitRotation && FirstPersonView)

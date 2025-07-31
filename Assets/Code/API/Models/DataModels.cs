@@ -40,7 +40,9 @@ namespace Code.API.Models
     {
         public int id;
         public string username;
+        public int balance;
         public DateTime created_at;
+        public string role;
     }
 
     [Serializable]
@@ -87,5 +89,43 @@ namespace Code.API.Models
     public class CheckPhoneRequest
     {
         public string phone;
+    }
+
+    [Serializable]
+    public class PostStoryData
+    {
+        public string image_url;
+        public int slot_id;
+        //public string lobby_id;
+        public int lobby_id;
+    }
+
+    [Serializable]
+    public class StoryCollection
+    {
+        public List<GetStoryData> screenshots;
+    }
+    
+    [Serializable]
+    public class GetStoryData
+    {
+        public int id;
+        public int user_id;
+        //public string lobby_id;
+        public int lobby_id;
+        public int slot_id;
+        public string image_url;
+        public string created_at;
+        public MeSchema user;
+
+    }
+    
+    [Serializable]
+    public class MessageData    
+    {
+        public string username;
+        public string lobby;
+        public int type;
+        public string text;
     }
 } 
