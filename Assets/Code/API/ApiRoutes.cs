@@ -14,6 +14,9 @@ namespace Code.API
         public const string GET_ME = "/api/client/users/me";
         public const string GET_OPERATORS = "/api/client/operators/";
         public const string GET_OPERATOR_LOGIN_URL = "/api/client/operators/{0}/loginUrl"; // {0} - operator_id
+        public const string LOAD_FILE_URL = "/api/s3/upload";
+        public const string LOAD_STORY = "/api/client/screenshots/add";
+        public const string GET_STRORIES_URL = "/api/client/screenshots/";
 
         // Методы для получения полного URL
         public static string GetCheckNumberUrl() => DOMAIN.TrimEnd('/') + CHECK_NUMBER;
@@ -24,5 +27,9 @@ namespace Code.API
         public static string GetMeUrl() => DOMAIN.TrimEnd('/') + GET_ME;
         public static string GetOperatorsUrl() => DOMAIN.TrimEnd('/') + GET_OPERATORS;
         public static string GetOperatorLoginUrl(int operatorId) => DOMAIN.TrimEnd('/') + string.Format(GET_OPERATOR_LOGIN_URL, operatorId);
+        
+        public static string GetLoadFileUrl() => DOMAIN.TrimEnd('/') + LOAD_FILE_URL;
+        public static string GetLoadStoryUrl() => DOMAIN.TrimEnd('/') + LOAD_STORY;
+        public static string GetStoriesUrl() => DOMAIN.TrimEnd('/') + GET_STRORIES_URL;
     }
 } 

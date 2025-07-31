@@ -1,6 +1,11 @@
+using System;
 using System.Collections;
+using Code.API;
+using Code.API.Models;
 using Code.InteractionSystem;
+using Code.Network.Lobby;
 using Code.Stories;
+using Proyecto26;
 using UnityEngine;
 using UnityEngine.UI;
 using Vuplex.WebView;
@@ -13,7 +18,7 @@ namespace Code.UI
         [SerializeField] private CanvasWebViewPrefab webView;
         [SerializeField] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField] private float timeout = 10f;
-        
+
         private Coroutine _timeoutCoroutine;
 
         private void OnEnable()
@@ -39,15 +44,14 @@ namespace Code.UI
             // Деактивировать кнопку
             screenshotButton.interactable = false;
 
-            if (slotMachineInteractable != null)
-                if (slotMachineInteractable.WebView != null)
-                {
-                    byte[] screenshotBytes = await slotMachineInteractable.WebView.CaptureScreenshot();
-                    LocalHandle(screenshotBytes);
+            if (slotMachineInteractable == null || slotMachineInteractable.WebView == null)
+                return;
 
-                    // Запустить таймер разблокировки
-                    _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
-                }
+            byte[] screenshotBytes = await slotMachineInteractable.WebView.CaptureScreenshot();
+            APIHandle(screenshotBytes);
+
+            // Запустить таймер разблокировки
+            _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
         }
 
         private IEnumerator TimeoutRoutine()
@@ -65,7 +69,38 @@ namespace Code.UI
 
         private void APIHandle(byte[] screenshotBytes)
         {
-            // Реализация при необходимости
+
+            var filename = $"{Guid.NewGuid()}_{ClientDataStorage.UserData.username}_{DateTime.Now}.png".Replace(' ','_');
+            var form = new WWWForm();
+            form.AddBinaryData("file", screenshotBytes, filename);
+
+            var loadFileRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetLoadFileUrl(),
+                Headers = ClientDataStorage.GetJwtHeader(),
+                FormData = form
+            };
+
+            RestClient.Post(loadFileRequest).Then(fileLoadResponse =>
+            {
+                if (fileLoadResponse.StatusCode != 200)
+                    return null;
+
+                var fileUri = fileLoadResponse.Text.Trim('\"');
+
+                var loadStoryRequest = new RequestHelper
+                {
+                    Uri = ApiRoutes.GetLoadStoryUrl(),
+                    Headers = ClientDataStorage.GetJwtHeader(),
+                    Body = new PostStoryData
+                    {
+                        image_url = fileUri,
+                        slot_id = slotMachineInteractable.IDNumber,
+                        //lobby_id = LobbyVariables.Instance.currentLobby.lobbyId
+                    }
+                };
+                return RestClient.Post(loadStoryRequest);
+            });
         }
     }
 }
