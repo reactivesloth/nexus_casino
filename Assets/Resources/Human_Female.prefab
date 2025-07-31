@@ -3194,7 +3194,8 @@ MonoBehaviour:
     m_Bits: 1
   terminalVelocity: 53
   cinemachineCameraTarget: {fileID: 6361485190004557894}
-  hideForFirstPersonViewLocal: []
+  hideForFirstPersonViewLocal:
+  - {fileID: 1428780899676934550}
   minCameraDistance: 1
   maxCameraDistance: 4
   minFOV: 55
@@ -6200,6 +6201,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+--- !u!1 &1428780899676934550 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3434268101353160747, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+  m_PrefabInstance: {fileID: 4358626871890874813}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1707206120807340400 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3156393215320328397, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}

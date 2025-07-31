@@ -300,13 +300,12 @@ namespace Code.Player
                 {
                     cc.SwitchHead(!smoothedFirstPerson);    
                 }
-
-                else
-                {
-                    foreach (var o in hideForFirstPersonViewLocal)
-                        if (o.GetComponent<Renderer>())
-                            o.GetComponent<Renderer>().enabled = !smoothedFirstPerson;
-                }
+                
+                foreach (var o in hideForFirstPersonViewLocal)
+                    if (o.GetComponent<Renderer>())
+                        o.GetComponent<Renderer>().enabled = !smoothedFirstPerson;
+                    else
+                        o.gameObject.SetActive(!smoothedFirstPerson);
             }
             
             FirstPersonView = smoothedFirstPerson;
