@@ -539,6 +539,8 @@ GameObject:
   - component: {fileID: 6668442221156157179}
   - component: {fileID: 8690079509221083420}
   - component: {fileID: 2377678613824972991}
+  - component: {fileID: 2736481187258168973}
+  - component: {fileID: 539568572558571143}
   m_Layer: 9
   m_Name: Slot Interaction
   m_TagString: Untagged
@@ -614,6 +616,74 @@ MonoBehaviour:
   lz4Compress: 0
   lz4Level: 0
   hostIsOwnerOnStart: 0
+--- !u!114 &2736481187258168973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3836657926655847833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  <IsNested>k__BackingField: 0
+  WasActiveDuringEdit: 1
+  WasActiveDuringEdit_Set1: 1
+  <ComponentIndex>k__BackingField: 0
+  <PredictedSpawn>k__BackingField: {fileID: 0}
+  <PredictedOwner>k__BackingField: {fileID: 0}
+  NetworkBehaviours: []
+  InitializedParentNetworkBehaviour: {fileID: 0}
+  InitializedNestedNetworkObjects: []
+  RuntimeParentNetworkBehaviour: {fileID: 0}
+  RuntimeChildNetworkBehaviours: []
+  _isNetworked: 1
+  _isSpawnable: 0
+  _isGlobal: 0
+  _initializeOrder: 0
+  _preventDespawnOnDisconnect: 0
+  _defaultDespawnType: 0
+  NetworkObserver: {fileID: 0}
+  _enablePrediction: 0
+  _predictionType: 0
+  _graphicalObject: {fileID: 0}
+  _detachGraphicalObject: 0
+  _enableStateForwarding: 1
+  _networkTransform: {fileID: 0}
+  _ownerInterpolation: 1
+  _ownerSmoothedProperties: 255
+  _adaptiveInterpolation: 3
+  _spectatorSmoothedProperties: 255
+  _spectatorInterpolation: 2
+  _enableTeleport: 0
+  _teleportThreshold: 1
+  <PrefabId>k__BackingField: 65535
+  <SpawnableCollectionId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 0
+  <SceneId>k__BackingField: 0
+  SerializedTransformProperties:
+    Position: {x: 0, y: 0, z: 0}
+    Rotation: {x: 0, y: 0, z: 0, w: 0}
+    Scale: {x: 0, y: 0, z: 0}
+    IsValid: 0
+--- !u!114 &539568572558571143
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3836657926655847833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _overrideType: 1
+  _updateHostVisibility: 1
+  _observerConditions:
+  - {fileID: 11400000, guid: 77980fe7b99a848428ea623c92c8f466, type: 2}
 --- !u!1 &4666618633821540953
 GameObject:
   m_ObjectHideFlags: 0
@@ -973,7 +1043,6 @@ GameObject:
   - component: {fileID: 791084595948481418}
   - component: {fileID: 8199382324019828225}
   - component: {fileID: 8868657392971916821}
-  - component: {fileID: 3989682574885961587}
   m_Layer: 9
   m_Name: Slot Machine Interactable
   m_TagString: Untagged
@@ -1112,22 +1181,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   objectId: 
---- !u!114 &3989682574885961587
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6154966392846168794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _overrideType: 1
-  _updateHostVisibility: 1
-  _observerConditions:
-  - {fileID: 11400000, guid: 77980fe7b99a848428ea623c92c8f466, type: 2}
 --- !u!1 &6370213183996952772
 GameObject:
   m_ObjectHideFlags: 0
