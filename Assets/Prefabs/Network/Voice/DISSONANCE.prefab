@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3270324029077661850}
   - component: {fileID: 4156589520490056622}
   - component: {fileID: 5477242417984974359}
+  - component: {fileID: 839196538994179208}
   m_Layer: 0
   m_Name: DISSONANCE
   m_TagString: Untagged
@@ -88,3 +89,16 @@ MonoBehaviour:
   _useTrigger: 0
   _roomName: Global
   _priority: -2
+--- !u!114 &839196538994179208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4646459408296855750}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 47599da20a4da8945acae8ffff2e471d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  voiceBroadcastTrigger: {fileID: 5477242417984974359}
