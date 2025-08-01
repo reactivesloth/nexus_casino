@@ -10,7 +10,7 @@ public class PlayerInput : MonoBehaviour
 
     [Header("Look Settings")]
     public float lookSensitivity => SettingsManager.Instance.CameraSensitivity/100;
-    public bool invertY => SettingsManager.Instance.InvertCamera;
+    public bool invertY => SettingsManager.Instance != null ? SettingsManager.Instance.InvertCamera : PlayerPrefs.GetInt("InvertCamera", false ? 1 : 0) == 1;
 
     // wrapper generated from .inputactions
     private InputAsset _inputAsset;

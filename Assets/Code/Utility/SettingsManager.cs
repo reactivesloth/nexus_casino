@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 // using UnityEngine.Localization.Settings; // Раскомментируй если подключена система локализации
@@ -14,8 +15,30 @@ namespace Code.Utility
         private const float DefaultMusicVolume = 30f;
         private const float DefaultSlotsVolume = 30f;
         private const float DefaultSFXVolume = 30f;
-        private int DefaultGraphicsQuality => QualitySettings.count;
-        private int DefaultResolutionIndex => Screen.resolutions.Length;
+        private int DefaultGraphicsQuality => QualitySettings.GetQualityLevel();
+        private int DefaultResolutionIndex => GetDefaultRes ();
+
+        private int GetDefaultRes()
+        {
+            var allRes = Screen.resolutions;
+            // Убираем дубликаты (по ширине, высоте, частоте): берем первую встречу
+            var seen = new HashSet<string>();
+            var displayOptions = new List<string>();
+            List<int> resolutionOriginalIndices  = new List<int>();
+            for (int i = 0; i < allRes.Length; i++)
+            {
+                var r = allRes[i];
+                string key = $"{r.width}x{r.height}@{r.refreshRate}";
+                if (seen.Add(key))
+                {
+                    displayOptions.Add($"{r.width}x{r.height} {r.refreshRate}Hz");
+                    resolutionOriginalIndices.Add(i); // запоминаем оригинальный индекс
+                }
+            }
+            
+            return resolutionOriginalIndices[^1];
+        }
+
         private const int DefaultFPSLimit = 60;
         private const bool DefaultEffectsEnabled = true;
         private const int DefaultAntiAliasingLevel = 2;
