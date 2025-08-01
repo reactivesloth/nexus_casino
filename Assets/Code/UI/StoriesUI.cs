@@ -110,7 +110,7 @@ namespace Code.UI
 
         private void StartNewCycle()
         {
-            if(slotMachineInteractable && !slotMachineInteractable.IsUsing)
+            if(slotMachineInteractable && !slotMachineInteractable.IsUsing )
                 return;
 
             if (_storyCoroutine != null)
