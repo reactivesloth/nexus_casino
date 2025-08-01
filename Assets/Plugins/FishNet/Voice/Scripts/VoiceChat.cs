@@ -42,16 +42,19 @@ public class VoiceChat : NetworkBehaviour
     private bool _canTalk;
     private bool _previousCanTalk;
 
+    private void Awake()
+    {
+        _audioSource = GetComponent<AudioSource>();
+        _audioSource.playOnAwake = false;
+        _audioSource.loop = false;
+    }
+
     public override void OnStartClient()
     {
         base.OnStartClient();
         if (!IsOwner) return;
 
-        _audioSource = GetComponent<AudioSource>();
-        _audioSource.playOnAwake = false;
-        _audioSource.loop = false;
-
-        // Select first available mic
+        // Owner-only initialization for microphone capture
         _deviceName = Microphone.devices.Length > 0 ? Microphone.devices[0] : null;
         if (string.IsNullOrEmpty(_deviceName))
             Debug.LogError("[VOICE] No microphone device found!");
@@ -59,7 +62,6 @@ public class VoiceChat : NetworkBehaviour
         _audioBuffer = new float[BufferSize];
         _writePosition = 0;
 
-        // Pre-calc send delay
         _sendDelay = new WaitForSeconds(BufferSize / (float)SampleRate);
     }
 
