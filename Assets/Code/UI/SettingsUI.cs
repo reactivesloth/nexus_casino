@@ -28,7 +28,9 @@ namespace Code.UI
 
         [Header("Camera & Controls")]
         public Slider cameraSensitivitySlider;
-        public Toggle invertCameraToggle;
+
+        public Toggle invertCameraToggleOn;
+        public Toggle invertCameraToggleOff;
 
         // [Header("Localization")]
         // [Tooltip("Список языковых кодов, например: en, ru")]
@@ -141,7 +143,7 @@ namespace Code.UI
             // antiAliasingDropdown.onValueChanged.AddListener(OnAntiAliasingChanged);
 
             cameraSensitivitySlider.onValueChanged.AddListener(OnCameraSensitivityChanged);
-            invertCameraToggle.onValueChanged.AddListener(OnInvertCameraChanged);
+            invertCameraToggleOn.onValueChanged.AddListener(OnInvertCameraChanged);
 
             // languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
         }
@@ -178,8 +180,9 @@ namespace Code.UI
 
             // Camera & Controls
             cameraSensitivitySlider.value = sm.CameraSensitivity;
-            invertCameraToggle.isOn = sm.InvertCamera;
-
+            invertCameraToggleOn.isOn = sm.InvertCamera;
+            invertCameraToggleOff.isOn = !sm.InvertCamera;
+            
             // Localization
             // int langIndex = languageCodes.IndexOf(sm.LanguageCode);
             // if (langIndex >= 0 && langIndex < languageDropdown.options.Count)

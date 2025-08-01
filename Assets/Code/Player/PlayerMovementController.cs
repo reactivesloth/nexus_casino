@@ -233,7 +233,7 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            var _input = (LookCameraLimitRotationRKM && !Input.GetMouseButton(1)) ? Vector2.zero : input.Look;
+            var _input = (LookCameraLimitRotationRKM && !input.IsRMB) ? Vector2.zero : input.Look;
             
             if (_input.sqrMagnitude >= Threshold)
             {
@@ -303,7 +303,7 @@ namespace Code.Player
                 CharacterCustomization cc = gameObject.GetComponent<CharacterCustomization>();
                 if (cc != null)
                 {
-                    cc.SwitchHead(!smoothedFirstPerson);    
+                    cc.SwitchHead(!smoothedFirstPerson);
                 }
                 
                 foreach (var o in hideForFirstPersonViewLocal)

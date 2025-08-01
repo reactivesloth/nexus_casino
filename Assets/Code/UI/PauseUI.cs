@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Code.UI
@@ -76,7 +77,7 @@ namespace Code.UI
             if (settingsPanel.activeSelf)
                 return;
             
-            if (Input.GetKeyDown(KeyCode.Escape))
+            if (PlayerInput.Instance.IsPausedDown)
             {
                 isPaused = !isPaused;
             }
