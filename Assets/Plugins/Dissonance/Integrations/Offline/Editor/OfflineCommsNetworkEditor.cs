@@ -2,6 +2,8 @@
 using UnityEditor;
 using UnityEngine;
 
+#if UNITY_EDITOR
+
 namespace Assets.Dissonance.Integrations.Offline.Editor
 {
     [CustomEditor(typeof(OfflineCommsNetwork))]
@@ -31,3 +33,5 @@ namespace Assets.Dissonance.Integrations.Offline.Editor
         }
     }
 }
+
+#endif
