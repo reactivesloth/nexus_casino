@@ -48,6 +48,9 @@ namespace Code.Network
 
         private Coroutine _sendLoop;
 
+        private Color _savedColor;
+        private Texture _savedTexture;
+        
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -97,6 +100,10 @@ namespace Code.Network
 
         private void OnEnable()
         {
+            var mat = computerMeshRenderer.materials[materialIndex];
+            _savedTexture = mat.GetTexture("_BaseMap");
+            _savedColor = mat.GetColor("_BaseColor");
+            
             if (IsOwner) StartSendLoop();
             else if (Owner == null) ShowIdleTexture();
         }
@@ -152,9 +159,10 @@ namespace Code.Network
                 materialIndex >= computerMeshRenderer.materials.Length) return;
 
             var mat = computerMeshRenderer.materials[materialIndex];
-            mat.SetTexture("_BaseMap", null);
-            mat.SetColor("_BaseColor", Color.black);
+            mat.SetTexture("_BaseMap", _savedTexture);
+            mat.SetColor("_BaseColor", _savedColor);
         }
+
 
         private IEnumerator SendLoop()
         {
