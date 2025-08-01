@@ -34956,7 +34956,6 @@ GameObject:
   - component: {fileID: 1228422927}
   - component: {fileID: 1228422926}
   - component: {fileID: 1228422925}
-  - component: {fileID: 1228422928}
   m_Layer: 0
   m_Name: DISSONANCE
   m_TagString: Untagged
@@ -34978,11 +34977,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _tokens:
     _tokens: []
-  _channelTypeExpanded: 0
-  _metadataExpanded: 0
+  _channelTypeExpanded: 1
+  _metadataExpanded: 1
   _activationModeExpanded: 1
-  _tokensExpanded: 0
-  _ampExpanded: 0
+  _tokensExpanded: 1
+  _ampExpanded: 1
   _activationFaderSettings:
     _volume: 1
     _fadeInTicks: 0
@@ -35034,28 +35033,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1228422928
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1228422924}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8cb4dc319de88dc4cb76c47aafb46b1c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _lastPrefabError: 
-  _isMuted: 0
-  _isDeafened: 0
-  _oneMinusBaseRemoteVoiceVolume: 0
-  _playbackPrefab: {fileID: 0}
-  _playbackPrefab2: {fileID: 0}
-  _micName: 
-  _playerPriority: 0
-  _tokens:
-    _tokens: []
 --- !u!4 &1229915739 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8043451613573980121, guid: 1f499c4571f06d648840a79b64d99e8a, type: 3}
@@ -44753,6 +44730,73 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1890946042}
   m_Mesh: {fileID: 2663545461501532695, guid: c6c979568b0233644843dc0e5cd95f16, type: 3}
+--- !u!1 &1894020385
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1894020388}
+  - component: {fileID: 1894020387}
+  - component: {fileID: 1894020386}
+  m_Layer: 0
+  m_Name: DISSONANCE_COMMONS
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1894020386
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894020385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 65b0b6734c9d4198ad4fc591f5577abd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1894020387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894020385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8cb4dc319de88dc4cb76c47aafb46b1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _lastPrefabError: 
+  _isMuted: 0
+  _isDeafened: 0
+  _oneMinusBaseRemoteVoiceVolume: 0
+  _playbackPrefab: {fileID: 0}
+  _playbackPrefab2: {fileID: 0}
+  _micName: 
+  _playerPriority: 0
+  _tokens:
+    _tokens: []
+--- !u!4 &1894020388
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1894020385}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1897860601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -56304,6 +56348,7 @@ SceneRoots:
   - {fileID: 50506565}
   - {fileID: 1737779943}
   - {fileID: 873410246}
+  - {fileID: 1894020388}
   - {fileID: 1228422927}
   - {fileID: 4473289758142325833}
   - {fileID: 8721388028321073873}
