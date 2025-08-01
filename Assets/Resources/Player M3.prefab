@@ -1276,6 +1276,7 @@ GameObject:
   - component: {fileID: 2742733034232920400}
   - component: {fileID: 272687025468308130}
   - component: {fileID: 6218711020452665331}
+  - component: {fileID: 7759956058583656967}
   m_Layer: 8
   m_Name: Head
   m_TagString: Untagged
@@ -1992,7 +1993,7 @@ MonoBehaviour:
       previewDisplayMode: 0
       collectionExpand: 0
     trigger: 0.7346939
-  configReady: 1
+  configReady: 0
   configNotReadyNotified: 0
   warnOnNullRefs: 1
   isDebug: 0
@@ -2066,6 +2067,21 @@ MonoBehaviour:
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0
   inspCollectionDisplayMode: 0
+--- !u!114 &7759956058583656967
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2305505919387633001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee64685f2881fe9479b93b1d1583b4ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDebug: 0
+  useLocalLipSync: 1
+  amplifyMultipleExperimental: 1
 --- !u!1 &2455074313813269249
 GameObject:
   m_ObjectHideFlags: 0

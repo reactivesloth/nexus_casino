@@ -1158,6 +1158,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3415041167778125870}
+    - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1450933857728523286}
   m_SourcePrefab: {fileID: 100100000, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
 --- !u!4 &1495082819104649297 stripped
 Transform:
@@ -2184,6 +2187,21 @@ MonoBehaviour:
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 1
   inspCollectionDisplayMode: 0
+--- !u!114 &1450933857728523286
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8021267353867592598}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee64685f2881fe9479b93b1d1583b4ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDebug: 0
+  useLocalLipSync: 1
+  amplifyMultipleExperimental: 1
 --- !u!4 &8592238374325572209 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}

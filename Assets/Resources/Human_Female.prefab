@@ -1415,6 +1415,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
       insertIndex: -1
       addedObject: {fileID: -9218759975078214841}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7949672937538496599}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8476192405330303806}
@@ -2974,7 +2977,7 @@ MonoBehaviour:
       previewDisplayMode: 0
       collectionExpand: 0
     trigger: 0.80999994
-  configReady: 1
+  configReady: 0
   configNotReadyNotified: 0
   warnOnNullRefs: 1
   isDebug: 0
@@ -3404,6 +3407,21 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 6120315999404777701, guid: 4145ad3fa7f2f45458091f01dc142cc6, type: 3}
   _networkObjectCache: {fileID: 0}
   trackingTransform: {fileID: 0}
+--- !u!114 &7949672937538496599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1272060476704202414}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee64685f2881fe9479b93b1d1583b4ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDebug: 0
+  useLocalLipSync: 1
+  amplifyMultipleExperimental: 1
 --- !u!1 &1292025462828639847 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8320365392235035240, guid: 2c4c73a312dee7041afb14c0a7cdfe15, type: 3}

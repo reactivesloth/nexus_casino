@@ -10841,6 +10841,10 @@ PrefabInstance:
       value: -39.915752
       objectReference: {fileID: 0}
     - target: {fileID: 2850488841187652001, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_text
+      value: Visit Boutique
+      objectReference: {fileID: 0}
+    - target: {fileID: 2850488841187652001, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
       propertyPath: 'm_ActiveFontFeatures.Array.data[0]'
       value: 1801810542
       objectReference: {fileID: 0}
@@ -11046,7 +11050,39 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.size
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 1024269919}
+    - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Load
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Code.Tests.SceneLoader, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_StringArgument
+      value: Character Customization
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749704, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749706, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_Name
+      value: Button-Character Customization
+      objectReference: {fileID: 0}
+    - target: {fileID: 6041974078165749706, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6041974078165749707, guid: 67ce491cc525c4b3aaed69dca7af6ab1, type: 3}
       propertyPath: m_AnchorMax.y
@@ -13979,7 +14015,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6011594845780862086, guid: 09f765b02088b3b4a87ea04b93f6a185, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -337.9132
+      value: -337.54346
       objectReference: {fileID: 0}
     - target: {fileID: 6011594845780862086, guid: 09f765b02088b3b4a87ea04b93f6a185, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -20299,7 +20335,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 873410246}
-  - component: {fileID: 873410247}
   - component: {fileID: 873410248}
   m_Layer: 0
   m_Name: ---- Logic --------------------------------
@@ -20323,21 +20358,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &873410247
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 873410245}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ccccd0404b820c498377076f41edba4, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  sceneName: Character Customization
-  key: 105
-  isDisconnect: 1
 --- !u!114 &873410248
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -23335,6 +23355,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1024269917}
   - component: {fileID: 1024269918}
+  - component: {fileID: 1024269919}
   m_Layer: 0
   m_Name: MenuPanels
   m_TagString: Untagged
@@ -23380,6 +23401,21 @@ MonoBehaviour:
   quitButton: {fileID: 1597258593}
   pausePanel: {fileID: 1934157488}
   settingsPanel: {fileID: 2049216050}
+--- !u!114 &1024269919
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1024269916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ccccd0404b820c498377076f41edba4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sceneName: Character Customization
+  key: 0
+  isDisconnect: 1
 --- !u!1 &1030001701
 GameObject:
   m_ObjectHideFlags: 0
