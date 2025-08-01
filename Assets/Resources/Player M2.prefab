@@ -648,9 +648,6 @@ PrefabInstance:
       addedObject: {fileID: 1885372026819522195}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6626438044635640616}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 6574052852678224511}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
@@ -661,6 +658,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 2267133584672632614}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6419089301180924083}
     - targetCorrespondingSourceObject: {fileID: -5823106577872157028, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7889299020810858274}
@@ -793,7 +793,7 @@ MonoBehaviour:
   NetworkBehaviours:
   - {fileID: 6472889869485083012}
   - {fileID: 3089256175066004713}
-  - {fileID: 6626438044635640616}
+  - {fileID: 0}
   - {fileID: 8013488042586796887}
   - {fileID: -6006401730760851951}
   - {fileID: 2267133584672632614}
@@ -889,28 +889,6 @@ MonoBehaviour:
   _overrideType: 1
   _updateHostVisibility: 1
   _observerConditions: []
---- !u!114 &6626438044635640616
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 36ed8226d477e144cb86620c8cf2d14f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 2
-  _addedNetworkObject: {fileID: 5084366635518163755}
-  _networkObjectCache: {fileID: 5084366635518163755}
-  VoiceChatType: 0
-  VoiceDetectionType: 0
-  Activated: 1
-  PushToTalkKey: 103
-  source: {fileID: 3793671562858602410}
-  proximityRange: 1
-  voiceActivationThreshold: 0.002
 --- !u!82 &6574052852678224511
 AudioSource:
   m_ObjectHideFlags: 0
@@ -1066,6 +1044,22 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 5084366635518163755}
   playerName: {fileID: 3016589416717469956}
   playerRole: {fileID: 5673751639316256807}
+--- !u!114 &-6419089301180924083
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2095315197724490687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85e6eb3dc92b4b0ab56eb14daf51d04a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 6120315999404777701, guid: 4145ad3fa7f2f45458091f01dc142cc6, type: 3}
+  _networkObjectCache: {fileID: 0}
+  trackingTransform: {fileID: 0}
 --- !u!137 &3903605093316825880 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
