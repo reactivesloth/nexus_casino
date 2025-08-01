@@ -37,6 +37,9 @@ namespace Code.Chat
         private void Start()
         {
             SetCurrentChat(lobbyChatBox);
+            
+            CurrentChatBox.DisableInputField();
+            CurrentChatBox.Disable();
         }
 
         private void OnEnable()
