@@ -48,7 +48,7 @@ namespace Code.Chat
 
         private void Update()
         {
-            if (Input.GetKeyUp(KeyCode.Tab))
+            if (Input.GetKeyUp(KeyCode.Tab) && CurrentChatBox.IsEnabled)
                 ChangeChat();
         }
 
@@ -71,6 +71,8 @@ namespace Code.Chat
                 CurrentChatBox.OnInputFieldDisabled -= OnInputFieldDisabled;
                 CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
                 CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
+                
+                CurrentChatBox.Disable();
             }
             
             CurrentChatBox = chatBox;
@@ -83,6 +85,8 @@ namespace Code.Chat
             CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
             CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
             
+            CurrentChatBox.EnableInputField();
+            CurrentChatBox.Enable();
         }
 
         private void OnInputFieldEnabled()
