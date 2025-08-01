@@ -96,8 +96,8 @@ namespace Code.API.Models
     {
         public string image_url;
         public int slot_id;
-        //public string lobby_id;
-        public int lobby_id;
+        public string lobby_id;
+        //public int lobby_id;
     }
 
     [Serializable]
