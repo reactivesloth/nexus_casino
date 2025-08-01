@@ -12,8 +12,9 @@ namespace Code.InteractionSystem
     public class SlotMachineInteractable : Interactable
     {
         [Header("UI Settings")]
-        [SerializeField, Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
-        private Canvas computerCanvas, contentCanvas;
+        [Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
+        [SerializeField]private Canvas computerCanvas;
+        [SerializeField]private Canvas contentCanvas;
         
         
         [SerializeField] private TextMeshPro idNumberText;
@@ -54,12 +55,8 @@ namespace Code.InteractionSystem
         {
             if (computerCanvas)
                 computerCanvas.gameObject.SetActive(false);
-        }
-
-        private void Reset()
-        {
-            if (!computerCanvas)
-                computerCanvas = GetComponentInChildren<Canvas>(true);
+            if (contentCanvas)
+                contentCanvas.gameObject.SetActive(false);
         }
 
         public override void OnStopNetwork()
@@ -93,6 +90,12 @@ namespace Code.InteractionSystem
             if (computerCanvas == null)
             {
                 Debug.LogError("[ComputerInteractable] computerCanvas is NULL! Assign it in Inspector or as a child.");
+                return;
+            }
+
+            if (contentCanvas == null)
+            {
+                Debug.LogError("[ComputerInteractable] contentCanvas is NULL! Assign it in Inspector or as a child.");
                 return;
             }
 
