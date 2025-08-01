@@ -6,6 +6,7 @@ using Code.InteractionSystem;
 using Code.Network.HostMigration;
 using Code.Network.HostMigration.Components;
 using Code.Network.Player;
+using Code.Utility;
 using FishNet.Connection;
 using SRF;
 using Unity.VisualScripting;
@@ -29,17 +30,18 @@ namespace Code.Player
             if (FindObjectOfType<CinemachineVirtualCamera>())
                 virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>().GetCinemachineComponent<Cinemachine3rdPersonFollow>();
             input = PlayerInput.Instance;
+            
+            CursorManager.Instance.HideCursor();
         }
 
         private void Update()
         {
             if (!IsOwner) return;
-
             
             if (_active == null)
             {
                 UpdateHover();
-                if (_hovered != null && input.InteractDown && !input.ForceCursorHeld && !_hovered.IsBusy)
+                if (_hovered != null && input.InteractDown && !CursorManager.Instance.IsVisible() && !_hovered.IsBusy)
                 {
                     _hovered.RequestInteract();
                     if (_hovered.ManualRelease)
@@ -48,7 +50,7 @@ namespace Code.Player
             }
             else
             {
-                if (input.InteractDown && !input.ForceCursorHeld && !_active.IsBusy)
+                if (input.InteractDown && !CursorManager.Instance.IsVisible() && !_active.IsBusy)
                 {
                     _active.RequestEndInteract();
                     _active = null;

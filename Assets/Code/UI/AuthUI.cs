@@ -54,6 +54,11 @@ namespace Code.UI
         {
             ToStartState();
             InitializeResendButton();
+            
+            if (CursorManager.Instance != null)
+            {
+                CursorManager.Instance.ShowCursor();
+            }
         }
 
         private void Update()

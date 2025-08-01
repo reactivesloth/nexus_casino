@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Code.Utility;
+using UnityEngine;
 using FishNet;
 using FishNet.Managing.Client;
 using FishNet.Managing.Server;
@@ -39,8 +40,7 @@ namespace Code.Network.Lobby
             if (_lobbyController)
                 _lobbyController.LeaveLobby();
             
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
+            CursorManager.Instance.ShowCursor();
         }
     }
 }

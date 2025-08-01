@@ -5,6 +5,7 @@ using Code.API;
 using Code.API.Models;
 using Code.Network.Lobby;
 using Code.Player;
+using Code.Utility;
 using NativeWebSocket;
 using TankAndHealerStudioAssets;
 using UnityEngine;
@@ -66,6 +67,8 @@ namespace Code.Chat
         {
             if (CurrentChatBox != null)
             {
+                CurrentChatBox.OnInputFieldEnabled -= OnInputFieldEnabled;
+                CurrentChatBox.OnInputFieldDisabled -= OnInputFieldDisabled;
                 CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
                 CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
             }
@@ -75,9 +78,27 @@ namespace Code.Chat
             globalChatBox.gameObject.SetActive(CurrentChatBox == globalChatBox);
             lobbyChatBox.gameObject.SetActive(CurrentChatBox == lobbyChatBox);
             
+            CurrentChatBox.OnInputFieldEnabled += OnInputFieldEnabled;
+            CurrentChatBox.OnInputFieldDisabled += OnInputFieldDisabled;
             CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
             CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
             
+        }
+
+        private void OnInputFieldEnabled()
+        {
+            if (CursorManager.Instance != null)
+            {
+                CursorManager.Instance.ShowCursor();
+            }
+        }
+
+        private void OnInputFieldDisabled()
+        {
+            if (CursorManager.Instance != null)
+            { 
+                CursorManager.Instance.HideCursor();
+            }
         }
 
         private void ChatBoxOnOnInputFieldCommandSubmitted(string command, string message)
