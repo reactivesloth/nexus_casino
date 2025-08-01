@@ -87,6 +87,7 @@ namespace Code.UI
                     return null;
 
                 var fileUri = fileLoadResponse.Text.Trim('\"');
+                Debug.Log(fileUri);
 
                 var loadStoryRequest = new RequestHelper
                 {
@@ -96,10 +97,13 @@ namespace Code.UI
                     {
                         image_url = fileUri,
                         slot_id = slotMachineInteractable.IDNumber,
-                        //lobby_id = LobbyVariables.Instance.currentLobby.lobbyId
+                        lobby_id = LobbyVariables.Instance.currentLobby.lobbyId
                     }
                 };
                 return RestClient.Post(loadStoryRequest);
+            })?.Then(loadStoryResponse =>
+            {
+                Debug.Log(loadStoryResponse.Text);
             });
         }
     }
