@@ -5,6 +5,7 @@
 using TMPro;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Ricimi
 {
@@ -15,7 +16,8 @@ namespace Ricimi
 		public List<string> Options;
 		public TextMeshProUGUI OptionText;
 
-		private int selectedOption;
+		public UnityEvent<int> onValueChanged;
+		public int value;
 
 		private void Start()
 		{
@@ -24,10 +26,10 @@ namespace Ricimi
 
 		public void OnPrevButtonClicked()
 		{
-			selectedOption--;
-			if (selectedOption < 0)
+			value--;
+			if (value < 0)
 			{
-				selectedOption = Options.Count - 1; 
+				value = Options.Count - 1; 
 			}
 
 			ChangeSelection();
@@ -35,14 +37,31 @@ namespace Ricimi
 
 		public void OnNextButtonClicked()
 		{
-			selectedOption = (selectedOption + 1) % Options.Count;
+			value = (value + 1) % Options.Count;
 
 			ChangeSelection();
 		}
 
 		private void ChangeSelection()
 		{
-			OptionText.text = Options[selectedOption];
+			OptionText.text = Options[value];
+			onValueChanged.Invoke(value);
+		}
+
+		public void AddOptions(List<string> displayOptions)
+		{
+			Options = displayOptions;
+			ChangeSelection();
+		}
+
+		public void ClearOptions()
+		{
+			Options.Clear();
+		}
+
+		public void RefreshShownValue()
+		{
+			ChangeSelection();
 		}
 	}
 }

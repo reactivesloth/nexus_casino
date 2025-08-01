@@ -44,11 +44,10 @@ namespace Ricimi
 			if (value)
 			{
 				if (currentGroup != null)
-				{
-					Destroy(currentGroup);
-				}
-
-				currentGroup = Instantiate(Content[index], Root != null ? Root : transform, false);
+					currentGroup.SetActive(false);
+				
+				currentGroup = Content[index];
+				currentGroup.SetActive(true);
 			}
 		}
 

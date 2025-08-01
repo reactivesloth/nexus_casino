@@ -15,14 +15,26 @@ public class MaterialVariantSwitcher : MonoBehaviour
 
     // Кэш оригинальных sharedMaterials
     private Dictionary<Renderer, Material[]> _originals = new Dictionary<Renderer, Material[]>();
-
+    private int quality, savedQuality;
+    
     void Start()
     {
+        savedQuality = -1;
+        quality = QualitySettings.GetQualityLevel();
         CacheOriginals();
-        bool useMobile = forceMobileMode || Application.isMobilePlatform;
-        Apply(useMobile);
     }
 
+    private void Update()
+    {
+        quality = QualitySettings.GetQualityLevel();
+        if (savedQuality != quality)
+        {
+            bool useMobile = forceMobileMode || quality < 2;
+            SwitchMode(useMobile);
+            savedQuality = quality;
+        }
+    }
+    
     /// <summary>
     /// Ручной вызов в рантайме, чтобы переключиться
     /// </summary>
