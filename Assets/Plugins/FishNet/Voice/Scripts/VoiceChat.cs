@@ -1,148 +1,299 @@
-// ✅ Упрощённый и 100% рабочий VoiceChat скрипт
-// ❗ Без OnAudioFilterRead — используется AudioClip.Create (проще, надёжнее для старта)
-// ❗ Работает с FishNet, Push-to-Talk, Proximity и PCM16
-
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
 using FishNet.Transporting;
 
-[RequireComponent(typeof(AudioSource))]
 public class VoiceChat : NetworkBehaviour
 {
     public enum ChatType { Global, Proximity }
+    public ChatType VoiceChatType = ChatType.Global;
+
     public enum DetectionType { PushToTalk, VoiceActivation }
+    public DetectionType VoiceDetectionType = DetectionType.PushToTalk;
 
-    [Header("Voice Settings")]
-    public ChatType voiceChatType = ChatType.Global;
-    public DetectionType detectionType = DetectionType.PushToTalk;
-    public KeyCode pushToTalkKey = KeyCode.V;
-    public bool activated = true;
-    public float voiceThreshold = 0.01f;
-    public float proximityRange = 12f;
+    public bool Activated = true;
+    public KeyCode PushToTalkKey;
 
-    private AudioSource audioSource;
-    private string micDevice;
-    private AudioClip micClip;
+    public AudioSource source;
+    public float proximityRange = 10f;
+    public float voiceActivationThreshold = 0.002f;
 
+    private bool canTalk = true;
+    private bool previousCanTalk = false;
+
+    private string deviceName;
     private const int sampleRate = 48000;
-    private const int sampleLengthSec = 1;
-    private const int sampleSize = 960; // 20ms
-    private float[] floatBuffer = new float[sampleSize];
-    private int micPosition = 0;
+    private const int bufferSize = 16384;
 
-    private Coroutine transmitRoutine;
-    private Dictionary<int, AudioSource> remoteSources = new();
+    private float[] audioBuffer;
+    private int position;
+
+    private AudioClip microphoneClip;
+    private float[] sampleData;
+    private float[] micDataBuffer;
+
+    private Coroutine transmitCoroutine;
 
     public override void OnStartClient()
     {
         base.OnStartClient();
+        if (!IsOwner)
+            return;
 
-        audioSource = GetComponent<AudioSource>();
-        micDevice = Microphone.devices.Length > 0 ? Microphone.devices[0] : null;
+        if (source == null)
+            Debug.LogError("[VOICE] AudioSource not assigned!");
 
-        if (IsOwner && !string.IsNullOrEmpty(micDevice))
+        deviceName = Microphone.devices.Length > 0 ? Microphone.devices[0] : null;
+
+        if (string.IsNullOrEmpty(deviceName))
+            Debug.LogError("[VOICE] No microphone device found!");
+
+        audioBuffer = new float[bufferSize];
+        sampleData = new float[bufferSize];
+        micDataBuffer = new float[bufferSize];
+        source.playOnAwake = false;
+    }
+
+    void Update()
+    {
+        if (!Activated || !IsOwner)
+            return;
+
+        string selectedDevice = MicrophoneManager.Instance.GetCurrentDeviceName();
+        if (selectedDevice != deviceName)
         {
-            micClip = Microphone.Start(micDevice, true, sampleLengthSec, sampleRate);
+            UpdateMicrophone(selectedDevice);
+        }
+
+        switch (VoiceDetectionType)
+        {
+            case DetectionType.PushToTalk:
+                canTalk = Input.GetKey(PushToTalkKey);
+                if (canTalk && microphoneClip == null)
+                {
+                    StartMicrophone();
+                }
+                else if (!canTalk && microphoneClip != null)
+                {
+                    StopTalking();
+                    StopMicrophone();
+                }
+                break;
+
+            case DetectionType.VoiceActivation:
+                if (microphoneClip == null)
+                {
+                    StartMicrophone();
+                }
+                canTalk = IsVoiceActivated();
+                break;
+        }
+
+        if (!previousCanTalk && canTalk)
+            StartTalking();
+
+        if (previousCanTalk && !canTalk)
+            StopTalking();
+
+        previousCanTalk = canTalk;
+    }
+
+    private void StartMicrophone()
+    {
+        if (string.IsNullOrEmpty(deviceName))
+            return;
+
+        position = 0;
+        microphoneClip = Microphone.Start(deviceName, true, 10, sampleRate);
+    }
+
+    private void StopMicrophone()
+    {
+        if (string.IsNullOrEmpty(deviceName))
+            return;
+
+        Microphone.End(deviceName);
+        microphoneClip = null;
+    }
+
+    private void UpdateMicrophone(string newDeviceName)
+    {
+        if (!string.IsNullOrEmpty(deviceName))
+        {
+            StopTalking();
+            StopMicrophone();
+        }
+
+        deviceName = newDeviceName;
+
+        if (canTalk)
+        {
+            StartMicrophone();
+            StartTalking();
         }
     }
 
-    private void Update()
+    private void StartTalking()
     {
-        if (!IsOwner || !activated || micClip == null) return;
+        if (string.IsNullOrEmpty(deviceName) || transmitCoroutine != null)
+            return;
 
-        bool shouldTalk = detectionType == DetectionType.PushToTalk ?
-            Input.GetKey(pushToTalkKey) : IsVoiceDetected();
+        transmitCoroutine = StartCoroutine(TransmitVoice());
+    }
 
-        if (shouldTalk && transmitRoutine == null)
-            transmitRoutine = StartCoroutine(SendVoice());
-        else if (!shouldTalk && transmitRoutine != null)
+    private void StopTalking()
+    {
+        if (transmitCoroutine != null)
         {
-            StopCoroutine(transmitRoutine);
-            transmitRoutine = null;
+            StopCoroutine(transmitCoroutine);
+            transmitCoroutine = null;
         }
     }
 
-    private bool IsVoiceDetected()
+    private IEnumerator TransmitVoice()
     {
-        int pos = Microphone.GetPosition(micDevice);
-        int start = pos - sampleSize;
-        if (start < 0) return false;
-        micClip.GetData(floatBuffer, start);
-        float sum = 0f;
-        for (int i = 0; i < floatBuffer.Length; i++)
-            sum += Mathf.Abs(floatBuffer[i]);
-        return (sum / floatBuffer.Length) > voiceThreshold;
+        while (canTalk)
+        {
+            if (microphoneClip == null)
+                yield break;
+
+            int micPosition = Microphone.GetPosition(deviceName);
+
+            if (micPosition < position)
+                position = micPosition;
+
+            if (position + bufferSize > micPosition)
+            {
+                yield return null;
+                continue;
+            }
+
+            microphoneClip.GetData(audioBuffer, position);
+            position = (position + bufferSize) % microphoneClip.samples;
+
+            TransmitAudioServerRpc(audioBuffer);
+
+            yield return new WaitForSeconds(bufferSize / (float)sampleRate);
+        }
     }
 
-    private IEnumerator SendVoice()
+    private bool IsVoiceActivated()
     {
-        while (true)
-        {
-            int micPos = Microphone.GetPosition(micDevice);
-            int diff = micPos - micPosition;
-            if (diff < sampleSize) { yield return null; continue; }
+        if (microphoneClip == null)
+            return false;
 
-            float[] sendBuffer = new float[sampleSize];
-            micClip.GetData(sendBuffer, micPosition);
-            micPosition = (micPosition + sampleSize) % micClip.samples;
+        int micPosition = Microphone.GetPosition(deviceName);
+        int sampleStartPosition = micPosition - bufferSize;
+        if (sampleStartPosition < 0)
+            return false;
 
-            TransmitVoiceServerRpc(sendBuffer);
-            yield return new WaitForSeconds(sampleSize / (float)sampleRate);
-        }
+        microphoneClip.GetData(sampleData, sampleStartPosition);
+
+        float sum = 0;
+        for (int i = 0; i < sampleData.Length; i++)
+            sum += Mathf.Abs(sampleData[i]);
+
+        float average = sum / sampleData.Length;
+        return average > voiceActivationThreshold;
     }
 
     [ServerRpc(RequireOwnership = false)]
-    private void TransmitVoiceServerRpc(float[] data, Channel channel = Channel.Unreliable, NetworkConnection sender = null)
+    private void TransmitAudioServerRpc(float[] audioData, Channel channel = Channel.Unreliable, NetworkConnection sender = null)
     {
-        TransmitVoiceObserverRpc(data, sender.ClientId);
+        TransmitAudioObserversRpc(audioData, sender.ClientId);
     }
 
-    [ObserversRpc(BufferLast = false)]
-    private void TransmitVoiceObserverRpc(float[] data, int senderId, Channel channel = Channel.Unreliable)
+    [ObserversRpc]
+    private void TransmitAudioObserversRpc(float[] audioData, int senderClientId, Channel channel = Channel.Unreliable)
     {
-        if (senderId == NetworkManager.ClientManager.Connection.ClientId)
+        if (senderClientId == NetworkManager.ClientManager.Connection.ClientId)
             return;
 
-        PlayReceivedAudio(senderId, data);
+        PlayReceivedAudio(audioData, senderClientId);
     }
 
-    private void PlayReceivedAudio(int senderId, float[] data)
+    private void PlayReceivedAudio(float[] audioData, int senderClientId)
     {
-        if (!remoteSources.TryGetValue(senderId, out var src) || src == null)
+        if (source == null)
         {
-            GameObject go = new GameObject($"Voice_{senderId}");
-            go.transform.SetParent(transform);
-            src = go.AddComponent<AudioSource>();
-            src.playOnAwake = false;
-            src.loop = false;
-            src.spatialBlend = voiceChatType == ChatType.Proximity ? 1f : 0f;
-            src.maxDistance = proximityRange;
-            remoteSources[senderId] = src;
+            Debug.LogError("[VOICE] AudioSource not assigned!");
+            return;
         }
 
-        if (voiceChatType == ChatType.Proximity)
+        if (source.clip != null)
         {
-            var senderObj = FindSender(senderId);
-            if (senderObj != null)
-                src.transform.position = senderObj.transform.position;
+            Destroy(source.clip);
+            source.clip = null;
         }
 
-        AudioClip clip = AudioClip.Create("recv", data.Length, 1, sampleRate, false);
-        clip.SetData(data, 0);
-        src.clip = clip;
-        src.Play();
+        if (VoiceChatType == ChatType.Proximity)
+        {
+            source.spatialBlend = 1.0f;
+            source.maxDistance = proximityRange;
+            Transform senderTransform = GetPlayerTransform(senderClientId);
+            if (senderTransform != null)
+            {
+                float distance = Vector3.Distance(transform.position, senderTransform.position);
+                if (distance > proximityRange)
+                    return;
+            }
+        }
+        else
+        {
+            source.spatialBlend = 0.0f;
+        }
+
+        AudioClip clip = AudioClip.Create("ReceivedVoice", audioData.Length, 1, sampleRate, false);
+        clip.SetData(audioData, 0);
+
+        source.clip = clip;
+        source.Play();
         Destroy(clip, clip.length + 0.1f);
     }
 
-    private GameObject FindSender(int id)
+    private Transform GetPlayerTransform(int clientId)
     {
         foreach (var obj in FindObjectsOfType<NetworkObject>())
-            if (obj.Owner.ClientId == id)
-                return obj.gameObject;
+        {
+            if (obj.Owner.ClientId == clientId)
+                return obj.transform;
+        }
         return null;
+    }
+
+    private float GetMicInputVolume()
+    {
+        if (microphoneClip == null || string.IsNullOrEmpty(deviceName))
+            return 0f;
+
+        int micPosition = Microphone.GetPosition(deviceName);
+        int sampleStartPosition = micPosition - bufferSize;
+        if (sampleStartPosition < 0)
+            return 0f;
+
+        microphoneClip.GetData(micDataBuffer, sampleStartPosition);
+
+        float sum = 0;
+        for (int i = 0; i < micDataBuffer.Length; i++)
+            sum += micDataBuffer[i] * micDataBuffer[i];
+
+        float rmsValue = Mathf.Sqrt(sum / micDataBuffer.Length);
+        return Mathf.Clamp(rmsValue * 50f, 0f, 1f);
+    }
+
+    private void OnDestroy()
+    {
+        if (!IsOwner)
+            return;
+
+        StopTalking();
+        StopMicrophone();
+
+        if (source != null && source.clip != null)
+        {
+            Destroy(source.clip);
+            source.clip = null;
+        }
     }
 }
