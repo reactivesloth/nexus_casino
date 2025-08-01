@@ -298,22 +298,7 @@ namespace Code.UI
 
         private void ResetToDefaults()
         {
-            // Очистить сохранённые prefs
-            PlayerPrefs.DeleteKey("VoiceVolume");
-            PlayerPrefs.DeleteKey("MusicVolume");
-            PlayerPrefs.DeleteKey("SlotsVolume");
-            PlayerPrefs.DeleteKey("SFXVolume");
-            PlayerPrefs.DeleteKey("GraphicsQuality");
-            PlayerPrefs.DeleteKey("ResolutionIndex");
-            PlayerPrefs.DeleteKey("FPSLimit");
-            PlayerPrefs.DeleteKey("EffectsEnabled");
-            PlayerPrefs.DeleteKey("AntiAliasingLevel");
-            PlayerPrefs.DeleteKey("CameraSensitivity");
-            PlayerPrefs.DeleteKey("InvertCamera");
-            PlayerPrefs.DeleteKey("Language");
-            // Перезагрузить из дефолтных
-            SettingsManager.Instance.LoadAllSettings();
-            LoadUIFromSettings();
+            SettingsManager.Instance.ResetToDefaults();
         }
     }
 }
