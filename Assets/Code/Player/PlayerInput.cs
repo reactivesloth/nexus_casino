@@ -1,4 +1,5 @@
 ﻿using System;
+using Code.Utility;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -8,8 +9,8 @@ public class PlayerInput : MonoBehaviour
     public static PlayerInput Instance { get; private set; }
 
     [Header("Look Settings")]
-    public float lookSensitivity = 1f;
-    public bool invertY = false;
+    public float lookSensitivity => SettingsManager.Instance.CameraSensitivity/100;
+    public bool invertY => SettingsManager.Instance.InvertCamera;
 
     // wrapper generated from .inputactions
     private InputAsset _inputAsset;

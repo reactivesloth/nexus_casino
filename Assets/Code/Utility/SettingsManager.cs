@@ -68,6 +68,9 @@ namespace Code.Utility
             SFXVolume = PlayerPrefs.GetFloat("SFXVolume", DefaultSFXVolume);
 
             QualityLevel = PlayerPrefs.GetInt("GraphicsQuality", DefaultGraphicsQuality);
+            MaterialVariantSwitcher msv = FindObjectOfType<MaterialVariantSwitcher>();
+            msv.SwitchMode(QualityLevel < 2);
+            
             ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
             FPSLimit = PlayerPrefs.GetInt("FPSLimit", DefaultFPSLimit);
             EffectsEnabled = PlayerPrefs.GetInt("EffectsEnabled", DefaultEffectsEnabled ? 1 : 0) == 1;
@@ -75,7 +78,6 @@ namespace Code.Utility
 
             CameraSensitivity = PlayerPrefs.GetFloat("CameraSensitivity", DefaultCameraSensitivity);
             InvertCamera = PlayerPrefs.GetInt("InvertCamera", DefaultInvertCamera ? 1 : 0) == 1;
-
             LanguageCode = PlayerPrefs.GetString("Language", DefaultLanguageCode);
 
             ApplyAllSettings(); // сразу применяем загруженное состояние
@@ -206,6 +208,8 @@ namespace Code.Utility
             QualityLevel = level;
             PlayerPrefs.SetInt("GraphicsQuality", level);
             QualitySettings.SetQualityLevel(level);
+            MaterialVariantSwitcher msv = FindObjectOfType<MaterialVariantSwitcher>();
+            msv.SwitchMode(QualityLevel < 2);
         }
 
         public void SetResolution(int index)

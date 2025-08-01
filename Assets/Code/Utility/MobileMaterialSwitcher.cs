@@ -1,6 +1,8 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using Code.Utility;
 
 [DisallowMultipleComponent]
 public class MaterialVariantSwitcher : MonoBehaviour
@@ -15,26 +17,22 @@ public class MaterialVariantSwitcher : MonoBehaviour
 
     // Кэш оригинальных sharedMaterials
     private Dictionary<Renderer, Material[]> _originals = new Dictionary<Renderer, Material[]>();
-    private int quality, savedQuality;
+    private int savedQualityLevel = -1;
     
     void Start()
     {
-        savedQuality = -1;
-        quality = QualitySettings.GetQualityLevel();
         CacheOriginals();
     }
 
     private void Update()
     {
-        quality = QualitySettings.GetQualityLevel();
-        if (savedQuality != quality)
+        if (SettingsManager.Instance.QualityLevel != savedQualityLevel)
         {
-            bool useMobile = forceMobileMode || quality < 2;
-            SwitchMode(useMobile);
-            savedQuality = quality;
+            savedQualityLevel = SettingsManager.Instance.QualityLevel;
+            SwitchMode(savedQualityLevel < 2);
         }
     }
-    
+
     /// <summary>
     /// Ручной вызов в рантайме, чтобы переключиться
     /// </summary>
