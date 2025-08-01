@@ -13,7 +13,7 @@ namespace Code.API.Models
         public string phone;
         public string confirmation_code;
     }
-    
+
     [Serializable]
     public class AuthResponse
     {
@@ -96,6 +96,7 @@ namespace Code.API.Models
     {
         public string image_url;
         public int slot_id;
+
         public string lobby_id;
         //public int lobby_id;
     }
@@ -105,27 +106,36 @@ namespace Code.API.Models
     {
         public List<GetStoryData> screenshots;
     }
-    
+
     [Serializable]
     public class GetStoryData
     {
         public int id;
+
         public int user_id;
+
         //public string lobby_id;
         public int lobby_id;
         public int slot_id;
         public string image_url;
         public string created_at;
         public MeSchema user;
-
     }
-    
+
     [Serializable]
-    public class MessageData    
+    public class MessageData
     {
         public string username;
         public string lobby;
         public int type;
         public string text;
     }
-} 
+
+    [Serializable]
+    public class SendMessageRequest
+    {
+        public string lobby_id;
+        public string message;
+        public string type;
+    }
+}
