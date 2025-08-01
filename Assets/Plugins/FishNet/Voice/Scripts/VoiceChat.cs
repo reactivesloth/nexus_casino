@@ -30,9 +30,10 @@ public class VoiceChat : NetworkBehaviour
     private int position;
 
     private AudioClip microphoneClip;
-
     private float[] sampleData;
     private float[] micDataBuffer;
+
+    private Coroutine transmitCoroutine;
 
     public override void OnStartClient()
     {
@@ -72,7 +73,6 @@ public class VoiceChat : NetworkBehaviour
                 if (canTalk && microphoneClip == null)
                 {
                     StartMicrophone();
-                    StartTalking();
                 }
                 else if (!canTalk && microphoneClip != null)
                 {
@@ -121,16 +121,12 @@ public class VoiceChat : NetworkBehaviour
     {
         if (!string.IsNullOrEmpty(deviceName))
         {
-            Debug.Log($"[VOICE] Switching microphone from '{deviceName}' to '{newDeviceName}'");
-
-            // Stop the current microphone
             StopTalking();
             StopMicrophone();
         }
 
         deviceName = newDeviceName;
 
-        // If currently talking, restart with the new microphone
         if (canTalk)
         {
             StartMicrophone();
@@ -140,18 +136,19 @@ public class VoiceChat : NetworkBehaviour
 
     private void StartTalking()
     {
-        if (string.IsNullOrEmpty(deviceName))
+        if (string.IsNullOrEmpty(deviceName) || transmitCoroutine != null)
             return;
 
-        StartCoroutine(TransmitVoice());
+        transmitCoroutine = StartCoroutine(TransmitVoice());
     }
 
     private void StopTalking()
     {
-        if (string.IsNullOrEmpty(deviceName))
-            return;
-
-        StopCoroutine(TransmitVoice());
+        if (transmitCoroutine != null)
+        {
+            StopCoroutine(transmitCoroutine);
+            transmitCoroutine = null;
+        }
     }
 
     private IEnumerator TransmitVoice()
@@ -187,21 +184,15 @@ public class VoiceChat : NetworkBehaviour
             return false;
 
         int micPosition = Microphone.GetPosition(deviceName);
-
         int sampleStartPosition = micPosition - bufferSize;
         if (sampleStartPosition < 0)
-        {
-            // Not enough data yet
             return false;
-        }
 
         microphoneClip.GetData(sampleData, sampleStartPosition);
 
         float sum = 0;
         for (int i = 0; i < sampleData.Length; i++)
-        {
             sum += Mathf.Abs(sampleData[i]);
-        }
 
         float average = sum / sampleData.Length;
         return average > voiceActivationThreshold;
@@ -214,9 +205,8 @@ public class VoiceChat : NetworkBehaviour
     }
 
     [ObserversRpc]
-    private void TransmitAudioObserversRpc(float[] audioData, int senderClientId,  Channel channel = Channel.Unreliable)
+    private void TransmitAudioObserversRpc(float[] audioData, int senderClientId, Channel channel = Channel.Unreliable)
     {
-        // Ensure we do not play our own voice
         if (senderClientId == NetworkManager.ClientManager.Connection.ClientId)
             return;
 
@@ -231,24 +221,27 @@ public class VoiceChat : NetworkBehaviour
             return;
         }
 
-        // Set spatial blend based on chat type
+        if (source.clip != null)
+        {
+            Destroy(source.clip);
+            source.clip = null;
+        }
+
         if (VoiceChatType == ChatType.Proximity)
         {
-            source.spatialBlend = 1.0f; // Make the audio 3D
+            source.spatialBlend = 1.0f;
             source.maxDistance = proximityRange;
             Transform senderTransform = GetPlayerTransform(senderClientId);
             if (senderTransform != null)
             {
                 float distance = Vector3.Distance(transform.position, senderTransform.position);
                 if (distance > proximityRange)
-                {
-                    return; // This is to save on bandwidth
-                }
+                    return;
             }
         }
         else
         {
-            source.spatialBlend = 0.0f; // Make the audio 2D for global chat
+            source.spatialBlend = 0.0f;
         }
 
         AudioClip clip = AudioClip.Create("ReceivedVoice", audioData.Length, 1, sampleRate, false);
@@ -256,6 +249,7 @@ public class VoiceChat : NetworkBehaviour
 
         source.clip = clip;
         source.Play();
+        Destroy(clip, clip.length + 0.1f);
     }
 
     private Transform GetPlayerTransform(int clientId)
@@ -263,9 +257,7 @@ public class VoiceChat : NetworkBehaviour
         foreach (var obj in FindObjectsOfType<NetworkObject>())
         {
             if (obj.Owner.ClientId == clientId)
-            {
                 return obj.transform;
-            }
         }
         return null;
     }
@@ -276,25 +268,32 @@ public class VoiceChat : NetworkBehaviour
             return 0f;
 
         int micPosition = Microphone.GetPosition(deviceName);
-
         int sampleStartPosition = micPosition - bufferSize;
         if (sampleStartPosition < 0)
-        {
-            // Not enough data yet
             return 0f;
-        }
 
         microphoneClip.GetData(micDataBuffer, sampleStartPosition);
 
         float sum = 0;
         for (int i = 0; i < micDataBuffer.Length; i++)
-        {
-            sum += micDataBuffer[i] * micDataBuffer[i]; // Squared values for RMS
-        }
+            sum += micDataBuffer[i] * micDataBuffer[i];
 
         float rmsValue = Mathf.Sqrt(sum / micDataBuffer.Length);
+        return Mathf.Clamp(rmsValue * 50f, 0f, 1f);
+    }
 
-        float amplifiedVolume = Mathf.Clamp(rmsValue * 50f, 0f, 1f);
-        return amplifiedVolume;
+    private void OnDestroy()
+    {
+        if (!IsOwner)
+            return;
+
+        StopTalking();
+        StopMicrophone();
+
+        if (source != null && source.clip != null)
+        {
+            Destroy(source.clip);
+            source.clip = null;
+        }
     }
 }
