@@ -14,12 +14,12 @@ namespace Code.Utility
         private const float DefaultMusicVolume = 30f;
         private const float DefaultSlotsVolume = 30f;
         private const float DefaultSFXVolume = 30f;
-        private const int DefaultGraphicsQuality = 3;
-        private const int DefaultResolutionIndex = 0;
+        private int DefaultGraphicsQuality => QualitySettings.count;
+        private int DefaultResolutionIndex => Screen.resolutions.Length;
         private const int DefaultFPSLimit = 60;
         private const bool DefaultEffectsEnabled = true;
         private const int DefaultAntiAliasingLevel = 2;
-        private const float DefaultCameraSensitivity = 1f;
+        private const float DefaultCameraSensitivity = 100f;
         private const bool DefaultInvertCamera = false;
         private const string DefaultLanguageCode = "en";
 
