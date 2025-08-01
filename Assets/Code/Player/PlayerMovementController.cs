@@ -233,7 +233,7 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            var _input = !CursorManager.Instance.IsVisible() && LookCameraLimitRotationRKM && !Input.GetMouseButton(1) ? Vector2.zero : input.Look;
+            var _input = (LookCameraLimitRotationRKM && !Input.GetMouseButton(1)) ? Vector2.zero : input.Look;
             
             if (_input.sqrMagnitude >= Threshold)
             {

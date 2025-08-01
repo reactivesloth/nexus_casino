@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using System.Linq;
 using FishNet.Object;
@@ -61,6 +62,15 @@ namespace Code.InteractionSystem
         private void SetupSitPoints()
         {
             sitPoint ??= transform.Find("SitPoint");
+        }
+
+        private void Update()
+        {
+            if (_isSitting && allowRotateCamera && useRightMouseButtonToRotate)
+            {
+                if (CursorManager.Instance != null)
+                    CursorManager.Instance.ShowCursor();
+            }
         }
 
         public override void OnStopNetwork()
@@ -241,6 +251,12 @@ namespace Code.InteractionSystem
             
             _sitRoutine = null;
             IsBusy = false;
+
+            if (allowRotateCamera && useRightMouseButtonToRotate)
+            {
+                if (CursorManager.Instance != null)
+                    CursorManager.Instance.HideCursor();
+            }
         }
 
         private EntryData FindClosestEntryPoint(Vector3 from)

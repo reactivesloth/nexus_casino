@@ -50,7 +50,7 @@ namespace Code.Player
             }
             else
             {
-                if (input.InteractDown && !CursorManager.Instance.IsVisible() && !_active.IsBusy)
+                if (input.InteractDown && !_active.IsBusy)
                 {
                     _active.RequestEndInteract();
                     _active = null;
