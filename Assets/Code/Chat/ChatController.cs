@@ -7,6 +7,7 @@ using Code.Network.Lobby;
 using Code.Player;
 using Code.Utility;
 using NativeWebSocket;
+using Proyecto26;
 using TankAndHealerStudioAssets;
 using UnityEngine;
 using UnityEngine.Events;
@@ -26,7 +27,7 @@ namespace Code.Chat
 
         public UltimateChatBox CurrentChatBox { get; private set; }
         private bool _isGlobalChatActive = false;
-        
+
         public string SystemName => systemName;
 
         private void Awake()
@@ -37,15 +38,16 @@ namespace Code.Chat
         private void Start()
         {
             SetCurrentChat(lobbyChatBox);
-            
+
             CurrentChatBox.DisableInputField();
             CurrentChatBox.Disable();
         }
 
         private void OnEnable()
         {
-            chatWebSocket = new WebSocket("wss://wss.ru", ClientDataStorage.GetJwtHeader()); 
-            //chatWebSocket.Connect();
+            chatWebSocket = new WebSocket("wss://back.nexusmetaclub.com/api/client/ws/lobby",
+                ClientDataStorage.GetJwtHeader());
+            chatWebSocket.Connect();
             chatWebSocket.OnMessage += OnMessageRecived;
         }
 
@@ -53,6 +55,21 @@ namespace Code.Chat
         {
             if (Input.GetKeyUp(KeyCode.Tab) && CurrentChatBox.IsEnabled)
                 ChangeChat();
+
+            if (chatWebSocket.State == WebSocketState.Open)
+                PingChatConnection();
+        }
+
+        private float _pingInterval = 2f;
+        private float _currentPingInterval = 0;
+        private void PingChatConnection()
+        {
+            _currentPingInterval += Time.deltaTime;
+            if (_currentPingInterval >= _pingInterval)
+            {
+                _currentPingInterval = 0;
+                chatWebSocket.SendText("{\n    \"event\": \"ping\",\n    \"data\": {}\n}");
+            }
         }
 
         private void OnDisable()
@@ -74,20 +91,20 @@ namespace Code.Chat
                 CurrentChatBox.OnInputFieldDisabled -= OnInputFieldDisabled;
                 CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
                 CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
-                
+
                 CurrentChatBox.Disable();
             }
-            
+
             CurrentChatBox = chatBox;
             _isGlobalChatActive = CurrentChatBox == globalChatBox;
             globalChatBox.gameObject.SetActive(CurrentChatBox == globalChatBox);
             lobbyChatBox.gameObject.SetActive(CurrentChatBox == lobbyChatBox);
-            
+
             CurrentChatBox.OnInputFieldEnabled += OnInputFieldEnabled;
             CurrentChatBox.OnInputFieldDisabled += OnInputFieldDisabled;
             CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
             CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
-            
+
             CurrentChatBox.EnableInputField();
             CurrentChatBox.Enable();
         }
@@ -103,7 +120,7 @@ namespace Code.Chat
         private void OnInputFieldDisabled()
         {
             if (CursorManager.Instance != null)
-            { 
+            {
                 CursorManager.Instance.HideCursor();
             }
         }
@@ -121,7 +138,7 @@ namespace Code.Chat
                 CurrentChatBox.RegisterChat(systemName, "command need value", UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
+
             commandData.unityEvent?.Invoke(message);
         }
 
@@ -130,11 +147,12 @@ namespace Code.Chat
             var dataText = System.Text.Encoding.UTF8.GetString(byteData);
             var messageData = JsonUtility.FromJson<MessageData>(dataText);
 
-            var style = UltimateChatBoxStyles.none;
-            
-            HandleGlobalMassage(messageData, style);
-            if(messageData.lobby == LobbyVariables.Instance.currentLobby.lobbyId)
-                HandleLobbyMassage(messageData, style);
+            Debug.Log(messageData);
+
+
+            HandleGlobalMassage(messageData);
+            if (messageData.Message.LobbyId == LobbyVariables.Instance.currentLobby.lobbyId)
+                HandleLobbyMassage(messageData);
         }
 
         private void OnInputFieldSubmittedCurrentBox(string text)
@@ -144,28 +162,49 @@ namespace Code.Chat
 
             var message = new MessageData
             {
-                lobby = LobbyVariables.Instance.currentLobby.lobbyId,
-                text = text,
-                username = ClientDataStorage.UserData.username
+                Message = new MessageInfo
+                {
+                    LobbyId = LobbyVariables.Instance.currentLobby.lobbyId,
+                    Message = text,
+                    UserId = 0
+                    // username = ClientDataStorage.UserData.username
+                }
             };
 
             var style = UltimateChatBoxStyles.boldUsername;
-            
+
             HandleLobbyMassage(message, style);
             HandleGlobalMassage(message, style);
+            
+            //TODO: Send
+
+            var sendRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.SendMessageUrl(),
+                Headers = ClientDataStorage.GetJwtHeader(),
+                Body = new SendMessageRequest
+                {
+                    lobby_id = LobbyVariables.Instance.currentLobby.lobbyId,
+                    message = text,
+                    type = "message"
+                },
+            };
+
+            RestClient.Post(sendRequest);
         }
-        
+
         public void HandleGlobalMassage(MessageData message, UltimateChatBox.ChatStyle style = null)
         {
-            globalChatBox.RegisterChat($"[...{message.lobby.Substring(message.lobby.Length - 4)}]{message.username}", message.text, style);
+            globalChatBox.RegisterChat($"[...{message.Message.LobbyId.Substring(message.Message.LobbyId.Length - 4)}]{message.Message.UserId}",
+                message.Message.Message, style);
         }
 
         public void HandleLobbyMassage(MessageData message, UltimateChatBox.ChatStyle style = null)
         {
-            lobbyChatBox.RegisterChat($"{message.username}", message.text, style);
+            lobbyChatBox.RegisterChat($"{message.Message.UserId}", message.Message.Message, style);
         }
     }
-    
+
     [Serializable]
     public class CommandData
     {

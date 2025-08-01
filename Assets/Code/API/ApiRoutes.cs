@@ -17,6 +17,8 @@ namespace Code.API
         public const string LOAD_FILE_URL = "/api/s3/upload";
         public const string LOAD_STORY = "/api/client/screenshots/add";
         public const string GET_STRORIES_URL = "/api/client/screenshots/";
+        public const string SEND_MESSAGE_URL = "/api/client/lobby-messages/send";
+        
 
         // Методы для получения полного URL
         public static string GetCheckNumberUrl() => DOMAIN.TrimEnd('/') + CHECK_NUMBER;
@@ -31,5 +33,7 @@ namespace Code.API
         public static string GetLoadFileUrl() => DOMAIN.TrimEnd('/') + LOAD_FILE_URL;
         public static string GetLoadStoryUrl() => DOMAIN.TrimEnd('/') + LOAD_STORY;
         public static string GetStoriesUrl() => DOMAIN.TrimEnd('/') + GET_STRORIES_URL;
+        
+        public static string SendMessageUrl() => DOMAIN.TrimEnd('/') + SEND_MESSAGE_URL;
     }
 } 
