@@ -1149,6 +1149,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 248452575153782290}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1522686985798500702}
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8509050154869065461}
@@ -1158,9 +1161,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3415041167778125870}
-    - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1450933857728523286}
   m_SourcePrefab: {fileID: 100100000, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
 --- !u!4 &1495082819104649297 stripped
 Transform:
@@ -1551,6 +1551,21 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 6120315999404777701, guid: 4145ad3fa7f2f45458091f01dc142cc6, type: 3}
   _networkObjectCache: {fileID: 0}
   trackingTransform: {fileID: 0}
+--- !u!114 &1522686985798500702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2302545898316884715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ee64685f2881fe9479b93b1d1583b4ae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  isDebug: 0
+  useLocalLipSync: 1
+  amplifyMultipleExperimental: 1
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
@@ -1578,8 +1593,8 @@ MonoBehaviour:
   m_Script: {fileID: -1091098677, guid: 21fe281538940584e84b6d5eedb3525e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioSrc: {fileID: 7473699452335869857}
-  waitForAudioSource: 0
+  audioSrc: {fileID: 0}
+  waitForAudioSource: 1
   useExternalAnalysis: 0
   audioSourceWaitTarget: {fileID: 0}
   queueProcessor: {fileID: 6323055440327571151}
@@ -1609,9 +1624,9 @@ MonoBehaviour:
   usePersistence: 0
   useTimingsOverride: 0
   globalDurON: 0.08
-  globalDurOFF: 0.06
+  globalDurOFF: 0.08
   globalDurOffBalance: 0
-  originalUpdateDelay: 0
+  originalUpdateDelay: 0.08
   globalNuanceBalance: 0
   useEasingOverride: 0
   globalEasing: 4
@@ -2121,7 +2136,7 @@ MonoBehaviour:
   needAudioSource: 1
   inspStateFoldoutProcessing: 1
   inspStateFoldoutSettings: 0
-  inspStateFoldoutVisemes: 1
+  inspStateFoldoutVisemes: 0
   inspCollectionDisplayMode: 0
   inspAnalysisDisplay: 0
   inspOverrideSecondaryMix: 0
@@ -2185,23 +2200,8 @@ MonoBehaviour:
   inspSalsaLinked: 1
   inspStateFoldoutProcessing: 1
   inspStateFoldoutSettings: 0
-  inspStateFoldoutEmotes: 1
+  inspStateFoldoutEmotes: 0
   inspCollectionDisplayMode: 0
---- !u!114 &1450933857728523286
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8021267353867592598}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee64685f2881fe9479b93b1d1583b4ae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isDebug: 0
-  useLocalLipSync: 1
-  amplifyMultipleExperimental: 1
 --- !u!4 &8592238374325572209 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
