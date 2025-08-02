@@ -1,4 +1,5 @@
 ﻿using System;
+using Code.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Code.Utility; // если нужно, как было у тебя
@@ -19,54 +20,28 @@ public class PlayerInput : MonoBehaviour
     private InputAsset _inputAsset;
     private InputAsset.PlayerActions _player;
 
-    // cached underlying actions (для событий)
-    private InputAction _interactAction;
-    private InputAction _cameraSwitchAction;
-
-    // события
-    public event Action OnInteract;
-    public event Action OnCameraSwitch;
-
     // мобильный ввод (встроенный fallback)
     [Header("Mobile Fallback (optional UI)")]
     public GameObject mobileCanvas;
-    public VirtualJoystick MoveJoystick;
-    public TouchLook LookArea;
-    public MobileActionButton JumpButton;
-    public MobileActionButton SprintButton;
-    public MobileActionButton InteractButton;
-    public MobileActionButton CameraSwitchButton;
-    public MobileActionButton ForceCursorButton;
-    public MobileActionButton PauseButton;
-    public MobileActionButton VoiceButton;
+    public UltimateJoystick MoveJoystick;
+    public UltimateTouchpad LookArea;
+    public UltimateButton JumpButton;
+    public UltimateButton SprintButton;
+    public UltimateButton InteractButton;
+    public UltimateButton CameraSwitchButton;
+    public UltimateButton PauseButton;
+    public UltimateButton VoiceButton;
+    
 
-    // внутреннее отслеживание edge для моб. кнопок
-    private bool _prevMobileInteract;
-    private bool _prevMobileCameraSwitch;
-
+    [SerializeField] private bool ForceMobile;
+    public bool IsUsingMobileFallback { get; set; }
+    
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
         _inputAsset = new InputAsset();
         _player = _inputAsset.Player;
-
-        _interactAction = _player.Interact;
-        _cameraSwitchAction = _player.CameraSwitch;
-
-        Action<InputAction.CallbackContext> interactCallback = ctx => OnInteract?.Invoke();
-        Action<InputAction.CallbackContext> cameraSwitchCallback = ctx => OnCameraSwitch?.Invoke();
-
-        if (_interactAction != null)
-            _interactAction.performed += interactCallback;
-        if (_cameraSwitchAction != null)
-            _cameraSwitchAction.performed += cameraSwitchCallback;
 
         _player.Enable();
     }
@@ -79,43 +54,26 @@ public class PlayerInput : MonoBehaviour
     private void OnDisable()
     {
         _player.Disable();
+        
+        foreach (Transform child in mobileCanvas.transform) child.gameObject.SetActive(false);
     }
 
     private void OnDestroy()
     {
-        if (_interactAction != null)
-            _interactAction.performed -= ctx => OnInteract?.Invoke(); // безопасно, т.к. делегаты без сохранения не снимаются—можно хранить если нужно точно отписывать
-        if (_cameraSwitchAction != null)
-            _cameraSwitchAction.performed -= ctx => OnCameraSwitch?.Invoke();
-
         _inputAsset?.Dispose();
         if (Instance == this) Instance = null;
     }
 
     private void Update()
     {
-        // мобильные кнопки: вручную вызываем события по edge
-        if (IsUsingMobileFallback)
-        {
-            bool interactDown = InteractDown; // от mobile
-            if (interactDown && !_prevMobileInteract)
-                OnInteract?.Invoke();
-            _prevMobileInteract = interactDown;
-
-            bool camSwitchDown = CameraSwitchDown;
-            if (camSwitchDown && !_prevMobileCameraSwitch)
-                OnCameraSwitch?.Invoke();
-            _prevMobileCameraSwitch = camSwitchDown;
-        }
+        IsUsingMobileFallback = ForceMobile || Application.isMobilePlatform;
 
         if (IsUsingMobileFallback != mobileCanvas.activeSelf)
         {
-            mobileCanvas.SetActive(IsUsingMobileFallback);
+            foreach (Transform child in mobileCanvas.transform) child.gameObject.SetActive(IsUsingMobileFallback);
+            Canvas.ForceUpdateCanvases();
         }
     }
-
-    [SerializeField] private bool ForceMobile;
-    private bool IsUsingMobileFallback => ForceMobile || (Application.isMobilePlatform && (MoveJoystick != null || LookArea != null || JumpButton != null || InteractButton != null));
 
     // --- Геттеры ввода (автоматически выбирают mobile если доступно) ---
     public Vector2 Move
@@ -123,7 +81,12 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && MoveJoystick != null)
-                return MoveJoystick.Output;
+            {
+                float h = MoveJoystick.HorizontalAxis;
+                float v = MoveJoystick.VerticalAxis;
+                return new Vector2(h, v);
+            }
+
             return _player.Move.ReadValue<Vector2>();
         }
     }
@@ -133,7 +96,12 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && LookArea != null)
-                return LookArea.Delta;
+            {
+                float h = LookArea.GetHorizontalAxis();
+                float v = -LookArea.GetVerticalAxis();
+                return new Vector2(h, v);
+            }
+
             return _player.Look.ReadValue<Vector2>();
         }
     }
@@ -153,7 +121,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && JumpButton != null)
-                return JumpButton.PressedThisFrame;
+                return JumpButton.GetButtonDown();
             return _player.Jump != null && _player.Jump.triggered;
         }
     }
@@ -163,7 +131,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && JumpButton != null)
-                return JumpButton.IsHeld;
+                return JumpButton.GetButton();
             return _player.Jump != null && _player.Jump.ReadValue<float>() > 0.5f;
         }
     }
@@ -172,7 +140,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && VoiceButton != null)
-                return VoiceButton.IsHeld;
+                return VoiceButton.GetButton();
             return _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f;
         }
     }
@@ -182,7 +150,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && SprintButton != null)
-                return SprintButton.IsHeld;
+                return SprintButton.GetButton();
             return _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
         }
     }
@@ -192,7 +160,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && CameraSwitchButton != null)
-                return CameraSwitchButton.PressedThisFrame;
+                return CameraSwitchButton.GetButtonDown();
             return _player.CameraSwitch != null && _player.CameraSwitch.triggered;
         }
     }
@@ -202,7 +170,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && InteractButton != null)
-                return InteractButton.PressedThisFrame;
+                return InteractButton.GetButtonDown();
             return _player.Interact != null && _player.Interact.triggered;
         }
     }
@@ -212,21 +180,13 @@ public class PlayerInput : MonoBehaviour
         get
         {
             if (IsUsingMobileFallback && PauseButton != null)
-                return PauseButton.PressedThisFrame;
+                return PauseButton.GetButtonDown();
             return _player.Pause != null && _player.Pause.triggered;
         }
     }
     public bool IsRMB => _player.RMB != null && _player.RMB.triggered;
-
-    public bool ForceCursorHeld
-    {
-        get
-        {
-            if (IsUsingMobileFallback && ForceCursorButton != null)
-                return ForceCursorButton.IsHeld;
-            return _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
-        }
-    }
+    public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
+    
 
     /// <summary>Включить/выключить ввод целиком (всей карты)</summary>
     public void SetEnabled(bool enabled)

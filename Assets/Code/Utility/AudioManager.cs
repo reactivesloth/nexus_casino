@@ -11,14 +11,7 @@ namespace Code.Utility
 
         private void Awake()
         {
-            if (Instance != null)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         public void SetVolume(string category, float volume)

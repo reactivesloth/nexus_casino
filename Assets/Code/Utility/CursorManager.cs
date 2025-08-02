@@ -19,10 +19,6 @@ public class CursorManager : MonoBehaviour
     [SerializeField] private Image customCursorImage;
     [SerializeField] private Vector2 customCursorOffset = Vector2.zero;
 
-    [Header("Single Input binding (Input System)")]
-    [Tooltip("Один экшен: tap = смена курсора, hold = показать, long hold = переключить lock")]
-    [SerializeField] private InputActionReference primaryCursorAction;
-
     [Header("Tap / Hold tuning")]
     [Tooltip("Максимальная длительность для считания как tap (в секундах)")]
     [SerializeField] private float tapMaxTime = 0.2f;
@@ -31,6 +27,8 @@ public class CursorManager : MonoBehaviour
     [SerializeField] private bool enableTapToCycle = true;
     [SerializeField] private bool enableLongPressToggleLock = true;
 
+    [SerializeField] private bool forceShowCursor;
+    
     public event Action<bool> OnVisibilityChanged;
     public event Action<int> OnCursorImageChanged;
     public event Action<CursorLockMode> OnLockModeChanged;
@@ -44,33 +42,24 @@ public class CursorManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance != null && Instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     private void OnEnable()
     {
-        if (primaryCursorAction != null)
-        {
-            primaryCursorAction.action?.Enable();
-        }
-
         ApplyCurrentCursor();
         UpdateCursorVisibility(false); // по умолчанию скрыт/в норме
     }
-
-    private void OnDisable()
-    {
-        // ничего подписанного вручную не отписываем, т.к. нет += в OnEnable
-    }
-
+    
     private void Update()
     {
+        if (forceShowCursor)
+        {
+            ShowCursor();
+            SetLockMode(CursorLockMode.None);
+            return;
+        }
+        
         HandlePrimaryAction();
 
         if (useCustomCursor && customCursorRect != null)
@@ -85,12 +74,10 @@ public class CursorManager : MonoBehaviour
 
     private void HandlePrimaryAction()
     {
-        if (primaryCursorAction == null || primaryCursorAction.action == null)
+        if (PlayerInput.Instance == null)
             return;
 
-        // читаем значение кнопки (нормально работает для Button-type binding)
-        float value = primaryCursorAction.action.ReadValue<float>();
-        bool isHeld = value > 0.5f;
+        bool isHeld = PlayerInput.Instance.ForceCursorHeld;
 
         if (isHeld)
         {

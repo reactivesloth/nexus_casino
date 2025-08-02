@@ -91,10 +91,10 @@ namespace Code.Player
                 {
                     foreach (var go in outlineGameObjects)
                     {
-                        var o = go.GetOrAddComponent<Outline>();
+                        var o = go.GetOrAddComponent<OutlineMesh>();
                         o.OutlineColor = Color.yellow;
                         o.OutlineWidth = 10;
-                        o.OutlineMode = Outline.Mode.OutlineVisible;
+                        o.OutlineMode = OutlineMesh.Mode.OutlineVisible;
                     }
                 }
             }
@@ -104,7 +104,7 @@ namespace Code.Player
                 {
                     foreach (var go in outlineGameObjects)
                     {
-                        go.RemoveComponentIfExists<Outline>();
+                        go.RemoveComponentIfExists<OutlineMesh>();
                     }
                 }
 

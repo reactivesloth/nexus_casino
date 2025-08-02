@@ -166,6 +166,7 @@ namespace Code.Player
         private bool smoothedFirstPerson;
         private float _syncWeight;
         private Vector3 _lookPos;
+        private bool _cursorVisible;
 
         private void Awake()
         {
@@ -211,6 +212,8 @@ namespace Code.Player
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
             input ??= PlayerInput.Instance;
 
+            _cursorVisible = PlayerInput.Instance.IsUsingMobileFallback || !CursorManager.Instance.IsVisible();
+            
             GroundedCheck();
             JumpAndGravity();
             Move();
@@ -220,7 +223,7 @@ namespace Code.Player
         {
             if (!IsOwner) return;
             
-            if ((CanMove || LookCameraLimitRotation) && !CursorManager.Instance.IsVisible())
+            if ((CanMove || LookCameraLimitRotation) && _cursorVisible)
                 UpdateCameraDistance();
             
             if (LookCameraLimitRotation && FirstPersonView)
@@ -341,7 +344,7 @@ namespace Code.Player
 
         private void Move()
         {
-            var _inputMove = !CursorManager.Instance.IsVisible() ? input.Move : Vector2.zero;
+            var _inputMove = _cursorVisible ? input.Move : Vector2.zero;
             
             bool canSprint = !FirstPersonView || (Mathf.Abs(_inputMove.x) < 0.1f && _inputMove.y > 0.1f);
             float targetSpeed = input.SprintHeld && canSprint ? sprintSpeed : moveSpeed;
@@ -365,21 +368,21 @@ namespace Code.Player
             if (input.Move != Vector2.zero)
             {
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
-                if (!FirstPersonView && !CursorManager.Instance.IsVisible())
+                if (!FirstPersonView && _cursorVisible)
                     transform.rotation = Quaternion.Euler(0, rotation, 0);
             }
 
-            if (FirstPersonView && !CursorManager.Instance.IsVisible())
+            if (FirstPersonView && _cursorVisible)
                 transform.rotation = Quaternion.Euler(0, mainCamera.transform.eulerAngles.y, 0);
 
             Vector3 moveDir = Quaternion.Euler(0, targetRotation, 0) * Vector3.forward;
             
-            if (!CursorManager.Instance.IsVisible()) 
+            if (_cursorVisible) 
                 controller.Move(moveDir.normalized * (speed * Time.deltaTime) + Vector3.up * verticalVelocity * Time.deltaTime);
 
             if (animator)
             {
-                Vector3 velocity = !CursorManager.Instance.IsVisible() ? transform.InverseTransformDirection(controller.velocity) : Vector3.zero;
+                Vector3 velocity = _cursorVisible ? transform.InverseTransformDirection(controller.velocity) : Vector3.zero;
                 vertical = Mathf.Lerp(vertical, velocity.normalized.z * (speed > moveSpeed ? 2 : 1), Time.deltaTime * 5);
                 horizontal = Mathf.Lerp(horizontal, velocity.normalized.x, Time.deltaTime * 5);
 
@@ -402,7 +405,7 @@ namespace Code.Player
 
                 if (verticalVelocity < 0) verticalVelocity = -2f;
 
-                if (!CursorManager.Instance.IsVisible() && input.JumpDown && jumpTimeoutDelta <= 0)
+                if (_cursorVisible && input.JumpDown && jumpTimeoutDelta <= 0)
                 {
                     verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
                     animator?.SetBool(animIDJump, true);
@@ -428,7 +431,7 @@ namespace Code.Player
 
         private void CameraRotation()
         {
-            var _inputLook = !CursorManager.Instance.IsVisible() ? input.Look : Vector2.zero;
+            var _inputLook = _cursorVisible? input.Look : Vector2.zero;
             if (input.Look.sqrMagnitude >= Threshold && !LockCameraPosition)
             {
                 float multiplier = Input.mousePositionDelta.magnitude > 0 ? 1f : Time.deltaTime;
