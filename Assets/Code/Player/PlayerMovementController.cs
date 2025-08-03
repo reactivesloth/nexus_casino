@@ -174,9 +174,12 @@ namespace Code.Player
             input = PlayerInput.Instance;
         }
 
-        private void Start()
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
-            cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
+            base.OnOwnershipClient(prevOwner);
+            if (!IsOwner)
+                return;
+         
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
             AssignAnimationIDs();
@@ -184,6 +187,7 @@ namespace Code.Player
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
             
+            cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
             if (animator != null)
             {
                 var head = animator.GetBoneTransform(HumanBodyBones.Head);
@@ -191,13 +195,6 @@ namespace Code.Player
             }
             
             gameObject.SetLayerRecursive(LayerMask.NameToLayer("Player"));
-        }
-
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
-        {
-            base.OnOwnershipClient(prevOwner);
-            if (!IsOwner)
-                return;
             
             Own = this;
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();

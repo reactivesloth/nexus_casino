@@ -194,11 +194,15 @@ namespace CC
 
         public void SwitchHead(bool value)
         { 
-            MainMesh.enabled = value;
-            foreach (var hairObject in HairObjects)
-            {
-                hairObject.GetComponentInChildren<Renderer>().enabled = value;
-            }
+            if (MainMesh != null)
+                MainMesh.enabled = value;
+    
+            if (HairObjects != null)
+                if (HairObjects.Count > 0)
+                    foreach (var o in HairObjects)
+                        if  (o != null)
+                            if (o.GetComponentInChildren<Renderer>() != null)
+                                o.GetComponentInChildren<Renderer>().enabled = value;
         }
         
         
