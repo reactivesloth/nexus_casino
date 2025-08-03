@@ -50,8 +50,8 @@ namespace Code.Chat
         [ObserversRpc(RunLocally = true)]
         public void ShareBalance_ObserversRpc(string nickname, int balance)
         {
-            chatController.HandleLobbyMassage(new MessageData { Message = new MessageInfo{UserId = 0, Message = $"Мой баланс {balance}!"}},
-                UltimateChatBoxStyles.noticeMessage);
+            /*chatController.HandleLobbyMassage(new MessageData { Message = new MessageInfo{UserId = 0, Message = $"Мой баланс {balance}!"}},
+                UltimateChatBoxStyles.noticeMessage);*/
         }
 
         #endregion

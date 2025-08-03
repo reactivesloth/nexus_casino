@@ -123,15 +123,6 @@ namespace Code.API.Models
     }
 
     [Serializable]
-    public class MessageData
-    {
-        public string username;
-        public string lobby;
-        public int type;
-        public string text;
-    }
-
-    [Serializable]
     public class SendMessageRequest
     {
         public string lobby_id;

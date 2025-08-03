@@ -1,16 +1,12 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.Network.Lobby;
 using Code.Player;
-using Code.Utility;
 using NativeWebSocket;
 using Proyecto26;
 using TankAndHealerStudioAssets;
 using UnityEngine;
-using UnityEngine.Events;
 
 namespace Code.Chat
 {
@@ -45,22 +41,30 @@ namespace Code.Chat
 
         private void OnEnable()
         {
-            chatWebSocket = new WebSocket("wss://back.nexusmetaclub.com/api/client/ws/lobby",
-                ClientDataStorage.GetJwtHeader());
-            chatWebSocket.Connect();
+            Debug.Log("OnEnable");
+            chatWebSocket = new WebSocket($"ws://back.nexusmetaclub.com/api/client/ws/lobby?jwt={ClientDataStorage.AccessToken}&lobby_id={"main"}");
+            
             chatWebSocket.OnMessage += OnMessageRecived;
+            chatWebSocket.OnError += Debug.LogError;
+            chatWebSocket.OnOpen += () => chatWebSocket.SendText("{\n  \"event\": \"send_message\",\n  \"data\": {\n    \"lobby_id\": \"main\",\n    \"message\": \"Привет всем!\",\n    \"type\": \"message\"\n  }\n}");
+            
+            chatWebSocket.Connect();
         }
 
         private void Update()
         {
             if (Input.GetKeyUp(KeyCode.Tab) && CurrentChatBox.IsEnabled)
                 ChangeChat();
+            
+#if !UNITY_WEBGL || UNITY_EDITOR
+            chatWebSocket.DispatchMessageQueue();
+#endif
 
             if (chatWebSocket.State == WebSocketState.Open)
                 PingChatConnection();
         }
 
-        private float _pingInterval = 2f;
+        private float _pingInterval = 5f;
         private float _currentPingInterval = 0;
         private void PingChatConnection()
         {
@@ -145,73 +149,52 @@ namespace Code.Chat
         private void OnMessageRecived(byte[] byteData)
         {
             var dataText = System.Text.Encoding.UTF8.GetString(byteData);
-            var messageData = JsonUtility.FromJson<MessageData>(dataText);
-
-            Debug.Log(messageData);
-
-
-            HandleGlobalMassage(messageData);
-            if (messageData.Message.LobbyId == LobbyVariables.Instance.currentLobby.lobbyId)
-                HandleLobbyMassage(messageData);
+            Debug.Log(dataText);
+            var reciveData = JsonUtility.FromJson<ChatModel<Empty>>(dataText);
+            ChatModel<NewMessageData> chatMessageData;
+            if(reciveData.@event is ChatSocketEvents.NewMessage or ChatSocketEvents.NewImportantMessage)
+                chatMessageData =  JsonUtility.FromJson<ChatModel<NewMessageData>>(dataText);
+            else 
+                return;
+            
+            if(chatMessageData.data.message.lobby_id == LobbyVariables.Instance.currentLobby.lobbyId)
+                HandleLobbyMassage(chatMessageData.data.message);
+            HandleGlobalMassage(chatMessageData.data.message);
         }
 
         private void OnInputFieldSubmittedCurrentBox(string text)
         {
             if (CurrentChatBox.InputFieldContainsCommand)
                 return;
-
-            var message = new MessageData
-            {
-                Message = new MessageInfo
-                {
-                    LobbyId = LobbyVariables.Instance.currentLobby.lobbyId,
-                    Message = text,
-                    UserId = 0
-                    // username = ClientDataStorage.UserData.username
-                }
-            };
-
-            var style = UltimateChatBoxStyles.boldUsername;
-
-            HandleLobbyMassage(message, style);
-            HandleGlobalMassage(message, style);
             
             //TODO: Send
 
-            var sendRequest = new RequestHelper
+            var sendMessageModel = new ChatModel<SendMassage>
             {
-                Uri = ApiRoutes.SendMessageUrl(),
-                Headers = ClientDataStorage.GetJwtHeader(),
-                Body = new SendMessageRequest
+                @event = ChatSocketEvents.SendMessage,
+                data = new SendMassage
                 {
                     lobby_id = LobbyVariables.Instance.currentLobby.lobbyId,
                     message = text,
                     type = "message"
-                },
+                }
             };
 
-            RestClient.Post(sendRequest);
+            var stringToSend = JsonUtility.ToJson(sendMessageModel);
+            Debug.Log(stringToSend);
+
+            chatWebSocket.SendText(stringToSend);
         }
 
-        public void HandleGlobalMassage(MessageData message, UltimateChatBox.ChatStyle style = null)
+        public void HandleGlobalMassage(MessageData message)
         {
-            globalChatBox.RegisterChat($"[...{message.Message.LobbyId.Substring(message.Message.LobbyId.Length - 4)}]{message.Message.UserId}",
-                message.Message.Message, style);
+            globalChatBox.RegisterChat($"[...{message.lobby_id.Substring(message.lobby_id.Length - 4)}]{message.user.username}",
+                message.message);
         }
 
-        public void HandleLobbyMassage(MessageData message, UltimateChatBox.ChatStyle style = null)
+        public void HandleLobbyMassage(MessageData message)
         {
-            lobbyChatBox.RegisterChat($"{message.Message.UserId}", message.Message.Message, style);
+            lobbyChatBox.RegisterChat($"{message.user.username}", message.message);
         }
-    }
-
-    [Serializable]
-    public class CommandData
-    {
-        public string commandValue;
-        public bool requireMessageValue = false;
-        public UnityEvent<string> unityEvent;
-
-        [TextArea] public string description;
     }
 }
