@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
@@ -16,24 +17,28 @@ namespace Code.UI
 {
     public class StoriesUI : MonoBehaviour
     {
-        [Header("UI References")] 
-        [SerializeField] private Image image;
+        [Header("UI References")] [SerializeField]
+        private Image image;
+
         [SerializeField] private TMP_Text playerName;
         [SerializeField] private Transform progressBarContainer;
         [SerializeField] private GameObject progressBarPrefab;
 
-        [Header("Story Settings")] 
-        [SerializeField] private int storiesPerCycle = 5;
+        [Header("Story Settings")] [SerializeField]
+        private int storiesPerCycle = 5;
+
         [SerializeField] private float storyDisplayTime = 3f;
 
-        [Header("Additional settings")] 
-        [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        [Header("Additional settings")] [SerializeField]
+        private SlotMachineInteractable slotMachineInteractable;
 
         private List<GetStoryData> _stories = new();
         private Coroutine _storyCoroutine;
         private Coroutine _waitCoroutine;
         private List<Image> _progressBars = new();
         private bool _isCurved;
+
+        private readonly Dictionary<int, Sprite> _idSpriteDictionaryCash = new();
 
         private void Awake()
         {
@@ -47,10 +52,12 @@ namespace Code.UI
 
         private void OnDisable()
         {
-            if(_storyCoroutine != null)
+            if (_storyCoroutine != null)
                 StopCoroutine(_storyCoroutine);
-            if(_waitCoroutine != null)
+            if (_waitCoroutine != null)
                 StopCoroutine(_waitCoroutine);
+            
+            ClearCash();
         }
 
         private void TryFetchStories(Action onStoriesFetched)
@@ -87,11 +94,10 @@ namespace Code.UI
                 }
 
                 _stories = responseResult.data.screenshots;
+                ClearOldSprites();
+
                 onStoriesFetched?.Invoke();
-            }).Catch(error =>
-            {
-                StartNewWaitStories();
-            });
+            }).Catch(error => { StartNewWaitStories(); });
         }
 
         private void StartNewWaitStories()
@@ -110,7 +116,7 @@ namespace Code.UI
 
         private void StartNewCycle()
         {
-            if(slotMachineInteractable && !slotMachineInteractable.IsUsing )
+            if (slotMachineInteractable && !slotMachineInteractable.IsUsing)
                 return;
 
             if (_storyCoroutine != null)
@@ -156,8 +162,14 @@ namespace Code.UI
                 playerName.text = story.user.username;
 
                 var imageUrl = Uri.EscapeUriString(story.image_url);
-                using (var imageLoadRequest = UnityWebRequest.Get(imageUrl))
+
+                if (_idSpriteDictionaryCash.TryGetValue(story.id, out var cashedSprite))
                 {
+                    image.sprite = cashedSprite;
+                }
+                else
+                {
+                    using var imageLoadRequest = UnityWebRequest.Get(imageUrl);
                     yield return imageLoadRequest.SendWebRequest();
                     if (imageLoadRequest.result != UnityWebRequest.Result.Success)
                     {
@@ -167,9 +179,10 @@ namespace Code.UI
                     {
                         var texture = imageLoadRequest.downloadHandler.data;
                         image.sprite = ImageByteConverter.CreateSpriteFromBytes(texture);
+                        _idSpriteDictionaryCash.TryAdd(story.id, image.sprite);
                     }
                 }
-                
+
                 yield return AnimateProgressBar(_progressBars[i], storyDisplayTime);
             }
 
@@ -188,5 +201,30 @@ namespace Code.UI
 
             bar.fillAmount = 1f;
         }
+
+        private void ClearOldSprites()
+        {
+            foreach (var storyId in _idSpriteDictionaryCash.Keys.Where(storyId =>
+                         _stories.FirstOrDefault(s => s.id == storyId) == null))
+            {
+                var sprite = _idSpriteDictionaryCash[storyId];
+                DestroyImmediate(sprite.texture);
+                DestroyImmediate(sprite);
+                _idSpriteDictionaryCash.Remove(storyId);
+            }
+        }
+
+        private void ClearCash()
+        {
+            print($"[Stories] ClearCash");
+            foreach (var sprite in _idSpriteDictionaryCash.Values)
+            {
+                DestroyImmediate(sprite.texture);
+                DestroyImmediate(sprite);
+            }
+            
+            _idSpriteDictionaryCash.Clear();
+        }
+        
     }
 }
