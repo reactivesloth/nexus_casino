@@ -109,7 +109,11 @@ namespace Code.UI
                 }
             }
 
+#if UNITY_ANDROID
+            resolutionOriginalIndices.Reverse();
+#endif
             resolutionDropdown.AddOptions(displayOptions);
+            
         }
 
         // private void PopulateAntiAliasingDropdown()
