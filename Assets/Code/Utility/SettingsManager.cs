@@ -87,7 +87,8 @@ namespace Code.Utility
             MaterialVariantSwitcher msv = FindObjectOfType<MaterialVariantSwitcher>();
             msv.SwitchMode(QualityLevel < 2);
             
-            ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
+            if (PlayerPrefs.HasKey("ResolutionIndex"))
+                ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
             FPSLimit = PlayerPrefs.GetInt("FPSLimit", DefaultFPSLimit);
             EffectsEnabled = PlayerPrefs.GetInt("EffectsEnabled", DefaultEffectsEnabled ? 1 : 0) == 1;
             AntiAliasingLevel = PlayerPrefs.GetInt("AntiAliasingLevel", DefaultAntiAliasingLevel);
@@ -128,7 +129,7 @@ namespace Code.Utility
             SFXVolume = DefaultSFXVolume;
 
             QualityLevel = DefaultGraphicsQuality;
-            ResolutionIndex = DefaultResolutionIndex;
+            //ResolutionIndex = DefaultResolutionIndex;
             FPSLimit = DefaultFPSLimit;
             EffectsEnabled = DefaultEffectsEnabled;
             AntiAliasingLevel = DefaultAntiAliasingLevel;
