@@ -173,7 +173,7 @@ namespace Code.Network
                 CaptureAndSend();
             }
         }
-
+        
         private void CaptureAndSend()
         {
             if (rawImage == null || rawImage.texture == null)
@@ -182,37 +182,34 @@ namespace Code.Network
             int w = Mathf.RoundToInt(rawImage.texture.width * downscale);
             int h = Mathf.RoundToInt(rawImage.texture.height * downscale);
 
-            // Инициализация пула текстур
             if (_rt == null || _rt.width != w || _rt.height != h)
             {
                 if (_rt != null) _rt.Release();
-                _rt = new RenderTexture(w, h, 0, RenderTextureFormat.ARGB32);
-                _readTex = new Texture2D(w, h, TextureFormat.RGB24, false);
+                _rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
+
+                if (_readTex == null || _readTex.width != w || _readTex.height != h)
+                    _readTex = new Texture2D(w, h, TextureFormat.RGB24, false);
             }
 
-            // GPU-копирование
             Graphics.Blit(rawImage.texture, _rt);
             RenderTexture.active = _rt;
             _readTex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
-            _readTex.Apply(false);
             RenderTexture.active = null;
 
-            // Скип дубликатов
+            byte[] encoded = useJpg
+                ? _readTex.EncodeToJPG(jpgQuality)
+                : _readTex.EncodeToPNG();
+
             if (skipDuplicateFrames)
             {
-                var hsh = Hash128.Compute(_readTex.GetRawTextureData());
+                var hsh = Hash128.Compute(encoded);
                 if (hsh == _lastHash) return;
                 _lastHash = hsh;
             }
 
-            // Кодирование
-            byte[] encoded = useJpg
-                ? _readTex.EncodeToJPG(jpgQuality)
-                : _readTex.EncodeToPNG();
             if (lz4Compress)
                 encoded = LZ4Pickler.Pickle(encoded, lz4Level);
 
-            // Отправка одним RPC (фрагментация включена через транспорт)
             UploadFrame(encoded, w, h);
         }
 
