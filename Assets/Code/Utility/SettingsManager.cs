@@ -35,7 +35,10 @@ namespace Code.Utility
                     resolutionOriginalIndices.Add(i); // запоминаем оригинальный индекс
                 }
             }
-            
+
+#if UNITY_ANDROID
+            return resolutionOriginalIndices.Reverse();
+#endif
             return resolutionOriginalIndices[^1];
         }
 
@@ -87,8 +90,7 @@ namespace Code.Utility
             MaterialVariantSwitcher msv = FindObjectOfType<MaterialVariantSwitcher>();
             msv.SwitchMode(QualityLevel < 2);
             
-            if (PlayerPrefs.HasKey("ResolutionIndex"))
-                ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
+            ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
             FPSLimit = PlayerPrefs.GetInt("FPSLimit", DefaultFPSLimit);
             EffectsEnabled = PlayerPrefs.GetInt("EffectsEnabled", DefaultEffectsEnabled ? 1 : 0) == 1;
             AntiAliasingLevel = PlayerPrefs.GetInt("AntiAliasingLevel", DefaultAntiAliasingLevel);
