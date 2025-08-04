@@ -235,9 +235,6 @@ namespace Code.UI
                 return;
             int originalIndex = resolutionOriginalIndices[uiIndex];
             SettingsManager.Instance.SetResolution(originalIndex);
-            // сразу применим
-            var res = Screen.resolutions[originalIndex];
-            Screen.SetResolution(res.width, res.height, Screen.fullScreen);
         }
 
         /*private void OnFPSLimitEdited(string str)

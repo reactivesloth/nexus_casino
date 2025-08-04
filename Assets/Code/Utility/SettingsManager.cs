@@ -178,8 +178,12 @@ namespace Code.Utility
 
         private void ApplyResolution()
         {
-            var resolutions = Screen.resolutions;
-            if (ResolutionIndex >= 0 && ResolutionIndex < resolutions.Length)
+            List<Resolution> resolutions = new List<Resolution>(Screen.resolutions);
+#if UNITY_ANDROID
+            resolutions.Reverse();
+#endif
+            
+            if (ResolutionIndex >= 0 && ResolutionIndex < resolutions.Count)
             {
                 var res = resolutions[ResolutionIndex];
                 Screen.SetResolution(res.width, res.height, Screen.fullScreen);
