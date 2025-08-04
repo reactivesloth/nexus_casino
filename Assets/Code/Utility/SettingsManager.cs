@@ -16,7 +16,7 @@ namespace Code.Utility
         private const float DefaultSlotsVolume = 30f;
         private const float DefaultSFXVolume = 30f;
         private int DefaultGraphicsQuality => QualitySettings.GetQualityLevel();
-        private int DefaultResolutionIndex => GetDefaultRes ();
+        /*private int DefaultResolutionIndex => GetDefaultRes ();
 
         private int GetDefaultRes()
         {
@@ -40,7 +40,7 @@ namespace Code.Utility
             return resolutionOriginalIndices.Reverse();
 #endif
             return resolutionOriginalIndices[^1];
-        }
+        }*/
 
         private const int DefaultFPSLimit = 60;
         private const bool DefaultEffectsEnabled = true;
@@ -57,7 +57,7 @@ namespace Code.Utility
 
         [Header("Graphics")] 
         public int QualityLevel { get; private set; }
-        public int ResolutionIndex { get; private set; }
+        //public int ResolutionIndex { get; private set; }
         public int FPSLimit { get; private set; }
         public bool EffectsEnabled { get; private set; }
         public int AntiAliasingLevel { get; private set; }
@@ -90,7 +90,7 @@ namespace Code.Utility
             MaterialVariantSwitcher msv = FindObjectOfType<MaterialVariantSwitcher>();
             msv.SwitchMode(QualityLevel < 2);
             
-            ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
+            //ResolutionIndex = PlayerPrefs.GetInt("ResolutionIndex", DefaultResolutionIndex);
             FPSLimit = PlayerPrefs.GetInt("FPSLimit", DefaultFPSLimit);
             EffectsEnabled = PlayerPrefs.GetInt("EffectsEnabled", DefaultEffectsEnabled ? 1 : 0) == 1;
             AntiAliasingLevel = PlayerPrefs.GetInt("AntiAliasingLevel", DefaultAntiAliasingLevel);
@@ -110,7 +110,7 @@ namespace Code.Utility
             PlayerPrefs.SetFloat("SFXVolume", SFXVolume);
 
             PlayerPrefs.SetInt("GraphicsQuality", QualityLevel);
-            PlayerPrefs.SetInt("ResolutionIndex", ResolutionIndex);
+            //PlayerPrefs.SetInt("ResolutionIndex", ResolutionIndex);
             PlayerPrefs.SetInt("FPSLimit", FPSLimit);
             PlayerPrefs.SetInt("EffectsEnabled", EffectsEnabled ? 1 : 0);
             PlayerPrefs.SetInt("AntiAliasingLevel", AntiAliasingLevel);
@@ -162,7 +162,7 @@ namespace Code.Utility
 
             // Graphics & display
             QualitySettings.SetQualityLevel(QualityLevel);
-            ApplyResolution();
+            //ApplyResolution();
             Application.targetFrameRate = FPSLimit;
             QualitySettings.antiAliasing = AntiAliasingLevel;
 
@@ -176,7 +176,7 @@ namespace Code.Utility
             OnSettingsApplied?.Invoke();
         }
 
-        private void ApplyResolution()
+        /*private void ApplyResolution()
         {
             List<Resolution> resolutions = new List<Resolution>(Screen.resolutions);
 #if UNITY_ANDROID
@@ -188,7 +188,7 @@ namespace Code.Utility
                 var res = resolutions[ResolutionIndex];
                 Screen.SetResolution(res.width, res.height, Screen.fullScreen);
             }
-        }
+        }*/
 
         #endregion
 
@@ -235,12 +235,12 @@ namespace Code.Utility
             msv.SwitchMode(QualityLevel < 2);
         }
 
-        public void SetResolution(int index)
-        {
-            ResolutionIndex = index;
-            PlayerPrefs.SetInt("ResolutionIndex", index);
-            ApplyResolution();
-        }
+        // public void SetResolution(int index)
+        // {
+        //     ResolutionIndex = index;
+        //     PlayerPrefs.SetInt("ResolutionIndex", index);
+        //     ApplyResolution();
+        // }
 
         public void SetFPSLimit(int fps)
         {

@@ -21,7 +21,7 @@ namespace Code.UI
 
         [Header("Graphics")]
         public TextSelectionSlider qualityDropdown;
-        public TextSelectionSlider resolutionDropdown;
+        //public TextSelectionSlider resolutionDropdown;
         // public InputField fpsInputField;
         // public Toggle effectsToggle;
         // public Dropdown antiAliasingDropdown;
@@ -44,7 +44,7 @@ namespace Code.UI
         public Button resetDefaultsButton;
 
         // Вспомогательные структуры
-        private List<int> resolutionOriginalIndices = new List<int>(); // для маппинга фильтрованных в оригинальные
+        //private List<int> resolutionOriginalIndices = new List<int>(); // для маппинга фильтрованных в оригинальные
 
         // Антиалиасинг: отображаемые + реальные значения
         private readonly int[] aaLevels = new[] { 0, 2, 4, 8 };
@@ -60,7 +60,7 @@ namespace Code.UI
             }
 
             PopulateQualityDropdown();
-            PopulateResolutionDropdown();
+            //PopulateResolutionDropdown();
             // PopulateAntiAliasingDropdown();
             // PopulateLanguageDropdown();
 
@@ -89,7 +89,7 @@ namespace Code.UI
             qualityDropdown.AddOptions(names);
         }
 
-        private void PopulateResolutionDropdown()
+        /*private void PopulateResolutionDropdown()
         {
             resolutionDropdown.ClearOptions();
             resolutionOriginalIndices.Clear();
@@ -114,7 +114,7 @@ namespace Code.UI
 #endif
             resolutionDropdown.AddOptions(displayOptions);
             
-        }
+        }*/
 
         // private void PopulateAntiAliasingDropdown()
         // {
@@ -141,7 +141,7 @@ namespace Code.UI
             sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
 
             qualityDropdown.onValueChanged.AddListener(OnQualityChanged);
-            resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
+            //resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
             // fpsInputField.onEndEdit.AddListener(OnFPSLimitEdited);
             // effectsToggle.onValueChanged.AddListener(OnEffectsToggled);
             // antiAliasingDropdown.onValueChanged.AddListener(OnAntiAliasingChanged);
@@ -167,12 +167,12 @@ namespace Code.UI
             qualityDropdown.RefreshShownValue();
 
             // Resolution: найти отображаемый индекс, соответствующий текущему ResolutionIndex
-            int uiResIndex = resolutionOriginalIndices.FindIndex(orig => orig == sm.ResolutionIndex);
-            if (uiResIndex >= 0)
-                resolutionDropdown.value = uiResIndex;
-            else
-                resolutionDropdown.value = 0;
-            resolutionDropdown.RefreshShownValue();
+            // int uiResIndex = resolutionOriginalIndices.FindIndex(orig => orig == sm.ResolutionIndex);
+            // if (uiResIndex >= 0)
+            //     resolutionDropdown.value = uiResIndex;
+            // else
+            //     resolutionDropdown.value = 0;
+            // resolutionDropdown.RefreshShownValue();
 
             // fpsInputField.text = sm.FPSLimit.ToString();
             // effectsToggle.isOn = sm.EffectsEnabled;
@@ -229,13 +229,13 @@ namespace Code.UI
             QualitySettings.SetQualityLevel(idx); // визуально сразу
         }
 
-        private void OnResolutionChanged(int uiIndex)
-        {
-            if (uiIndex < 0 || uiIndex >= resolutionOriginalIndices.Count)
-                return;
-            int originalIndex = resolutionOriginalIndices[uiIndex];
-            SettingsManager.Instance.SetResolution(originalIndex);
-        }
+        // private void OnResolutionChanged(int uiIndex)
+        // {
+        //     if (uiIndex < 0 || uiIndex >= resolutionOriginalIndices.Count)
+        //         return;
+        //     int originalIndex = resolutionOriginalIndices[uiIndex];
+        //     SettingsManager.Instance.SetResolution(originalIndex);
+        // }
 
         /*private void OnFPSLimitEdited(string str)
         {
