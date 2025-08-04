@@ -185,6 +185,7 @@ public class PlayerInput : MonoBehaviour
         }
     }
     public bool IsRMB => _player.RMB != null && _player.RMB.triggered;
+    public bool IsRMBDown => _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f;
     public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
     
 

@@ -233,7 +233,7 @@ namespace Code.Player
         
         private void SitCameraRotation()
         {
-            var _input = (LookCameraLimitRotationRKM && !input.IsRMB) ? Vector2.zero : input.Look;
+            var _input = (LookCameraLimitRotationRKM && !input.IsRMBDown) ? Vector2.zero : input.Look;
             
             if (_input.sqrMagnitude >= Threshold)
             {
