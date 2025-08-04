@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -25,10 +25,6 @@ namespace Vuplex.WebView {
     /// into a Canvas via the editor or by programmatically calling CanvasKeyboard.Instantiate().
     /// For an example, please see 3D WebView's CanvasWorldSpaceDemo scene.
     /// </summary>
-    /// <remarks>
-    /// Important note: 2D WebView for WebGL doesn't support CanvasKeyboard due to a browser limitation
-    /// where clicking on the keyboard causes it to steal focus from webviews.
-    /// </remarks>
     public class CanvasKeyboard : BaseKeyboard {
 
         /// <summary>
@@ -55,7 +51,7 @@ namespace Vuplex.WebView {
         /// };
         /// </code>
         /// </example>
-        public CanvasWebViewPrefab WebViewPrefab { get => (CanvasWebViewPrefab)_webViewPrefab; }
+        public CanvasWebViewPrefab WebViewPrefab { get { return (CanvasWebViewPrefab)_webViewPrefab; }}
 
         /// <summary>
         /// Creates a new instance.
@@ -104,8 +100,8 @@ namespace Vuplex.WebView {
         // Added in v3.12, deprecated in v4.0.
         [Obsolete("CanvasKeyboard.InitialResolution is now deprecated. Please use CanvasKeyboard.Resolution instead.")]
         public float InitialResolution {
-            get => Resolution;
-            set => Resolution = value;
+            get { return Resolution; }
+            set { Resolution = value; }
         }
     }
 }

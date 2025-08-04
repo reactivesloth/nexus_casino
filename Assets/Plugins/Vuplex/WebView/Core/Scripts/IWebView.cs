@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -94,20 +94,14 @@ namespace Vuplex.WebView {
         /// Raised whenever SetFocused() is called. This event primarily exists because 3D WebView
         /// internally uses it to to implement keyboard focus handling.
         /// </summary>
-        /// <example>
-        /// <code>
-        /// await webViewPrefab.WaitUntilInitialized();
-        /// webViewPrefab.WebView.FocusChanged += (sender, eventArgs) => {
-        ///     Debug.Log("SetFocused() was called with value: " + eventArgs.Value);
-        /// };
-        /// </code>
-        /// </example>
         event EventHandler<EventArgs<bool>> FocusChanged;
 
         /// <summary>
         /// Indicates when an input field has been focused or unfocused. This can be used,
         /// for example, to determine when to show or hide an on-screen keyboard.
         /// This event is also raised when a focused input field is clicked subsequent times.
+        /// Note that this event is currently only fired for input fields focused in the main frame
+        /// and is not fired for input fields in iframes.
         /// </summary>
         /// <example>
         /// <code>
@@ -117,35 +111,7 @@ namespace Vuplex.WebView {
         /// };
         /// </code>
         /// </example>
-        /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>
-        ///     When an [&lt;iframe&gt;](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) element is focused,
-        ///     the event specifies the type FocusedInputFieldType.IFrame. This is because the
-        ///     event's implementation is unable detect the type of element that is focused inside an &lt;iframe&gt;.
-        ///   </item>
-        ///   <item>
-        ///     For 2D WebView for WebGL, this API is often disabled due to browser limitations.
-        ///     For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        ///   </item>
-        /// </list>
-        /// </remarks>
         event EventHandler<FocusedInputFieldChangedEventArgs> FocusedInputFieldChanged;
-
-        /// <summary>
-        /// Indicates that the page failed to load due to an error. This can happen, for example,
-        /// if DNS is unable to resolve the hostname.
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// await webViewPrefab.WaitUntilInitialized();
-        /// webViewPrefab.WebView.LoadFailed += (sender, eventArgs) => {
-        ///     Debug.Log($"Load failed. Error code: {eventArgs.NativeErrorCode}, URL: {eventArgs.Url}");
-        /// };
-        /// </code>
-        /// </example>
-        event EventHandler<LoadFailedEventArgs> LoadFailed;
 
         /// <summary>
         /// Indicates changes in the loading status of a web page. This event can be used, for example,
@@ -196,17 +162,24 @@ namespace Vuplex.WebView {
         event EventHandler<EventArgs<string>> MessageEmitted;
 
         /// <summary>
+        /// Indicates that the page failed to load due to an error. This can happen, for instance,
+        /// if DNS is unable to resolve the hostname.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// await webViewPrefab.WaitUntilInitialized();
+        /// webViewPrefab.WebView.PageLoadFailed += (sender, eventArgs) => {
+        ///     Debug.Log("Page load failed");
+        /// };
+        /// </code>
+        /// </example>
+        event EventHandler PageLoadFailed;
+
+        /// <summary>
         /// Indicates that the browser engine reported that its process for the webview terminated unexpectedly,
-        /// either because the web process crashed or because it was killed by the operating system. The webview
-        /// cannot be used after it has been terminated, so if this event occurs, the webview must be destroyed,
-        /// and then the application can optionally create a new webview to replace it. 3D WebView is only aware
-        /// that the browser engine reported that its process terminated, and 3D WebView doesn't have any
-        /// additional insights into what caused the termination. For more details, you can visit the
-        /// documentation for the native platform APIs that 3D WebView uses to detect termination: <br/>
-        /// - Windows and macOS: <see href="https://magpcss.org/ceforum/apidocs3/projects/(default)/CefRequestHandler.html#OnRenderProcessTerminated(CefRefPtr%3CCefBrowser%3E,TerminationStatus)">OnRenderProcessTerminated()</see><br/>
-        /// - Android: <see href="https://developer.android.com/reference/android/webkit/WebViewClient#onRenderProcessGone(android.webkit.WebView,%20android.webkit.RenderProcessGoneDetail)">onRenderProcessGone()</see><br/>
-        /// - Android Gecko: <see href="https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.ContentDelegate.html#onCrash(org.mozilla.geckoview.GeckoSession)">onCrash()</see> and <see href="https://mozilla.github.io/geckoview/javadoc/mozilla-central/org/mozilla/geckoview/GeckoSession.ContentDelegate.html#onKill(org.mozilla.geckoview.GeckoSession)">onKill()</see><br/>
-        /// - iOS and visionOS: <see href="https://developer.apple.com/documentation/webkit/wknavigationdelegate/1455639-webviewwebcontentprocessdidtermi?language=objc">webViewWebContentProcessDidTerminate</see>
+        /// either because the web process crashed or because it was killed by the
+        /// operating system. The webview cannot be used after it has been terminated, so if this event occurs, the webview must be
+        /// destroyed, and then the appication can optionally create a new webview to replace it.
         /// </summary>
         /// <example>
         /// <code>
@@ -393,13 +366,7 @@ namespace Vuplex.WebView {
         /// Returns a PNG image of the content visible in the webview.
         /// </summary>
         /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>On iOS, screenshots do not include video content, which appears black.</item>
-        ///   <item>
-        ///     2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        ///   </item>
-        /// </list>
+        /// On iOS, screenshots do not include video content, which appears black.
         /// </remarks>
         /// <example>
         /// <code>
@@ -450,9 +417,6 @@ namespace Vuplex.WebView {
         /// <example>
         /// <c>webViewPrefab.WebView.Copy();</c>
         /// </example>
-        /// <remarks>
-        /// 2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        /// </remarks>
         /// <seealso cref="Cut"/>
         /// <seealso cref="Paste"/>
         /// <seealso cref="SelectAll"/>
@@ -481,9 +445,6 @@ namespace Vuplex.WebView {
         /// <example>
         /// <c>webViewPrefab.WebView.Cut();</c>
         /// </example>
-        /// <remarks>
-        /// 2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        /// </remarks>
         /// <seealso cref="Copy"/>
         /// <seealso cref="Paste"/>
         /// <seealso cref="SelectAll"/>
@@ -510,50 +471,10 @@ namespace Vuplex.WebView {
         /// <code>
         /// await webViewPrefab.WaitUntilInitialized();
         /// await webViewPrefab.WebView.WaitForNextPageLoadToFinish();
-        ///
-        /// // Example 1: Get the text of the first &lt;h1&gt; element on the page.
         /// var headerText = await webViewPrefab.WebView.ExecuteJavaScript("document.getElementsByTagName('h1')[0].innerText");
         /// Debug.Log("H1 text: " + headerText);
-        ///
-        /// // Example 2: Set the web page title to text input by the user.
-        /// webViewPrefab.WebView.ExecuteJavaScript(@"
-        ///     // Enclose in a block to prevent titleText from being a global variable.
-        ///     {
-        ///         let titleText = window.prompt('What do you want to set the web page title to?');
-        ///         document.title = titleText;
-        ///     }
-        /// ");
-        ///
-        /// // Example 3: Get the URL of the image at the point (500px, 350px).
-        /// Vector2Int pointInPixels = new Vector2Int(500, 350);
-        /// var imageUrl = await webViewPrefab.WebView.ExecuteJavaScript($@"
-        ///     (function() {{
-        ///         const element = document.elementFromPoint({pointInPixels.x}, {pointInPixels.y});
-        ///         if (element instanceof HTMLImageElement) {{
-        ///             return element.currentSrc;
-        ///         }}
-        ///         return '';
-        ///     }})()
-        /// ");
-        /// Debug.Log("Image URL: " + imageUrl);
         /// </code>
         /// </example>
-        /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>
-        ///     For Android, iOS, and UWP, JavaScript variables not enclosed in a [block](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/block) become global variables. Global variables can be assigned to again in subsequent calls to ExecuteJavaScript(), but they cannot be declared again (i.e. using `let` or `var`) because doing so will result in a JavaScript error like the following:
-        ///     ```
-        ///     Uncaught SyntaxError: Identifier '{variable_name}' has already been declared
-        ///     ```
-        ///     If your JavaScript declares variables, it is recommended to enclose the JavaScript in a block like shown in example #2 above. This behavior is only exhibited by the 3D WebView packages for Android, iOS, and UWP. For the other 3D WebView packages (Windows, macOS, Android Gecko, and WebGL), JavaScript variables are not declared in the global scope.
-        ///   </item>
-        ///   <item>
-        ///     For 2D WebView for WebGL, this API is often disabled due to browser limitations.
-        ///     For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        ///   </item>
-        /// </list>
-        /// </remarks>
         /// <seealso cref="PageLoadScripts"/>
         /// <seealso href="https://support.vuplex.com/articles/javascript-promise-result">How to get ExecuteJavaScript() to return the result of a Promise?</seealso>
         /// <seealso href="https://support.vuplex.com/articles/how-to-send-messages-from-javascript-to-c-sharp">JS-to-C# message passing</seealso>
@@ -568,26 +489,16 @@ namespace Vuplex.WebView {
         void ExecuteJavaScript(string javaScript, Action<string> callback);
 
         /// <summary>
-        /// <para>
-        /// A replacement for <see href="https://docs.unity3d.com/ScriptReference/Texture2D.GetRawTextureData.html">Texture2D.GetRawTextureData()</see>
+        /// A replacement for [Texture2D.GetRawTextureData()](https://docs.unity3d.com/ScriptReference/Texture2D.GetRawTextureData.html)
         /// for IWebView.Texture.
-        /// </para>
+        /// </summary>
+        /// <remarks>
         /// Unity's Texture2D.GetRawTextureData() method currently does not work for textures created with
         /// Texture2D.CreateExternalTexture(). So, this method serves as a replacement by providing
         /// the equivalent functionality. You can load the bytes returned by this method into another
-        /// texture using <see href="https://docs.unity3d.com/ScriptReference/Texture2D.LoadRawTextureData.html">Texture2D.LoadRawTextureData()</see>.
-        /// </summary>
-        /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>On iOS, the texture data excludes video content, which appears black.</item>
-        ///   <item>
-        ///     2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        ///   </item>
-        /// </list>
+        /// texture using [Texture2D.LoadRawTextureData()](https://docs.unity3d.com/ScriptReference/Texture2D.LoadRawTextureData.html).
+        /// Note that on iOS, the texture data excludes video content, which appears black.
         /// </remarks>
-        /// <example>
-        /// <code>
         /// <example>
         /// <code>
         /// var webView = webViewPrefab.WebView;
@@ -694,12 +605,8 @@ namespace Vuplex.WebView {
         /// for requests for subsequent resources, like linked JavaScript or CSS files.
         /// </summary>
         /// <remarks>
-        /// For Windows, macOS, and Android Gecko, this method cannot be used to set the browser's Accept-Language header. For more details, please see the following resources: <br/>
-        /// - [How to change the Accept-Language header on Windows and macOS](https://support.vuplex.com/articles/how-to-change-accept-language-header) <br/>
-        /// - [AndroidGeckoWebView.SetLocales()](https://developer.vuplex.com/webview/AndroidGeckoWebView#SetLocales)
-        /// </remarks>
-        /// <remarks>
-        /// For 2D WebView for WebGL, this method is unable to send additional headers due to browser limitations, so it loads the URL without additional headers.
+        /// On Windows and macOS, this method cannot be used to set the Accept-Language header.
+        /// For more info, please see [this article](https://support.vuplex.com/articles/how-to-change-accept-language-header).
         /// </remarks>
         /// <example>
         /// <code>
@@ -724,9 +631,6 @@ namespace Vuplex.WebView {
         /// <example>
         /// <c>webViewPrefab.WebView.Paste();</c>
         /// </example>
-        /// <remarks>
-        /// 2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        /// </remarks>
         /// <seealso cref="Copy"/>
         /// <seealso cref="Cut"/>
         void Paste();
@@ -782,14 +686,7 @@ namespace Vuplex.WebView {
         /// Resizes the webview to the given dimensions in pixels.
         /// </summary>
         /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>If you're using WebViewPrefab, you should call WebViewPrefab.Resize() instead.</item>
-        ///   <item>
-        ///     On visionOS, if the webview was created with VisionOSWebView.CreateInWindow(), then calling Resize() has no effect
-        ///     because only the user can resize the webview using visionOS's native windowing controls.
-        ///   </item>
-        /// </list>
+        /// If you're using WebViewPrefab, you should call WebViewPrefab.Resize() instead.
         /// </remarks>
         /// <seealso cref="Size"/>
         /// <seealso cref="WebViewPrefab.Resolution"/>
@@ -941,16 +838,8 @@ namespace Vuplex.WebView {
         /// Zooms into the currently loaded web content. Note that the zoom level gets reset when a new page is loaded.
         /// </summary>
         /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>
-        ///     On Windows and macOS, adjusting the zoom also affects other webviews viewing the same site,
-        ///     similar to how tabs behave in a desktop browser.
-        ///   </item>
-        ///   <item>
-        ///     2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        ///   </item>
-        /// </list>
+        /// On Windows and macOS, adjusting the zoom also affects other webviews viewing the same site,
+        /// similar to how tabs behave in a desktop browser.
         /// </remarks>
         /// <example>
         /// <code>
@@ -966,16 +855,8 @@ namespace Vuplex.WebView {
         /// Zooms back out after a previous call to ZoomIn(). Note that the zoom level gets reset when a new page is loaded.
         /// </summary>
         /// <remarks>
-        /// Important notes:
-        /// <list type="bullet">
-        ///   <item>
-        ///     On Windows and macOS, adjusting the zoom also affects other webviews viewing the same site,
-        ///     similar to how tabs behave in a desktop browser.
-        ///   </item>
-        ///   <item>
-        ///     2D WebView for WebGL doesn't support this API due to browser limitations. For more information, please see <see href="https://support.vuplex.com/articles/webgl-limitations">this article</see>.
-        ///   </item>
-        /// </list>
+        /// On Windows and macOS, adjusting the zoom also affects other webviews viewing the same site,
+        /// similar to how tabs behave in a desktop browser.
         /// </remarks>
         /// <example>
         /// <code>
@@ -1030,10 +911,6 @@ namespace Vuplex.WebView {
         [Obsolete(ObsoletionMessages.Init2, true)]
         void Init(Texture2D texture, float width, float height, Texture2D videoTexture);
 
-        // Added in v1.0, deprecated in v4.6.
-        [Obsolete(ObsoletionMessages.PageLoadFailed)]
-        event EventHandler PageLoadFailed;
-
         // Added in v1.0, removed in v4.0.
         [Obsolete(ObsoletionMessages.Resolution, true)]
         float Resolution { get; }
@@ -1068,7 +945,6 @@ namespace Vuplex.WebView {
         public const string HandleKeyboardInput = "IWebView.HandleKeyboardInput() has been renamed to IWebView.SendKey(). Please switch to SendKey().";
         public const string Init = "IWebView.Init(Texture2D, float, float) has been removed in v4. Please switch to IWebView.Init(int, int) and await the Task it returns. For more details, please see this article: https://support.vuplex.com/articles/v4-changes#init";
         public const string Init2 = "IWebView.Init(Texture2D, float, float, Texture2D) has been removed in v4. Please switch to IWebView.Init(int, int) and await the Task it returns. For more details, please see this article: https://support.vuplex.com/articles/v4-changes#init";
-        public const string PageLoadFailed = "IWebView.PageLoadFailed is now deprecated. Please use IWebView.LoadFailed instead: https://developer.vuplex.com/webview/IWebView#LoadFailed";
         public const string Resolution = "IWebView.Resolution has been removed in v4. Please use WebViewPrefab.Resolution or CanvasWebViewPrefab.Resolution instead. For more details, please see this article: https://support.vuplex.com/articles/v4-changes#resolution";
         public const string SetResolution = "IWebView.SetResolution() has been removed in v4. Please set the WebViewPrefab.Resolution or CanvasWebViewPrefab.Resolution property instead. For more details, please see this article: https://support.vuplex.com/articles/v4-changes#resolution";
         public const string SizeInPixels = "IWebView.SizeInPixels is now deprecated. Please use IWebView.Size instead: https://developer.vuplex.com/webview/IWebView#Size";

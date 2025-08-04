@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -15,6 +15,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Serialization;
+using UnityEngine.XR;
 using Vuplex.WebView.Internal;
 
 namespace Vuplex.WebView {
@@ -92,7 +93,7 @@ namespace Vuplex.WebView {
         ///   <item>Native 2D Mode requires that the canvas's render mode be set to "Screen Space - Overlay".</item>
         /// </list>
         /// </remarks>
-        [Label("Native 2D Mode (Android, iOS, WebGL, & UWP only)")]
+        [Label("Native 2D Mode (Android, iOS, WebGL, and UWP only)")]
         [Tooltip("Native 2D Mode positions a native 2D webview in front of the Unity game view instead of rendering web content as a texture in the Unity scene. Native 2D Mode provides better performance on iOS and UWP, because the default mode of rendering web content to a texture is slower. \n\nImportant notes:\n• Native 2D Mode is only supported for Android (non-Gecko), iOS, WebGL, and UWP. For the other 3D WebView packages, the default render mode is used instead.\n• Native 2D Mode requires that the canvas's render mode be set to \"Screen Space - Overlay\".")]
         [HideInInspector]
         [Header("Platform-specific")]
@@ -109,7 +110,6 @@ namespace Vuplex.WebView {
         /// <list type="bullet">
         ///   <item>3D WebView for Android (non-Gecko)</item>
         ///   <item>3D WebView for iOS</item>
-        ///   <item>3D WebView for visionOS</item>
         /// </list>
         /// </remarks>
         /// <remarks>
@@ -117,10 +117,13 @@ namespace Vuplex.WebView {
         /// but you can use Unity's [TouchScreenKeyboard](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html)
         /// API to show the keyboard and then send typed characters to the webview like described in [this article](https://support.vuplex.com/articles/how-to-use-a-third-party-keyboard).
         /// </remarks>
+        /// <remarks>
+        /// On iOS, disabling the keyboard for one webview disables it for all webviews.
+        /// </remarks>
         /// <seealso cref="IWithNativeOnScreenKeyboard"/>
         /// <seealso cref="KeyboardEnabled"/>
-        [Label("Native On-Screen Keyboard (Android, iOS, & visionOS only)")]
-        [Tooltip("Determines whether the operating system's native on-screen keyboard is automatically shown when a text input in the webview is focused. The native on-screen keyboard is only supported for the following packages:\n• 3D WebView for Android (non-Gecko)\n• 3D WebView for iOS\n• 3D WebView for visionOS")]
+        [Label("Native On-Screen Keyboard (Android and iOS only)")]
+        [Tooltip("Determines whether the operating system's native on-screen keyboard is automatically shown when a text input in the webview is focused. The native on-screen keyboard is only supported for the following packages:\n• 3D WebView for Android (non-Gecko)\n• 3D WebView for iOS")]
         public bool NativeOnScreenKeyboardEnabled = true;
 
         /// <summary>
@@ -179,25 +182,6 @@ namespace Vuplex.WebView {
                 }
                 base.Visible = value;
             }
-        }
-
-        public override Vector2 BrowserToScreenPoint(int xInPixels, int yInPixels) {
-
-            if (WebView == null) {
-                return Vector2.zero;
-            }
-            var rect = _getScreenSpaceRect();
-            if (rect == Rect.zero) {
-                return Vector2.zero;
-            }
-            var normalizedPoint = WebView.PointToNormalized(xInPixels, yInPixels);
-            // Clamp x and y to the range [0, WebView.Size].
-            var clampedNormalizedX = Math.Min(Math.Max(normalizedPoint.x, 0), 1);
-            var clampedNormalizedY = Math.Min(Math.Max(normalizedPoint.y, 0), 1);
-            return new Vector2(
-                rect.x + rect.width * clampedNormalizedX,
-                rect.y + rect.height * clampedNormalizedY
-            );
         }
 
         /// <summary>
@@ -304,8 +288,12 @@ namespace Vuplex.WebView {
                 }
                 return false;
             }
-            // Note: this method used to return false if XRSettings.enabled is true in order to prevent accidental use on VR headsets,
-            //       but that caused an issue where Native 2D Mode couldn't be used with AR Foundation.
+            if (XRSettings.enabled) {
+                if (logWarnings) {
+                    _logNative2DModeWarning("CanvasWebViewPrefab.Native2DModeEnabled is enabled but XR is enabled, so Native 2D Mode will not be enabled.");
+                }
+                return false;
+            }
             return true;
         }
 
@@ -344,11 +332,11 @@ namespace Vuplex.WebView {
             _rectTransform.GetWorldCorners(worldCorners);
             var topLeftCorner = worldCorners[1];
             var bottomRightCorner = worldCorners[3];
+
             if (canvas.renderMode != RenderMode.ScreenSpaceOverlay) {
                 var camera = canvas.worldCamera;
                 if (camera == null) {
                     WebViewLogger.LogError("Unable to determine the screen space rect for Native 2D Mode because the Canvas's render camera is not set. Please set the Canvas's \"Render Camera\" setting or change its render mode to \"Screen Space - Overlay\".");
-                    return Rect.zero;
                 } else {
                     topLeftCorner = camera.WorldToScreenPoint(topLeftCorner);
                     bottomRightCorner = camera.WorldToScreenPoint(bottomRightCorner);
@@ -356,8 +344,8 @@ namespace Vuplex.WebView {
             }
             var x = topLeftCorner.x;
             var y = Screen.height - topLeftCorner.y;
-            var width = Math.Abs(bottomRightCorner.x - topLeftCorner.x);
-            var height = Math.Abs(topLeftCorner.y - bottomRightCorner.y);
+            var width = bottomRightCorner.x - topLeftCorner.x;
+            var height = topLeftCorner.y - bottomRightCorner.y;
             var scaleFactor = _getScreenSpaceScaleFactor();
             if (scaleFactor != 1f) {
                 x *= scaleFactor;
@@ -407,6 +395,12 @@ namespace Vuplex.WebView {
             return 1f;
         }
 
+        protected override ViewportMaterialView _getVideoLayer() {
+
+            var obj = transform.Find("VideoLayer");
+            return obj == null ? null : obj.GetComponent<ViewportMaterialView>();
+        }
+
         protected override ViewportMaterialView _getView() {
 
             var obj = transform.Find("CanvasWebViewPrefabView");
@@ -433,13 +427,7 @@ namespace Vuplex.WebView {
                 if (_logErrorIfSizeIsInvalid(rect.size)) {
                     return;
                 }
-                var legacyVideoLayer = transform.Find("VideoLayer");
-                if (legacyVideoLayer != null) {
-                    // This prefab instance has the old fallback video layer that is no longer part of the prefab.
-                    Destroy(legacyVideoLayer.gameObject);
-                }
                 await _initBase(rect, preferNative2DMode);
-                _logEventCameraWarningIfNeeded();
             } catch (Exception exception) {
                 // Catch any exceptions that occur during initialization because
                 // some applications terminate the application on uncaught exceptions.
@@ -462,17 +450,6 @@ namespace Vuplex.WebView {
                 return true;
             }
             return false;
-        }
-
-        void _logEventCameraWarningIfNeeded() {
-
-            var canvas = _canvas;
-            if (canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay || _getNative2DWebViewIfActive() != null) {
-                return;
-            }
-            if (canvas.worldCamera == null) {
-                WebViewLogger.LogWarning($"The CanvasWebViewPrefab is unable to detect clicking or scrolling through Unity's event system because the Canvas's \"Event Camera\" isn't set. To fix this, please set the Canvas's \"Event Camera\" to the scene's main camera. For more details, see <em>https://support.vuplex.com/articles/clicking</em>");
-            }
         }
 
         void _logNative2DModeWarning(string message) {
@@ -519,6 +496,14 @@ namespace Vuplex.WebView {
             return true;
         }
 
+        protected override void _setVideoLayerPosition(Rect videoRect) {
+
+            var videoRectTransform = _videoLayer.transform as RectTransform;
+            // Use Vector2.Scale() because Vector2 * Vector2 isn't supported in Unity 2017.
+            videoRectTransform.anchoredPosition = Vector2.Scale(Vector2.Scale(videoRect.position, _rectTransform.rect.size), new Vector2(1, -1));
+            videoRectTransform.sizeDelta = Vector2.Scale(videoRect.size, _rectTransform.rect.size);
+        }
+
         bool _sizeIsInvalid(Vector2 size) => !(size.x > 0f && size.y > 0f);
 
         void Start() => _initCanvasPrefab();
@@ -558,8 +543,8 @@ namespace Vuplex.WebView {
         // Deprecated in v4.0.
         [Obsolete("CanvasWebViewPrefab.InitialResolution is now deprecated. Please use CanvasWebViewPrefab.Resolution instead.")]
         public float InitialResolution {
-            get => Resolution;
-            set => Resolution = value;
+            get { return Resolution; }
+            set { Resolution = value; }
         }
     #endregion
     }

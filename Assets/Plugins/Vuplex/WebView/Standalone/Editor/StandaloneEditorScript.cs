@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -13,7 +13,6 @@
 // limitations under the License.
 #if UNITY_EDITOR_WIN || UNITY_EDITOR_OSX
 using UnityEditor;
-using UnityEngine;
 using Vuplex.WebView.Internal;
 
 namespace Vuplex.WebView.Editor {
@@ -28,26 +27,6 @@ namespace Vuplex.WebView.Editor {
 
         static StandaloneEditorScript() {
 
-            _checkReloadDomainSetting();
-            _checkScriptCompilationSetting();
-        }
-
-        const int RecompileAndContinuePlaying = 0;
-        const int RecompileAfterFinishedPlaying = 1;
-        const string ScriptCompilationDuringPlay = "ScriptCompilationDuringPlay";
-
-        static void _checkReloadDomainSetting() {
-
-            #if UNITY_2020_1_OR_NEWER
-                if (EditorSettings.enterPlayModeOptionsEnabled &&
-                    EditorSettings.enterPlayModeOptions.HasFlag(EnterPlayModeOptions.DisableDomainReload)) {
-                    WebViewLogger.LogError("In Editor Settings, domain reload when entering play mode is disabled. This is a setting that 3D WebView doesn't currently support, so it won't work correctly in the editor. To fix this, please go to \"Project Settings\" -> \"Editor Settings\" and either disable \"Enter Play Mode Options\" or enable \"Reload Domain\". The following page describes how scripts must be modified to explicitly support disabling domain reload, which is why 3D WebView doesn't currently support it: https://docs.unity3d.com/Manual/domain-reloading.html");
-                }
-            #endif
-        }
-
-        static void _checkScriptCompilationSetting() {
-
             #if !VUPLEX_IGNORE_SCRIPT_COMPILATION_SETTING
                 // https://support.unity.com/hc/en-us/articles/210452343
                 var setting = EditorPrefs.GetInt(ScriptCompilationDuringPlay);
@@ -57,6 +36,10 @@ namespace Vuplex.WebView.Editor {
                 }
             #endif
         }
+
+        const int RecompileAndContinuePlaying = 0;
+        const int RecompileAfterFinishedPlaying = 1;
+        const string ScriptCompilationDuringPlay = "ScriptCompilationDuringPlay";
     }
 }
 #endif

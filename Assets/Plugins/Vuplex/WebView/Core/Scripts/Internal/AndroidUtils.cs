@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -44,6 +44,18 @@ namespace Vuplex.WebView.Internal {
             return new Material(Resources.Load<Material>("AndroidWebMaterial"));
         }
 
+        public static byte[] ConvertFromJavaByteArray(AndroidJavaObject arrayObject) {
+
+            // Unity 2019.1 and newer logs a warning that converting from byte[] is obsolete
+            // but older versions are incapable of converting from sbyte[].
+            #if UNITY_2019_1_OR_NEWER
+                return (byte[])(Array)AndroidJNIHelper.ConvertFromJNIArray<sbyte[]>(arrayObject.GetRawObject());
+            #else
+                return AndroidJNIHelper.ConvertFromJNIArray<byte[]>(arrayObject.GetRawObject());
+            #endif
+        }
+
+
         public static bool DeviceIsMetaQuest() {
 
             // Note: this method used to use deviceName, but its value may be "<unknown>" in some cases.
@@ -80,16 +92,12 @@ namespace Vuplex.WebView.Internal {
             if (jobject == IntPtr.Zero) {
                 return null;
             }
-            #if UNITY_2022_2_OR_NEWER
-                return new AndroidJavaObject(jobject);
-            #else
-                return (AndroidJavaObject)_legacyAndroidJavaObjectIntPtrConstructor.Invoke(new object[] { jobject });
-            #endif
+            return (AndroidJavaObject)_androidJavaObjectIntPtrConstructor.Invoke(new object[] { jobject });
         }
 
         // Get a reference to AndroidJavaObject's hidden constructor that takes
         // the IntPtr for a jobject as a parameter.
-        readonly static ConstructorInfo _legacyAndroidJavaObjectIntPtrConstructor = typeof(AndroidJavaObject).GetConstructor(
+        readonly static ConstructorInfo _androidJavaObjectIntPtrConstructor = typeof(AndroidJavaObject).GetConstructor(
             BindingFlags.Instance | BindingFlags.NonPublic,
             null,
             new []{ typeof(IntPtr) },

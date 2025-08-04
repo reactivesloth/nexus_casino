@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -24,12 +24,15 @@ namespace Vuplex.Demos {
 
         CanvasWebViewPrefab canvasWebViewPrefab;
 
-        async void Start() {
+        void Awake() {
 
             // Use a desktop User-Agent to request the desktop versions of websites.
             // https://developer.vuplex.com/webview/Web#SetUserAgent
             // Call this from Awake() to ensure it's called before the webview initializes.
             Web.SetUserAgent(false);
+        }
+
+        async void Start() {
 
             // Get a reference to the CanvasWebViewPrefab.
             // https://support.vuplex.com/articles/how-to-reference-a-webview

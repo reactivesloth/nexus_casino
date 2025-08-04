@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
+using System.Threading.Tasks;
 using UnityEngine;
 using Vuplex.WebView.Internal;
 
@@ -20,7 +21,7 @@ namespace Vuplex.WebView {
     /// <summary>
     /// Mock IWebPlugin implementation used for running in the Unity editor.
     /// </summary>
-    public class MockWebPlugin : IWebPlugin {
+    class MockWebPlugin : IWebPlugin {
 
         public ICookieManager CookieManager { get; } = MockCookieManager.Instance;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -12,7 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using UnityEngine;
-using UnityEngine.XR;
+#if UNITY_2017_2_OR_NEWER
+    using UnityEngine.XR;
+#else
+    using XRSettings = UnityEngine.VR.VRSettings;
+#endif
 
 namespace Vuplex.Demos {
 
@@ -31,7 +35,6 @@ namespace Vuplex.Demos {
     #if !UNITY_WEBGL
         void Start() {
 
-            _warnIfVisionOS();
             // If XR is disabled, enable the gyro so that it can be used to control the camera rotation.
             if (!XRSettings.enabled) {
                 Input.gyro.enabled = true;
@@ -83,12 +86,5 @@ namespace Vuplex.Demos {
             }
         }
     #endif
-
-        void _warnIfVisionOS() {
-
-            #if UNITY_VISIONOS
-                Vuplex.WebView.Internal.WebViewLogger.LogError("visionOS: These scenes in 3D WebView's Demos folder are included with all of the 3D WebView packages (e.g. Windows, Android, iOS) but aren't designed for running on visionOS because they aren't configured for XR. However, these scenes are still included with the 3D WebView for visionOS package because they provide useful examples for things such as using 3D WebView's scripting APIs. For examples that are configured to run on visionOS, please see the following visionOS example repos:\n- https://github.com/vuplex/visionos-metal-webview-example\n- https://github.com/vuplex/visionos-realitykit-webview-example");
-            #endif
-        }
     }
 }

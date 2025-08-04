@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2023 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -31,12 +31,10 @@ namespace Vuplex.WebView {
         public static FocusedInputFieldType ParseType(string typeString) {
 
             switch (typeString) {
-                case "IFRAME":
-                    return FocusedInputFieldType.IFrame;
-                case "NONE":
-                    return FocusedInputFieldType.None;
                 case "TEXT":
                     return FocusedInputFieldType.Text;
+                case "NONE":
+                    return FocusedInputFieldType.None;
                 default:
                     WebViewLogger.LogWarning("Unrecognized FocusedInputFieldType string: " + typeString);
                     return FocusedInputFieldType.None;
