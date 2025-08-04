@@ -32,12 +32,12 @@ namespace Code.UI
         [Header("Additional settings")] [SerializeField]
         private SlotMachineInteractable slotMachineInteractable;
 
-        private List<GetStoryData> _stories = new();
         private Coroutine _storyCoroutine;
         private Coroutine _waitCoroutine;
-        private List<Image> _progressBars = new();
         private bool _isCurved;
-
+        
+        private readonly List<Image> _progressBars = new();
+        private readonly List<GetStoryData> _stories = new();
         private readonly Dictionary<int, Sprite> _idSpriteDictionaryCash = new();
 
         private void Awake()
@@ -93,7 +93,8 @@ namespace Code.UI
                     return;
                 }
 
-                _stories = responseResult.data.screenshots;
+                _stories.Clear();
+                _stories.AddRange(responseResult.data.screenshots);
                 ClearOldSprites();
 
                 onStoriesFetched?.Invoke();

@@ -50,7 +50,7 @@ namespace Code.Network.Player
 
         
         [SerializeField] private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new List<PlayerSpawnableModelKeyValuePair>();
-        Dictionary<string, NetworkObject> playerSpawnables = new Dictionary<string, NetworkObject>();
+        private readonly Dictionary<string, NetworkObject> playerSpawnables = new Dictionary<string, NetworkObject>();
 
         void Awake() {
             foreach (var kvp in playerPrefabs) {
@@ -68,7 +68,7 @@ namespace Code.Network.Player
         /// </summary>
         private int _nextSpawn;
         
-        private List<NetworkConnection> _dontSpawn = new();
+        private readonly List<NetworkConnection> _dontSpawn = new();
         private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
 
         #endregion

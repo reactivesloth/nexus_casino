@@ -4,7 +4,6 @@ using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network.Lobby;
-using Code.Stories;
 using Proyecto26;
 using UnityEngine;
 using UnityEngine.UI;
@@ -59,12 +58,6 @@ namespace Code.UI
             yield return new WaitForSeconds(timeout);
             screenshotButton.interactable = true;
             _timeoutCoroutine = null;
-        }
-
-        private void LocalHandle(byte[] screenshotBytes)
-        {
-            var slotId = slotMachineInteractable ? slotMachineInteractable.IDNumber : -1;
-            LocalStoriesStorage.Instance.ScreenshotMake(screenshotBytes, slotId);
         }
 
         private void APIHandle(byte[] screenshotBytes)
