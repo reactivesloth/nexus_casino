@@ -112,6 +112,9 @@ public class CursorManager : MonoBehaviour
 
     public void ShowCursor()
     {
+#if UNITY_ANDROID || UNITY_IOS
+        return;
+#else
         if (useCustomCursor)
         {
             if (customCursorImage != null)
@@ -122,12 +125,15 @@ public class CursorManager : MonoBehaviour
         {
             Cursor.visible = true;
         }
-
         OnVisibilityChanged?.Invoke(true);
+#endif
     }
 
     public void HideCursor()
     {
+#if UNITY_ANDROID || UNITY_IOS
+        return;
+#else
         if (useCustomCursor)
         {
             if (customCursorImage != null)
@@ -139,19 +145,28 @@ public class CursorManager : MonoBehaviour
         }
 
         OnVisibilityChanged?.Invoke(false);
+#endif
     }
 
     private void UpdateCursorVisibility(bool visible)
     {
+#if UNITY_ANDROID || UNITY_IOS
+        return;
+#else
         if (visible) ShowCursor();
         else HideCursor();
+#endif 
     }
 
     public bool IsVisible()
     {
+#if UNITY_ANDROID || UNITY_IOS
+        return true;
+#else
         return useCustomCursor
             ? (customCursorImage != null && customCursorImage.gameObject.activeSelf)
             : Cursor.visible;
+#endif
     }
 
     #endregion
