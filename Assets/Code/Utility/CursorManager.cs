@@ -161,7 +161,7 @@ public class CursorManager : MonoBehaviour
     public bool IsVisible()
     {
 #if UNITY_ANDROID || UNITY_IOS
-        return true;
+        return false;
 #else
         return useCustomCursor
             ? (customCursorImage != null && customCursorImage.gameObject.activeSelf)
