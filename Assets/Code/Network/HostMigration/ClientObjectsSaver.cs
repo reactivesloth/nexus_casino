@@ -65,7 +65,6 @@ namespace Code.Network.HostMigration
             if(!InstanceFinder.ClientManager.Started)
                 return;
 
-            var oldObjectsCount = 0;
             // Удаляем неактуальные
             for (int i = OwnObjects.Count - 1; i >= 0; i--)
             {
@@ -73,24 +72,20 @@ namespace Code.Network.HostMigration
                 if (obj == null || !InstanceFinder.ClientManager.Connection.Objects.Contains(obj))
                 {
                     OwnObjects.RemoveAt(i);
-                    oldObjectsCount++;
                 }
             }
 
-            var newObjectsCount = 0;
             // Добавляем новые
             foreach (var obj in InstanceFinder.ClientManager.Connection.Objects)
             {
                 if (obj != null && !OwnObjects.Contains(obj))
                 {
                     OwnObjects.Add(obj);
-                    newObjectsCount++;
                 }
             }
             
             // Вызов события после обновления списка
-            if(newObjectsCount > 0 || oldObjectsCount > 0)
-                OnOwnObjectsUpdated?.Invoke(OwnObjects);
+            OnOwnObjectsUpdated?.Invoke(OwnObjects);
         }
     }
 }
