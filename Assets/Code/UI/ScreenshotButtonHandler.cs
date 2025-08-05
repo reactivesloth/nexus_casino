@@ -7,14 +7,12 @@ using Code.Network.Lobby;
 using Proyecto26;
 using UnityEngine;
 using UnityEngine.UI;
-using Vuplex.WebView;
 
 namespace Code.UI
 {
     public class ScreenshotButtonHandler : MonoBehaviour
     {
         [SerializeField] private Button screenshotButton;
-        [SerializeField] private CanvasWebViewPrefab webView;
         [SerializeField] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField] private float timeout = 10f;
 

@@ -63,7 +63,7 @@ namespace Code.Utility
         {
             if (imageBytes == null || imageBytes.Length == 0)
             {
-                Debug.LogError("Invalid image byte array.");
+                Debug.LogWarning("Invalid image byte array.");
                 return null;
             }
 
@@ -71,7 +71,7 @@ namespace Code.Utility
             bool isLoaded = texture.LoadImage(imageBytes);
             if (!isLoaded)
             {
-                Debug.LogError("Failed to load image from bytes.");
+                Debug.LogWarning("Failed to load image from bytes.");
                 return null;
             }
 

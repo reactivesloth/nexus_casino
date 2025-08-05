@@ -266,6 +266,8 @@ namespace Code.Network
 
         public void ClearTexture()
         {
+            if (rawImage == null) return;
+            
             Destroy(rawImage.texture);
             rawImage.texture = null;
             rawImage = null;
