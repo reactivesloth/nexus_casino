@@ -1,4 +1,4 @@
-// Assets/Editor/MobileMaterialGenerator.cs
+// Assets/Editor/MobileMaterialVariantGenerator.cs
 using UnityEditor;
 using UnityEngine;
 using System.IO;
@@ -7,35 +7,36 @@ public static class MobileMaterialGenerator
 {
     private const string k_GeneratedFolder = "Assets/Resources/GeneratedMaterials";
     private const string k_DesktopFolder   = k_GeneratedFolder + "/DesktopMaterials";
-    private const string k_MobileFolder    = k_GeneratedFolder + "/MobileMaterials";
+    private const string k_MobileFolder    = k_GeneratedFolder + "/MobileMaterials";   // теперь для Simple Lit
+    private const string k_BakedFolder     = k_GeneratedFolder + "/BakedMaterials";    // теперь для Baked Lit
 
     private const string k_LitShader     = "Universal Render Pipeline/Lit";
-    private const string k_SimpleLit     = "Universal Render Pipeline/Simple Lit";
+    private const string k_SimpleLit     = "Universal Render Pipeline/Simple Lit";      // среднее
+    private const string k_BakedShader   = "Universal Render Pipeline/Baked Lit";       // низкое
 
-    [MenuItem("Tools/Generate Material Variants (Desktop & Mobile)")]
+    [MenuItem("Tools/Generate Material Variants (All Quality Levels)")]
     private static void GenerateMenu()
     {
         bool addNewOnly = EditorUtility.DisplayDialog(
-            "Material Variants Generation",
-            "Выберите режим генерации:\n\n" +
-            "– «Добавить новые» (пропустить уже существующие)\n" +
-            "– «Перегенерировать всё» (обновить все варианты)",
+            "Генерация вариантов материалов",
+            "Добавить только новые или обновить все существующие?",
             "Добавить новые",
-            "Перегенерировать всё"
-        );
-
+            "Обновить всё");
         GenerateVariants(addNewOnly);
     }
 
     private static void GenerateVariants(bool addNewOnly)
     {
+        // Создаём папки, если нужно
         EnsureFolderExists(k_GeneratedFolder);
         EnsureFolderExists(k_DesktopFolder);
         EnsureFolderExists(k_MobileFolder);
+        EnsureFolderExists(k_BakedFolder);
 
         var guids = AssetDatabase.FindAssets("t:Material");
-        int createdDesk = 0, updatedDesk = 0, skippedDesk = 0;
-        int createdMob = 0,  updatedMob  = 0, skippedMob  = 0;
+        int createdHigh = 0, updatedHigh = 0, skippedHigh = 0;
+        int createdMed  = 0, updatedMed  = 0, skippedMed  = 0;
+        int createdLow  = 0, updatedLow  = 0, skippedLow  = 0;
 
         foreach (var guid in guids)
         {
@@ -44,76 +45,88 @@ public static class MobileMaterialGenerator
             if (origMat == null || origMat.shader.name != k_LitShader)
                 continue;
 
-            // ----- Desktop variant -----
-            string deskFile   = origMat.name + ".mat";
-            string deskPath   = $"{k_DesktopFolder}/{deskFile}";
-            var    deskMat    = AssetDatabase.LoadAssetAtPath<Material>(deskPath);
-            bool   deskExists = deskMat != null;
-
-            if (deskExists)
+            // === High-Quality (Lit) ===
+            string highFile = origMat.name + ".mat";
+            string highPath = $"{k_DesktopFolder}/{highFile}";
+            var    highMat  = AssetDatabase.LoadAssetAtPath<Material>(highPath);
+            if (highMat != null)
             {
-                if (addNewOnly)
-                {
-                    skippedDesk++;
-                }
+                if (addNewOnly) skippedHigh++;
                 else
                 {
-                    // Обновляем свойства на месте (сохраняем GUID и ссылки)
-                    deskMat.shader = Shader.Find(k_LitShader);
-                    deskMat.CopyPropertiesFromMaterial(origMat);
-                    deskMat.shaderKeywords = origMat.shaderKeywords;
-                    EditorUtility.SetDirty(deskMat);
-                    updatedDesk++;
+                    highMat.shader = Shader.Find(k_LitShader);
+                    highMat.CopyPropertiesFromMaterial(origMat);
+                    highMat.shaderKeywords = origMat.shaderKeywords;
+                    EditorUtility.SetDirty(highMat);
+                    updatedHigh++;
                 }
             }
             else
             {
-                // Создаём новый Desktop‑материал
-                var newDesk = new Material(Shader.Find(k_LitShader));
-                newDesk.CopyPropertiesFromMaterial(origMat);
-                newDesk.shaderKeywords = origMat.shaderKeywords;
-                AssetDatabase.CreateAsset(newDesk, deskPath);
-                createdDesk++;
+                var newHigh = new Material(Shader.Find(k_LitShader));
+                newHigh.CopyPropertiesFromMaterial(origMat);
+                newHigh.shaderKeywords = origMat.shaderKeywords;
+                AssetDatabase.CreateAsset(newHigh, highPath);
+                createdHigh++;
             }
 
-            // ----- Mobile variant -----
-            string mobFile   = origMat.name + "_Mobile.mat";
-            string mobPath   = $"{k_MobileFolder}/{mobFile}";
-            var    mobMat    = AssetDatabase.LoadAssetAtPath<Material>(mobPath);
-            bool   mobExists = mobMat != null;
-
-            if (mobExists)
+            // === Medium-Quality (Simple Lit) ===
+            string medFile = origMat.name + "_Mobile.mat";
+            string medPath = $"{k_MobileFolder}/{medFile}";
+            var    medMat  = AssetDatabase.LoadAssetAtPath<Material>(medPath);
+            if (medMat != null)
             {
-                if (addNewOnly)
-                {
-                    skippedMob++;
-                }
+                if (addNewOnly) skippedMed++;
                 else
                 {
-                    // Обновляем свойства на месте
-                    mobMat.shader = Shader.Find(k_SimpleLit);
-                    mobMat.CopyPropertiesFromMaterial(origMat);
-                    mobMat.shaderKeywords = origMat.shaderKeywords;
-                    EditorUtility.SetDirty(mobMat);
-                    updatedMob++;
+                    medMat.shader = Shader.Find(k_SimpleLit);
+                    medMat.CopyPropertiesFromMaterial(origMat);
+                    medMat.shaderKeywords = origMat.shaderKeywords;
+                    EditorUtility.SetDirty(medMat);
+                    updatedMed++;
                 }
             }
             else
             {
-                // Создаём новый Mobile‑материал
-                var newMob = new Material(Shader.Find(k_SimpleLit));
-                newMob.CopyPropertiesFromMaterial(origMat);
-                newMob.shaderKeywords = origMat.shaderKeywords;
-                AssetDatabase.CreateAsset(newMob, mobPath);
-                createdMob++;
+                var newMed = new Material(Shader.Find(k_SimpleLit));
+                newMed.CopyPropertiesFromMaterial(origMat);
+                newMed.shaderKeywords = origMat.shaderKeywords;
+                AssetDatabase.CreateAsset(newMed, medPath);
+                createdMed++;
+            }
+
+            // === Low-Quality (Baked Lit) ===
+            string lowFile = origMat.name + "_BakedLit.mat";
+            string lowPath = $"{k_BakedFolder}/{lowFile}";
+            var    lowMat  = AssetDatabase.LoadAssetAtPath<Material>(lowPath);
+            if (lowMat != null)
+            {
+                if (addNewOnly) skippedLow++;
+                else
+                {
+                    lowMat.shader = Shader.Find(k_BakedShader);
+                    lowMat.CopyPropertiesFromMaterial(origMat);
+                    lowMat.shaderKeywords = origMat.shaderKeywords;
+                    EditorUtility.SetDirty(lowMat);
+                    updatedLow++;
+                }
+            }
+            else
+            {
+                var newLow = new Material(Shader.Find(k_BakedShader));
+                newLow.CopyPropertiesFromMaterial(origMat);
+                newLow.shaderKeywords = origMat.shaderKeywords;
+                AssetDatabase.CreateAsset(newLow, lowPath);
+                createdLow++;
             }
         }
 
         AssetDatabase.SaveAssets();
 
         string summary =
-            $"Desktop → создано: {createdDesk}, обновлено: {updatedDesk}, пропущено: {skippedDesk}\n" +
-            $"Mobile  → создано: {createdMob},  обновлено: {updatedMob},  пропущено: {skippedMob}";
+            $"High   (Lit)      → создано: {createdHigh}, обновлено: {updatedHigh}, пропущено: {skippedHigh}\n" +
+            $"Medium (SimpleLit)→ создано: {createdMed}, обновлено: {updatedMed}, пропущено: {skippedMed}\n" +
+            $"Low    (BakedLit) → создано: {createdLow}, обновлено: {updatedLow}, пропущено: {skippedLow}";
         Debug.Log($"[MobileMaterialGenerator]\n{summary}");
         EditorUtility.DisplayDialog("Генерация завершена", summary, "OK");
     }

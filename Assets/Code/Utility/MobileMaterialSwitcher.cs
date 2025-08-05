@@ -1,115 +1,99 @@
-﻿using System;
+﻿// Assets/Scripts/MaterialVariantSwitcher.cs
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Collections.Generic;
 using Code.Utility;
 
 [DisallowMultipleComponent]
 public class MaterialVariantSwitcher : MonoBehaviour
 {
-    [Tooltip("Путь внутри Resources к Desktop‑вариантам (без суффикса)")]
-    public string desktopResourcesPath = "GeneratedMaterials/DesktopMaterials";
-    [Tooltip("Путь внутри Resources к Mobile‑вариантам (_Mobile суффикс)")]
-    public string mobileResourcesPath  = "GeneratedMaterials/MobileMaterials";
+    [Tooltip("Путь внутри Resources к High-Quality-вариантам (Lit) без суффикса")]
+    public string highQualityPath   = "GeneratedMaterials/DesktopMaterials";
+    [Tooltip("Путь внутри Resources к Medium-Quality-вариантам (Baked Lit) без суффикса")]
+    public string mediumQualityPath = "GeneratedMaterials/BakedMaterials";
+    [Tooltip("Путь внутри Resources к Low-Quality-вариантам (Simple Lit) без суффикса")]
+    public string lowQualityPath    = "GeneratedMaterials/MobileMaterials";
 
-    [Tooltip("Принудительно мобильный режим (для тестирования в редакторе)")]
-    public bool forceMobileMode = false;
+    [Tooltip("Принудительно низкий режим (для тестирования)")]
+    public bool forceLowQuality = false;
 
-    // Кэш оригинальных sharedMaterials
     private Dictionary<Renderer, Material[]> _originals = new Dictionary<Renderer, Material[]>();
-    private int savedQualityLevel = -1;
-    
+    private int savedQualityLevel      = -1;
+    private bool lastForceLowQuality   = false;
+
     void Start()
     {
         CacheOriginals();
     }
 
-    private void Update()
+    void Update()
     {
-        if (SettingsManager.Instance.QualityLevel != savedQualityLevel)
+        int level = SettingsManager.Instance.QualityLevel;
+        if (level != savedQualityLevel || forceLowQuality != lastForceLowQuality)
         {
-            savedQualityLevel = SettingsManager.Instance.QualityLevel;
-            SwitchMode(savedQualityLevel < 2);
+            savedQualityLevel    = level;
+            lastForceLowQuality  = forceLowQuality;
+            ApplyByLevel(level);
         }
     }
 
-    /// <summary>
-    /// Ручной вызов в рантайме, чтобы переключиться
-    /// </summary>
-    public void SwitchMode(bool useMobile)
+    private void ApplyByLevel(int level)
     {
-        forceMobileMode = useMobile;
-        Apply(useMobile);
-    }
-
-    /// <summary>
-    /// Контекстное меню в инспекторе: применить Desktop‑варианты
-    /// </summary>
-    [ContextMenu("Apply Desktop Variants")]
-    private void ContextApplyDesktop() => Apply(false);
-
-    /// <summary>
-    /// Контекстное меню в инспекторе: применить Mobile‑варианты
-    /// </summary>
-    [ContextMenu("Apply Mobile Variants")]
-    private void ContextApplyMobile() => Apply(true);
-
-    /// <summary>
-    /// Контекстное меню в инспекторе: вернуть оригиналы
-    /// </summary>
-    [ContextMenu("Revert To Originals")]
-    private void ContextRevert() => RevertToOriginals();
-
-    /// <summary>
-    /// Кэшируем на старте оригинальный массив sharedMaterials у каждого Renderer.
-    /// </summary>
-    private void CacheOriginals()
-    {
-        _originals.Clear();
-        foreach (var rend in FindAllRenderers())
+        if (forceLowQuality)
         {
-            _originals[rend] = rend.sharedMaterials.Clone() as Material[];
+            // Принудительно самый низкий → Baked Lit
+            ApplyVariant(mediumQualityPath, "_BakedLit");
+            return;
         }
-        Debug.Log($"[MaterialVariantSwitcher] Cached {_originals.Count} renderers’ originals");
+
+        if (level <= 0)
+        {
+            // Низкий → URP/Baked Lit
+            ApplyVariant(mediumQualityPath, "_BakedLit");
+        }
+        else if (level == 1)
+        {
+            // Средний → URP/Simple Lit
+            ApplyVariant(lowQualityPath, "_Mobile");
+        }
+        else
+        {
+            // Высокий → URP/Lit
+            ApplyVariant(highQualityPath, "");
+        }
     }
 
-    /// <summary>
-    /// Основная логика подмены: пытается загрузить из Resources,
-    /// иначе возвращает оригинал из кэша.
-    /// </summary>
-    private void Apply(bool useMobile)
+    private void ApplyVariant(string basePath, string suffix)
     {
-        string basePath = useMobile ? mobileResourcesPath : desktopResourcesPath;
-        string suffix   = useMobile ? "_Mobile" : "";
-
-        Debug.Log($"[MaterialVariantSwitcher] Applying {(useMobile ? "Mobile" : "Desktop")} variants from Resources/{basePath}");
-
+        Debug.Log($"[MaterialVariantSwitcher] Applying variants from Resources/{basePath} (suffix '{suffix}')");
         foreach (var kv in _originals)
         {
-            var rend     = kv.Key;
+            var rend      = kv.Key;
             var originals = kv.Value;
-            var slots    = new Material[originals.Length];
+            var slots     = new Material[originals.Length];
 
             for (int i = 0; i < originals.Length; i++)
             {
                 var orig = originals[i];
                 if (orig == null)
                 {
+                    Debug.LogWarning($"[{rend.name}] Slot {i}: оригинальный материал = null");
                     slots[i] = null;
                     continue;
                 }
 
                 string resPath = $"{basePath}/{orig.name}{suffix}";
                 var variant = Resources.Load<Material>(resPath);
+
                 if (variant != null)
                 {
+                    Debug.Log($"[{rend.name}] Slot {i}: '{orig.name}' → загружен вариант '{resPath}'");
                     slots[i] = variant;
-                    Debug.Log($"[MaterialVariantSwitcher] Loaded variant {resPath}");
                 }
                 else
                 {
+                    Debug.LogWarning($"[{rend.name}] Slot {i}: вариант не найден по пути Resources/{resPath}, использую оригинал '{orig.name}'");
                     slots[i] = orig;
-                    Debug.LogWarning($"[MaterialVariantSwitcher] Variant not found at {resPath}, using original {orig.name}");
                 }
             }
 
@@ -117,19 +101,21 @@ public class MaterialVariantSwitcher : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Возвращает всем renderers их оригинальные материалы
-    /// </summary>
     public void RevertToOriginals()
     {
         foreach (var kv in _originals)
             kv.Key.sharedMaterials = kv.Value;
-        Debug.Log("[MaterialVariantSwitcher] Reverted to original scene materials");
+        Debug.Log("[MaterialVariantSwitcher] Reverted to original materials");
     }
 
-    /// <summary>
-    /// Собирает все Renderer из загруженных сцен
-    /// </summary>
+    private void CacheOriginals()
+    {
+        _originals.Clear();
+        foreach (var rend in FindAllRenderers())
+            _originals[rend] = rend.sharedMaterials.Clone() as Material[];
+        Debug.Log($"[MaterialVariantSwitcher] Cached {_originals.Count} renderer originals");
+    }
+
     private static List<Renderer> FindAllRenderers()
     {
         var list = new List<Renderer>();
