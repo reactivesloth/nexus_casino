@@ -37,7 +37,7 @@ namespace Vuplex.WebView {
             if (url == null) {
                 return;
             }
-            if (!PlayerSettings.Android.useAPKExpansionFiles) {
+            if (!PlayerSettings.Android.splitApplicationBinary) {
                 return;
             }
             if (url.StartsWith("streaming-assets://") || url.Contains(Application.streamingAssetsPath)) {
