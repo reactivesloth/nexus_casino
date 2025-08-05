@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -14,13 +14,13 @@
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// Indicates the type of input field focused.
+    /// Indicates the type of input field focused for IWebView.FocusedInputFieldChanged.
     /// </summary>
     public enum FocusedInputFieldType {
 
         /// <summary>
         /// Indicates that a text input field is focused. Examples of a text input field include
-        /// an `input` element, a `textarea` element, and an element with a `contentEditable`
+        /// an &lt;input&gt; element, a &lt;textarea&gt; element, and an element with a contenteditable
         /// attribute.
         /// </summary>
         Text,
@@ -28,6 +28,12 @@ namespace Vuplex.WebView {
         /// <summary>
         /// Indicates that no input field is focused.
         /// </summary>
-        None
+        None,
+
+        /// <summary>
+        /// Indicates that an &lt;iframe&gt; element is focused. This is its own type because
+        /// the FocusedInputFieldChanged event's implementation is unable detect the type of element that is focused inside an &lt;iframe&gt;.
+        /// </summary>
+        IFrame
     }
 }

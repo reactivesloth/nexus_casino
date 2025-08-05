@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -18,10 +18,17 @@ namespace Vuplex.WebView {
     /// <summary>
     /// An interface implemented by a webview if it supports creating a PDF from a web page.
     /// Created PDFs are saved to Application.temporaryCachePath, but you can move them to a different
-    /// location after they are created.
+    /// location after they are created. If you wish to format the PDF differently on Windows and macOS,
+    /// you can achieve that by using StandaloneWebView.CreatePdf() instead.
     /// </remarks>
     /// <remarks>
     /// On iOS, PDF creation is only supported on iOS 14 and newer.
+    /// </remarks>
+    /// Important notes:
+    /// <list type="bullet">
+    ///   <item>On iOS, PDF creation is only supported on iOS 14 and newer.</item>
+    ///   <item>On iOS and visionOS, generated PDFs are not paginated (i.e. the PDF is one long page) due to a limitation of WKWebView's PDF functionality.</item>
+    /// </list>
     /// </remarks>
     /// <example>
     /// <code>

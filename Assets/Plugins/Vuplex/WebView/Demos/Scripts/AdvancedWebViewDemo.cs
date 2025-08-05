@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -98,12 +98,14 @@ namespace Vuplex.Demos {
 
             controlsWebViewPrefab.WebView.MessageEmitted += Controls_MessageEmitted;
             controlsWebViewPrefab.WebView.LoadHtml(CONTROLS_HTML);
+            await controlsWebViewPrefab.WebView.WaitForNextPageLoadToFinish();
+            _setDisplayedUrl(mainWebViewPrefab.WebView.Url);
 
-            // Android Gecko and UWP w/ XR enabled don't support transparent webviews, so set the cutout
-            // rect to the entire view so that the shader makes its black background pixels transparent.
+            // Android Gecko and UWP w/ XR enabled don't support transparent webviews, so as a workaround,
+            // configure the shader to turn black pixels transparent.
             var pluginType = controlsWebViewPrefab.WebView.PluginType;
             if (pluginType == WebPluginType.AndroidGecko || pluginType == WebPluginType.UniversalWindowsPlatform) {
-                controlsWebViewPrefab.SetCutoutRect(new Rect(0, 0, 1, 1));
+                controlsWebViewPrefab.SetRenderBlackAsTransparent(true);
             }
         }
 
@@ -119,12 +121,6 @@ namespace Vuplex.Demos {
 
         void Controls_MessageEmitted(object sender, EventArgs<string> eventArgs) {
 
-            if (eventArgs.Value == "CONTROLS_INITIALIZED") {
-                // The controls UI won't be initialized in time to receive the first UrlChanged event,
-                // so explicitly set the initial URL after the controls UI indicates it's ready.
-                _setDisplayedUrl(mainWebViewPrefab.WebView.Url);
-                return;
-            }
             var message = eventArgs.Value;
             if (message == "GO_BACK") {
                 mainWebViewPrefab.WebView.GoBack();
@@ -226,26 +222,15 @@ namespace Vuplex.Demos {
                     </div>
                     <script>
                         // Handle messages sent from C#
-                        function handleMessage(message) {
-                            var data = JSON.parse(message.data);
+                        window.addEventListener('vuplexmessage', event => {
+                            var data = JSON.parse(event.value);
                             if (data.type === 'SET_URL') {
                                 document.getElementById('url').innerText = data.url;
                             } else if (data.type === 'SET_BUTTONS') {
                                 document.getElementById('back-button').disabled = !data.canGoBack;
                                 document.getElementById('forward-button').disabled = !data.canGoForward;
                             }
-                        }
-
-                        function attachMessageListener() {
-                            window.vuplex.addEventListener('message', handleMessage);
-                            window.vuplex.postMessage('CONTROLS_INITIALIZED');
-                        }
-
-                        if (window.vuplex) {
-                            attachMessageListener();
-                        } else {
-                            window.addEventListener('vuplexready', attachMessageListener);
-                        }
+                        });
                     </script>
                 </body>
             </html>

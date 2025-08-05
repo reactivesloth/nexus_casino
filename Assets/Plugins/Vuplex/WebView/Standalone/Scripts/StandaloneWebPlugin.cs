@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -30,7 +30,8 @@ namespace Vuplex.WebView {
         // Deprecated
         public void CreateMaterial(Action<Material> callback) => callback(VXUtils.CreateDefaultMaterial());
 
-        public void EnableRemoteDebugging() => StandaloneWebView.EnableRemoteDebugging(8080);
+        // 9222 is Chromium's default remote debugging port, which chrome://inspect already listens to by default.
+        public void EnableRemoteDebugging() => StandaloneWebView.EnableRemoteDebugging(9222);
 
         public void SetAutoplayEnabled(bool enabled) => StandaloneWebView.SetAutoplayEnabled(enabled);
 

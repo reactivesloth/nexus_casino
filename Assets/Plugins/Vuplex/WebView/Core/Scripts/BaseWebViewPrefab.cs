@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -83,7 +83,7 @@ namespace Vuplex.WebView {
         /// The default is `true`. CursorIconsEnabled is currently only supported by 3D WebView for Windows and macOS.
         /// </summary>
         /// <seealso cref="IWithCursorType"/>
-        [Label("Cursor Icons Enabled (Windows and macOS only)")]
+        [Label("Cursor Icons Enabled (Windows & macOS only)")]
         [Tooltip("(Windows and macOS only) Sets whether the mouse cursor icon is automatically updated based on interaction with the web page. For example, hovering over a link causes the mouse cursor icon to turn into a pointer hand.")]
         public bool CursorIconsEnabled = true;
 
@@ -178,8 +178,8 @@ namespace Vuplex.WebView {
         /// This property is unused when running in [Native 2D Mode](https://support.vuplex.com/articles/native-2d-mode).
         /// </remarks>
         public Material Material {
-            get { return _view.Material; }
-            set { _view.Material = value; }
+            get => _view.Material;
+            set => _view.Material = value;
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         /// <seealso cref="IWithPixelDensity"/>
-        [Label("Pixel Density (Windows and macOS only)")]
+        [Label("Pixel Density (Windows & macOS only)")]
         [Tooltip("(Windows and macOS only) Sets the webview's pixel density.")]
         public float PixelDensity = 1;
 
@@ -223,13 +223,10 @@ namespace Vuplex.WebView {
         /// prevent it from initializating, for example.
         /// </summary>
         public virtual bool Visible {
-            get { return _visible; }
+            get => _visible;
             set {
                 _visible = value;
                 _view.gameObject.SetActive(value);
-                if (_videoLayerIsEnabled) {
-                    _videoLayer.gameObject.SetActive(value);
-                }
             }
         }
 
@@ -266,6 +263,22 @@ namespace Vuplex.WebView {
         }
 
         /// <summary>
+        /// Converts the given point from web browser viewport coordinates to the
+        /// corresponding Unity screen space coordinates of where the point is rendered
+        /// in the application window. Note that web browser coordinates (the input parameters)
+        /// treat the top left corner of the browser viewport as the (0, 0) origin. In contrast,
+        /// Unity's screen space coordinates (the return value) treat the bottom left corner of the application's
+        /// window as the (0, 0) origin.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// var screenPoint = webViewPrefab.BrowserToSreenPoint(200, 300);
+        /// Debug.Log($"Point (200px, 300px) within the browser window is rendered at point {screenPoint} on the device screen.");
+        /// </code>
+        /// </example>
+        public abstract Vector2 BrowserToScreenPoint(int xInPixels, int yInPixels);
+
+        /// <summary>
         /// Destroys the instance and its children. Note that you don't have
         /// to call this method if you destroy the instance's parent with
         /// Object.Destroy().
@@ -277,8 +290,6 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         public void Destroy() => Destroy(gameObject);
-
-        public void SetCutoutRect(Rect rect) => _view.SetCutoutRect(rect);
 
         /// <summary>
         /// Sets options that can be used to alter the webview that the prefab creates
@@ -341,9 +352,12 @@ namespace Vuplex.WebView {
             // If WebView hasn't been set yet, then _initPointerInputDetector
             // will get called before it's set to initialize _pointerInputDetector.
             if (WebView != null) {
-                _initPointerInputDetector(WebView, previousPointerInputDetector);
+                _attachOrDetachPointerInputDetector(previousPointerInputDetector, false);
+                _initPointerInputDetector(WebView);
             }
         }
+
+        public void SetRenderBlackAsTransparent(bool enabled) => _view.SetRenderBlackAsTransparent(enabled);
 
         /// <summary>
         /// By default, the prefab creates a new IWebView during initialization. However,
@@ -387,16 +401,13 @@ namespace Vuplex.WebView {
         float _appliedResolution;
         [SerializeField]
         [HideInInspector]
-        ViewportMaterialView _cachedVideoLayer;
-        [SerializeField]
-        [HideInInspector]
         ViewportMaterialView _cachedView;
         IWebView _cachedWebView;
         bool _consoleMessageLoggedHandlerAttached;
         bool _dragThresholdReached;
         bool _dragToScrollClickIsPending;
         bool _hasOverriddenCursorIcon;
-        int _heightInPixels { get { return (int)(_sizeInUnityUnits.y * _appliedResolution); }}
+        int _heightInPixels { get => (int)(_sizeInUnityUnits.y * _appliedResolution); }
         bool _keyboardHasBeenEnabled;
         bool _loggedDragWarning;
         static bool _loggedHoverWarning;
@@ -405,9 +416,7 @@ namespace Vuplex.WebView {
         [HideInInspector]
         MonoBehaviour _pointerInputDetectorMonoBehaviour;
         IPointerInputDetector _pointerInputDetector {
-            get {
-                return _pointerInputDetectorMonoBehaviour as IPointerInputDetector;
-            }
+            get => _pointerInputDetectorMonoBehaviour as IPointerInputDetector;
             set {
                 var monoBehaviour = value as MonoBehaviour;
                 if (monoBehaviour == null) {
@@ -422,25 +431,6 @@ namespace Vuplex.WebView {
         Vector2 _previousMovePointerPoint;
         static bool _remoteDebuggingEnabled;
         protected Vector2 _sizeInUnityUnits;
-        protected ViewportMaterialView _videoLayer {
-            get {
-                if (_cachedVideoLayer == null) {
-                    _cachedVideoLayer = _getVideoLayer();
-                }
-                return _cachedVideoLayer;
-            }
-        }
-        bool _videoLayerIsEnabled {
-            get {
-                return _videoLayer != null && _videoLayer.gameObject.activeSelf;
-            }
-            set {
-                if (_videoLayer != null) {
-                    _videoLayer.gameObject.SetActive(value);
-                }
-            }
-        }
-        Material _videoMaterial;
         protected ViewportMaterialView _view {
             get {
                 if (_cachedView == null) {
@@ -455,7 +445,30 @@ namespace Vuplex.WebView {
         [SerializeField]
         [HideInInspector]
         GameObject _webViewGameObject;
-        int _widthInPixels { get { return (int)(_sizeInUnityUnits.x * _appliedResolution); }}
+        int _widthInPixels { get => (int)(_sizeInUnityUnits.x * _appliedResolution); }
+
+        void _attachOrDetachPointerInputDetector(IPointerInputDetector detector, bool attach) {
+
+            if (attach) {
+                detector.BeganDrag += InputDetector_BeganDrag;
+                detector.Dragged += InputDetector_Dragged;
+                detector.PointerDown += InputDetector_PointerDown;
+                detector.PointerEntered += InputDetector_PointerEntered;
+                detector.PointerExited += InputDetector_PointerExited;
+                detector.PointerMoved += InputDetector_PointerMoved;
+                detector.PointerUp += InputDetector_PointerUp;
+                detector.Scrolled += InputDetector_Scrolled;
+            } else {
+                detector.BeganDrag -= InputDetector_BeganDrag;
+                detector.Dragged -= InputDetector_Dragged;
+                detector.PointerDown -= InputDetector_PointerDown;
+                detector.PointerEntered -= InputDetector_PointerEntered;
+                detector.PointerExited -= InputDetector_PointerExited;
+                detector.PointerMoved -= InputDetector_PointerMoved;
+                detector.PointerUp -= InputDetector_PointerUp;
+                detector.Scrolled -= InputDetector_Scrolled;
+            }
+        }
 
         void _attachWebViewEventHandlers(IWebView webView) {
 
@@ -469,7 +482,7 @@ namespace Vuplex.WebView {
             // Needed for fallback video support on iOS.
             var webViewWithFallbackVideo = webView as IWithFallbackVideo;
             if (webViewWithFallbackVideo != null && !_options.disableVideo) {
-                webViewWithFallbackVideo.VideoRectChanged += (sender, eventArgs) => _setVideoRect(eventArgs.Value);
+                webViewWithFallbackVideo.VideoRectChanged += WebView_FallbackVideoRectChanged;
             }
         }
 
@@ -545,9 +558,12 @@ namespace Vuplex.WebView {
             return null;
         }
 
-        protected abstract ViewportMaterialView _getVideoLayer();
-
         protected abstract ViewportMaterialView _getView();
+
+        void _handleTrialExpired() {
+
+            _view.Material = new Material(Resources.Load<Material>("TrialExpiredMaterial"));
+        }
 
         protected async Task _initBase(Rect rect, bool preferNative2DMode = false) {
 
@@ -594,21 +610,15 @@ namespace Vuplex.WebView {
                 if (_view != null) {
                     _view.gameObject.SetActive(false);
                 }
-                _videoLayerIsEnabled = false;
                 return;
             }
             // Initialize the main view.
             _viewMaterial = webView.CreateMaterial();
             _view.Material = _viewMaterial;
-
-            // Initialize the video view (iOS only).
+            // Initialize the fallback video texture (iOS only).
             var webViewWithFallbackVideo = webView as IWithFallbackVideo;
-            if (webViewWithFallbackVideo != null && webViewWithFallbackVideo.FallbackVideoEnabled) {
-                _videoMaterial = webViewWithFallbackVideo.CreateVideoMaterial();
-                _videoLayer.Material = _videoMaterial;
-                _setVideoRect(Rect.zero);
-            } else {
-                _videoLayerIsEnabled = false;
+            if (webViewWithFallbackVideo != null) {
+                _view.SetFallbackVideoTexture(webViewWithFallbackVideo.VideoTexture);
             }
         }
 
@@ -623,7 +633,12 @@ namespace Vuplex.WebView {
             var enableNative2DMode = preferNative2DMode && webView is IWithNative2DMode;
             if (enableNative2DMode) {
                 var native2DWebView = webView as IWithNative2DMode;
-                await native2DWebView.InitInNative2DMode(rect);
+                try {
+                    await native2DWebView.InitInNative2DMode(rect);
+                } catch (TrialExpiredException ex) {
+                    _handleTrialExpired();
+                    throw ex;
+                }
                 // Hide the webview if Visible has already been set to false.
                 native2DWebView.SetVisible(_visible);
                 return webView;
@@ -637,7 +652,12 @@ namespace Vuplex.WebView {
                 webViewWithFallbackVideo.SetFallbackVideoEnabled(true);
             }
 
-            await webView.Init(_widthInPixels, _heightInPixels);
+            try {
+                await webView.Init(_widthInPixels, _heightInPixels);
+            } catch (TrialExpiredException ex) {
+                _handleTrialExpired();
+                throw ex;
+            }
 
             // (Windows and macOS only) Enable cursor icons if needed.
             var webViewWithCursorType = webView as IWithCursorType;
@@ -651,18 +671,8 @@ namespace Vuplex.WebView {
             return webView;
         }
 
-        void _initPointerInputDetector(IWebView webView, IPointerInputDetector previousPointerInputDetector = null) {
+        void _initPointerInputDetector(IWebView webView) {
 
-            if (previousPointerInputDetector != null) {
-                previousPointerInputDetector.BeganDrag -= InputDetector_BeganDrag;
-                previousPointerInputDetector.Dragged -= InputDetector_Dragged;
-                previousPointerInputDetector.PointerDown -= InputDetector_PointerDown;
-                previousPointerInputDetector.PointerEntered -= InputDetector_PointerEntered;
-                previousPointerInputDetector.PointerExited -= InputDetector_PointerExited;
-                previousPointerInputDetector.PointerMoved -= InputDetector_PointerMoved;
-                previousPointerInputDetector.PointerUp -= InputDetector_PointerUp;
-                previousPointerInputDetector.Scrolled -= InputDetector_Scrolled;
-            }
             if (_pointerInputDetector == null) {
                 // Pass the argument `true` to find the IPointerInputDetector even if it's disabled.
                 // Otherwise, if BaseWebViewPrefab.Visible is set to `false` before initialization,
@@ -671,14 +681,7 @@ namespace Vuplex.WebView {
             }
             // Only enable the PointerMoved event if the webview implementation has MovePointer().
             _pointerInputDetector.PointerMovedEnabled = (webView as IWithMovablePointer) != null;
-            _pointerInputDetector.BeganDrag += InputDetector_BeganDrag;
-            _pointerInputDetector.Dragged += InputDetector_Dragged;
-            _pointerInputDetector.PointerDown += InputDetector_PointerDown;
-            _pointerInputDetector.PointerEntered += InputDetector_PointerEntered;
-            _pointerInputDetector.PointerExited += InputDetector_PointerExited;
-            _pointerInputDetector.PointerMoved += InputDetector_PointerMoved;
-            _pointerInputDetector.PointerUp += InputDetector_PointerUp;
-            _pointerInputDetector.Scrolled += InputDetector_Scrolled;
+            _attachOrDetachPointerInputDetector(_pointerInputDetector, true);
         }
 
         void InputDetector_BeganDrag(object sender, EventArgs<Vector2> eventArgs) {
@@ -870,16 +873,17 @@ namespace Vuplex.WebView {
                     keyboardManager.SetKeyboardEnabled(this, false);
                 }
             }
+            if (_pointerInputDetector != null) {
+                // Detach the pointer input detector in case the app has assigned a custom one that's not a child.
+                _attachOrDetachPointerInputDetector(_pointerInputDetector, false);
+                _pointerInputDetectorMonoBehaviour = null;
+            }
             Destroy();
             // Unity doesn't automatically destroy materials and textures
             // when the GameObject is destroyed.
             if (_viewMaterial != null) {
                 Destroy(_viewMaterial.mainTexture);
                 Destroy(_viewMaterial);
-            }
-            if (_videoMaterial != null) {
-                Destroy(_videoMaterial.mainTexture);
-                Destroy(_videoMaterial);
             }
             if (_hasOverriddenCursorIcon) {
                 Internal.CursorHelper.SetCursorIcon(null);
@@ -902,31 +906,6 @@ namespace Vuplex.WebView {
             }
             WebView.Scroll(scrollDelta, point);
             Scrolled?.Invoke(this, new ScrolledEventArgs(scrollDelta, point));
-        }
-
-        protected abstract void _setVideoLayerPosition(Rect videoRect);
-
-        void _setVideoRect(Rect videoRect) {
-
-            if (_videoLayer == null) {
-                return;
-            }
-            _view.SetCutoutRect(videoRect);
-            _setVideoLayerPosition(videoRect);
-            // This code applies a cropping rect to the video layer's shader based on what part of the video (if any)
-            // falls outside of the viewport and therefore needs to be hidden. Note that the dimensions here are divided
-            // by the videoRect's width or height, because in the videoLayer shader, the width of the videoRect is 1
-            // and the height is 1 (i.e. the dimensions are normalized).
-            float videoRectXMin = Math.Max(0, - 1 * videoRect.x / videoRect.width);
-            float videoRectYMin = Math.Max(0, -1 * videoRect.y / videoRect.height);
-            float videoRectXMax = Math.Min(1, (1 - videoRect.x) / videoRect.width);
-            float videoRectYMax = Math.Min(1, (1 - videoRect.y) / videoRect.height);
-            var videoCropRect = Rect.MinMaxRect(videoRectXMin, videoRectYMin, videoRectXMax, videoRectYMax);
-            if (videoCropRect == new Rect(0, 0, 1, 1)) {
-                // The entire video rect fits within the viewport, so set the cropt rect to zero to disable it.
-                videoCropRect = Rect.zero;
-            }
-            _videoLayer.SetCropRect(videoCropRect);
         }
 
         void _throwExceptionIfInitialized() {
@@ -993,6 +972,11 @@ namespace Vuplex.WebView {
             }
         }
 
+        void WebView_FallbackVideoRectChanged(object sender, EventArgs<Rect> eventArgs) {
+
+            _view.SetFallbackVideoRect(eventArgs.Value);
+        }
+
         void WebView_TextureChanged(object sender, EventArgs<Texture2D> eventArgs) {
 
             var oldTexture = _view.Texture;
@@ -1009,5 +993,9 @@ namespace Vuplex.WebView {
         // Added in v3.5, removed in v3.7.
         [Obsolete("The WebViewPrefab.DragToScrollThreshold property has been removed. Please use DragThreshold instead: https://developer.vuplex.com/webview/WebViewPrefab#DragThreshold", true)]
         public float DragToScrollThreshold { get; set; }
+
+        // Removed in v4.11.
+        [Obsolete("WebViewPrefab.SetCutoutRect() has been replaced with WebViewPrefab.SetRenderBlackAsTransparent(). Please call SetRenderBlackAsTransparent(true) on the WebViewPrefab instance instead.", true)]
+        public void SetCutoutRect(Rect rect) {}
     }
 }

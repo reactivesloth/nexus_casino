@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -31,16 +31,16 @@ namespace Vuplex.WebView.Editor {
     /// </summary>
     public class WindowsBuildScript : IPreprocessBuild {
 
-        public int callbackOrder { get { return 0; } }
+        public int callbackOrder { get => 0; }
 
         public void OnPreprocessBuild(BuildTarget buildTarget, string buildPath) {
 
-            if (buildTarget != BuildTarget.StandaloneWindows) {
+            if (!(buildTarget == BuildTarget.StandaloneWindows || buildTarget == BuildTarget.StandaloneWindows64)) {
                 return;
             }
             #if !VUPLEX_DISABLE_GRAPHICS_API_WARNING
                 var selectedGraphicsApi = PlayerSettings.GetGraphicsAPIs(buildTarget)[0];
-                var error = VXUtils.GetGraphicsApiErrorMessage(selectedGraphicsApi, new GraphicsDeviceType[] { GraphicsDeviceType.Direct3D11 });
+                var error = VXUtils.GetGraphicsApiErrorMessage(selectedGraphicsApi, new GraphicsDeviceType[] { GraphicsDeviceType.Direct3D11, GraphicsDeviceType.Direct3D12 });
                 if (error != null) {
                     throw new BuildFailedException(error);
                 }
@@ -48,12 +48,12 @@ namespace Vuplex.WebView.Editor {
         }
 
         [PostProcessBuild]
-        public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject) {
+        public static void OnPostProcessBuild(BuildTarget buildTarget, string pathToBuiltProject) {
 
-            if (!(target == BuildTarget.StandaloneWindows || target == BuildTarget.StandaloneWindows64)) {
+            if (!(buildTarget == BuildTarget.StandaloneWindows || buildTarget == BuildTarget.StandaloneWindows64)) {
                 return;
             }
-            var buildPluginDirectoryPath = _getBuiltPluginDirectoryPath(target, pathToBuiltProject);
+            var buildPluginDirectoryPath = _getBuiltPluginDirectoryPath(buildTarget, pathToBuiltProject);
             var sourceChromiumDirectory = EditorUtils.FindDirectory(Path.Combine(new string[] { Application.dataPath, "Vuplex", "WebView", "Standalone", "Windows", "Plugins", CHROMIUM_DIRECTORY_NAME }));
             var destinationChromiumDirectory = Path.Combine(buildPluginDirectoryPath, CHROMIUM_DIRECTORY_NAME);
             EditorUtils.CopyAndReplaceDirectory(sourceChromiumDirectory, destinationChromiumDirectory);
@@ -67,11 +67,11 @@ namespace Vuplex.WebView.Editor {
         const string DLL_FILE_NAME = "VuplexWebViewWindows.dll";
         const string CHROMIUM_DIRECTORY_NAME = "VuplexWebViewChromium";
 
-        static string _getBuiltPluginDirectoryPath(BuildTarget target, string pathToBuiltProject) {
+        static string _getBuiltPluginDirectoryPath(BuildTarget buildTarget, string pathToBuiltProject) {
 
             var productName = Path.GetFileNameWithoutExtension(pathToBuiltProject);
             var buildDirectoryPath = _getParentDirectoryOfFile(pathToBuiltProject, '/');
-            var architecture = target == BuildTarget.StandaloneWindows64 ? "x86_64" : "x86";
+            var architecture = buildTarget == BuildTarget.StandaloneWindows64 ? "x86_64" : "x86";
             var expectedPluginPath = Path.Combine(buildDirectoryPath, productName + "_Data", "Plugins", architecture, DLL_FILE_NAME);
             var actualPluginPath = EditorUtils.FindFile(expectedPluginPath, buildDirectoryPath);
             return _getParentDirectoryOfFile(actualPluginPath, Path.DirectorySeparatorChar);

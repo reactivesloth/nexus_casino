@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -27,7 +27,7 @@ namespace Vuplex.WebView.Internal {
             get {
                 if (_mainThreadId == 0) {
                     // This happens if CurrentlyOnMainThread is accessed from a method annotated with `RuntimeInitializeOnLoadMethod()`
-                    // (for example: method that AndroidWebPlugin.cs calls on startup on Oculus Quest).
+                    // (for example: method that AndroidWebPlugin.cs calls on startup on Meta Quest).
                     return true;
                 }
                 return Thread.CurrentThread.ManagedThreadId == _mainThreadId;

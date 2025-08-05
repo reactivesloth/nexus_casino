@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -14,7 +14,9 @@
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// An interface implemented by a webview if it supports [deep linking](https://en.wikipedia.org/wiki/Mobile_deep_linking).
+    /// An interface implemented by a webview if it supports <see href="https://en.wikipedia.org/wiki/Mobile_deep_linking">deep linking</see>
+    /// (i.e. launching an external application by executing a URL with a custom protocol). Deep linking is disabled by
+    /// default but can be enabled with <see cref="SetDeepLinkingEnabled">SetDeepLinkingEnabled</see>.
     /// </summary>
     /// <remarks>
     /// On iOS, in order to open a link with a custom URI scheme, that scheme must also be listed in
@@ -48,7 +50,7 @@ namespace Vuplex.WebView {
     public interface IWithDeepLinking {
 
         /// <summary>
-        /// Sets whether deep links are enabled. The default is `false`.
+        /// Sets whether deep linking is enabled. The default is `false`.
         /// </summary>
         void SetDeepLinkingEnabled(bool enabled);
     }

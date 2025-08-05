@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -54,7 +54,7 @@ namespace Vuplex.WebView {
         /// <summary>
         /// Gets the prefab's collider.
         /// </summary>
-        public Collider Collider { get { return _view.GetComponent<Collider>(); }}
+        public Collider Collider { get => _view.GetComponent<Collider>(); }
 
         /// <summary>
         /// Determines whether the operating system's native on-screen keyboard is
@@ -67,6 +67,7 @@ namespace Vuplex.WebView {
         /// <list type="bullet">
         ///   <item>3D WebView for Android (non-Gecko)</item>
         ///   <item>3D WebView for iOS</item>
+        ///   <item>3D WebView for visionOS</item>
         /// </list>
         /// </remarks>
         /// <remarks>
@@ -74,14 +75,11 @@ namespace Vuplex.WebView {
         /// but you can use Unity's [TouchScreenKeyboard](https://docs.unity3d.com/ScriptReference/TouchScreenKeyboard.html)
         /// API to show the keyboard and then send typed characters to the webview like described in [this article](https://support.vuplex.com/articles/how-to-use-a-third-party-keyboard).
         /// </remarks>
-        /// <remarks>
-        /// On iOS, disabling the keyboard for one webview disables it for all webviews.
-        /// </remarks>
         /// <seealso cref="IWithNativeOnScreenKeyboard"/>
         /// <seealso cref="KeyboardEnabled"/>
-        [Label("Native On-Screen Keyboard (Android and iOS only)")]
+        [Label("Native On-Screen Keyboard (Android, iOS, & visionOS only)")]
         [Header("Platform-specific")]
-        [Tooltip("Determines whether the operating system's native on-screen keyboard is automatically shown when a text input in the webview is focused. The native on-screen keyboard is only supported for the following packages:\n• 3D WebView for Android (non-Gecko)\n• 3D WebView for iOS")]
+        [Tooltip("Determines whether the operating system's native on-screen keyboard is automatically shown when a text input in the webview is focused. The native on-screen keyboard is only supported for the following packages:\n• 3D WebView for Android (non-Gecko)\n• 3D WebView for iOS\n• 3D WebView for visionOS")]
         public bool NativeOnScreenKeyboardEnabled;
 
         /// <summary>
@@ -114,13 +112,18 @@ namespace Vuplex.WebView {
         [HideInInspector]
         public float ScrollingSensitivity = 0.005f;
 
-        /// <summary>
-        /// Converts the given world point to a normalized point in the webview.
-        /// </summary>
-        public Vector2 WorldToNormalized(Vector3 worldPoint) {
+        public override Vector2 BrowserToScreenPoint(int xInPixels, int yInPixels) {
 
-            var localPoint = _viewResizer.transform.InverseTransformPoint(worldPoint);
-            return new Vector2(1 - localPoint.x, -1 * localPoint.y);
+            if (WebView == null || Camera.main == null) {
+                return Vector2.zero;
+            }
+            var normalizedPoint = WebView.PointToNormalized(xInPixels, yInPixels);
+            // Clamp x and y to the range [0, WebView.Size].
+            var clampedNormalizedX = Math.Min(Math.Max(normalizedPoint.x, 0), 1);
+            var clampedNormalizedY = Math.Min(Math.Max(normalizedPoint.y, 0), 1);
+            var worldPoint = _viewResizer.TransformPoint(new Vector3(1 - clampedNormalizedX, -1 * clampedNormalizedY, 0));
+            var screenPoint = Camera.main.WorldToScreenPoint(worldPoint);
+            return new Vector2(screenPoint.x, Screen.height - screenPoint.y);
         }
 
         /// <summary>
@@ -204,11 +207,17 @@ namespace Vuplex.WebView {
             _setViewSize(width, height);
         }
 
+        /// <summary>
+        /// Converts the given world point to a normalized point in the webview.
+        /// </summary>
+        public Vector2 WorldToNormalized(Vector3 worldPoint) {
+
+            var localPoint = _viewResizer.transform.InverseTransformPoint(worldPoint);
+            return new Vector2(1 - localPoint.x, -1 * localPoint.y);
+        }
+
     #region Non-public members
         Vector2 _sizeForInitialization = Vector2.zero;
-        [SerializeField]
-        [HideInInspector]
-        Transform _videoRectPositioner;
         [SerializeField]
         [HideInInspector]
         protected Transform _viewResizer;
@@ -230,14 +239,6 @@ namespace Vuplex.WebView {
 
         protected override bool _getNativeOnScreenKeyboardEnabled() => NativeOnScreenKeyboardEnabled;
 
-        protected override ViewportMaterialView _getVideoLayer() {
-
-            if (_videoRectPositioner == null) {
-                return null;
-            }
-            return _videoRectPositioner.GetComponentInChildren<ViewportMaterialView>();
-        }
-
         protected override ViewportMaterialView _getView() {
 
             return transform.Find("WebViewPrefabResizer/WebViewPrefabView").GetComponent<ViewportMaterialView>();
@@ -246,17 +247,9 @@ namespace Vuplex.WebView {
         async void _initWebViewPrefab() {
             try {
                 OnInit();
-
                 #if VUPLEX_XR_INTERACTION_TOOLKIT
                     WebViewLogger.LogWarning("It looks like you're using a WebViewPrefab with XR Interaction Toolkit. Please use a CanvasWebViewPrefab inside a world space Canvas instead. For more information, please see <em>https://support.vuplex.com/articles/xr-interaction-toolkit</em>.");
                 #endif
-
-                #if UNITY_ANDROID
-                    if (VXUtils.IsSrpBatcherEnabled()) {
-                        WebViewLogger.LogError("URP settings error: \"SRP Batcher\" is enabled in Universal Render Pipeline (URP) settings, but URP for Android has an issue that prevents 3D WebView's textures from showing up outside of a Canvas. Please either go to \"UniversalRenderPipelineAsset\" -> \"Advanced\" and disable SRP Batcher or switch to using CanvasWebViewPrefab.");
-                    }
-                #endif
-
                 if (_sizeForInitialization == Vector2.zero) {
                     if (_webViewForInitialization != null) {
                         _sizeForInitialization = (Vector2)_webViewForInitialization.Size / Resolution;
@@ -267,7 +260,12 @@ namespace Vuplex.WebView {
                     }
                 }
                 _viewResizer = transform.GetChild(0);
-                _videoRectPositioner = _viewResizer.Find("VideoRectPositioner");
+                var legacyVideoLayer = _viewResizer.Find("VideoRectPositioner");
+                if (legacyVideoLayer != null) {
+                    // This prefab instance has the old fallback video layer that is no longer part of the prefab.
+                    // We must remove it to prevent it from covering the web content.
+                    Destroy(legacyVideoLayer.gameObject);
+                }
                 _setViewSize(_sizeForInitialization.x, _sizeForInitialization.y);
                 await _initBase(new Rect(Vector2.zero, _sizeForInitialization));
             } catch (Exception exception) {
@@ -290,18 +288,6 @@ namespace Vuplex.WebView {
             transform.localScale = new Vector3(1, 1, localScale.z);
             var offsetMagnitude = 0.5f * localScale.x;
             transform.localPosition = transform.localPosition + Quaternion.Euler(transform.localEulerAngles) * new Vector3(offsetMagnitude, 0, 0);
-        }
-
-        protected override void _setVideoLayerPosition(Rect videoRect) {
-
-            // The origins of the prefab and the video rect are in their top-right
-            // corners instead of their top-left corners.
-            _videoRectPositioner.localPosition = new Vector3(
-                1 - (videoRect.x + videoRect.width),
-                -1 * videoRect.y,
-                _videoRectPositioner.localPosition.z
-            );
-            _videoRectPositioner.localScale = new Vector3(videoRect.width, videoRect.height, _videoRectPositioner.localScale.z);
         }
 
         void _setViewSize(float width, float height) {
@@ -341,8 +327,8 @@ namespace Vuplex.WebView {
         // Deprecated in v4.0.
         [Obsolete("WebViewPrefab.InitialResolution is now deprecated. Please use WebViewPrefab.Resolution instead.")]
         public float InitialResolution {
-            get { return Resolution; }
-            set { Resolution = value; }
+            get => Resolution;
+            set => Resolution = value;
         }
 
         // Added in v2.3.3, removed in v3.5.

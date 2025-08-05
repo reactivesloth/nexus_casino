@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -38,10 +38,10 @@ static void UNITY_INTERFACE_EXPORT UNITY_INTERFACE_API VuplexUnityPluginUnload()
 + (id<MTLDevice>)metalDevice {
 
     if (!_metalGraphics) {
-        NSLog(@"ERROR: VXWebViewAppController._metalGraphics is not set, which means another iOS graphics plugin is clashing with 3D WebView. Please see https://support.vuplex.com/articles/ios-graphics-plugin-conflict");
+        NSLog(@"ERROR: VXWebViewAppController._metalGraphics is not set, which means another iOS graphics plugin is clashing with 3D WebView. Please see https://support.vuplex.com/articles/apple-graphics-plugin-conflict");
     }
     // If you experience an EXC_BAD_ACCESS error here, please see
-    // https://support.vuplex.com/articles/ios-graphics-plugin-conflict
+    // https://support.vuplex.com/articles/apple-graphics-plugin-conflict
     return _metalGraphics->MetalDevice();
 }
 

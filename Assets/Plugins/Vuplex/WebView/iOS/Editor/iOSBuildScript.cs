@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
+using UnityEditor.Build.Reporting;
 using UnityEditor.Callbacks;
 using UnityEditor.iOS.Xcode;
 
@@ -28,7 +29,25 @@ namespace Vuplex.WebView.Editor {
     /// - Adds the -ObjC linker flag for the native iOS library
     /// - Disables bitcode (required since bitcode is disabled for the native iOS library)
     /// </summary>
-    public class iOSBuildScript {
+    public class iOSBuildScript : IPreprocessBuildWithReport {
+
+        /// <seealso cref="IPreprocessBuildWithReport"/>
+        public int callbackOrder { get => 0; }
+
+        /// <seealso cref="IPreprocessBuildWithReport"/>
+        public void OnPreprocessBuild(BuildReport report) {
+
+            if (report.summary.platform != BuildTarget.iOS) {
+                return;
+            }
+            var isDeviceSdk = PlayerSettings.iOS.sdkVersion == iOSSdkVersion.DeviceSDK;
+            AppleEditorUtils.SetActivePlugin(
+                isDeviceSdk,
+                "Vuplex/WebView/iOS/Plugins/libVuplexWebViewiOS_device.a",
+                "Vuplex/WebView/iOS/Plugins/libVuplexWebViewiOS_simulator.a",
+                BuildTarget.iOS
+            );
+        }        
 
         [PostProcessBuild]
         public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject) {

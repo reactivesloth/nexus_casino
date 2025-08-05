@@ -1,25 +1,16 @@
-﻿// <copyright file="VideoUnlitShader.cs" company="Google Inc.">
-// Copyright (C) 2017 Google Inc. All Rights Reserved.
+﻿// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
-//  Licensed under the Apache License, Version 2.0 (the "License");
-//  you may not use this file except in compliance with the License.
-//  You may obtain a copy of the License at
+// Licensed under the Vuplex Commercial Software Library License, you may
+// not use this file except in compliance with the License. You may obtain
+// a copy of the License at
 //
-//  http://www.apache.org/licenses/LICENSE-2.0
+//     https://vuplex.com/commercial-library-license
 //
-//  Unless required by applicable law or agreed to in writing, software
-//  distributed under the License is distributed on an "AS IS" BASIS,
-//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//  See the License for the specific language governing permissions and
-//    limitations under the License.
-// </copyright>
-
-// This shader is a modified version of VideoUnlitShader.cs from the Unity Google VR SDK.
-// For Android, it renders from OES_external_image textures, which require special
-// OpenGLES extensions and a special texture sampler.
-// Thank you to the following developers for improving this shader:
-// - Tom Neumann at Rendever (@Mandelboxed) for his solution to support Single Pass stereo rendering: https://forum.unity.com/threads/unity_stereoeyeindex-with-glsl-single-pass-implementation-details.592990/#post-3982708
-// - Nanome (https://nanome.ai) for updating this shader to also work with non-VR cameras.
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 Shader "Vuplex/Android Web Shader" {
     Properties {
         _MainTex ("Base (RGB)", 2D) = "white" {}
@@ -27,8 +18,7 @@ Shader "Vuplex/Android Web Shader" {
         [Toggle(FLIP_Y)] _FlipY ("Flip Y", Float) = 0
 
         [Header(Properties set programmatically)]
-        _VideoCutoutRect("Video Cutout Rect", Vector) = (0, 0, 0, 0)
-        _CropRect("Crop Rect", Vector) = (0, 0, 0, 0)
+        _RenderBlackAsTransparent ("Render Black as Transparent", Float) = 0
 
         // Include these UI properties from UI-Default.shader
         // in order to support UI Scroll Views.
@@ -79,6 +69,10 @@ Shader "Vuplex/Android Web Shader" {
                 #ifdef VERTEX
                     #version 300 es
                     #ifdef STEREO_MULTIVIEW_ON
+                        // Requiring GL_OVR_multiview2 is supposed to implicitly enable GL_OVR_multiview, but there are
+                        // some old Android devices (e.g. Galaxy Tab A7 Lite (SM-T220)) where shader compilation fails unless
+                        // GL_OVR_multiview is explicitly required.
+                        #extension GL_OVR_multiview : require
                         #extension GL_OVR_multiview2 : require
                     #endif
                         #extension GL_OES_EGL_image_external : require
@@ -119,6 +113,7 @@ Shader "Vuplex/Android Web Shader" {
                     }
 
                     void main() {
+
                         int eye = setupStereoEyeIndex();
                         gl_Position = getStereoMatrixVP(eye) * unity_ObjectToWorld * gl_Vertex;
                         vec2 untransformedUV = in_TEXCOORD0;
@@ -140,60 +135,23 @@ Shader "Vuplex/Android Web Shader" {
                     }
 
                     uniform samplerExternalOES _MainTex;
-                    uniform vec4 _VideoCutoutRect;
-                    uniform vec4 _CropRect;
-                    varying vec2 uv;
+                    uniform float _RenderBlackAsTransparent;
                     varying vec4 vertexColor;
+                    varying vec2 uv;
 
                     void main() {
-                        vec4 col = texture2D(_MainTex, uv);
-                        float cutoutWidth = _VideoCutoutRect.z;
-                        float cutoutHeight = _VideoCutoutRect.w;
-                        #ifdef FLIP_X
-                            float nonflippedX = 1.0 - uv.x;
-                        #else
-                            float nonflippedX = uv.x;
-                        #endif
-                        #ifdef FLIP_Y
-                            float nonflippedY = uv.y;
-                        #else
-                            float nonflippedY = 1.0 - uv.y;
-                        #endif
 
-                        // Make the pixels transparent if they fall within the video rect cutout and the they're black.
-                        // Keeping non-black pixels allows the video controls to still show up on top of the video.
-                        bool pointIsInCutout = cutoutWidth != 0.0 &&
-                                                cutoutHeight != 0.0 &&
-                                                nonflippedX >= _VideoCutoutRect.x &&
-                                                nonflippedX <= _VideoCutoutRect.x + cutoutWidth &&
-                                                nonflippedY >= _VideoCutoutRect.y &&
-                                                nonflippedY <= _VideoCutoutRect.y + cutoutHeight;
-
-                        if (pointIsInCutout) {
-                            // Use a threshold of 0.15 to consider a pixel as black.
-                            bool pixelIsBlack = all(lessThan(col.xyz, vec3(0.15, 0.15, 0.15)));
-                            if (pixelIsBlack) {
-                                col = vec4(0.0, 0.0, 0.0, 0.0);
-                            }
+                        vec4 color = texture2D(_MainTex, uv);
+                        // Use a threshold of 0.15 to consider a pixel as black.
+                        if (_RenderBlackAsTransparent != 0.0 && all(lessThan(color.xyz, vec3(0.15, 0.15, 0.15)))) {
+                            color = vec4(0.0, 0.0, 0.0, 0.0);
                         }
-
-                        float cropWidth = _CropRect.z;
-                        float cropHeight = _CropRect.w;
-                        bool pointIsOutsideOfCrop = cropWidth != 0.0 &&
-                                                    cropHeight != 0.0 &&
-                                                    (nonflippedX < _CropRect.x || nonflippedX > _CropRect.x + cropWidth || nonflippedY < _CropRect.y || nonflippedY > _CropRect.y + cropHeight);
-
-                        if (pointIsOutsideOfCrop) {
-                            col = vec4(0.0, 0.0, 0.0, 0.0);
-                        }
-
-                        // Place color correction last so it doesn't effect cutout rect functionality.
+                        // Place color correction last so it doesn't affect _RenderBlackAsTransparent functionality.
                         #ifndef UNITY_COLORSPACE_GAMMA
-                            col = vec4(GammaToLinearSpace(col.xyz), col.w);
+                            color = vec4(GammaToLinearSpace(color.xyz), color.w);
                         #endif
-
                         // Multiply the alpha by the vertex color's alpha to support CanvasGroup.alpha.
-                        gl_FragColor = vec4(col.xyz, col.w * vertexColor.w);
+                        gl_FragColor = vec4(color.xyz, color.w * vertexColor.w);
                     }
                 #endif
             ENDGLSL

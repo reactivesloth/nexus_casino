@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -37,11 +37,11 @@ namespace Vuplex.WebView {
 
         public event EventHandler<FocusedInputFieldChangedEventArgs> FocusedInputFieldChanged;
 
+        public event EventHandler<LoadFailedEventArgs> LoadFailed;
+
         public event EventHandler<ProgressChangedEventArgs> LoadProgressChanged;
 
         public event EventHandler<EventArgs<string>> MessageEmitted;
-
-        public event EventHandler PageLoadFailed;
 
         public event EventHandler<TerminatedEventArgs> Terminated;
 
@@ -227,7 +227,10 @@ namespace Vuplex.WebView {
 
         public Vector2Int NormalizedToPoint(Vector2 normalizedPoint) {
 
-            return new Vector2Int((int)(normalizedPoint.x * (float)Size.x), (int)(normalizedPoint.y * (float)Size.y));
+            return new Vector2Int(
+                (int)Math.Round(normalizedPoint.x * (float)Size.x),
+                (int)Math.Round(normalizedPoint.y * (float)Size.y)
+            );
         }
 
         public void Paste() {
@@ -331,7 +334,7 @@ namespace Vuplex.WebView {
 
         void _handlePageLoad(string url) {
 
-            UrlChanged?.Invoke(this, new UrlChangedEventArgs(url, UrlActionType.Load));
+            UrlChanged?.Invoke(this, new UrlChangedEventArgs(url));
             LoadProgressChanged?.Invoke(this, new ProgressChangedEventArgs(ProgressChangeType.Started, 0));
             LoadProgressChanged?.Invoke(this, new ProgressChangedEventArgs(ProgressChangeType.Finished, 1));
             _pageLoadFinishedTaskSource?.SetResult(true);
@@ -387,6 +390,9 @@ namespace Vuplex.WebView {
         [Obsolete(ObsoletionMessages.Init2, true)]
         public void Init(Texture2D texture, float width, float height, Texture2D videoTexture) {}
 
+        [Obsolete(ObsoletionMessages.PageLoadFailed)]
+        public event EventHandler PageLoadFailed;
+
         [Obsolete(ObsoletionMessages.Resolution, true)]
         public float Resolution { get; }
 
@@ -394,7 +400,7 @@ namespace Vuplex.WebView {
         public void SetResolution(float pixelsPerUnityUnit) {}
 
         [Obsolete(ObsoletionMessages.SizeInPixels)]
-        public Vector2 SizeInPixels { get { return (Vector2)Size; }}
+        public Vector2 SizeInPixels { get => (Vector2)Size; }
 
         [Obsolete(ObsoletionMessages.VideoRectChanged, true)]
         public event EventHandler<EventArgs<Rect>> VideoRectChanged;

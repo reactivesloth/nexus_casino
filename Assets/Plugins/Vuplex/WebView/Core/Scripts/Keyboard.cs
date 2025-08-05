@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -25,7 +25,7 @@ namespace Vuplex.WebView {
     /// For use in a Canvas, please see CanvasKeyboard instead.
     /// </summary>
     /// <remarks>
-    /// The Keyboard's UI is a React.js app that runs inside a WebViewPrefab and
+    /// The keyboard UI is a React.js app that runs inside a WebViewPrefab and
     /// emits messages to C# to when keys are pressed.
     /// [The keyboard UI is open source and available on GitHub](https://github.com/vuplex/unity-keyboard).
     /// </remarks>
@@ -34,6 +34,12 @@ namespace Vuplex.WebView {
     /// based on the operating system's default language: English, Spanish, French, German, Italian, Russian,
     /// Danish, Norwegian, and Swedish.
     /// </remarks>
+    /// <remarks>
+    /// Please note that 3D WebView's on-screen keyboard prefabs do not support Chinese, Japanese, or Korean.
+    /// For those languages, please see [this article about IME support](https://support.vuplex.com/articles/chinese-japanese-and-korean)
+    /// and [this section](https://support.vuplex.com/articles/chinese-japanese-and-korean#ime-unsupported)
+    /// that describes how to enter characters for those languages programmatically.
+    /// </remarks>///
     public class Keyboard : BaseKeyboard {
 
         /// <summary>
@@ -60,7 +66,7 @@ namespace Vuplex.WebView {
         /// };
         /// </code>
         /// </example>
-        public WebViewPrefab WebViewPrefab { get { return (WebViewPrefab)_webViewPrefab; }}
+        public WebViewPrefab WebViewPrefab { get => (WebViewPrefab)_webViewPrefab; }
 
         /// <summary>
         /// Creates an instance using the default width and height.
@@ -128,8 +134,8 @@ namespace Vuplex.WebView {
         // Added in v3.12, deprecated in v4.0.
         [Obsolete("Keyboard.InitialResolution is now deprecated. Please use Keyboard.Resolution instead.")]
         public float InitialResolution {
-            get { return Resolution; }
-            set { Resolution = value; }
+            get => Resolution;
+            set => Resolution = value;
         }
     }
 }

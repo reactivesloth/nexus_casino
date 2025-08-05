@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -47,18 +47,76 @@ namespace Vuplex.WebView {
         public bool FallbackVideoEnabled { get; private set; }
 
         /// <see cref="IWithNative2DMode"/>
-        public bool Native2DModeEnabled { get { return _native2DModeEnabled; }}
+        public bool Native2DModeEnabled { get => _native2DModeEnabled; }
 
         public WebPluginType PluginType { get; } = WebPluginType.iOS;
 
         /// <see cref="IWithNative2DMode"/>
-        public Rect Rect { get { return _rect; }}
+        public Rect Rect { get => _rect; }
 
         /// <see cref="IWithFallbackVideo"/>
         public new Texture2D VideoTexture { get; private set; }
 
         /// <see cref="IWithNative2DMode"/>
-        public bool Visible { get; private set; }
+        public bool Visible { get => _visible; }
+
+        /// <summary>
+        /// The application can use this event to handle authentication challenges
+        /// (e.g. for HTTP auth, client certificate auth, integration with smart cards).
+        /// This event maps directly to iOS's native <see href="https://developer.apple.com/documentation/webkit/wknavigationdelegate/webview(_:didreceive:completionhandler:)?language=objc">webView:didReceiveAuthenticationChallenge:completionHandler:</see>
+        /// delegate method. In order to provide access to the full flexibility of the
+        /// native API, this event provides IntPtr references to the native Objective-C
+        /// pointers for the `challenge` and `completionHandler` arguments that the OS
+        /// passed to <see href="https://developer.apple.com/documentation/webkit/wknavigationdelegate/webview(_:didreceive:completionhandler:)?language=objc">webView:didReceiveAuthenticationChallenge:completionHandler:</see>.
+        /// To utilize these IntPtr arguments, the application must pass them
+        /// to a native function defined in an Objective-C (.m) file like illustrated in the example below.
+        /// If the application attaches a listener to this event, it must invoke the native
+        /// CompletionHandler callback in order to specify how the authentication challenge should be handled.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// // Example of defining a native Objective-C function that handles the authentication challenge.
+        /// // Place this in a .m file in your project, like Assets/Plugins/WebViewCustom.m
+        /// #import &lt;Foundation/Foundation.h&gt;
+        ///
+        /// typedef void (^ CompletionHandler)(enum NSURLSessionAuthChallengeDisposition, NSURLCredential *);
+        ///
+        /// void WebViewCustom_handleAuthChallengeReceived(NSURLAuthenticationChallenge * authChallenge, CompletionHandler completionHandler) {
+        ///
+        ///     NSURLCredential *credential = [[NSURLCredential alloc] initWithUser:@"myUsername" password:@"myPassword" persistence:NSURLCredentialPersistenceForSession];
+        ///     completionHandler(NSURLSessionAuthChallengeUseCredential, credential);
+        /// }
+        /// </code>
+        /// <code>
+        /// // Example of calling the native Objective-C function from C#.
+        /// async void AttachAuthChallengeReceivedEventHandler(WebViewPrefab webViewPrefab) {
+        ///
+        ///     await webViewPrefab.WaitUntilInitialized();
+        ///     #if UNITY_IOS &amp;&amp; !UNITY_EDITOR
+        ///         var iOSWebViewInstance = webViewPrefab.WebView as iOSWebView;
+        ///         iOSWebViewInstance.AuthChallengeReceived += (sender, eventArgs) => {
+        ///             WebViewCustom_handleAuthChallengeReceived(eventArgs.AuthChallenge, eventArgs.CompletionHandler);
+        ///         };
+        ///     #endif
+        /// }
+        ///
+        /// [System.Runtime.InteropServices.DllImport("__Internal")]
+        /// static extern void WebViewCustom_handleAuthChallengeReceived(IntPtr authChallenge, IntPtr completionHandler);
+        /// </code>
+        /// </example>
+        public event EventHandler<iOSAuthChallengeReceivedEventArgs> AuthChallengeReceived {
+            add {
+                _assertSingletonEventHandlerUnset(_authChallengeReceivedHandler, "AuthChallengeReceived");
+                _authChallengeReceivedHandler = value;
+                WebView_setAuthChallengeReceivedEnabled(_nativeWebViewPtr, true);
+            }
+            remove {
+                if (_authChallengeReceivedHandler == value) {
+                    _authChallengeReceivedHandler = null;
+                    WebView_setAuthChallengeReceivedEnabled(_nativeWebViewPtr, false);
+                }
+            }
+        }
 
         /// <see cref="IWithDownloads"/>
         public event EventHandler<DownloadChangedEventArgs> DownloadProgressChanged;
@@ -77,19 +135,6 @@ namespace Vuplex.WebView {
             WebView_bringToFront(_nativeWebViewPtr);
         }
 
-        public static void ClearAllData() => WebView_clearAllData();
-
-        public override void Click(int xInPixels, int yInPixels, bool preventStealingFocus = false) {
-
-            _assertValidState();
-            _assertPointIsWithinBounds(xInPixels, yInPixels);
-            if (preventStealingFocus) {
-                WebView_clickWithoutStealingFocus(_nativeWebViewPtr, xInPixels, yInPixels);
-            } else {
-                WebView_click(_nativeWebViewPtr, xInPixels, yInPixels);
-            }
-        }
-
         // Override because BaseWebView.CaptureScreenshot() uses too much memory on iOS.
         public override Task<byte[]> CaptureScreenshot() {
 
@@ -102,6 +147,19 @@ namespace Vuplex.WebView {
             Marshal.Copy(unmanagedBytes, managedBytes, 0, unmanagedBytesLength);
             WebView_freeMemory(unmanagedBytes);
             return Task.FromResult(managedBytes);
+        }
+
+        public static void ClearAllData() => WebView_clearAllData();
+
+        public override void Click(int xInPixels, int yInPixels, bool preventStealingFocus = false) {
+
+            _assertValidState();
+            _assertPointIsWithinBounds(xInPixels, yInPixels);
+            if (preventStealingFocus) {
+                WebView_clickWithoutStealingFocus(_nativeWebViewPtr, xInPixels, yInPixels);
+            } else {
+                WebView_click(_nativeWebViewPtr, xInPixels, yInPixels);
+            }
         }
 
         /// <see cref="IWithPdfCreation"/>
@@ -121,7 +179,7 @@ namespace Vuplex.WebView {
         /// <see cref="IWithFallbackVideo"/>
         public Material CreateVideoMaterial() {
 
-            var material = new Material(Resources.Load<Material>("iOSVideoMaterial"));
+            var material = new Material(Resources.Load<Material>("AppleVideoMaterial"));
             material.mainTexture = VideoTexture;
             return material;
         }
@@ -151,7 +209,10 @@ namespace Vuplex.WebView {
         }
 
         /// <summary>
-        /// Returns a pointer to the instance's native Objective-C WKWebView.
+        /// Returns an Objective-C pointer to the instance's underlying native <see href="https://developer.apple.com/documentation/webkit/wkwebview?language=objc">WKWebView</see>.
+        /// The application can use this to utilize native iOS APIs for which 3D WebView doesn't yet have
+        /// dedicated C# equivalents. To utilize the pointer, the application must pass it to a native function
+        /// defined in an Objective-C (.m) file like illustrated in the example below.
         /// </summary>
         /// <remarks>
         /// Warning: Adding code that interacts with the native WKWebView directly
@@ -168,7 +229,7 @@ namespace Vuplex.WebView {
         /// #import &lt;Foundation/Foundation.h&gt;
         /// #import &lt;WebKit/WebKit.h&gt;
         ///
-        /// void WebViewCustom_SetAllowsLinkPreview(WKWebView *webView, BOOL allowsLinkPreview) {
+        /// void WebViewCustom_setAllowsLinkPreview(WKWebView *webView, BOOL allowsLinkPreview) {
         ///
         ///     webView.allowsLinkPreview = allowsLinkPreview;
         /// }
@@ -180,12 +241,12 @@ namespace Vuplex.WebView {
         ///     await webViewPrefab.WaitUntilInitialized();
         ///     #if UNITY_IOS &amp;&amp; !UNITY_EDITOR
         ///         var wkWebViewPtr = (webViewPrefab.WebView as iOSWebView).GetNativeWebView();
-        ///         WebViewCustom_SetAllowsLinkPreview(wkWebViewPtr, true);
+        ///         WebViewCustom_setAllowsLinkPreview(wkWebViewPtr, true);
         ///     #endif
         /// }
         ///
         /// [System.Runtime.InteropServices.DllImport("__Internal")]
-        /// static extern void WebViewCustom_SetAllowsLinkPreview(System.IntPtr webViewPtr, bool allowsLinkPreview);
+        /// static extern void WebViewCustom_setAllowsLinkPreview(System.IntPtr webViewPtr, bool allowsLinkPreview);
         /// </code>
         /// </example>
         public IntPtr GetNativeWebView() {
@@ -223,7 +284,7 @@ namespace Vuplex.WebView {
         public void MovePointer(Vector2 normalizedPoint, bool pointerLeave = false) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             WebView_movePointer(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, pointerLeave);
         }
 
@@ -290,6 +351,8 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Like Web.SetCameraAndMicrophoneEnabled(), but enables only the camera without enabling the microphone.
+        /// In addition to calling this method, you must also complete the additional steps described [here](https://support.vuplex.com/articles/webrtc#ios)
+        /// in order to successfully enable the camera.
         /// </summary>
         /// <example>
         /// <code>
@@ -337,6 +400,30 @@ namespace Vuplex.WebView {
             FallbackVideoEnabled = enabled;
         }
 
+        /// <summary>
+        /// When Native 2D Mode is enabled, this method sets whether web pages can use the
+        /// <see href="https://developer.mozilla.org/en-US/docs/Web/API/Fullscreen_API">JavaScript Fullscreen API</see>
+        /// to make an HTML element occupy the device's entire screen. The default is `true`, meaning that the JavaScript
+        /// Fullscreen API is enabled by default. When Native 2D Mode is disabled, this method has no effect because
+        /// the JavaScript Fullscreen API is only supported in Native 2D Mode.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// #if UNITY_IOS &amp;&amp; !UNITY_EDITOR
+        ///     await canvasWebViewPrefab.WaitUntilInitialized();
+        ///     var iOSWebViewInstance = canvasWebViewPrefab.WebView as iOSWebView;
+        ///     // Disable the JavaScript Fullscreen API.
+        ///     iOSWebViewInstance.SetFullscreenEnabled(false);
+        /// #endif
+        /// </code>
+        /// </example>
+        /// <seealso href="https://support.vuplex.com/articles/fullscreen">Fullscreen support in 3D WebView</seealso>
+        public void SetFullscreenEnabled(bool enabled) {
+
+            _assertValidState();
+            WebView_setFullscreenEnabled(_nativeWebViewPtr, enabled);
+        }
+
         public static void SetIgnoreCertificateErrors(bool ignore) => WebView_setIgnoreCertificateErrors(ignore);
 
         /// <summary>
@@ -361,6 +448,8 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Like Web.SetCameraAndMicrophoneEnabled(), but enables only the microphone without enabling the camera.
+        /// In addition to calling this method, you must also complete the additional steps described [here](https://support.vuplex.com/articles/webrtc#ios)
+        /// in order to successfully enable the microphone.
         /// </summary>
         /// <example>
         /// <code>
@@ -388,12 +477,12 @@ namespace Vuplex.WebView {
         }
 
         /// <summary>
-        /// 3D WebView for iOS works by using native WKWebView instances, and it must
+        /// 3D WebView for iOS is powered by native WKWebView instances, and it must
         /// add those instances to the native iOS view hierarchy in order for them to work correctly.
         /// By default, 3D WebView adds the native WKWebView instances as children of
         /// the Unity view controller's view. However, you can call this method at the start of the app to override the native UIView to which
-        /// 3D WebView adds the native WKWebView instances. For example, you may need to do that if you're
-        /// embedding Unity as a library. The `nativeParentView` parameter is a pointer to an Objective-C UIView (`UIView *`).
+        /// 3D WebView adds the native WKWebView instances. For example, you may need to do this if your app
+        /// embeds Unity as a library. The `nativeParentView` parameter is a pointer to an Objective-C UIView (`UIView *`).
         /// </summary>
         /// <example>
         /// <code>
@@ -435,14 +524,6 @@ namespace Vuplex.WebView {
             WebView_setRemoteDebuggingEnabled(enabled);
             if (enabled) {
                 WebViewLogger.Log("Remote debugging is enabled for iOS. For instructions, please see https://support.vuplex.com/articles/how-to-debug-web-content#ios.");
-            }
-        }
-
-        public override void SetRenderingEnabled(bool enabled) {
-
-            base.SetRenderingEnabled(enabled);
-            if (enabled && _currentVideoNativeTexture != IntPtr.Zero) {
-                VideoTexture.UpdateExternalTexture(_currentVideoNativeTexture);
             }
         }
 
@@ -516,11 +597,15 @@ namespace Vuplex.WebView {
 
             _assertValidState();
             _assertNative2DModeEnabled();
-            Visible = visible;
+            _visible = visible;
             WebView_setVisible(_nativeWebViewPtr, visible);
         }
 
     #region Non-public members
+        // iOS's max size is much lower, so set its threshold at 2.5 megapixels.
+        // Testing on an iPhone 13 Mini, I found that it could handle 2.4 megapixels but not 3.5 megapixels.
+        protected override int _abnormallyLargeThreshold { get => 2500000; }
+        EventHandler<iOSAuthChallengeReceivedEventArgs> _authChallengeReceivedHandler;
         IntPtr _currentVideoNativeTexture;
         Dictionary<string, TaskCompletionSource<string>> _pendingCreatePdfTaskSources = new Dictionary<string, TaskCompletionSource<string>>();
         static Dictionary<string, Action<bool>> _pendingDeleteCookiesResultCallbacks = new Dictionary<string, Action<bool>>();
@@ -528,21 +613,14 @@ namespace Vuplex.WebView {
         Rect _videoRect;
         readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
 
-        void _applyVideoTexture() {
+        void _assertNotExpiredTrial() {
 
-            if (_currentVideoNativeTexture == IntPtr.Zero) {
-                return;
-            }
-            var previousNativeTexturePtr = VideoTexture.GetNativeTexturePtr();
-            VideoTexture.UpdateExternalTexture(_currentVideoNativeTexture);
-            VideoTexture.Apply();
-            var newNativeTexturePtr = VideoTexture.GetNativeTexturePtr();
-            if (!(previousNativeTexturePtr == IntPtr.Zero || previousNativeTexturePtr == newNativeTexturePtr)) {
-                WebView_destroyTexture(previousNativeTexturePtr, SystemInfo.graphicsDeviceType.ToString());
+            if (_nativeWebViewPtr == IntPtr.Zero) {
+                throw new TrialExpiredException("Your trial of 3D WebView for iOS has expired. Please purchase a license to continue using it.");
             }
         }
 
-        protected override Material _createMaterial() => new Material(Resources.Load<Material>("iOSWebMaterial"));
+        protected override Material _createMaterial() => new Material(Resources.Load<Material>("AppleWebMaterial"));
 
         [AOT.MonoPInvokeCallback(typeof(Action<string>))]
         static void _handleDeleteCookiesResult(string resultCallbackId) {
@@ -550,6 +628,18 @@ namespace Vuplex.WebView {
             var callback = _pendingDeleteCookiesResultCallbacks[resultCallbackId];
             _pendingDeleteCookiesResultCallbacks.Remove(resultCallbackId);
             callback(true);
+        }
+
+        // Invoked by the native plugin.
+        void HandleAuthChallengeReceived(string message) {
+
+            var parameters = message.Split(new char[] { ',' }, 2);
+            var completionHandler = VXUtils.ParseIntPtr(parameters[1]);
+            var eventArgs = new iOSAuthChallengeReceivedEventArgs {
+                AuthChallenge = VXUtils.ParseIntPtr(parameters[0]),
+                CompletionHandler = VXUtils.ParseIntPtr(parameters[1])
+            };
+            _authChallengeReceivedHandler?.Invoke(this, eventArgs);
         }
 
         // Invoked by the native plugin.
@@ -601,17 +691,17 @@ namespace Vuplex.WebView {
         }
 
         // Invoked by the native plugin.
-        async void HandlePopup(string paramsString) {
+        async void HandlePopup(string message) {
 
-            var parameters = paramsString.Split(new char[] { ',' });
+            var parameters = message.Split(new char[] { ',' });
             if (!(parameters.Length == 1 || parameters.Length == 2)) {
-                WebViewLogger.LogError($"HandlePopup received an unexpected number of parameters ({parameters.Length}): {paramsString}");
+                WebViewLogger.LogError($"HandlePopup received an unexpected number of parameters ({parameters.Length}): {message}");
                 return;
             }
             var url = parameters[0];
             iOSWebView popupWebView = null;
             if (parameters.Length == 2) {
-                var nativePopupWebViewPtr = new IntPtr(Int64.Parse(parameters[1]));
+                var nativePopupWebViewPtr = VXUtils.ParseIntPtr(parameters[1]);
                 popupWebView = Instantiate();
                 if (Native2DModeEnabled) {
                     await popupWebView._initIOS2D(Rect, nativePopupWebViewPtr);
@@ -625,22 +715,26 @@ namespace Vuplex.WebView {
         // Invoked by the native plugin.
         void HandleVideoTextureChanged(string textureString) {
 
-            var nativeTexture = new IntPtr(Int64.Parse(textureString));
+            var nativeTexture = VXUtils.ParseIntPtr(textureString);
             if (nativeTexture == _currentVideoNativeTexture) {
                 return;
             }
             var previousNativeTexture = _currentVideoNativeTexture;
             _currentVideoNativeTexture = nativeTexture;
-            if (_renderingEnabled) {
-                VideoTexture.UpdateExternalTexture(_currentVideoNativeTexture);
-            }
-
+            VideoTexture.UpdateExternalTexture(_currentVideoNativeTexture);
             if (previousNativeTexture != IntPtr.Zero && previousNativeTexture != _currentVideoNativeTexture) {
                 WebView_destroyTexture(previousNativeTexture, SystemInfo.graphicsDeviceType.ToString());
             }
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        // Execute as early as possible to help ensure it runs before user code.
+        [RuntimeInitializeOnLoadMethod(
+            #if UNITY_2019_2_OR_NEWER
+                RuntimeInitializeLoadType.SubsystemRegistration
+            #else
+                RuntimeInitializeLoadType.BeforeSceneLoad
+            #endif
+        )]
         static void _initializePlugin() {
 
             WebView_setCookieCallbacks(
@@ -651,10 +745,7 @@ namespace Vuplex.WebView {
 
         async Task _initIOS2D(Rect rect, IntPtr popupNativeWebView) {
 
-            _native2DModeEnabled = true;
-            _rect = rect;
-            Visible = true;
-            await _initBase((int)rect.width, (int)rect.height, createTexture: false);
+            await _initInNative2DModeBase(rect);
             _nativeWebViewPtr = WebView_newInNative2DMode(
                 gameObject.name,
                 (int)rect.x,
@@ -663,6 +754,7 @@ namespace Vuplex.WebView {
                 (int)rect.height,
                 popupNativeWebView
             );
+            _assertNotExpiredTrial();
         }
 
         async Task _initIOS3D(int width, int height, IntPtr popupNativeWebView) {
@@ -679,6 +771,7 @@ namespace Vuplex.WebView {
                 SystemInfo.graphicsDeviceType != GraphicsDeviceType.Metal,
                 popupNativeWebView
             );
+            _assertNotExpiredTrial();
         }
 
         // Start the coroutine from OnEnable so that the coroutine
@@ -688,14 +781,14 @@ namespace Vuplex.WebView {
         void _pointerDown(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount, bool preventStealingFocus) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             WebView_pointerDown(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount, preventStealingFocus);
         }
 
         void _pointerUp(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             WebView_pointerUp(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount);
         }
 
@@ -812,6 +905,9 @@ namespace Vuplex.WebView {
         static extern void WebView_setAllowsInlineMediaPlayback(bool allow);
 
         [DllImport(_dllName)]
+        static extern void WebView_setAuthChallengeReceivedEnabled(IntPtr webViewPtr, bool enabled);
+
+        [DllImport(_dllName)]
         static extern void WebView_setAutoplayEnabled(bool ignore);
 
         [DllImport(_dllName)]
@@ -828,6 +924,9 @@ namespace Vuplex.WebView {
 
         [DllImport(_dllName)]
         static extern void WebView_setDownloadsEnabled(IntPtr webViewPtr, bool enabled);
+
+        [DllImport(_dllName)]
+        static extern void WebView_setFullscreenEnabled(IntPtr webViewPtr, bool enabled);
 
         [DllImport(_dllName)]
         static extern void WebView_setIgnoreCertificateErrors(bool ignore);

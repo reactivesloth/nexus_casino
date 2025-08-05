@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -35,6 +35,12 @@ namespace Vuplex.WebView.Internal {
     /// </summary>
     public class NativeKeyboardListener : MonoBehaviour {
 
+        public event EventHandler ImeCompositionCancelled;
+
+        public event EventHandler<EventArgs<string>> ImeCompositionChanged;
+
+        public event EventHandler<EventArgs<string>> ImeCompositionFinished;
+
         public event EventHandler<KeyboardEventArgs> KeyDownReceived;
 
         public event EventHandler<KeyboardEventArgs> KeyUpReceived;
@@ -62,15 +68,19 @@ namespace Vuplex.WebView.Internal {
                 }
             }
         );
+        bool? _imeShouldBeEnabled;
         List<string> _keysDown = new List<string>();
-        // Keys that don't show up correctly in Input.inputString. Must be defined before _keyValues.
+        // Keys that don't show up correctly in Input.inputString.
+        // Must be defined before _keyValues and cannot contain any values present in _keyValues (or else the key will be dispatched twice).
         static readonly string[] _keyValuesUndetectableThroughInputString = new string[] {
-            // Note: "Backspace" is included here for the Hololens system TouchScreenKeyboard. In other scenarios, \b is detectable through Input.inputString.
-            "Tab", "ArrowUp", "ArrowDown", "ArrowRight", "ArrowLeft", "Escape", "Delete", "Home", "End", "Insert", "PageUp", "PageDown", "Help", "Backspace"
+            // Notes:
+            // - "Backspace" is included only because it doesn't show up in Input.inputString for the Hololens system TouchScreenKeyboard. In other scenarios, it can be detected as \b through Input.inputString.
+            // - "Enter" is only included because it doesn't show up in Input.inputString when IME is enabled on macOS. In other scenarios, it can be detected as \n or \r through Input.inputString.
+            "ArrowDown", "ArrowRight", "ArrowLeft", "ArrowUp", "Backspace", "End", "Enter", "Escape", "Delete", "Help", "Home", "Insert", "PageDown", "PageUp", "Tab"
         };
         KeyRepeatState _keyRepeatState;
         static readonly string[] _keyValues = new string[] {
-            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "`", "-", "=", "[", "]", "\\", ";", "'", ",", ".", "/", " ", "Enter"
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "`", "-", "=", "[", "]", "\\", ";", "'", ",", ".", "/", " "
         }.Concat(_keyValuesUndetectableThroughInputString).ToArray();
         bool _legacyInputManagerDisabled;
         KeyModifier _modifiersDown;
@@ -94,7 +104,45 @@ namespace Vuplex.WebView.Internal {
             #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
                 _legacyInputManagerDisabled = true;
                 WebViewLogger.LogWarning("3D WebView's support for automatically detecting input from the native keyboard currently requires Unity's Legacy Input Manager, which is currently disabled for the project. So, automatic detection of input from the native keyboard will be disabled. For details, please see this page: https://support.vuplex.com/articles/keyboard");
+            #else
+                _enableImeIfNeeded();
             #endif
+        }
+
+        bool _determineIfImeShouldBeEnabled() {
+
+            var isMacOS = Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.OSXEditor;
+            if (!isMacOS) {
+                return true;
+            }
+            var correctlySupportsIme = false;
+            #if UNITY_2020_3
+                correctlySupportsIme = VXUnityVersion.Instance.Minor >= 38;
+            #elif UNITY_2021_2_OR_NEWER
+                correctlySupportsIme = true;
+            #endif
+            if (correctlySupportsIme) {
+                return true;
+            }
+            switch (Application.systemLanguage) {
+                case SystemLanguage.ChineseSimplified:
+                case SystemLanguage.ChineseTraditional:
+                case SystemLanguage.Japanese:
+                case SystemLanguage.Korean:
+                    WebViewLogger.LogWarning($"The system language is set to a language that uses IME ({Application.systemLanguage}), but the version of Unity in use ({Application.unityVersion}) has a bug where IME doesn't work correctly on macOS. To use IME with 3D WebView on macOS, please upgrade to Unity 2021.2 or newer. For more details, please see this page: https://issuetracker.unity3d.com/issues/macos-linux-input-dot-inputstring-doesnt-convert-input-to-the-suggestions-from-ime");
+                    break;
+            }
+            return false;
+        }
+
+        void _enableImeIfNeeded() {
+
+            if (_imeShouldBeEnabled == null) {
+                _imeShouldBeEnabled = _determineIfImeShouldBeEnabled();
+            }
+            if ((bool)_imeShouldBeEnabled) {
+                Input.imeCompositionMode = IMECompositionMode.On;
+            }
         }
 
         KeyModifier _getModifiers() {
@@ -190,6 +238,37 @@ namespace Vuplex.WebView.Internal {
             };
         }
 
+        // When an IME composition is in progress, Input.GetKeyDown() and GetKey() are unable to detect the arrow keys.
+        // So, in that scenario, we use Event.current (which must be used within OnGUI()) to detect the arrow keys so
+        // they can be used to move the cursor within the IME composition.
+        // Note: This code is only included for Standalone because the visionOS player has a bug where using OnGUI()
+        // causes crashes: https://discussions.unity.com/t/in-66702-fully-immersive-app-crashes-when-loading-into-scene-with-visual-scripting-objects/330544/7
+        #if UNITY_STANDALONE || UNITY_EDITOR
+            void OnGUI() {
+
+                var imeCompositionInProgress = Input.compositionString.Length > 0;
+                if (!imeCompositionInProgress) {
+                    return;
+                }
+                var ev = Event.current;
+                if (ev == null || !ev.isKey) {
+                    return;
+                }
+                string keyToDispatch = null;
+                if (ev.keyCode == KeyCode.LeftArrow) {
+                    keyToDispatch = "ArrowLeft";
+                } else if (ev.keyCode == KeyCode.RightArrow) {
+                    keyToDispatch = "ArrowRight";
+                }
+                if (keyToDispatch == null) {
+                    return;
+                }
+                var eventArgs = new KeyboardEventArgs(keyToDispatch, KeyModifier.None);
+                KeyDownReceived?.Invoke(this, eventArgs);
+                KeyUpReceived?.Invoke(this, eventArgs);
+            }
+        #endif
+
         bool _processInputString() {
 
             var inputString = Input.inputString;
@@ -229,7 +308,7 @@ namespace Vuplex.WebView.Internal {
                 var altGrPressed = _modifiersDown == (KeyModifier.Alt | KeyModifier.Control);
                 if (skipGetKeyUpBecauseUnityBug && altGrPressed) {
                     // When AltGr is used, the Alt and Control modifiers will be detected, but these shouldn't
-                    // emitted because they shouldn't be passed to the browser with the key. 
+                    // emitted because they shouldn't be passed to the browser with the key.
                     // Note: this should only be reset to KeyModifier.None when AltGr is detected, because the JavaScript KeyboardEvent.key field
                     // isn't set correctly on Windows and macOS for characters like @ and ! unless the Shift modifier is included.
                     _modifiersDown = KeyModifier.None;
@@ -246,6 +325,48 @@ namespace Vuplex.WebView.Internal {
                 }
             }
             return Input.inputString.Length > 0;
+        }
+
+        bool _processIme() {
+
+            // It's necessary to re-enable IME in Update() because a Unity InputField component is unfocused,
+            // it automatically resets Input.imeCompositionMode back to Auto.
+            _enableImeIfNeeded();
+            var previousCompositionString = _previousImeCompositionString;
+            _previousImeCompositionString = Input.compositionString;
+            var compositionString = Input.compositionString;
+            // The Microsoft Pinyin keyboard automatically adds apostrophes between latin letters. For example, if you type
+            // "abc", the Input.compositionString contains "a'b'c". However, when moving
+            // between characters with the arrow keys, the Windows IME skips over the apostrophes like they don't exist.
+            // This is problematic because when arrow keys are sent to Chromium (to move the text caret within its IME composition node),
+            // it doesn't automatically skip over apostrophes like the Windows IME does. This causes the text caret position in the Chromium
+            // IME visualization to be incorrect compared to the actual text caret position in the (invisible) Windows IME composition.
+            // It would be ideal to detect the text caret position of the Windows IME composition (in order to synchronize Chromium's IME text caret position),
+            // but I haven't found a way to accomplish that. Unity doesn't have an API for it, and when I tried to use the Win32 ImmGetCompositionString() API
+            // like demonstrated in CefClient's GetCompositionSelectionRange() function, I found that it always incorrectly indicates that the text caret is
+            // positioned at the end of the composition. So, as a workaround to keep the text caret position in sync between the underlying (invisible) Windows IME
+            // and the visualized Chromium IME composition node, we remove the apostrophes from the IME composition and don't send them to Chromium.
+            if (compositionString.Contains("'")) {
+                compositionString = compositionString.Replace("'", "");
+            }
+            var imeStateChanged = false;
+            if (previousCompositionString != "") {
+                // If Input.inputString contains a value while Input.compositionString contains a value (even if they're the same value),
+                // it indicates that Input.inputString contains the text of a committed (finished) IME composition and that Input.compositionString
+                // contain the text of a new composition that has just started.
+                if (Input.inputString != "") {
+                    ImeCompositionFinished?.Invoke(this, new EventArgs<string>(Input.inputString));
+                    imeStateChanged = true;
+                } else if (compositionString == "") {
+                    ImeCompositionCancelled?.Invoke(this, EventArgs.Empty);
+                    imeStateChanged = true;
+                }
+            }
+            if (compositionString != previousCompositionString && compositionString != "") {
+                ImeCompositionChanged?.Invoke(this, new EventArgs<string>(compositionString));
+                imeStateChanged = true;
+            }
+            return imeStateChanged;
         }
 
         void _processKeysPressed() {
@@ -375,9 +496,14 @@ namespace Vuplex.WebView.Internal {
             KeyUpReceived?.Invoke(this, eventArgs);
         }
 
+        string _previousImeCompositionString = "";
+
         void Update() {
 
             if (_legacyInputManagerDisabled) {
+                return;
+            }
+            if (_processIme()) {
                 return;
             }
             _modifiersDown = _getModifiers();

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -37,35 +36,6 @@ namespace Vuplex.WebView.Internal {
             return new Material(Resources.Load<Material>("DefaultWebMaterial"));
         }
 
-        public static Texture2D CreateDefaultTexture(int width, int height) {
-
-            VXUtils.WarnIfAbnormallyLarge(width, height);
-            var texture = new Texture2D(
-                width,
-                height,
-                TextureFormat.RGBA32,
-                false,
-                false
-            );
-            #if UNITY_2020_2_OR_NEWER
-                // In Unity 2020.2, Unity's internal TexturesD3D11.cpp class on Windows logs an error if
-                // UpdateExternalTexture() is called on a Texture2D created from the constructor
-                // rather than from Texture2D.CreateExternalTexture(). So, rather than returning
-                // the original Texture2D created via the constructor, we return a copy created
-                // via CreateExternalTexture(). This approach is only used for 2020.2 and newer because
-                // it doesn't work in 2018.4 and instead causes a crash.
-                texture = Texture2D.CreateExternalTexture(
-                    width,
-                    height,
-                    TextureFormat.RGBA32,
-                    false,
-                    false,
-                    texture.GetNativeTexturePtr()
-                );
-            #endif
-            return texture;
-        }
-
         public static string GetGraphicsApiErrorMessage(GraphicsDeviceType activeGraphicsApi, GraphicsDeviceType[] acceptableGraphicsApis) {
 
             var isValid = Array.IndexOf(acceptableGraphicsApis, activeGraphicsApi) != -1;
@@ -77,34 +47,18 @@ namespace Vuplex.WebView.Internal {
             return $"Unsupported graphics API: Vuplex 3D WebView requires {acceptableApisList} for this platform, but the selected graphics API is {activeGraphicsApi}. Please go to Player Settings and set \"Graphics APIs\" to {acceptableApisList}.";
         }
 
-        public static bool IsSrpBatcherEnabled() {
-
-            #if UNITY_2018_2_OR_NEWER
-                // Checking renderPipelineAsset is needed to verify that URP is enabled because useScriptableRenderPipelineBatching
-                // can sometimes be true even when the built-in render pipeline is in use.
-                return GraphicsSettings.useScriptableRenderPipelineBatching && GraphicsSettings.defaultRenderPipeline != null;
-            #else
-                return false;
-            #endif
-        }
-
         public static void LogNative2DModeWarning(string methodName, string effect = "will be ignored") {
 
             WebViewLogger.LogWarning($"{methodName}() was called but {effect} because it is not supported in Native 2D Mode.");
         }
 
-        public static void WarnIfAbnormallyLarge(int width, int height) {
+        /// <summary>
+        /// Polyfill for IntPtr.Parse(), which only exists in .NET 5+.
+        /// </summary>
+        public static IntPtr ParseIntPtr(string ptrString) {
 
-            // Anything over 19.4 megapixels (6k) is almost certainly a mistake.
-            // Cast to floats to avoid integer overflow.
-            if ((float)width * (float)height > 19400000) {
-                var message = $"The application specified an abnormally large webview size ({width}px x {height}px), and webviews of this size are normally only created by mistake. A WebViewPrefab's default Resolution is 1300px per Unity unit, so it's likely that you specified a large physical size by mistake or need to reduce the Resolution. For more information, please see WebViewPrefab.Resolution: https://developer.vuplex.com/webview/WebViewPrefab#Resolution .";
-                WebViewLogger.LogWarning(message);
-                // In the Editor, throw an exception to prevent a graphics error from crashing the Editor.
-                #if UNITY_EDITOR && !VUPLEX_ALLOW_LARGE_WEBVIEWS
-                    throw new ArgumentException(message + " This exception is thrown while running in the Editor in order to prevent the Editor from crashing due to a graphics error. If this large webview size is intentional, you can disable this exception by adding the scripting symbol VUPLEX_ALLOW_LARGE_WEBVIEWS to player settings. However, please note that if the webview size is larger than the graphics system can handle, the Editor may crash.");
-                #endif
-            }
+            // Use UInt64.Parse() because Int64.Parse() can result in an OverflowException.
+            return new IntPtr((Int64)UInt64.Parse(ptrString));
         }
     }
 }

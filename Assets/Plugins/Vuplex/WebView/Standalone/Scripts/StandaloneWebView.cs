@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -14,6 +14,7 @@
 #if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN || UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -27,10 +28,12 @@ namespace Vuplex.WebView {
     /// It also includes additional APIs for Standalone-specific functionality.
     /// </summary>
     public abstract partial class StandaloneWebView : BaseWebView,
+                                                      IWithAuth,
                                                       IWithCursorType,
+                                                      IWithDeepLinking,
                                                       IWithDownloads,
                                                       IWithFileSelection,
-                                                      IWithHttpAuth,
+                                                      IWithIme,
                                                       IWithKeyDownAndUp,
                                                       IWithMovablePointer,
                                                       IWithMutableAudio,
@@ -39,10 +42,11 @@ namespace Vuplex.WebView {
                                                       IWithPixelDensity,
                                                       IWithPointerDownAndUp,
                                                       IWithPopups,
+                                                      IWithSettableUserAgent,
                                                       IWithTouch {
 
 
-        /// <see cref="IWithHttpAuth"/>
+        /// <see cref="IWithAuth"/>
         public event EventHandler<AuthRequestedEventArgs> AuthRequested {
             add {
                 _assertSingletonEventHandlerUnset(_authRequestedHandler, "AuthRequested");
@@ -53,6 +57,54 @@ namespace Vuplex.WebView {
                 if (_authRequestedHandler == value) {
                     _authRequestedHandler = null;
                     WebView_setAuthEnabled(_nativeWebViewPtr, false);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Indicates that the web page has requested a client certificate for authentication,
+        /// and allows the application to select which client certificate to use.
+        /// </summary>
+        /// <remarks>
+        /// In order for the Chromium browser engine to be able to use a client certificate,
+        /// the certificate must be <see href="https://www.digicert.com/kb/managing-client-certificates.htm">installed in the system</see>.
+        /// By default, if a web page requests a client certificate and the application hasn't
+        /// attached an event handler to this event, then Chromium automatically selects the
+        /// first client certificate available. If the application attaches an event handler
+        /// to this event, the event handler should call the eventArgs.Select() callback and
+        /// pass one of the certificates from the eventArgs.Certificates array as an argument.
+        /// Or the handler can call `eventArgs.Select(null)` to continue without using a certificate.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// await webViewPrefab.WaitUntilInitialized();
+        /// #if UNITY_STANDALONE || UNITY_EDITOR
+        ///     var standaloneWebView = webViewPrefab.WebView as StandaloneWebView;
+        ///     standaloneWebView.ClientCertificateRequested += (sender, eventArgs) => {
+        ///         if (eventArgs.Certificates.Length == 0) {
+        ///             Debug.Log("No matching client certificates are installed in the system; proceeding without a certificate.");
+        ///             eventArgs.Select(null);
+        ///             return;
+        ///         }
+        ///         // For your use case, you may want to select the certificate based on its fields,
+        ///         // such as Subject.CommonName or ValidStart.
+        ///         var certificate = eventArgs.Certificates[0];
+        ///         Debug.Log("Proceeding with client certificate: " + certificate);
+        ///         eventArgs.Select(certificate);
+        ///     };
+        /// #endif
+        /// </code>
+        /// </example>
+        public event EventHandler<StandaloneClientCertificateRequestedEventArgs> ClientCertificateRequested {
+            add {
+                _assertSingletonEventHandlerUnset(_clientCertificateRequestedHandler, "ClientCertificateRequested");
+                _clientCertificateRequestedHandler = value;
+                WebView_setClientCertificateSelectionEnabled(_nativeWebViewPtr, true);
+            }
+            remove {
+                if (_clientCertificateRequestedHandler == value) {
+                    _clientCertificateRequestedHandler = null;
+                    WebView_setClientCertificateSelectionEnabled(_nativeWebViewPtr, false);
                 }
             }
         }
@@ -90,11 +142,21 @@ namespace Vuplex.WebView {
             }
         }
 
+        /// <see cref="IWithIme"/>
+        public event EventHandler<EventArgs<Vector2Int>> ImeInputFieldPositionChanged;
+
         /// <see cref="IWithPopups"/>
         public event EventHandler<PopupRequestedEventArgs> PopupRequested;
 
         /// <see cref="IWithPixelDensity"/>
         public float PixelDensity { get; private set; } = 1f;
+
+        /// <see cref="IWithIme"/>
+        public void CancelImeComposition() {
+
+            _assertValidState();
+            WebView_cancelImeComposition(_nativeWebViewPtr);
+        }
 
         public override Task<bool> CanGoBack() {
 
@@ -133,16 +195,43 @@ namespace Vuplex.WebView {
         }
 
         /// <see cref="IWithPdfCreation"/>
-        public Task<string> CreatePdf() {
+        public Task<string> CreatePdf() => CreatePdf(null);
+
+        /// <summary>
+        /// Like IWithPdfCreation.CreatePdf(), but accepts an additional
+        /// parameter with options for formatting the PDF.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// #if UNITY_STANDALONE || UNITY_EDITOR
+        ///     var standaloneWebView = webViewPrefab.WebView as StandaloneWebView;
+        ///     var pdfFilePath = await standaloneWebView.CreatePdf(new StandalonePdfOptions {
+        ///         PageRanges = "1-3",
+        ///         PreferCssPageSize = true,
+        ///         PrintBackground = true
+        ///     });
+        ///     // Now that the PDF has been created, do something with it.
+        ///     // For example, you can move it to a different location.
+        ///     File.Move(pdfFilePath, someOtherLocation);
+        /// #endif
+        /// </code>
+        /// </example>
+        public Task<string> CreatePdf(StandalonePdfOptions pdfOptions) {
 
             _assertValidState();
+            if (pdfOptions == null) {
+                pdfOptions = new StandalonePdfOptions();
+            }
             var taskSource = new TaskCompletionSource<string>();
             var resultCallbackId = Guid.NewGuid().ToString();
             _pendingCreatePdfTaskSources[resultCallbackId] = taskSource;
-            var pdfSubdirectory = Path.Combine(Application.temporaryCachePath, WEBVIEW_DATA_SUBDIRECTORY_NAME, "pdfs");
-            Directory.CreateDirectory(pdfSubdirectory);
-            var pdfPath = Path.Combine(pdfSubdirectory, resultCallbackId + ".pdf");
-            WebView_createPdf(_nativeWebViewPtr, resultCallbackId, pdfPath);
+            // Application.temporaryCachePath can only be accessed on the main Unity thread.
+            ThreadDispatcher.RunOnMainThread(() => {
+                var pdfSubdirectory = Path.Combine(Application.temporaryCachePath, WEBVIEW_DATA_SUBDIRECTORY_NAME, "pdfs");
+                Directory.CreateDirectory(pdfSubdirectory);
+                var pdfPath = Path.Combine(pdfSubdirectory, resultCallbackId + ".pdf");
+                WebView_createPdf(_nativeWebViewPtr, resultCallbackId, pdfPath, pdfOptions.ToJson());
+            });
             return taskSource.Task;
         }
 
@@ -177,13 +266,17 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Like Web.EnableRemoteDebugging(), but starts the DevTools session on the
-        /// specified port instead of the default port 8080.
+        /// specified port instead of the default port of 9222. If you specify
+        /// a custom port number other than 9222 or 9229, when you load the chrome://inspect
+        /// page to inspect webviews, you must click the "Configure..." button next to "Discover network targets"
+        /// and add the host "localhost:{portNumber}", where portNumber is the port number you specified.
+        /// For more details on retmoe debugging, see <see href="https://support.vuplex.com/articles/how-to-debug-web-content">this page</see>.
         /// </summary>
         /// <param name="portNumber">Port number in the range 1024 - 65535.</param>
         /// <example>
         /// <code>
         /// void Awake() {
-        ///     StandaloneWebView.EnableRemoteDebugging(9000);
+        ///     StandaloneWebView.EnableRemoteDebugging(8080);
         /// }
         /// </code>
         /// </example>
@@ -198,13 +291,20 @@ namespace Vuplex.WebView {
                 _throwAlreadyInitializedException("EnableRemoteDebugging");
             }
             var platform = Application.platform == RuntimePlatform.WindowsPlayer || Application.platform == RuntimePlatform.WindowsEditor ? "Windows" : "macOS";
-            WebViewLogger.Log($"Enabling remote debugging for {platform} on port {portNumber}. Please visit http://localhost:{portNumber} using a Chromium-based browser. For more info, see <em>https://support.vuplex.com/articles/how-to-debug-web-content#standalone</em>. If port {portNumber} is already in use, you can specify a different port using StandaloneWebView.EnableRemoteDebugging(portNumber): <em>https://developer.vuplex.com/webview/StandaloneWebView#EnableRemoteDebugging</em>.");
+            WebViewLogger.Log($"Enabling remote debugging for {platform} on port {portNumber}. To inspect webviews, load the URL chrome://inspect in a Chromium-based browser. For more info, see <em>https://support.vuplex.com/articles/how-to-debug-web-content#standalone</em>. If port {portNumber} is already in use, you can specify a different port using StandaloneWebView.EnableRemoteDebugging(portNumber): <em>https://developer.vuplex.com/webview/StandaloneWebView#EnableRemoteDebugging</em>.");
         }
 
         public override void ExecuteJavaScript(string javaScript, Action<string> callback) {
 
             base.ExecuteJavaScript(javaScript, callback);
             OnExecuteJavaScript();
+        }
+
+        /// <see cref="IWithIme"/>
+        public void FinishImeComposition(string text) {
+
+            _assertValidState();
+            WebView_finishImeComposition(_nativeWebViewPtr, text);
         }
 
         public static Task<Cookie[]> GetCookies(string url, string cookieName = null) {
@@ -225,21 +325,9 @@ namespace Vuplex.WebView {
             return base.GetRawTextureData();
         }
 
-        public static void GloballySetUserAgent(bool mobile) {
+        public static void GloballySetUserAgent(string userAgent) => WebView_globallySetUserAgent(userAgent);
 
-            var success = WebView_globallySetUserAgentToMobile(mobile);
-            if (!success) {
-                _throwAlreadyInitializedException("SetUserAgent");
-            }
-        }
-
-        public static void GloballySetUserAgent(string userAgent) {
-
-            var success = WebView_globallySetUserAgent(userAgent);
-            if (!success) {
-                _throwAlreadyInitializedException("SetUserAgent");
-            }
-        }
+        public static void GloballySetUserAgent(bool mobile) => WebView_globallySetUserAgentToMobile(mobile);
 
         public override void GoBack() {
 
@@ -255,12 +343,12 @@ namespace Vuplex.WebView {
 
         public async Task Init(int width, int height) {
 
-            await _initBase(width, height, asyncInit: true);
+            var task = await _initBase(width, height, asyncInit: true);
             _nativeWebViewPtr = WebView_new(gameObject.name, width, height, PixelDensity, null);
             if (_nativeWebViewPtr == IntPtr.Zero) {
-                throw new WebViewUnavailableException("Failed to instantiate a new webview. This could indicate that you're using an expired trial version of 3D WebView.");
+                throw new TrialExpiredException("Your trial of 3D WebView for Windows and macOS has expired. Please purchase a license to continue using it.");
             }
-            await _initTaskSource.Task;
+            await task;
         }
 
         /// <see cref="IWithKeyDownAndUp"/>
@@ -305,7 +393,7 @@ namespace Vuplex.WebView {
         public void MovePointer(Vector2 normalizedPoint, bool pointerLeave = false) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             WebView_movePointer(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, pointerLeave);
         }
 
@@ -346,11 +434,40 @@ namespace Vuplex.WebView {
             WebView_selectAll(_nativeWebViewPtr);
         }
 
+        /// <summary>
+        /// Sends a method call message over the Chrome DevTools protocol.
+        /// The messageJson parameter is a JSON DevTools message that contains "id" (int), "method" (string),
+        /// and "params" (dictionary, optional) values.
+        /// See the <see href="https://chromedevtools.github.io/devtools-protocol/">DevTools protocol documentation</see>
+        /// for details of supported methods and the expected "params" dictionary contents.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// await webViewPrefab.WaitUntilInitialized();
+        /// #if UNITY_STANDALONE || UNITY_EDITOR
+        ///     var standaloneWebView = webViewPrefab.WebView as StandaloneWebView;
+        ///     var messageId = 0;
+        ///     standaloneWebView.SendDevToolsMessage(
+        ///         @$"{{
+        ///             ""id"": {messageId++},
+        ///             ""method"": ""Network.setUserAgentOverride"",
+        ///             ""params"": {{ ""userAgent"": ""a custom user agent"" }}
+        ///         }}"
+        ///     );
+        /// #endif
+        /// </code>
+        /// </example>
+        public void SendDevToolsMessage(string messageJson) {
+
+            _assertValidState();
+            WebView_sendDevToolsMessage(_nativeWebViewPtr, messageJson);
+        }
+
         /// <see cref="IWithTouch"/>
         public void SendTouchEvent(TouchEvent touchEvent) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(touchEvent.Point);
+            var pixelsPoint = _normalizedToPointAssertValid(touchEvent.Point);
             WebView_sendTouchEvent(
                 _nativeWebViewPtr,
                 touchEvent.TouchID,
@@ -362,6 +479,35 @@ namespace Vuplex.WebView {
                 touchEvent.RotationAngle,
                 touchEvent.Pressure
             );
+        }
+
+        /// <summary>
+        /// Sets whether <see href="https://support.vuplex.com/articles/standalone-hardware-acceleration">hardware accelerated rendering</see>
+        // is enabled on Windows for the D3D11 graphics API. The default is `true`. This method has no effect for the D3D12 graphics API or for macOS.
+        /// </summary>
+        /// <remarks>
+        /// By default, when running on Windows with the D3D11 graphics API, 3D WebView uses the most
+        /// performant method of rendering, which involves using Chromium Embedded Framework's (CEF's) OnAcceleratedPaint()
+        /// function. However, the application can call `SetAcceleratedPaintEnabled(false)` to make 3D WebView use
+        /// CEF's less performant OnPaint() function instead.
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// void Awake() {
+        ///     #if UNITY_STANDALONE || UNITY_EDITOR
+        ///         StandaloneWebView.SetAcceleratedPaintEnabled(false);
+        ///     #endif
+        /// }
+        /// </code>
+        /// </example>
+        public static void SetAcceleratedPaintEnabled(bool enabled) {
+
+            var success = WebView_setAcceleratedPaintEnabled(enabled);
+            if (success) {
+                _acceleratedPaintEnabled = enabled;
+            } else {
+                _throwAlreadyInitializedException("SetAcceleratedPaintEnabled");
+            }
         }
 
         /// <see cref="IWithMutableAudio"/>
@@ -382,8 +528,8 @@ namespace Vuplex.WebView {
         /// <summary>
         /// By default, Chromium's cache is saved at the file path Application.persistentDataPath/Vuplex.WebView/chromium-cache,
         /// but you can call this method to specify a custom file path for the cache instead. This is useful, for example, to
-        /// allow multiple instances of your app to run on the same machine, because multiple instances of Chromium cannot
-        /// simultaneously share the same cache.
+        /// <see href="https://support.vuplex.com/articles/multiple-app-instances">allow multiple instances of your app to run on the same machine</see>,
+        /// because multiple instances of Chromium cannot simultaneously share the same cache.
         /// </summary>
         /// <remarks>
         /// This method cannot be executed while the Chromium browser process is running. So, you will likely need to call it from Awake() to ensure that it's executed before Chromium is started. Alternatively, you can manually terminate Chromium prior to calling this method using StandaloneWebView.TerminateBrowserProcess().
@@ -413,10 +559,8 @@ namespace Vuplex.WebView {
         }
 
         /// <summary>
-        /// Sets the log level for the Chromium logs. The default is ChromiumLogLevel.Warning. Log locations: <br/>
-        /// - Windows editor: {ProjectPath}\Assets\Vuplex\WebView\Standalone\Windows\Plugins\VuplexWebViewChromium\log-chromium.txt~ <br/>
-        /// - Windows player: {AppPath}\{AppName}_Data\Plugins\{Architecture}\VuplexWebViewChromium\log-chromium.txt <br/>
-        /// - macOS: ~/Library/Logs/Vuplex/log-chromium.txt
+        /// Sets the log level for the Chromium logs. The default is ChromiumLogLevel.Warning. For a description of where
+        /// the Chromium logs are written to, see <see cref="SetChromiumLogPath">SetChromiumLogPath()</see>.
         /// </summary>
         /// <remarks>
         /// This method cannot be executed while the Chromium browser process is running. So, you will likely need to call it from Awake() to ensure that it's executed before Chromium is started. Alternatively, you can manually terminate Chromium prior to calling this method using StandaloneWebView.TerminateBrowserProcess().
@@ -430,11 +574,40 @@ namespace Vuplex.WebView {
         /// }
         /// </code>
         /// </example>
+        /// <seealso cref="Web.SetChromiumLogPath"/>
         public static void SetChromiumLogLevel(ChromiumLogLevel level) {
 
             var success = WebView_setChromiumLogLevel((int)level);
             if (!success) {
                 _throwAlreadyInitializedException("SetChromiumLogLevel");
+            }
+        }
+
+        /// <summary>
+        /// Overrides the absolute file path to which the Chromium debug log is written. By default, Chromium's log file is written to the following locations: <br/>
+        /// - Windows editor: {ProjectPath}\Assets\Vuplex\WebView\Standalone\Windows\Plugins\VuplexWebViewChromium\log-chromium.txt~ <br/>
+        /// - Windows player: {AppPath}\{AppName}_Data\Plugins\{Architecture}\VuplexWebViewChromium\log-chromium.txt <br/>
+        /// - macOS: ~/Library/Logs/Vuplex/log-chromium.txt <br/>
+        /// </summary>
+        /// <remarks>
+        /// This method cannot be executed while the Chromium browser process is running. So, you will likely need to call it from Awake() to ensure that it's executed before Chromium is started. Alternatively, you can manually terminate Chromium prior to calling this method using StandaloneWebView.TerminateBrowserProcess().
+        /// </remarks>
+        /// <example>
+        /// <code>
+        /// void Awake() {
+        ///     #if UNITY_STANDALONE || UNITY_EDITOR
+        ///         var customLogPath = Path.Combine(Application.persistentDataPath, "your-chromium-log.txt");
+        ///         StandaloneWebView.SetChromiumLogPath(customLogPath);
+        ///     #endif
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso cref="Web.SetChromiumLogLevel"/>
+        public static void SetChromiumLogPath(string absoluteFilePath) {
+
+            var success = WebView_setChromiumLogPath(absoluteFilePath);
+            if (!success) {
+                _throwAlreadyInitializedException("SetChromiumLogPath");
             }
         }
 
@@ -477,6 +650,13 @@ namespace Vuplex.WebView {
             return taskSource.Task;
         }
 
+        /// <see cref="IWithDeepLinking"/>
+        public void SetDeepLinkingEnabled(bool enabled) {
+
+            _assertValidState();
+            WebView_setDeepLinkingEnabled(_nativeWebViewPtr, enabled);
+        }
+
         /// <see cref="IWithDownloads"/>
         public void SetDownloadsEnabled(bool enabled) {
 
@@ -491,6 +671,13 @@ namespace Vuplex.WebView {
             if (!success) {
                 _throwAlreadyInitializedException("SetIgnoreCertificateErrors");
             }
+        }
+
+        /// <see cref="IWithIme"/>
+        public void SetImeComposition(string text) {
+
+            _assertValidState();
+            WebView_setImeComposition(_nativeWebViewPtr, text);
         }
 
         /// <summary>
@@ -574,8 +761,10 @@ namespace Vuplex.WebView {
 
         public static void SetStorageEnabled(bool enabled) {
 
-            var cachePath = enabled ? _getCachePath() : "";
-            _setCachePath(cachePath, "SetStorageEnabled");
+            var success = WebView_setStorageEnabled(enabled);
+            if (!success) {
+                _throwAlreadyInitializedException("SetStorageEnabled");
+            }
         }
 
         /// <summary>
@@ -601,6 +790,20 @@ namespace Vuplex.WebView {
             if (!success) {
                 _throwAlreadyInitializedException("SetTargetFrameRate");
             }
+        }
+
+        /// <see cref="IWithSettableUserAgent"/>
+        public void SetUserAgent(string userAgent) {
+
+            _assertValidState();
+            WebView_setUserAgent(_nativeWebViewPtr, userAgent);
+        }
+
+        /// <see cref="IWithSettableUserAgent"/>
+        public void SetUserAgent(bool mobile) {
+
+            _assertValidState();
+            WebView_setUserAgentToMobile(_nativeWebViewPtr, mobile);
         }
 
         /// <summary>
@@ -668,12 +871,14 @@ namespace Vuplex.WebView {
             if (_terminationTaskSource != null) {
                 return _terminationTaskSource.Task;
             }
+            var taskSource = new TaskCompletionSource<bool>();
+            _terminationTaskSource = taskSource;
             var processWasRunning = WebView_terminateBrowserProcess();
             if (!processWasRunning) {
-                return Task.FromResult(true);
+                taskSource.SetResult(true);
+                _terminationTaskSource = null;
             }
-            _terminationTaskSource = new TaskCompletionSource<bool>();
-            return _terminationTaskSource.Task;
+            return taskSource.Task;
         }
 
         public override void ZoomIn() {
@@ -689,8 +894,10 @@ namespace Vuplex.WebView {
         }
 
     #region Non-public members
+        protected static bool _acceleratedPaintEnabled = true;
         EventHandler<AuthRequestedEventArgs> _authRequestedHandler;
         static string _cachePathOverride;
+        EventHandler<StandaloneClientCertificateRequestedEventArgs> _clientCertificateRequestedHandler;
         event EventHandler<EventArgs<string>> _cursorTypeChanged;
         EventHandler<FileSelectionEventArgs> _fileSelectionHandler;
         Dictionary<string, TaskCompletionSource<string>> _pendingCreatePdfTaskSources = new Dictionary<string, TaskCompletionSource<string>>();
@@ -708,7 +915,7 @@ namespace Vuplex.WebView {
             return taskSource.Task;
         }
 
-        protected static string _getCachePath() {
+        static string _getCachePath() {
 
             return _cachePathOverride ?? Path.Combine(Application.persistentDataPath, WEBVIEW_DATA_SUBDIRECTORY_NAME, "chromium-cache");
         }
@@ -724,10 +931,21 @@ namespace Vuplex.WebView {
             }
             var eventArgs = new AuthRequestedEventArgs(
                 host,
+                false,
                 (username, password) => WebView_continueAuth(_nativeWebViewPtr, username, password),
                 () => WebView_cancelAuth(_nativeWebViewPtr)
             );
             _authRequestedHandler?.Invoke(this, eventArgs);
+        }
+
+        // Invoked by the native plugin.
+        void HandleClientCertificateRequested(string serializedMessage) {
+
+            var eventArgs = StandaloneClientCertificateRequestedEventArgs.FromMessageJson(
+                serializedMessage,
+                cert => WebView_selectClientCertificate(_nativeWebViewPtr, cert == null ? 0 : cert.ID)
+            );
+            _clientCertificateRequestedHandler?.Invoke(this, eventArgs);
         }
 
         // Invoked by the native plugin.
@@ -764,6 +982,16 @@ namespace Vuplex.WebView {
             _pendingGetCookiesResultCallbacks.Remove(resultCallbackId);
             var cookies = Cookie.ArrayFromJson(serializedCookies);
             callback(cookies);
+        }
+
+        // Invoked by the native plugin.
+        void HandleImeInputFieldPositionChanged(string message) {
+
+            var components = message.Split(new char[] { ',' }, 2);
+            var x = int.Parse(components[0]);
+            var y = int.Parse(components[1]);
+            var position = new Vector2Int(x, y);
+            ImeInputFieldPositionChanged?.Invoke(this, new EventArgs<Vector2Int>(position));
         }
 
         // Invoked by the native plugin.
@@ -821,13 +1049,23 @@ namespace Vuplex.WebView {
 
         async Task _initPopup(int width, int height, float pixelDensity, string popupId) {
 
-            await _initBase(width, height, asyncInit: true);
+            var task = await _initBase(width, height, asyncInit: true);
             PixelDensity = pixelDensity;
             _nativeWebViewPtr = WebView_new(gameObject.name, width, height, PixelDensity, popupId);
-            await _initTaskSource.Task;
+            await task;
         }
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        // Execute as early as possible to help ensure it runs before user code.
+        [RuntimeInitializeOnLoadMethod(
+            #if UNITY_2019_1_OR_NEWER
+                // BeforeSplashScreen is the earliest we can run initialization because
+                // if we it's executed earlier (i.e. RuntimeInitializeLoadType.SubsystemRegistration), then
+                // the Win32 IsWindowVisible() API returns false for the app's windows.
+                RuntimeInitializeLoadType.BeforeSplashScreen
+            #else
+                RuntimeInitializeLoadType.BeforeSceneLoad
+            #endif
+        )]
         static void _initializePlugin() {
 
             WebView_initializePlugin(
@@ -881,20 +1119,22 @@ namespace Vuplex.WebView {
         void _pointerDown(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount, bool preventStealingFocus) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             WebView_pointerDown(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount, preventStealingFocus);
         }
 
         void _pointerUp(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             WebView_pointerUp(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount);
         }
 
-        static void _setCachePath(string path, string methodName) {
+        static void _setCachePath(string cachePath, string methodName) {
 
-            var cachePath = path ?? "";
+            if (cachePath == null) {
+                throw new ArgumentException("cachePath cannot be null");
+            }
             var success = WebView_setCachePath(cachePath);
             if (!success) {
                 _throwAlreadyInitializedException(methodName);
@@ -930,6 +1170,9 @@ namespace Vuplex.WebView {
         static extern void WebView_cancelFileSelection(IntPtr webViewPtr);
 
         [DllImport(_dllName)]
+        static extern void WebView_cancelImeComposition(IntPtr webViewPtr);
+
+        [DllImport(_dllName)]
         static extern void WebView_continueAuth(IntPtr webViewPtr, string username, string password);
 
         [DllImport(_dllName)]
@@ -939,7 +1182,7 @@ namespace Vuplex.WebView {
         static extern void WebView_copy(IntPtr webViewPtr);
 
         [DllImport(_dllName)]
-        static extern void WebView_createPdf(IntPtr webViewPtr, string resultCallbackId, string filePath);
+        static extern void WebView_createPdf(IntPtr webViewPtr, string resultCallbackId, string filePath, string options);
 
         [DllImport(_dllName)]
         static extern void WebView_cut(IntPtr webViewPtr);
@@ -951,13 +1194,16 @@ namespace Vuplex.WebView {
         static extern bool WebView_enableRemoteDebugging(int portNumber);
 
         [DllImport(_dllName)]
+        static extern void WebView_finishImeComposition(IntPtr webViewPtr, string text);
+
+        [DllImport(_dllName)]
         static extern void WebView_getCookies(string url, string cookieName, string resultCallbackId);
 
         [DllImport(_dllName)]
-        static extern bool WebView_globallySetUserAgentToMobile(bool mobile);
+        static extern void WebView_globallySetUserAgent(string userAgent);
 
         [DllImport(_dllName)]
-        static extern bool WebView_globallySetUserAgent(string userAgent);
+        static extern void WebView_globallySetUserAgentToMobile(bool mobile);
 
         [DllImport(_dllName)]
         static extern void WebView_initializePlugin(
@@ -997,18 +1243,17 @@ namespace Vuplex.WebView {
         [DllImport(_dllName)]
         static extern void WebView_selectAll(IntPtr webViewPtr);
 
+        [DllImport(_dllName)]
+        static extern void WebView_selectClientCertificate(IntPtr webViewPtr, int certificateID);
+
         [DllImport (_dllName)]
-        static extern void WebView_sendTouchEvent(
-            IntPtr webViewPtr,
-            int touchID,
-            int type,
-            float pointX,
-            float pointY,
-            float radiusX,
-            float radiusY,
-            float rotationAngle,
-            float pressure
-        );
+        static extern void WebView_sendDevToolsMessage(IntPtr webViewPtr, string messageJson);
+
+        [DllImport (_dllName)]
+        static extern void WebView_sendTouchEvent(IntPtr webViewPtr, int touchID, int type, float pointX, float pointY, float radiusX, float radiusY, float rotationAngle, float pressure);
+
+        [DllImport(_dllName)]
+        static extern bool WebView_setAcceleratedPaintEnabled(bool enabled);
 
         [DllImport(_dllName)]
         static extern void WebView_setAudioMuted(IntPtr webViewPtr, bool muted);
@@ -1029,6 +1274,12 @@ namespace Vuplex.WebView {
         static extern bool WebView_setChromiumLogLevel(int level);
 
         [DllImport(_dllName)]
+        static extern bool WebView_setChromiumLogPath(string logPath);
+
+        [DllImport (_dllName)]
+        static extern void WebView_setClientCertificateSelectionEnabled(IntPtr webViewPtr, bool enabled);
+
+        [DllImport(_dllName)]
         static extern bool WebView_setCommandLineArguments(string args);
 
         [DllImport(_dllName)]
@@ -1038,6 +1289,9 @@ namespace Vuplex.WebView {
         static extern void WebView_setCursorTypeEventsEnabled(IntPtr webViewPtr, bool enabled);
 
         [DllImport (_dllName)]
+        static extern void WebView_setDeepLinkingEnabled(IntPtr webViewPtr, bool enabled);
+
+        [DllImport (_dllName)]
         static extern void WebView_setDownloadsEnabled(IntPtr webViewPtr, string downloadsDirectoryPath);
 
         [DllImport (_dllName)]
@@ -1045,6 +1299,9 @@ namespace Vuplex.WebView {
 
         [DllImport(_dllName)]
         static extern bool WebView_setIgnoreCertificateErrors(bool ignore);
+
+        [DllImport(_dllName)]
+        static extern void WebView_setImeComposition(IntPtr webViewPtr, string text);
 
         [DllImport(_dllName)]
         static extern void WebView_setNativeFileDialogEnabled(IntPtr webViewPtr, bool enabled);
@@ -1059,7 +1316,16 @@ namespace Vuplex.WebView {
         static extern bool WebView_setScreenSharingEnabled(bool enabled);
 
         [DllImport(_dllName)]
+        static extern bool WebView_setStorageEnabled(bool enabled);
+
+        [DllImport(_dllName)]
         static extern bool WebView_setTargetFrameRate(uint targetFrameRate);
+
+        [DllImport(_dllName)]
+        static extern void WebView_setUserAgent(IntPtr webViewPtr, string userAgent);
+
+        [DllImport(_dllName)]
+        static extern void WebView_setUserAgentToMobile(IntPtr webViewPtr, bool mobile);
 
         [DllImport(_dllName)]
         static extern void WebView_setZoomLevel(IntPtr webViewPtr, float zoomLevel);

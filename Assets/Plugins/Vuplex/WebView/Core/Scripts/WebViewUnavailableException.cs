@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -14,9 +14,8 @@
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// Indicates that the webview plugin is unavailable. Potential reasons
-    /// include that the 3D WebView plugin for the platform isn't installed
-    /// or that you're using an expired trial version of the asset.
+    /// Indicates that the webview plugin is unavailable. For example, this exception
+    /// is thrown if the 3D WebView plugin for the platform isn't installed.
     /// </summary>
     public class WebViewUnavailableException : System.Exception {
 

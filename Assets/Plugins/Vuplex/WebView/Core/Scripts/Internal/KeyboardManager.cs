@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -78,6 +78,9 @@ namespace Vuplex.WebView.Internal {
 
             _nativeKeyboardListener = NativeKeyboardListener.Instantiate();
             _nativeKeyboardListener.transform.parent = transform;
+            _nativeKeyboardListener.ImeCompositionCancelled += NativeKeyboardListener_ImeCompositionCancelled;
+            _nativeKeyboardListener.ImeCompositionChanged += NativeKeyboardListener_ImeCompositionChanged;
+            _nativeKeyboardListener.ImeCompositionFinished += NativeKeyboardListener_ImeCompositionFinished;
             _nativeKeyboardListener.KeyDownReceived += NativeKeyboardListener_KeyDownReceived;
             _nativeKeyboardListener.KeyUpReceived += NativeKeyboardListener_KeyUpReceived;
         }
@@ -104,6 +107,34 @@ namespace Vuplex.WebView.Internal {
             // is set but before raising BaseWebViewPrefab.Initialized so that this method can set the FocusChanged handler before
             // the application has the chance to call SetFocused().
             webViewPrefab.WebView.FocusChanged += WebView_FocusChanged;
+            var webViewWithIme = webViewPrefab.WebView as IWithIme;
+            if (webViewWithIme != null) {
+                webViewWithIme.ImeInputFieldPositionChanged += WebView_ImeInputFieldPositionChanged;
+            }
+        }
+
+        void NativeKeyboardListener_ImeCompositionCancelled(object sender, EventArgs eventArgs) {
+
+            var webViewWithIme = _focusedWebViewPrefab?.WebView as IWithIme;
+            if (webViewWithIme != null) {
+                webViewWithIme.CancelImeComposition();
+            }
+        }
+
+        void NativeKeyboardListener_ImeCompositionChanged(object sender, EventArgs<string> eventArgs) {
+
+            var webViewWithIme = _focusedWebViewPrefab?.WebView as IWithIme;
+            if (webViewWithIme != null) {
+                webViewWithIme.SetImeComposition(eventArgs.Value);
+            }
+        }
+
+        void NativeKeyboardListener_ImeCompositionFinished(object sender, EventArgs<string> eventArgs) {
+
+            var webViewWithIme = _focusedWebViewPrefab?.WebView as IWithIme;
+            if (webViewWithIme != null) {
+                webViewWithIme.FinishImeComposition(eventArgs.Value);
+            }
         }
 
         void NativeKeyboardListener_KeyDownReceived(object sender, KeyboardEventArgs eventArgs) {
@@ -142,6 +173,11 @@ namespace Vuplex.WebView.Internal {
                 // webview in case the object clicked was a Unity Input Field.
                 _setFocusedWebViewPrefab(null);
             }
+            if (_focusedWebViewPrefab != null && !_focusedWebViewPrefab.gameObject.activeInHierarchy) {
+                // The focused WebViewPrefab was deactivated, so unfocus it so that we don't continue sending
+                // keys to the webview while it's invisible.
+                _setFocusedWebViewPrefab(null);
+            }
         }
 
         void _removeWebViewPrefab(BaseWebViewPrefab webViewPrefab) {
@@ -158,6 +194,10 @@ namespace Vuplex.WebView.Internal {
             webViewPrefab.PointerExited -= WebViewPrefab_PointerExited;
             if (webViewPrefab.WebView != null) {
                 webViewPrefab.WebView.FocusChanged -= WebView_FocusChanged;
+            }
+            var webViewWithIme = webViewPrefab.WebView as IWithIme;
+            if (webViewWithIme != null) {
+                webViewWithIme.ImeInputFieldPositionChanged -= WebView_ImeInputFieldPositionChanged;
             }
         }
 
@@ -182,6 +222,31 @@ namespace Vuplex.WebView.Internal {
                 _setFocusedWebViewPrefab(prefab);
             } else if (prefab == _focusedWebViewPrefab) {
                 _setFocusedWebViewPrefab(null);
+            }
+        }
+
+        void WebView_ImeInputFieldPositionChanged(object sender, EventArgs<Vector2Int> eventArgs) {
+
+            var prefab = _webViewPrefabs.ToList().Find(p => p.WebView == sender);
+            if (prefab != null && prefab == _focusedWebViewPrefab) {
+                #if !ENABLE_INPUT_SYSTEM || ENABLE_LEGACY_INPUT_MANAGER
+                    var screenPoint = prefab.BrowserToScreenPoint(eventArgs.Value.x, eventArgs.Value.y);
+                    var screenPointY = screenPoint.y;
+                    switch (Application.platform) {
+                        case RuntimePlatform.WindowsEditor:
+                            // For some reason, in the Windows editor, Input.compositionCursorPos doesn't work correctly
+                            // and the IME popup window is positioned higher than the specified point.
+                            // So, add an extra Y offset when running in the Windows editor.
+                            screenPointY += 60;
+                            break;
+                        case RuntimePlatform.OSXPlayer:
+                        case RuntimePlatform.OSXEditor:
+                            // Unity has a bug on macOS where the Y axis for Input.compositionCursorPos is incorrectly flipped.
+                            screenPointY = Screen.height - screenPointY;
+                            break;
+                    }
+                    Input.compositionCursorPos = new Vector2(screenPoint.x, screenPointY);
+                #endif
             }
         }
 

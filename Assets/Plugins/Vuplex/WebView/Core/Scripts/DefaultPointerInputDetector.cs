@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -27,15 +27,22 @@ namespace Vuplex.WebView {
     [HelpURL("https://developer.vuplex.com/webview/IPointerInputDetector")]
     public class DefaultPointerInputDetector : MonoBehaviour,
                                                IPointerInputDetector,
+                                            #if VUPLEX_MRTK && !VUPLEX_IGNORE_MRTK
+                                               IMixedRealityPointerHandler,
+                                               // When using MRTK, don't implement the standard Unity event interfaces because
+                                               // it causes CanvasWebViewPrefab to receive click events twice (once through MRTK and
+                                               // once through the standard Unity interfaces).
+                                            #else
                                                IBeginDragHandler,
                                                IDragHandler,
                                                IPointerClickHandler,
                                                IPointerDownHandler,
                                                IPointerEnterHandler,
                                                IPointerExitHandler,
+                                            #if UNITY_2021_1_OR_NEWER
+                                               IPointerMoveHandler,
+                                            #endif
                                                IPointerUpHandler,
-                                            #if VUPLEX_MRTK
-                                               IMixedRealityPointerHandler,
                                             #endif
                                                IScrollHandler {
 
@@ -82,7 +89,23 @@ namespace Vuplex.WebView {
         /// <see cref="IPointerDownHandler"/>
         public virtual void OnPointerDown(PointerEventData eventData) {
 
-            _hasReceivedInputFromInputModule = true;
+            // StandaloneInputModule and InputSystemUIInputModule both have an issue where clickCount is 1 less than what it should be in OnPointerDown:
+            // https://issuetracker.unity3d.com/product/unity/issues/guid/UUM-68720
+            // This issue has been observed in all of the Unity versions tested: 2020.3, 2022.3, 2023.2
+            // Here's an example of what logging the clickCount in OnPointerDown and OnPointerUp for a double click looks like:
+            // > OnPointerDown clickCount: 0
+            // > OnPointerUp clickCount: 1
+            // > OnPointerDown clickCount: 1
+            // > OnPointerUp clickCount: 2
+            // Originally this class tried to compensate for that by adding 1 to the OnPointerDown() clickCount value,
+            // but Unity 2020.3 and 2021.3 (but not 2022.3) have another issue where after a double click, the OnPointerDown() clickCount value
+            // is incorrectly set to 2 on the next click after a double click.
+            // As a workaround, this class rolls its own click count detection instead.
+            var now = DateTime.Now;
+            var millisecondsSinceLastPointerDown = (now - _lastPointerDownDateTime).TotalMilliseconds;
+            _lastPointerDownDateTime = now;
+            var isDoubleClick = millisecondsSinceLastPointerDown <= 500;
+            _clickCount = isDoubleClick ? _clickCount + 1 : 1;
             _raisePointerDownEvent(_convertToPointerEventArgs(eventData));
         }
 
@@ -111,6 +134,24 @@ namespace Vuplex.WebView {
             _raisePointerExitedEvent(new EventArgs<Vector2>(point));
         }
 
+        /// <see cref="IPointerMoveHandler"/>
+        public void OnPointerMove(PointerEventData eventData) {
+
+            if (!(PointerMovedEnabled && _isHovering)) {
+                return;
+            }
+            var point = _convertToNormalizedPoint(eventData);
+            if (!(point.x >= 0f && point.y >= 0f)) {
+                // This can happen while the prefab is being resized.
+                return;
+            }
+            if (_previousPointerMovedPoint == point) {
+                return;
+            }
+            _previousPointerMovedPoint = point;
+            _raisePointerMovedEvent(new EventArgs<Vector2>(point));
+        }
+
         /// <see cref="IPointerUpHandler"/>
         public virtual void OnPointerUp(PointerEventData eventData) {
 
@@ -124,8 +165,10 @@ namespace Vuplex.WebView {
             _raiseScrolledEvent(new ScrolledEventArgs(scrollDelta, _convertToNormalizedPoint(eventData)));
         }
 
+        int _clickCount = 1;
+        DateTime _lastPointerDownDateTime = DateTime.Now;
         bool _isHovering;
-        bool _hasReceivedInputFromInputModule;
+        Vector2 _previousPointerMovedPoint;
 
         EventArgs<Vector2> _convertToEventArgs(Vector3 worldPosition) {
 
@@ -167,17 +210,10 @@ namespace Vuplex.WebView {
             return new PointerEventArgs {
                 Point = _convertToNormalizedPoint(eventData),
                 Button = (MouseButton)eventData.button,
-                // StandaloneInputModule incorrectly specifies a click count of 0
-                // for PointerDown events, so set the minimum to 1 click.
-                ClickCount = Math.Max(eventData.clickCount, 1)
+                ClickCount = _clickCount
             };
         }
 
-        /// <summary>
-        /// Unity's event system doesn't include a standard pointer event
-        /// for hovering (i.e. there's no `IPointerHoverHandler` interface).
-        /// So, this method implements the equivalent functionality for different input modules.
-        /// </summary>
         PointerEventData _getLastPointerEventData() {
 
             var currentInputModule = EventSystem.current == null ? null : EventSystem.current.currentInputModule;
@@ -234,21 +270,14 @@ namespace Vuplex.WebView {
 
         protected void _raisePointerExitedEvent(EventArgs<Vector2> eventArgs) => PointerExited?.Invoke(this, eventArgs);
 
-        void _raisePointerMovedIfNeeded() {
+        // IPointerMoveHandler was added in Unity 2021.1, so this method attempts to manually call OnPointerMove
+        // for versions of Unity older than 2021.1.
+        void _processLegacyPointerMoveHandler() {
 
-            if (!(PointerMovedEnabled && _isHovering)) {
-                return;
+            var eventData = _getLastPointerEventData();
+            if (eventData != null) {
+                OnPointerMove(eventData);
             }
-            var pointerEventData = _getLastPointerEventData();
-            if (pointerEventData == null) {
-                return;
-            }
-            var point = _convertToNormalizedPoint(pointerEventData);
-            if (!(point.x >= 0f && point.y >= 0f)) {
-                // This can happen while the prefab is being resized.
-                return;
-            }
-            _raisePointerMovedEvent(new EventArgs<Vector2>(point));
         }
 
         protected void _raisePointerMovedEvent(EventArgs<Vector2> eventArgs) => PointerMoved?.Invoke(this, eventArgs);
@@ -257,7 +286,12 @@ namespace Vuplex.WebView {
 
         protected void _raiseScrolledEvent(ScrolledEventArgs eventArgs) => Scrolled?.Invoke(this, eventArgs);
 
-        protected virtual void Update() => _raisePointerMovedIfNeeded();
+        protected virtual void Update() {
+
+            #if !UNITY_2021_1_OR_NEWER
+                _processLegacyPointerMoveHandler();
+            #endif
+        }
 
     // Code specific to Microsoft's Mixed Reality Toolkit.
     #if VUPLEX_MRTK
@@ -269,9 +303,6 @@ namespace Vuplex.WebView {
         /// <see cref="IMixedRealityPointerHandler"/>
         public void OnPointerDragged(MixedRealityPointerEventData eventData) {
 
-            if (_hasReceivedInputFromInputModule) {
-                return;
-            }
             var eventArgs = _convertToEventArgs(eventData.Pointer.Result.Details.Point);
             if (_beganDragEmitted) {
                 _raiseDraggedEvent(eventArgs);
@@ -284,9 +315,6 @@ namespace Vuplex.WebView {
         /// <see cref="IMixedRealityPointerHandler"/>
         public void OnPointerDown(MixedRealityPointerEventData eventData) {
 
-            if (_hasReceivedInputFromInputModule) {
-                return;
-            }
             // Set IsTargetPositionLockedOnFocusLock to false, or else the Point
             // coordinates will be locked and won't change in OnPointerDragged or OnPointerUp.
             eventData.Pointer.IsTargetPositionLockedOnFocusLock = false;
@@ -298,9 +326,6 @@ namespace Vuplex.WebView {
         /// <see cref="IMixedRealityPointerHandler"/>
         public void OnPointerUp(MixedRealityPointerEventData eventData) {
 
-            if (_hasReceivedInputFromInputModule) {
-                return;
-            }
             var screenPoint = _convertToNormalizedPoint(eventData.Pointer.Result.Details.Point);
             _raisePointerUpEvent(new PointerEventArgs { Point = screenPoint });
         }

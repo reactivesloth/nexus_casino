@@ -13,13 +13,7 @@ buildscript {
 apply plugin: 'com.android.library'
 
 android {
-    // Compatibility issue with Gradle version
-    namespace 'com.pew.eos_dependencies'
-    
-    packagingOptions {
-          pickFirst 'lib/arm64-v8a/libc++_shared.so'
-    }
-    
+    namespace "com.pew.eos_dependencies"
     sourceSets {
         main {
             manifest.srcFile 'AndroidManifest.xml'
@@ -30,10 +24,14 @@ android {
         }
     }
 
-    compileSdkVersion 35
+    compileSdkVersion 36
     buildToolsVersion '34.0.0'
     defaultConfig {
-        targetSdkVersion 35
+        targetSdkVersion 36
+    }
+    
+    packagingOptions {
+         pickFirst 'lib/arm64-v8a/libc++_shared.so' 
     }
 }
 dependencies {

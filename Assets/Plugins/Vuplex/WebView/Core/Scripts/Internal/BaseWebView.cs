@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -13,7 +13,7 @@
 // limitations under the License.
 // Only define BaseWebView.cs on supported platforms to avoid IL2CPP linking
 // errors on unsupported platforms.
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_ANDROID || (UNITY_IOS && !VUPLEX_OMIT_IOS) || (UNITY_WEBGL && !VUPLEX_OMIT_WEBGL) || UNITY_WSA
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_ANDROID || (UNITY_IOS && !VUPLEX_OMIT_IOS) || (UNITY_VISIONOS && !VUPLEX_OMIT_VISIONOS) || (UNITY_WEBGL && !VUPLEX_OMIT_WEBGL) || UNITY_WSA
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -66,11 +66,11 @@ namespace Vuplex.WebView.Internal {
             }
         }
 
+        public event EventHandler<LoadFailedEventArgs> LoadFailed;
+
         public event EventHandler<ProgressChangedEventArgs> LoadProgressChanged;
 
         public event EventHandler<EventArgs<string>> MessageEmitted;
-
-        public event EventHandler PageLoadFailed;
 
         public event EventHandler<TerminatedEventArgs> Terminated;
 
@@ -80,7 +80,7 @@ namespace Vuplex.WebView.Internal {
 
         public bool IsDisposed { get; protected set; }
 
-        public bool IsInitialized { get { return _initState == InitState.Initialized; }}
+        public bool IsInitialized { get => _initState == InitState.Initialized; }
 
         public List<string> PageLoadScripts { get; } = new List<string>();
 
@@ -130,7 +130,7 @@ namespace Vuplex.WebView.Internal {
         public void Click(Vector2 normalizedPoint, bool preventStealingFocus = false) {
 
             _assertValidState();
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             Click(pixelsPoint.x, pixelsPoint.y, preventStealingFocus);
         }
 
@@ -140,7 +140,7 @@ namespace Vuplex.WebView.Internal {
             GUIUtility.systemCopyBuffer = await _getSelectedText();
         }
 
-        public Material CreateMaterial() {
+        public virtual Material CreateMaterial() {
 
             if (_native2DModeEnabled) {
                 VXUtils.LogNative2DModeWarning("CreateMaterial", "will return null");
@@ -235,7 +235,10 @@ namespace Vuplex.WebView.Internal {
 
         public Vector2Int NormalizedToPoint(Vector2 normalizedPoint) {
 
-            return new Vector2Int((int)(normalizedPoint.x * (float)Size.x), (int)(normalizedPoint.y * (float)Size.y));
+            return new Vector2Int(
+                (int)Math.Round(normalizedPoint.x * (float)Size.x),
+                (int)Math.Round(normalizedPoint.y * (float)Size.y)
+            );
         }
 
         public virtual void Paste() {
@@ -258,7 +261,13 @@ namespace Vuplex.WebView.Internal {
                                        .Replace("'", "\\'")
                                        .Replace("\n", "\\n")
                                        .Replace("\r", "\\r");
-            ExecuteJavaScript($"vuplex._emit('message', {{ data: '{escapedString}' }})", null);
+            ExecuteJavaScript($@"{{
+                const value = '{escapedString}';
+                const event = new Event('vuplexmessage');
+                event.value = value;
+                event.data = value;
+                window.dispatchEvent(event);
+            }}", null);
         }
 
         public virtual void Reload() {
@@ -274,7 +283,7 @@ namespace Vuplex.WebView.Internal {
             }
             _assertValidState();
             _assertValidSize(width, height);
-            VXUtils.WarnIfAbnormallyLarge(width, height);
+            _warnIfAbnormallyLarge(width, height);
             Size = new Vector2Int(width, height);
             _resize();
         }
@@ -288,15 +297,15 @@ namespace Vuplex.WebView.Internal {
         public void Scroll(Vector2 normalizedScrollDelta) {
 
             _assertValidState();
-            var scrollDeltaInPixels = _convertNormalizedToPixels(normalizedScrollDelta, false);
+            var scrollDeltaInPixels = NormalizedToPoint(normalizedScrollDelta);
             Scroll(scrollDeltaInPixels.x, scrollDeltaInPixels.y);
         }
 
         public virtual void Scroll(Vector2 normalizedScrollDelta, Vector2 normalizedPoint) {
 
             _assertValidState();
-            var scrollDeltaInPixels = _convertNormalizedToPixels(normalizedScrollDelta, false);
-            var pointInPixels = _convertNormalizedToPixels(normalizedPoint);
+            var scrollDeltaInPixels = NormalizedToPoint(normalizedScrollDelta);
+            var pointInPixels = _normalizedToPointAssertValid(normalizedPoint);
             WebView_scrollAtPoint(_nativeWebViewPtr, scrollDeltaInPixels.x, scrollDeltaInPixels.y, pointInPixels.x, pointInPixels.y);
         }
 
@@ -356,9 +365,6 @@ namespace Vuplex.WebView.Internal {
             }
             WebView_setRenderingEnabled(_nativeWebViewPtr, enabled);
             _renderingEnabled = enabled;
-            if (enabled && _currentNativeTexture != IntPtr.Zero) {
-                Texture.UpdateExternalTexture(_currentNativeTexture);
-            }
         }
 
         public virtual void StopLoad() {
@@ -394,6 +400,8 @@ namespace Vuplex.WebView.Internal {
             Initialized
         }
 
+        // Anything over 19.4 megapixels (6k) is almost certainly a mistake.
+        protected virtual int _abnormallyLargeThreshold { get => 19400000; }
         EventHandler<ConsoleMessageEventArgs> _consoleMessageLogged;
         protected IntPtr _currentNativeTexture;
 
@@ -411,7 +419,7 @@ namespace Vuplex.WebView.Internal {
 
         EventHandler<FocusedInputFieldChangedEventArgs> _focusedInputFieldChanged;
         protected InitState _initState = InitState.Uninitialized;
-        protected TaskCompletionSource<bool> _initTaskSource;
+        TaskCompletionSource<bool> _initTaskSource;
         Material _materialForBlitting;
         protected bool _native2DModeEnabled;  // Used for Native 2D Mode.
         protected Vector2Int _native2DPosition; // Used for Native 2D Mode.
@@ -424,7 +432,7 @@ namespace Vuplex.WebView.Internal {
         // Used for Native 2D Mode. Use Size as the single source of truth for the size
         // to ensure that both Size and Rect stay in sync when Resize() or SetRect() is called.
         protected Rect _rect {
-            get { return new Rect(_native2DPosition, Size); }
+            get => new Rect(_native2DPosition, Size);
             set {
                 Size = new Vector2Int((int)value.width, (int)value.height);
                 _native2DPosition = new Vector2Int((int)value.x, (int)value.y);
@@ -432,6 +440,8 @@ namespace Vuplex.WebView.Internal {
         }
         static string[] STANDARD_URI_SCHEMES = new string[] { "http:", "https:", "file:", "about:" };
         static readonly Regex _streamingAssetsUrlRegex = new Regex(@"^streaming-assets:(//)?(.*)$", RegexOptions.IgnoreCase);
+        // Used for Native 2D Mode.
+        protected bool _visible;
 
         protected void _assertNative2DModeEnabled() {
 
@@ -455,6 +465,23 @@ namespace Vuplex.WebView.Internal {
             }
         }
 
+        void _assertSupportedGraphicsApi() {
+
+            var supportedApis = _getSupportedGraphicsApis();
+            if (supportedApis == null) {
+                // Graphics API validation is disabled for this platform.
+                return;
+            }
+            var isValid = supportedApis.ToList().Contains(SystemInfo.graphicsDeviceType);
+            if (isValid) {
+                return;
+            }
+            var listOfSupportedApis = supportedApis.Length == 1 ? supportedApis[0].ToString() : $"one of the following: {String.Join(", ", supportedApis)}";
+            var message = $"Unsupported Graphics API: The Graphics API is set to {SystemInfo.graphicsDeviceType}, which 3D WebView doesn't support on this platform. Please go to Player Settings -> Other Settings and set the Graphics API to {listOfSupportedApis}";
+            WebViewLogger.LogError(message);
+            throw new InvalidOperationException(message);
+        }
+
         void _assertValidSize(int width, int height) {
 
             if (!(width > 0 && height > 0)) {
@@ -472,28 +499,35 @@ namespace Vuplex.WebView.Internal {
             }
         }
 
-        protected Vector2Int _convertNormalizedToPixels(Vector2 normalizedPoint, bool assertBetweenZeroAndOne = true) {
+        protected Vector2Int _normalizedToPointAssertValid(Vector2 normalizedPoint) {
 
-            if (assertBetweenZeroAndOne) {
-                var isValid = normalizedPoint.x >= 0f && normalizedPoint.x <= 1f && normalizedPoint.y >= 0f && normalizedPoint.y <= 1f;
-                if (!isValid) {
-                    throw new ArgumentException($"The normalized point provided is invalid. The x and y values of normalized points must be in the range of [0, 1], but the value provided was {normalizedPoint.ToString("n4")}. For more info, please see https://support.vuplex.com/articles/normalized-points");
-                }
+            var isValid = normalizedPoint.x >= 0f && normalizedPoint.x <= 1f && normalizedPoint.y >= 0f && normalizedPoint.y <= 1f;
+            if (isValid) {
+                return NormalizedToPoint(normalizedPoint);
             }
-            return new Vector2Int((int)(normalizedPoint.x * Size.x), (int)(normalizedPoint.y * Size.y));
+            throw new ArgumentException($"The normalized point provided is invalid. The x and y values of normalized points must be in the range of [0, 1], but the value provided was {normalizedPoint.ToString("n4")}. For more info, please see https://support.vuplex.com/articles/normalized-points");
         }
 
         protected virtual Material _createMaterial() => VXUtils.CreateDefaultMaterial();
 
         protected virtual Task<Texture2D> _createTexture(int width, int height) {
 
-            VXUtils.WarnIfAbnormallyLarge(width, height);
+            _warnIfAbnormallyLarge(width, height);
+            var textureFormat = _getTextureFormat();
+            // Note: The `linear` parameter is set to true to prevent the following issues that occur when it's set to false:
+            // - When running on Android with Vulkan and Unity >= 2023.1, color space conversion occurs automatically,
+            //   and since color conversion is performed in the shader, colors are overcorrected to be too dark.
+            // - When running on Windows with Unity >= 6, the following warning is logged to the console:
+            //   > d3d11: Creating a default shader resource view with dxgi-fmt=91 for a texture that uses dxgi-fmt=87
+            //   I found that if I changed 3D WebView's native plugin to use DXGI_FORMAT_B8G8R8A8_UNORM_SRGB (91) instead of
+            //   DXGI_FORMAT_B8G8R8A8_UNORM (87), that caused color space correction to occur automatically like it does
+            //   for Android Vulkan.
             var texture = new Texture2D(
                 width,
                 height,
-                TextureFormat.RGBA32,
+                textureFormat,
                 false,
-                false
+                true
             );
             #if UNITY_2020_2_OR_NEWER
                 var originalTexture = texture;
@@ -506,9 +540,9 @@ namespace Vuplex.WebView.Internal {
                 texture = Texture2D.CreateExternalTexture(
                     width,
                     height,
-                    TextureFormat.RGBA32,
+                    textureFormat,
                     false,
-                    false,
+                    true,
                     originalTexture.GetNativeTexturePtr()
                 );
                 // Destroy the original texture so that its memory is released.
@@ -530,7 +564,7 @@ namespace Vuplex.WebView.Internal {
                 Size.y,
                 0,
                 RenderTextureFormat.Default,
-                RenderTextureReadWrite.Linear
+                RenderTextureReadWrite.Default
             );
             RenderTexture previousRenderTexture = RenderTexture.active;
             RenderTexture.active = tempRenderTexture;
@@ -551,6 +585,16 @@ namespace Vuplex.WebView.Internal {
             return readableTexture;
         }
 
+        static string _getRenderPipelineName() {
+
+            #if UNITY_2019_3_OR_NEWER
+                // Use the new API to prevent Unity 6 from showing a "Script Updating Consent" popup.
+                return GraphicsSettings.defaultRenderPipeline?.ToString() ?? "default";
+            #else
+                return GraphicsSettings.renderPipelineAsset?.ToString() ?? "default";
+            #endif
+        }
+
         Task<string> _getSelectedText() {
 
             // window.getSelection() doesn't work on the content of <textarea> and <input> elements in
@@ -565,6 +609,10 @@ namespace Vuplex.WebView.Internal {
                 }"
             );
         }
+
+        protected virtual GraphicsDeviceType[] _getSupportedGraphicsApis() => null;
+
+        protected virtual TextureFormat _getTextureFormat() => TextureFormat.RGBA32;
 
         // Invoked by the native plugin.
         void HandleCanGoBackResult(string message) {
@@ -607,7 +655,7 @@ namespace Vuplex.WebView.Internal {
         }
 
         // Invoked by the native plugin.
-        void HandleInitFinished(string unusedParam) {
+        protected void HandleInitFinished(string _) {
 
             _initState = InitState.Initialized;
             var taskSource = _initTaskSource;
@@ -633,20 +681,20 @@ namespace Vuplex.WebView.Internal {
         }
 
         // Invoked by the native plugin.
-        void HandleLoadFailed(string param) {
+        void HandleLoadFailed(string message) {
 
-            var parameters = param.Split(new []{','}, 2);
+            var parameters = message.Split(new []{','}, 2);
             var nativeErrorCode = parameters[0];
             var url = parameters[1];
-            var eventArgs = new PageLoadFailedEventArgs(nativeErrorCode, url);
-            PageLoadFailed?.Invoke(this, eventArgs);
+            var eventArgs = new LoadFailedEventArgs(nativeErrorCode, url);
+            LoadFailed?.Invoke(this, eventArgs);
             OnLoadProgressChanged(new ProgressChangedEventArgs(ProgressChangeType.Failed, 1.0f));
             var taskSource = _pageLoadFinishedTaskSource;
             _pageLoadFinishedTaskSource = null;
-            if (PageLoadFailed == null && LoadProgressChanged == null) {
-                // No handlers are attached to PageLoadFailed or LoadProgressChanged,
+            if (LoadFailed == null && LoadProgressChanged == null) {
+                // No handlers are attached to LoadFailed or LoadProgressChanged,
                 // so log a warning about the page load failure.
-                WebViewLogger.LogWarning("A web page failed to load. This can happen if the URL loaded is invalid or if the device has no network connection. To detect and handle page load failures like this, applications can use the IWebView.PageLoadFailed event or the IWebView.LoadProgressChanged event. You can disable this warning message by attaching an event handler to one of those events. Load failure details: " + eventArgs);
+                WebViewLogger.LogWarning("A web page failed to load. This can happen if the URL loaded is invalid or if the device has no network connection. To detect and handle page load failures like this, applications can use the IWebView.LoadFailed event or the IWebView.LoadProgressChanged event. You can disable this warning message by attaching an event handler to one of those events. Load failure details: " + eventArgs);
                 if (Application.internetReachability == NetworkReachability.NotReachable) {
                     WebViewLogger.LogError("The device is not connected to the internet (Application.internetReachability == NetworkReachability.NotReachable).");
                 }
@@ -656,7 +704,7 @@ namespace Vuplex.WebView.Internal {
         }
 
         // Invoked by the native plugin.
-        void HandleLoadFinished(string unusedParam) {
+        void HandleLoadFinished(string _) {
 
             OnLoadProgressChanged(new ProgressChangedEventArgs(ProgressChangeType.Finished, 1.0f));
             var taskSource = _pageLoadFinishedTaskSource;
@@ -669,7 +717,7 @@ namespace Vuplex.WebView.Internal {
         }
 
         // Invoked by the native plugin.
-        void HandleLoadStarted(string unusedParam) {
+        void HandleLoadStarted(string _) {
 
             OnLoadProgressChanged(new ProgressChangedEventArgs(ProgressChangeType.Started, 0.0f));
         }
@@ -703,8 +751,9 @@ namespace Vuplex.WebView.Internal {
                     break;
                 }
                 case "vuplex.webview.titleChanged": {
-                    Title = StringBridgeMessage.ParseValue(serializedMessage);
-                    TitleChanged?.Invoke(this, new EventArgs<string>(Title));
+                    // This message is used on WebGL and UWP (other platforms call HandleTitleChanged directly).
+                    var title = StringBridgeMessage.ParseValue(serializedMessage);
+                    HandleTitleChanged(title);
                     break;
                 }
                 case "vuplex.webview.transparencyBlockedWarning": {
@@ -713,7 +762,9 @@ namespace Vuplex.WebView.Internal {
                     break;
                 }
                 case "vuplex.webview.urlChanged": {
-                    _handleUrlChanged(serializedMessage);
+                    // This message is used on WebGL and UWP (other platforms call HandleUrlChanged directly).
+                    var url = StringBridgeMessage.ParseValue(serializedMessage);
+                    HandleUrlChanged(url);
                     break;
                 }
                 default: {
@@ -741,43 +792,59 @@ namespace Vuplex.WebView.Internal {
                     WebViewLogger.LogError("Unrecognized termination type: " + typeString);
                     break;
             }
-            Terminated?.Invoke(this, new TerminatedEventArgs(type));
+            // Log this warning *before* invoking the handler because the event handler may detach itself from the event.
             if (Terminated == null) {
                 WebViewLogger.LogError($"The browser engine indicated that the browser's web content process terminated. Reason: {type}. You can detect and handle this condition using the IWebView.Terminated event. This message was logged because the application hasn't attached a handler to the Terminated event. For more details, please see this page: https://developer.vuplex.com/webview/IWebView#Terminated");
             }
+            Terminated?.Invoke(this, new TerminatedEventArgs(type));
         }
 
         // Invoked by the native plugin.
-        virtual protected void HandleTextureChanged(string textureString) {
+        virtual protected void HandleTextureChanged(string message) {
 
-            // Use UInt64.Parse() because Int64.Parse() can result in an OverflowException.
-            var nativeTexture = new IntPtr((Int64)UInt64.Parse(textureString));
+            var parameters = message.Split(new char[] { ',' }, 3);
+            var nativeTexture = VXUtils.ParseIntPtr(parameters[0]);
             if (nativeTexture == _currentNativeTexture) {
                 return;
             }
             var previousNativeTexture = _currentNativeTexture;
             _currentNativeTexture = nativeTexture;
-            if (_renderingEnabled) {
-                Texture.UpdateExternalTexture(nativeTexture);
+            if (parameters.Length >= 3) {
+                // On Windows, the plugin also emits the texture width and height so that Texture.Reinitialize() can be called here to avoid the
+                // following warnings that are logged in the Unity 2022.3 Editor:
+                // > Registering a native texture with width={...} while the actual texture has width={...}
+                // > Registering a native texture with height={...} while the actual texture has height={...}
+                var width = int.Parse(parameters[1]);
+                var height = int.Parse(parameters[2]);
+                #if UNITY_2021_2_OR_NEWER
+                    Texture.Reinitialize(width, height);
+                #endif
             }
+            Texture.UpdateExternalTexture(nativeTexture);
             if (previousNativeTexture != IntPtr.Zero) {
                 _destroyNativeTexture(previousNativeTexture);
             }
         }
 
-        void _handleUrlChanged(string serializedMessage) {
+        // Invoked by the native plugin.
+        void HandleTitleChanged(string title) {
 
-            var action = JsonUtility.FromJson<UrlChangedMessage>(serializedMessage).urlAction;
-            if (Url == action.Url) {
+            Title = title;
+            TitleChanged?.Invoke(this, new EventArgs<string>(title));
+        }
+
+        // Invoked by the native plugin.
+        void HandleUrlChanged(string url) {
+
+            if (url == Url) {
                 return;
             }
             // Custom URI schemes are only be emitted via IWebView.UrlChanged but not set as IWebView.Url.
-            var isCustomUriScheme = !STANDARD_URI_SCHEMES.Any(scheme => action.Url.StartsWith(scheme));
+            var isCustomUriScheme = !STANDARD_URI_SCHEMES.Any(scheme => url.StartsWith(scheme));
             if (!isCustomUriScheme) {
-                Url = action.Url;
+                Url = url;
             }
-
-            if (action.Url.StartsWith("https://accounts.google.com/v3/signin/rejected")) {
+            if (url.StartsWith("https://accounts.google.com/v3/signin/rejected")) {
                 WebViewLogger.LogError(
                     @"Google tries to block WebViews from signing into Google accounts, but a workaround is to use Web.SetUserAgent() to change the browser's User-Agent in Awake(), like this:
                     void Awake() {
@@ -787,20 +854,17 @@ namespace Vuplex.WebView.Internal {
                         #elif UNITY_IOS
                             // On iOS, change the User-Agent to desktop:
                             Web.SetUserAgent(false);
-                        #else
-                            // Otherwise, change the User-Agent to a recent version of FireFox (Google blocks older versions).
-                            var firefox100ReleaseDate = DateTime.Parse(""2022-05-03"");
-                            var currentVersion = 100 + ((DateTime.Now.Year - firefox100ReleaseDate.Year) * 12) + DateTime.Now.Month - firefox100ReleaseDate.Month;
-                            Web.SetUserAgent($""Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:{currentVersion}.0) Gecko/20100101 Firefox/{currentVersion}.0"");
+                        #elif UNITY_ANDROID
+                            // On Android, change the User-Agent to ""random"":
+                            Web.SetUserAgent(""random"");
                         #endif
                     }"
                 );
             }
-
-            UrlChanged?.Invoke(this, new UrlChangedEventArgs(action.Url, action.Type));
+            UrlChanged?.Invoke(this, new UrlChangedEventArgs(url));
         }
 
-        protected async Task _initBase(int width, int height, bool createTexture = true, bool asyncInit = false) {
+        protected async Task<Task> _initBase(int width, int height, bool createTexture = true, bool asyncInit = false) {
 
             if (_initState != InitState.Uninitialized) {
                 var message = _initState == InitState.Initialized ? "Init() cannot be called on a webview that has already been initialized."
@@ -811,18 +875,31 @@ namespace Vuplex.WebView.Internal {
             // Assign the game object a unique name so that the native view can send it messages.
             gameObject.name = "WebView-" + Guid.NewGuid().ToString();
             Size = new Vector2Int(width, height);
-            VXUtils.WarnIfAbnormallyLarge(width, height);
+            _warnIfAbnormallyLarge(width, height);
             // Prevent the script from automatically being destroyed when a new scene is loaded.
             DontDestroyOnLoad(gameObject);
             if (createTexture) {
+                // The Graphics API only needs to be validated in 3D rendering mode.
+                _assertSupportedGraphicsApi();
                 Texture = await _createTexture(width, height);
             }
             if (asyncInit) {
                 _initState = InitState.InProgress;
                 _initTaskSource = new TaskCompletionSource<bool>();
+                return _initTaskSource.Task;
             } else {
                 _initState = InitState.Initialized;
+                return null;
             }
+        }
+
+        protected Task<Task> _initInNative2DModeBase(Rect rect, bool asyncInit = false) {
+
+            _native2DModeEnabled = true;
+            _rect = rect;
+            _visible = true;
+            WebViewLogger.Log("Initializing webview in Native 2D Mode.");
+            return _initBase((int)rect.width, (int)rect.height, createTexture: false, asyncInit: asyncInit);
         }
 
         static void _logSystemInfoIfNeeded() {
@@ -837,7 +914,7 @@ namespace Vuplex.WebView.Internal {
                 #if UNITY_2019_3_OR_NEWER
                     ["Rendering threading mode"] = SystemInfo.renderingThreadingMode,
                 #endif
-                    ["Render pipeline"] = GraphicsSettings.renderPipelineAsset?.ToString() ?? "default",
+                    ["Render pipeline"] = _getRenderPipelineName(),
                 #if UNITY_2018_2_OR_NEWER
                     ["SRP Batcher"] = GraphicsSettings.useScriptableRenderPipelineBatching,
                 #endif
@@ -918,6 +995,19 @@ namespace Vuplex.WebView.Internal {
                 return streamingAssetsUrl;
             }
             return originalUrl;
+        }
+
+        void _warnIfAbnormallyLarge(int width, int height) {
+
+            // Cast to floats to avoid integer overflow.
+            if ((float)width * (float)height > _abnormallyLargeThreshold) {
+                var message = $"The application specified an abnormally large webview size for this platform ({width}px x {height}px). Webviews of this size are normally only created by mistake and may lead to issues, such as the webview not rendering or the app crashing. To avoid this issue, please reduce the Resolution of your WebViewPrefab or CanvasWebViewPrefab: https://developer.vuplex.com/webview/WebViewPrefab#Resolution .";
+                WebViewLogger.LogWarning(message);
+                // In the Editor, throw an exception to prevent a graphics error from crashing the Editor.
+                #if UNITY_EDITOR && !VUPLEX_ALLOW_LARGE_WEBVIEWS
+                    throw new ArgumentException(message + " This exception is thrown while running in the Editor in order to prevent the Editor from crashing due to a graphics error. If this large webview size is intentional, you can disable this exception by adding the scripting symbol VUPLEX_ALLOW_LARGE_WEBVIEWS to player settings. However, please note that if the webview size is larger than the graphics system can handle, the Editor may crash.");
+                #endif
+            }
         }
 
         [DllImport(_dllName)]
@@ -1030,6 +1120,25 @@ namespace Vuplex.WebView.Internal {
         [Obsolete(ObsoletionMessages.Init2, true)]
         public void Init(Texture2D texture, float width, float height, Texture2D videoTexture) {}
 
+        Dictionary<EventHandler, EventHandler<LoadFailedEventArgs>> _legacyPageLoadFailedHandlerMap;
+        [Obsolete(ObsoletionMessages.PageLoadFailed)]
+        public event EventHandler PageLoadFailed {
+            add {
+                EventHandler<LoadFailedEventArgs> newHandler = (sender, eventArgs) => value(sender, EventArgs.Empty);
+                LoadFailed += newHandler;
+                _legacyPageLoadFailedHandlerMap[value] = newHandler;
+            }
+            remove {
+                EventHandler<LoadFailedEventArgs> newHandler;
+                _legacyPageLoadFailedHandlerMap.TryGetValue(value, out newHandler);
+                if (newHandler == null) {
+                    return;
+                }
+                LoadFailed -= newHandler;
+                _legacyPageLoadFailedHandlerMap.Remove(value);
+            }
+        }
+
         [Obsolete(ObsoletionMessages.Resolution, true)]
         public float Resolution { get; }
 
@@ -1037,7 +1146,7 @@ namespace Vuplex.WebView.Internal {
         public void SetResolution(float pixelsPerUnityUnit) {}
 
         [Obsolete(ObsoletionMessages.SizeInPixels)]
-        public Vector2 SizeInPixels { get { return (Vector2)Size; }}
+        public Vector2 SizeInPixels { get => (Vector2)Size; }
 
         #pragma warning disable CS0067
         [Obsolete(ObsoletionMessages.VideoRectChanged, true)]

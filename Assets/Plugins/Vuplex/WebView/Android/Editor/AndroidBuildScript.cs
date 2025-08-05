@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -15,6 +15,7 @@
 #pragma warning disable CS0618
 using System;
 using System.IO;
+using System.Reflection;
 using System.Xml;
 using UnityEditor;
 using UnityEditor.Android;
@@ -34,7 +35,7 @@ namespace Vuplex.WebView.Editor {
                                       IPreprocessBuild {
 
         // Set the callbackOrder to MaxValue so that this script runs last, after OVRGradleGeneration.PatchAndroidManifest().
-        public int callbackOrder { get { return int.MaxValue; }}
+        public int callbackOrder { get => int.MaxValue; }
 
         /// <seealso cref="IPreprocessBuild"/>
         public void OnPreprocessBuild(BuildTarget buildTarget, string buildPath) {
@@ -57,11 +58,9 @@ namespace Vuplex.WebView.Editor {
 
         const string ANDROID_XML_NAMESPACE = "http://schemas.android.com/apk/res/android";
 
-        /// <summary>
-        /// On Oculus devices, the app's AndroidManifest.xml must have the following application
-        /// tag in order for 3D WebView for Android to render correctly:
-        /// &lt;meta-data android:name="com.oculus.always_draw_view_root" android:value="true"/>
-        /// </summary>
+        // On Meta Quest devices, the app's AndroidManifest.xml must have the following application
+        // tag in order for 3D WebView for Android to render correctly:
+        // <meta-data android:name="com.oculus.always_draw_view_root" android:value="true"/>
         static void _addOculusMetaDataElementIfNeeded(XmlDocument xmlDocument, XmlElement applicationElement) {
 
             // Add the Oculus meta-data element when any XR device is supported (not just ones that contain the word "Oculus")
@@ -114,9 +113,16 @@ namespace Vuplex.WebView.Editor {
                 return;
             }
             #if VUPLEX_OCULUS_PROJECT_CONFIG
-                var projectConfig = OVRProjectConfig.GetProjectConfig();
-                if (projectConfig != null) {
-                    if (projectConfig.enableNSCConfig) {
+                // Use the newer OVRProjectConfig.CachedProjectConfig property if it exists in OVRProjectConfig
+                // because OVRProjectConfig.GetProjectConfig() was removed in Meta XR SDK v67. CachedProjectConfig exists
+                // at least as far back as SDK v62. For older versions that don't have CachedProjectConfig, don't fallback
+                // to using GetProjectConfig() because it has a different signature (i.e. optional parameter) depending on which
+                // version of the SDK is installed, which makes it difficult to invoke via InvokeMember().
+                var type = typeof(OVRProjectConfig);
+                var cachedProjectConfigProperty = type.GetProperty("CachedProjectConfig");
+                if (cachedProjectConfigProperty != null) {
+                    var projectConfig = (OVRProjectConfig)cachedProjectConfigProperty.GetValue(null);
+                    if (projectConfig != null && projectConfig.enableNSCConfig) {
                         WebViewLogger.Log("Just a heads-up: 3D WebView is automatically disabling the \"Enable NSC Configuration\" setting in Oculus project settings in order to allow webviews to load plain http:// (non-https) URLs. If you want to disable this behavior, you can do so by adding the scripting symbol VUPLEX_ANDROID_DISABLE_CLEARTEXT_TRAFFIC in Player Settings. For more info, see this page: https://support.vuplex.com/articles/how-to-enable-cleartext-traffic-on-android");
                         projectConfig.enableNSCConfig = false;
                         OVRProjectConfig.CommitProjectConfig(projectConfig);
@@ -135,11 +141,20 @@ namespace Vuplex.WebView.Editor {
         /// so this is the only way to override it.
         /// https://forum.unity.com/threads/532786
         /// </summary>
-        void _enableHardwareAccelerationIfNeeded(XmlElement applicationElement, XmlElement activityElement) {
+        void _enableHardwareAccelerationIfNeeded(XmlElement applicationElement) {
 
             #if !VUPLEX_ANDROID_DISABLE_HARDWARE_ACCELERATION
                 applicationElement.SetAttribute("hardwareAccelerated", ANDROID_XML_NAMESPACE, "true");
-                activityElement.SetAttribute("hardwareAccelerated", ANDROID_XML_NAMESPACE, "true");
+                // Enable hardware acceleration for all activities because the application may use
+                // com.unity3d.player.UnityPlayerActivity, com.unity3d.player.UnityPlayerGameActivity, or
+                // its own custom activity.
+                var activityElements = applicationElement.SelectNodes("//activity");
+                if (activityElements.Count == 0) {
+                    WebViewLogger.LogWarning("3D WebView was unable to enable hardware acceleration for the AndroidManifest.xml file because it contains no <activity> elements. As a result, hardware accelerated content like video may not render in Native 2D Mode.");
+                }
+                foreach (var activityElement in activityElements) {
+                    ((XmlElement)activityElement).SetAttribute("hardwareAccelerated", ANDROID_XML_NAMESPACE, "true");
+                }
             #endif
         }
 
@@ -150,23 +165,7 @@ namespace Vuplex.WebView.Editor {
             xmlDocument.PreserveWhitespace = true;
             xmlDocument.Load(androidManifestPath);
             var applicationElement = (XmlElement)xmlDocument.DocumentElement.SelectSingleNode("//application");
-            var namespaceManager = new XmlNamespaceManager(xmlDocument.NameTable);
-            namespaceManager.AddNamespace("android", ANDROID_XML_NAMESPACE);
-            // First, try to get the activity that matches the default
-            // "com.unity3d.player.UnityPlayerActivity" activity name.
-            var activityElement = (XmlElement)applicationElement.SelectSingleNode("//activity[@android:name='com.unity3d.player.UnityPlayerActivity']", namespaceManager);
-            if (activityElement == null) {
-                // No activity matches the default name, so just use the first activity.
-                var activityElements = applicationElement.SelectNodes("//activity");
-                if (activityElements.Count == 0) {
-                    throw new BuildFailedException("3D WebView is unable to make required modifications to the AndroidManifest.xml file because it contains no <activity> elements.");
-                }
-                if (activityElements.Count > 1) {
-                    WebViewLogger.LogWarning("3D WebView must modify the main <activity> in the the AndroidManifest.xml in order for some functionality to work correctly, but the AndroidManifest.xml doesn't contain an <activity> with the default name 'com.unity3d.player.UnityPlayerActivity' and the AndroidManifest.xml file contains multiple <activity> elements. So, 3D WebView will assume the first <activity> in the AndroidManifest.xml is the application's main activity.");
-                }
-                activityElement = (XmlElement)activityElements[0];
-            }
-            _enableHardwareAccelerationIfNeeded(applicationElement, activityElement);
+            _enableHardwareAccelerationIfNeeded(applicationElement);
             _enableCleartextTrafficIfNeeded(applicationElement);
             _addOculusMetaDataElementIfNeeded(xmlDocument, applicationElement);
             _addVuplexActivityIfNeeded(xmlDocument, applicationElement);

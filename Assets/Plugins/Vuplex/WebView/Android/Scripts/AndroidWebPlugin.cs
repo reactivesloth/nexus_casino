@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -31,6 +31,9 @@ namespace Vuplex.WebView {
                     DontDestroyOnLoad(_instance.gameObject);
                     if (AndroidUtils.DeviceIsMetaQuest()) {
                         AndroidWebView.SetAlternativePointerInputSystemEnabled(true);
+                    }
+                    if (SystemInfo.deviceModel.Contains("Magic Leap")) {
+                        AndroidWebView.SetForceDrawEnabled(true);
                     }
                 }
                 return _instance;
@@ -74,7 +77,6 @@ namespace Vuplex.WebView {
             // See the documentation for AndroidWebView.PauseAll() for more info.
             #if !VUPLEX_ANDROID_DISABLE_AUTOMATIC_PAUSING
                 if (isPaused) {
-                    WebViewLogger.LogWarning("3D WebView for Android is automatically pausing all of the webviews in an application because Unity has paused. If this interferes with WebViews created by other plugins in your project (such as ad SDKs), please see this article: https://support.vuplex.com/articles/android-conflicts-with-other-plugins");
                     AndroidWebView.PauseAll();
                 } else {
                     AndroidWebView.ResumeAll();

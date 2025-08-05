@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+﻿// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -13,13 +13,14 @@
 // limitations under the License.
 Shader "Vuplex/Default Web Shader" {
     Properties {
-        _MainTex ("Base (RGB)", 2D) = "white" {}
         [Toggle(FLIP_X)] _FlipX ("Flip X", Float) = 0
         [Toggle(FLIP_Y)] _FlipY ("Flip Y", Float) = 0
 
         [Header(Properties set programmatically)]
-        _VideoCutoutRect("Video Cutout Rect", Vector) = (0, 0, 0, 0)
-        _CropRect("Crop Rect", Vector) = (0, 0, 0, 0)
+        _FallbackVideoRect ("Video Cutout Rect", Vector) = (0, 0, 0, 0)
+        _FallbackVideoTexture ("Fallback Video Texture", 2D) = "white" {}
+        _MainTex ("Base (RGB)", 2D) = "white" {}
+        _RenderBlackAsTransparent ("Render Black as Transparent", Float) = 0
 
         // Include these UI properties from UI-Default.shader
         // in order to support UI Scroll Views.
@@ -95,72 +96,80 @@ Shader "Vuplex/Default Web Shader" {
                     o.vertex = UnityObjectToClipPos(v.vertex);
                     o.vertexColor =  v.vertexColor;
                     float2 untransformedUV = v.uv;
-
                     #ifdef FLIP_X
                         untransformedUV.x = 1.0 - untransformedUV.x;
                     #endif
                     #ifdef FLIP_Y
                         untransformedUV.y = 1.0 - untransformedUV.y;
                     #endif
-
                     o.uv = TRANSFORM_TEX(untransformedUV, _MainTex);
                     return o;
                 }
 
-                float4 _VideoCutoutRect;
-                float4 _CropRect;
+                float4 _FallbackVideoRect;
+                Texture2D _FallbackVideoTexture;
+                float _RenderBlackAsTransparent;
+
+                bool _isBlack(fixed4 color) {
+
+                    // Use a threshold of 0.15 to consider a pixel as black.
+                    return all(color.xyz < float3(0.15, 0.15, 0.15));
+                }
+
+                bool _pointIsInRect(float2 pnt, float4 rect) {
+
+                    #ifdef FLIP_X
+                        float nonflippedX = 1.0 - pnt.x;
+                    #else
+                        float nonflippedX = pnt.x;
+                    #endif
+                    #ifdef FLIP_Y
+                        float nonflippedY = pnt.y;
+                    #else
+                        float nonflippedY = 1.0 - pnt.y;
+                    #endif
+                    float width = rect.z;
+                    float height = rect.w;
+                    bool pointIsInRect = width != 0.0 &&
+                                         height != 0.0 &&
+                                         nonflippedX >= rect.x &&
+                                         nonflippedX <= rect.x + width &&
+                                         nonflippedY >= rect.y &&
+                                         nonflippedY <= rect.y + height;
+                    return pointIsInRect;
+                }
 
                 fixed4 frag(v2f i) : SV_Target {
 
-                    fixed4 col = _MainTex.Sample(linear_clamp_sampler, i.uv);
-                    float cutoutWidth = _VideoCutoutRect.z;
-                    float cutoutHeight = _VideoCutoutRect.w;
-
-                    #ifdef FLIP_X
-                        float nonflippedX = 1.0 - i.uv.x;
-                    #else
-                        float nonflippedX = i.uv.x;
-                    #endif
-                    #ifdef FLIP_Y
-                        float nonflippedY = i.uv.y;
-                    #else
-                        float nonflippedY = 1.0 - i.uv.y;
-                    #endif
-
-                    // Make the pixels transparent if they fall within the video rect cutout and the they're black.
-                    // Keeping non-black pixels allows the video controls to still show up on top of the video.
-                    bool pointIsInCutout = cutoutWidth != 0.0 &&
-                                           cutoutHeight != 0.0 &&
-                                           nonflippedX >= _VideoCutoutRect.x &&
-                                           nonflippedX <= _VideoCutoutRect.x + cutoutWidth &&
-                                           nonflippedY >= _VideoCutoutRect.y &&
-                                           nonflippedY <= _VideoCutoutRect.y + cutoutHeight;
-
-                    if (pointIsInCutout) {
-                        // Use a threshold of 0.15 to consider a pixel as black.
-                        bool pixelIsBlack = all(col.xyz < float3(0.15, 0.15, 0.15));
-                        if (pixelIsBlack) {
-                            col = float4(0.0, 0.0, 0.0, 0.0);
+                    // Sample the main view texture.
+                    fixed4 color = _MainTex.Sample(linear_clamp_sampler, i.uv);
+                    if (_pointIsInRect(i.uv, _FallbackVideoRect)) {
+                        // In order to allow a web page to display content on top of a video, only
+                        // render video on black pixels.
+                        if (_isBlack(color)) {
+                            // Sample the fallback video texture.
+                            // Convert from normalized coordinates within the view to normalized coordinates within the fallback video texture.
+                            float2 fallbackVideoTextureCoordinates = (float2(i.uv.x, 1.0 - i.uv.y) - _FallbackVideoRect.xy) / _FallbackVideoRect.zw;
+                            fixed4 videoColor = _FallbackVideoTexture.Sample(linear_clamp_sampler, fallbackVideoTextureCoordinates);
+                            // Don't render the video if the video texture is transparent.
+                            if (videoColor[3] != 0) {
+                                color = videoColor;
+                            }
                         }
                     }
-
-                    float cropWidth = _CropRect.z;
-                    float cropHeight = _CropRect.w;
-                    bool pointIsOutsideOfCrop = cropWidth != 0.0 &&
-                                                cropHeight != 0.0 &&
-                                                (nonflippedX < _CropRect.x || nonflippedX > _CropRect.x + cropWidth ||nonflippedY < _CropRect.y || nonflippedY > _CropRect.y + cropHeight);
-                    if (pointIsOutsideOfCrop) {
-                        col = float4(0.0, 0.0, 0.0, 0.0);
+                    if (_RenderBlackAsTransparent && _isBlack(color)) {
+                        color = float4(0.0, 0.0, 0.0, 0.0);
                     }
 
-                    // Place color correction last so it doesn't effect cutout rect functionality.
-                    #ifndef UNITY_COLORSPACE_GAMMA
-                        col = float4(GammaToLinearSpace(col.xyz), col.w);
+                    // Color correction to convert gamma to linear space.
+                    // This is performed last so it doesn't effect cutout rect functionality.
+                    #if !defined(UNITY_COLORSPACE_GAMMA)
+                        color = float4(GammaToLinearSpace(color.xyz), color.w);
                     #endif
 
                     // Multiply the alpha by the vertex color's alpha to support CanvasGroup.alpha.
-                    col = float4(col.xyz, col.w * i.vertexColor.w);
-                    return col;
+                    color = float4(color.xyz, color.w * i.vertexColor.w);
+                    return color;
                 }
             ENDCG
         }

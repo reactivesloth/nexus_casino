@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -31,13 +31,13 @@ namespace Vuplex.WebView {
     /// </summary>
     public class AndroidWebView : BaseWebView,
                                   IWebView,
+                                  IWithAuth,
                                   IWithChangingTexture,
                                   IWithDeepLinking,
                                   IWithDownloads,
                                   IWithFallbackTextureData,
                                   IWithFileSelection,
                                   IWithFind,
-                                  IWithHttpAuth,
                                   IWithMovablePointer,
                                   IWithPdfCreation,
                                   IWithNative2DMode,
@@ -47,29 +47,12 @@ namespace Vuplex.WebView {
                                   IWithPopups,
                                   IWithSettableUserAgent {
 
-        /// <see cref="IWithDownloads"/>
-        public event EventHandler<DownloadChangedEventArgs> DownloadProgressChanged;
-
-        /// <see cref="IWithChangingTexture"/>
-        public event EventHandler<EventArgs<Texture2D>> TextureChanged;
-
-        /// <seealso cref="IWithNative2DMode"/>
-        public bool Native2DModeEnabled { get { return _native2DModeEnabled; }}
-
-        public WebPluginType PluginType { get; } = WebPluginType.Android;
-
-        /// <seealso cref="IWithNative2DMode"/>
-        public Rect Rect { get { return _rect; }}
-
-        /// <seealso cref="IWithNative2DMode"/>
-        public bool Visible { get; private set; }
-
-        /// <see cref="IWithHttpAuth"/>
+        /// <see cref="IWithAuth"/>
         public event EventHandler<AuthRequestedEventArgs> AuthRequested {
             add {
                 _assertSingletonEventHandlerUnset(_authRequestedHandler, "AuthRequested");
                 _authRequestedHandler = value;
-                _callInstanceMethod("setAuthRequestedHandler", new AndroidStringAndObjectCallback(_handleAuthRequested));
+                _callInstanceMethod("setAuthRequestedHandler", new AndroidBiConsumer<String, AndroidJavaObject>(_biConsumerClassName, _handleAuthRequested));
             }
             remove {
                 if (_authRequestedHandler == value) {
@@ -79,12 +62,52 @@ namespace Vuplex.WebView {
             }
         }
 
+        /// <summary>
+        /// An event that maps directly to the native Android <see href="https://developer.android.com/reference/android/webkit/WebViewClient#onReceivedClientCertRequest(android.webkit.WebView,%20android.webkit.ClientCertRequest)">onReceivedClientCertRequest()</see>
+        /// API for handling client certificate requests. EventArgs.Value is an AndroidJavaObject for the native <see href="https://developer.android.com/reference/android/webkit/ClientCertRequest">ClientCertRequest</see> object.
+        /// For details on how to handle certificate requests, see Android's documentation for onReceivedClientCertRequest() and ClientCertRequest.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// await webViewPrefab.WaitUntilInitialized();
+        /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
+        ///     var androidWebView = webViewPrefab.WebView as AndroidWebView;
+        ///     androidWebView.ClientCertificateRequested += (sender, eventArgs) => {
+        ///         var clientCertRequest = eventArgs.Value;
+        ///         var host = clientCertRequest.Call<string>("getHost");
+        ///         Debug.Log("Client certificate requested for host: " + host);
+        ///         // TODO: This example calls ClientCertRequest.ignore() to ignore the request,
+        ///         // but you're probably intending to use this event to pass a client certificate,
+        ///         // in which case you'll want to use native Android APIs (like KeyChain.getPrivateKey)
+        ///         // to look up a private key and call ClientCertRequest.proceed() instead.
+        ///         clientCertRequest.Call("ignore");
+        ///     };
+        /// #endif
+        /// </code>
+        /// </example>
+        public event EventHandler<EventArgs<AndroidJavaObject>> ClientCertificateRequested {
+            add {
+                _assertSingletonEventHandlerUnset(_clientCertificateRequestedHandler, "ClientCertificateRequested");
+                _clientCertificateRequestedHandler = value;
+                _callInstanceMethod("setClientCertificateRequestedHandler", new AndroidConsumer<AndroidJavaObject>(_consumerClassName, _handleClientCertificateRequested));
+            }
+            remove {
+                if (_clientCertificateRequestedHandler == value) {
+                    _clientCertificateRequestedHandler = null;
+                    _callInstanceMethod("setClientCertificateRequestedHandler", null);
+                }
+            }
+        }
+
+        /// <see cref="IWithDownloads"/>
+        public event EventHandler<DownloadChangedEventArgs> DownloadProgressChanged;
+
         /// <see cref="IWithFileSelection"/>
         public event EventHandler<FileSelectionEventArgs> FileSelectionRequested {
             add {
                 _assertSingletonEventHandlerUnset(_fileSelectionHandler, "FileSelectionRequested");
                 _fileSelectionHandler = value;
-                _callInstanceMethod("setFileSelectionHandler", new AndroidFileSelectionCallback(_handleFileSelection));
+                _callInstanceMethod("setFileSelectionHandler", new AndroidConsumer<AndroidJavaObject>(_consumerClassName, _handleFileSelection));
             }
             remove {
                 if (_fileSelectionHandler == value) {
@@ -122,7 +145,7 @@ namespace Vuplex.WebView {
             add {
                 _assertSingletonEventHandlerUnset(_scriptAlertHandler, "ScriptAlerted");
                 _scriptAlertHandler = value;
-                _callInstanceMethod("setScriptAlertHandler", new AndroidStringAndBoolDelegateCallback(_handleScriptAlert));
+                _callInstanceMethod("setScriptAlertHandler", new AndroidStringAndBoolConsumerBiConsumer(_biConsumerClassName, _handleScriptAlert));
             }
             remove {
                 if (_scriptAlertHandler == value) {
@@ -157,7 +180,7 @@ namespace Vuplex.WebView {
             add {
                 _assertSingletonEventHandlerUnset(_scriptConfirmHandler, "ScriptConfirmRequested");
                 _scriptConfirmHandler = value;
-                _callInstanceMethod("setScriptConfirmHandler", new AndroidStringAndBoolDelegateCallback(_handleScriptConfirm));
+                _callInstanceMethod("setScriptConfirmHandler", new AndroidStringAndBoolConsumerBiConsumer(_biConsumerClassName, _handleScriptConfirm));
             }
             remove {
                 if (_scriptConfirmHandler == value) {
@@ -166,6 +189,20 @@ namespace Vuplex.WebView {
                 }
             }
         }
+
+        /// <see cref="IWithChangingTexture"/>
+        public event EventHandler<EventArgs<Texture2D>> TextureChanged;
+
+        /// <seealso cref="IWithNative2DMode"/>
+        public bool Native2DModeEnabled { get => _native2DModeEnabled; }
+
+        public WebPluginType PluginType { get; } = WebPluginType.Android;
+
+        /// <seealso cref="IWithNative2DMode"/>
+        public Rect Rect { get => _rect; }
+
+        /// <seealso cref="IWithNative2DMode"/>
+        public bool Visible { get => _visible; }
 
         internal static void AssertWebViewIsAvailable() {
 
@@ -184,14 +221,14 @@ namespace Vuplex.WebView {
         public override Task<bool> CanGoBack() {
 
             var taskSource = new TaskCompletionSource<bool>();
-            _callInstanceMethod("canGoBack", new AndroidBoolCallback(taskSource.SetResult));
+            _callInstanceMethod("canGoBack", new AndroidConsumer<bool>(_consumerClassName, taskSource.SetResult));
             return taskSource.Task;
         }
 
         public override Task<bool> CanGoForward() {
 
             var taskSource = new TaskCompletionSource<bool>();
-            _callInstanceMethod("canGoForward", new AndroidBoolCallback(taskSource.SetResult));
+            _callInstanceMethod("canGoForward", new AndroidConsumer<bool>(_consumerClassName, taskSource.SetResult));
             return taskSource.Task;
         }
 
@@ -202,7 +239,7 @@ namespace Vuplex.WebView {
                 // Note: this native Android implementation doesn't capture hardware accelerated content like WebGL or video
                 // because an application can't create an Android Canvas with hardware acceleration enabled.
                 var taskSource = new TaskCompletionSource<byte[]>();
-                _callInstanceMethod("captureScreenshot", new AndroidByteArrayCallback(taskSource.SetResult));
+                _callInstanceMethod("captureScreenshot", new AndroidByteArrayResultConsumer(_consumerClassName, taskSource.SetResult));
                 return taskSource.Task;
             }
             return base.CaptureScreenshot();
@@ -237,7 +274,7 @@ namespace Vuplex.WebView {
 
             _assertValidState();
             var taskSource = new TaskCompletionSource<string>();
-            _callInstanceMethod("createPdf", new AndroidStringCallback(filePath => {
+            _callInstanceMethod("createPdf", new AndroidConsumer<string>(_consumerClassName, filePath => {
                 if (filePath.Length == 0) {
                     taskSource.SetException(new Exception("Failed to create PDF. Please check the Logcat logs for more details."));
                 } else {
@@ -260,17 +297,31 @@ namespace Vuplex.WebView {
 
             _assertValidState();
             AndroidUtils.AssertMainThread("Dispose");
-            // Cancel the render if it has been scheduled via GL.IssuePluginEvent().
-            WebView_removePointer(_webView.GetRawObject());
             IsDisposed = true;
-            _webView.Call("destroy");
-            _webView.Dispose();
+            try {
+                // Cancel the render if it has been scheduled via GL.IssuePluginEvent().
+                WebView_removePointer(_webView.GetRawObject());
+                _webView.Call("destroy");
+                _webView.Dispose();
+            } catch (NullReferenceException) {
+                // This can happen if Unity destroys its native representation of _webView
+                // as the app is shutting down. This can happen, for example, on the call
+                // to _webView.Dispose(), even though _webView was not null directly before.
+            }
             Destroy(gameObject);
         }
 
         public override void ExecuteJavaScript(string javaScript, Action<string> callback) {
 
-            var nativeCallback = callback == null ? null : new AndroidStringCallback(callback);
+            AndroidConsumer<string> nativeCallback = null;
+            if (callback != null) {
+                nativeCallback = new AndroidConsumer<string>(
+                    _consumerClassName,
+                    // Run the callback on the Unity main thread to match the behavior of other platforms.
+                    // Otherwise, the callback would run on the Android UI thread.
+                    result => ThreadDispatcher.RunOnMainThread(() => callback(result))
+                );
+            }
             _callInstanceMethod("executeJavaScript", javaScript, nativeCallback);
         }
 
@@ -307,12 +358,14 @@ namespace Vuplex.WebView {
             // Note: this native Android implementation doesn't capture hardware accelerated content like WebGL or video
             // because an application can't create an Android Canvas with hardware acceleration enabled.
             var taskSource = new TaskCompletionSource<byte[]>();
-            _callInstanceMethod("getRawTextureData", new AndroidByteArrayCallback(taskSource.SetResult));
+            _callInstanceMethod("getRawTextureData", new AndroidByteArrayResultConsumer(_consumerClassName, taskSource.SetResult));
             return taskSource.Task;
         }
 
         /// <summary>
-        /// Returns the instance's native android.webkit.WebView.
+        /// Returns the instance's underlying native <see href="https://developer.android.com/reference/android/webkit/WebView">android.webkit.WebView</see>.
+        /// The application can use this to utilize native Android APIs for which 3D WebView doesn't yet have
+        /// dedicated C# equivalents.
         /// </summary>
         /// <remarks>
         /// Warning: Adding code that interacts with the native WebView directly
@@ -448,13 +501,12 @@ namespace Vuplex.WebView {
         /// <see cref="IWithMovablePointer"/>
         public void MovePointer(Vector2 normalizedPoint, bool pointerLeave = false) {
 
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             _callInstanceMethod("movePointer", pixelsPoint.x, pixelsPoint.y, pointerLeave);
         }
 
         /// <summary>
-        /// Pauses processing, media, and rendering for this webview instance
-        /// until Resume() is called.
+        /// Pauses media and rendering for this webview instance until Resume() is called.
         /// </summary>
         /// <example>
         /// <code>
@@ -467,18 +519,11 @@ namespace Vuplex.WebView {
         public void Pause() => _callInstanceMethod("pause");
 
         /// <summary>
-        /// Pauses processing, media, and rendering for all webview instances.
-        /// By default, 3D WebView automatically calls this method when the application
-        /// is paused.
+        /// Pauses media and rendering for all webview instances until ResumeAll() is called.
+        /// 3D WebView automatically calls this method when the application
+        /// is paused. Note that this method does not pause JavaScript. To pause JavaScript
+        /// globally, use PauseTimers().
         /// </summary>
-        /// <remarks>
-        /// This method internally calls android.webkit.WebView.pauseTimers(), which globally affects all
-        /// native webview instances. So, if your project contains other plugins that use
-        /// the System WebView (for example, ad SDKs), they can be affected by this method.
-        /// If you find that 3D WebView is interfering with an ad SDK or other plugin in your project that
-        /// uses the System WebView, please add the scripting symbol `VUPLEX_ANDROID_DISABLE_AUTOMATIC_PAUSING`
-        /// to your project to prevent 3D WebView from automatically calling this method.
-        /// </remarks>
         /// <example>
         /// <code>
         /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
@@ -487,6 +532,22 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         public static void PauseAll() => _callStaticMethod("pauseAll");
+
+        /// <summary>
+        /// Pauses all layout, parsing, and JavaScript timers for all webviews
+        /// until ResumeTimers() is called. This is a global request that affects
+        /// all Android WebView instances in the application, even those not created
+        /// by 3D WebView (for example, webviews used by other 3rd party libraries
+        /// such as ad SDKs).
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
+        ///     AndroidWebView.PauseTimers();
+        /// #endif
+        /// </code>
+        /// </example>
+        public static void PauseTimers() => _callStaticMethod("pauseTimers");
 
         /// <see cref="IWithPointerDownAndUp"/>
         public void PointerDown(Vector2 point) => _pointerDown(point, MouseButton.Left, 1, false);
@@ -530,7 +591,7 @@ namespace Vuplex.WebView {
         public override void Reload() => _callInstanceMethod("reload");
 
         /// <summary>
-        /// Resumes processing and rendering for all webview instances
+        /// Resumes rendering for this webview instance
         /// after a previous call to Pause().
         /// </summary>
         /// <example>
@@ -544,10 +605,10 @@ namespace Vuplex.WebView {
         public void Resume() => _callInstanceMethod("resume");
 
         /// <summary>
-        /// Resumes processing and rendering for all webview instances
-        /// after a previous call to PauseAll(). This method
-        /// is automatically called by the plugin when the application resumes after
-        /// being paused.
+        /// Resumes rendering for all webview instances
+        /// after a previous call to PauseAll(). 3D WebView automatically
+        /// calls this method when the application resumes after
+        /// having been paused.
         /// </summary>
         /// <example>
         /// <code>
@@ -557,6 +618,19 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         public static void ResumeAll() => _callStaticMethod("resumeAll");
+
+        /// <summary>
+        /// Resumes all layout, parsing, and JavaScript timers for all webviews
+        /// after a previous call to PauseTimers().
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
+        ///     AndroidWebView.ResumeTimers();
+        /// #endif
+        /// </code>
+        /// </example>
+        public static void ResumeTimers() => _callStaticMethod("resumeTimers");
 
         /// <summary>
         /// Runs the given function on the Android UI thread.
@@ -576,8 +650,8 @@ namespace Vuplex.WebView {
 
         public override void Scroll(Vector2 normalizedScrollDelta, Vector2 normalizedPoint) {
 
-            var scrollDeltaInPixels = _convertNormalizedToPixels(normalizedScrollDelta, false);
-            var pointInPixels = _convertNormalizedToPixels(normalizedPoint);
+            var scrollDeltaInPixels = NormalizedToPoint(normalizedScrollDelta);
+            var pointInPixels = _normalizedToPointAssertValid(normalizedPoint);
             _callInstanceMethod("scroll", scrollDeltaInPixels.x, scrollDeltaInPixels.y, pointInPixels.x, pointInPixels.y);
         }
 
@@ -605,6 +679,8 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Like Web.SetCameraAndMicrophoneEnabled(), but enables only the camera without enabling the microphone.
+        /// In addition to calling this method, you must also complete the additional steps described [here](https://support.vuplex.com/articles/webrtc#android)
+        /// in order to successfully enable the camera.
         /// </summary>
         /// <example>
         /// <code>
@@ -670,15 +746,25 @@ namespace Vuplex.WebView {
         public void SetForceDark(ForceDark forceDark) => _callInstanceMethod("setForceDark", (int)forceDark);
 
         /// <summary>
-        /// By default, web pages can use the JavaScript Fullscreen API to make the browser occupy the entire
-        /// device screen when running in Native 2D Mode, but this method can be used to disable that. This method
-        /// only has an effect in Native 2D Mode and has no effect when Native 2D Mode is disabled.
+        /// Normally, the native `android.webkit.WebView` instance redraws itself whenever
+        /// the web content has changed. However on some systems (like Magic Leap 2),
+        /// the operating system has a bug where this drawing does not occur
+        /// automatically. In those cases, this  method must be called to make it so
+        /// the webview is forced to redraw itself every frame. This method is automatically called
+        /// by AndroidWebPlugin.cs for Magic Leap 2.
+        /// </summary>
+        public static void SetForceDrawEnabled(bool enabled) => _callStaticMethod("setForceDrawEnabled", enabled);
+
+        /// <summary>
+        /// Sets whether web pages can use the JavaScript Fullscreen API to make an HTML element occupy the entire
+        /// webview in 3D rendering mode or the entire device screen in Native 2D Mode. The default is `true`,
+        /// meaning that the JavaScript Fullscreen API is enabled by default.
         /// </summary>
         /// <example>
         /// <code>
         /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
-        ///     await canvasWebViewPrefab.WaitUntilInitialized();
-        ///     var androidWebView = canvasWebViewPrefab.WebView as AndroidWebView;
+        ///     await webViewPrefab.WaitUntilInitialized();
+        ///     var androidWebView = webViewPrefab.WebView as AndroidWebView;
         ///     androidWebView.SetFullscreenEnabled(false);
         /// #endif
         /// </code>
@@ -725,6 +811,8 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Like Web.SetCameraAndMicrophoneEnabled(), but enables only the microphone without enabling the camera.
+        /// In addition to calling this method, you must also complete the additional steps described [here](https://support.vuplex.com/articles/webrtc#android)
+        /// in order to successfully enable the microphone.
         /// </summary>
         /// <example>
         /// <code>
@@ -736,6 +824,20 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         public static void SetMicrophoneEnabled(bool enabled) => _callStaticMethod("setMicrophoneEnabled", enabled);
+
+        /// <summary>
+        /// Enables sysex messages to be sent to or received from MIDI devices. The default is disabled.
+        /// These messages are privileged operations, e.g. modifying sound libraries and sampling data,
+        /// or even updating the MIDI device's firmware.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
+        ///     AndroidWebView.SetMidiSysexEnabled(true);
+        /// #endif
+        /// </code>
+        /// </example>
+        public static void SetMidiSysexEnabled(bool enabled) => _callStaticMethod("setMidiSysexEnabled", enabled);
 
         /// <summary>
         /// By default, a native file picker is shown for file inputs,
@@ -758,7 +860,7 @@ namespace Vuplex.WebView {
         public void SetNativeJavaScriptDialogsEnabled(bool enabled) => _callInstanceMethod("setNativeJavaScriptDialogsEnabled", enabled);
 
         /// <summary>
-        /// 3D WebView for Android works by using native android.webkit.WebView instances, and it must
+        /// 3D WebView for Android is powered by native android.webkit.WebView instances, and it must
         /// add those instances to the native Android view hierarchy in order for them to work correctly.
         /// By default, 3D WebView adds the native WebView instances as children of
         /// the Unity game's ViewGroup, which is obtained using this approach in Java:
@@ -766,20 +868,20 @@ namespace Vuplex.WebView {
         /// ViewGroup parentViewGroup = (ViewGroup)UnityPlayer.currentActivity.getWindow().getDecorView().getRootView();
         /// </code>
         /// However, you can call this method at the start of the app to override the ViewGroup to which
-        /// 3D WebView adds the native WebView instances. For example, you may need to do that if you're
-        /// embedding Unity as a library, which may cause `UnityPlayer.currentActivity` to return a different
+        /// 3D WebView adds the native WebView instances. For example, you may need to do this if your app
+        /// embeds Unity as a library, which may cause `UnityPlayer.currentActivity` to return a different
         /// activity than expected.
         /// </summary>
         /// <example>
         /// <code>
         /// void Awake() {
         ///     #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
-        ///         AndroidWebView.SetNativeParentView(viewGroup);
+        ///         AndroidWebView.SetNativeParentView(nativeParentView);
         ///     #endif
         /// }
         /// </code>
         /// </example>
-        public static void SetNativeParentView(AndroidJavaObject viewGroup) => _callStaticMethod("setNativeParentView", viewGroup);
+        public static void SetNativeParentView(AndroidJavaObject nativeParentView) => _callStaticMethod("setNativeParentView", nativeParentView);
 
         /// <summary>
         /// Configures the webview's behavior when a secure origin attempts to load a resource from an insecure origin.
@@ -871,10 +973,12 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Sets the android.view.Surface to which the webview renders.
-        /// This can be used, for example, to render to an Oculus
+        /// This can be used, for example, to render to a Meta Quest
         /// [OVROverlay](https://developer.oculus.com/reference/unity/1.34/class_o_v_r_overlay).
-        /// After this method is called, the webview no longer renders
-        /// to its original texture and instead renders to the given surface.
+        /// When the application invokes this method with a valid surface, the webview renders
+        /// to that given surface instead of rendering to its original texture surface (so IWebView.Texture
+        /// is no longer updated). If the application invokes this method with a null parameter, it causes the webview
+        /// to revert back to rendering to its original texture surface.
         /// </summary>
         /// <example>
         /// <code>
@@ -922,7 +1026,7 @@ namespace Vuplex.WebView {
 
             _assertNative2DModeEnabled();
             _callInstanceMethod("setVisible", visible);
-            Visible = visible;
+            _visible = visible;
         }
 
         public override void StopLoad() => _callInstanceMethod("stopLoad");
@@ -960,9 +1064,12 @@ namespace Vuplex.WebView {
     #region Non-public members
         const string _2dWebViewClassName = "com.vuplex.webview.WebView";
         const string _3dWebViewClassName = "com.vuplex.webview.WebView3D";
-        static AndroidJavaClass _class = new AndroidJavaClass(_3dWebViewClassName);
-        internal const string DllName = "VuplexWebViewAndroid";
         EventHandler<AuthRequestedEventArgs> _authRequestedHandler;
+        const string _biConsumerClassName = "com.vuplex.webview.BiConsumer";
+        static AndroidJavaClass _class = new AndroidJavaClass(_3dWebViewClassName);
+        EventHandler<EventArgs<AndroidJavaObject>> _clientCertificateRequestedHandler;
+        const string _consumerClassName = "com.vuplex.webview.Consumer";
+        internal const string DllName = "VuplexWebViewAndroid";
         EventHandler<FileSelectionEventArgs> _fileSelectionHandler;
         List<Action<FindResult>> _pendingFindCallbacks = new List<Action<FindResult>>();
         EventHandler<ScriptDialogEventArgs> _scriptAlertHandler;
@@ -976,31 +1083,49 @@ namespace Vuplex.WebView {
 
             _assertValidState();
             AndroidUtils.AssertMainThread(methodName);
-            _webView.Call(methodName, args);
+            _webView.Call(methodName, _convertNullArgsIfNeeded(args));
         }
 
         TReturn _callInstanceMethod<TReturn>(string methodName, params object[] args) {
 
             _assertValidState();
             AndroidUtils.AssertMainThread(methodName);
-            return _webView.Call<TReturn>(methodName, args);
+            return _webView.Call<TReturn>(methodName, _convertNullArgsIfNeeded(args));
         }
 
         static void _callStaticMethod(string methodName, params object[] args) {
 
             AndroidUtils.AssertMainThread(methodName);
-            _class.CallStatic(methodName, args);
+            _class.CallStatic(methodName, _convertNullArgsIfNeeded(args));
         }
 
         static TReturn _callStaticMethod<TReturn>(string methodName, params object[] args) {
 
             AndroidUtils.AssertMainThread(methodName);
-            return _class.CallStatic<TReturn>(methodName, args);
+            return _class.CallStatic<TReturn>(methodName, _convertNullArgsIfNeeded(args));
+        }
+
+        // If code calls _callInstanceMethod() with a null second parameter to pass a null Java object reference,
+        // the args parameter itself ends up being a null array (as opposed to an array containing null).
+        // This method converts the null args array to an array containing null because otherwise
+        // AndroidJavaObject.Call() will ignore the parameter completely.
+        static object[] _convertNullArgsIfNeeded(object[] args) {
+
+            if (args == null) {
+                return new object[] { null };
+            }
+            return args;
         }
 
         protected override Material _createMaterial() => AndroidUtils.CreateAndroidMaterial();
 
-        protected override Task<Texture2D> _createTexture(int width, int height) => AndroidTextureCreator.Instance.CreateTexture(width, height);
+        protected override Task<Texture2D> _createTexture(int width, int height) {
+
+            if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Vulkan) {
+                return base._createTexture(width, height);
+            }
+            return AndroidOpenGLTextureCreator.GetInstance(WebView_getCreateOpenGLTextureFunction()).CreateTexture(width, height);
+        }
 
         protected override void _destroyNativeTexture(IntPtr nativeTexture) => VulkanDelayedTextureDestroyer.GetInstance(WebView_destroyVulkanTexture).DestroyTexture(nativeTexture);
 
@@ -1008,10 +1133,16 @@ namespace Vuplex.WebView {
 
             var eventArgs = new AuthRequestedEventArgs(
                 host,
+                false,
                 (string username, string password) => httpAuthHandler.Call("proceed", username, password),
                 () => httpAuthHandler.Call("cancel")
             );
             _authRequestedHandler(this, eventArgs);
+        }
+
+        void _handleClientCertificateRequested(AndroidJavaObject clientCertRequest) {
+
+            _clientCertificateRequestedHandler(this, new EventArgs<AndroidJavaObject>(clientCertRequest));
         }
 
         // Invoked by the native plugin.
@@ -1020,14 +1151,13 @@ namespace Vuplex.WebView {
             DownloadProgressChanged?.Invoke(this, DownloadMessage.FromJson(serializedMessage).ToEventArgs());
         }
 
-        void _handleFileSelection(string serializedMessage, Action<string[]> continueCallback, Action cancelCallback) {
+        void _handleFileSelection(AndroidJavaObject request) {
 
-            var message = FileSelectionMessage.FromJson(serializedMessage);
             var eventArgs = new FileSelectionEventArgs(
-                message.AcceptFilters,
-                message.MultipleAllowed,
-                continueCallback,
-                cancelCallback
+                request.Get<string[]>("acceptFilters"),
+                request.Get<bool>("multipleAllowed"),
+                filePaths => request.Get<AndroidJavaObject>("continueCallback").Call("accept", filePaths),
+                () => request.Get<AndroidJavaObject>("cancelCallback").Call("run")
             );
             _fileSelectionHandler(this, eventArgs);
         }
@@ -1099,21 +1229,25 @@ namespace Vuplex.WebView {
 
         async Task _initAndroid2D(Rect rect, AndroidJavaObject popupResultMessage) {
 
-            _native2DModeEnabled = true;
-            _rect = rect;
-            Visible = true;
-            await _initBase((int)rect.width, (int)rect.height, createTexture: false, asyncInit: true);
-            _webView = new AndroidJavaObject(
-                _2dWebViewClassName,
-                gameObject.name,
-                (int)rect.x,
-                (int)rect.y,
-                (int)rect.width,
-                (int)rect.height,
-                new AndroidStringAndObjectCallback(_handlePopup),
-                popupResultMessage
-            );
-            await _initTaskSource.Task;
+            var task = await _initInNative2DModeBase(rect, asyncInit: true);
+            try {
+                _webView = new AndroidJavaObject(
+                    _2dWebViewClassName,
+                    gameObject.name,
+                    (int)rect.x,
+                    (int)rect.y,
+                    (int)rect.width,
+                    (int)rect.height,
+                    new AndroidBiConsumer<string, AndroidJavaObject>(_biConsumerClassName, _handlePopup),
+                    popupResultMessage
+                );
+            } catch (AndroidJavaException ex) {
+                if (ex.Message.Contains("trial")) {
+                    throw new TrialExpiredException(ex.Message);
+                }
+                throw ex;
+            }
+            await task;
         }
 
         async Task _initAndroid3D(int width, int height, AndroidJavaObject popupResultMessage) {
@@ -1122,40 +1256,41 @@ namespace Vuplex.WebView {
             if (vulkanEnabled && !WebView_deviceHasRequiredVulkanExtension()) {
                 AndroidUtils.ThrowVulkanExtensionException();
             }
-            await _initBase(width, height, asyncInit: true);
-            _webView = new AndroidJavaObject(
-                _3dWebViewClassName,
-                gameObject.name,
-                vulkanEnabled ? 0 : Texture.GetNativeTexturePtr().ToInt32(),
-                width,
-                height,
-                SystemInfo.graphicsMultiThreaded,
-                vulkanEnabled,
-                XRSettings.enabled,
-                new AndroidStringAndObjectCallback(_handlePopup),
-                popupResultMessage
-            );
-            await _initTaskSource.Task;
+            var task = await _initBase(width, height, asyncInit: true);
+            try {
+                _webView = new AndroidJavaObject(
+                    _3dWebViewClassName,
+                    gameObject.name,
+                    vulkanEnabled ? 0 : Texture.GetNativeTexturePtr().ToInt32(),
+                    width,
+                    height,
+                    vulkanEnabled,
+                    XRSettings.enabled,
+                    new AndroidBiConsumer<string, AndroidJavaObject>(_biConsumerClassName, _handlePopup),
+                    popupResultMessage
+                );
+            } catch (AndroidJavaException ex) {
+                if (ex.Message.Contains("trial")) {
+                    throw new TrialExpiredException(ex.Message);
+                }
+                throw ex;
+            }
+            await task;
         }
 
         // Start the coroutine from OnEnable so that the coroutine
         // is restarted if the object is deactivated and then reactivated.
-        void OnEnable() {
-
-            if (SystemInfo.graphicsMultiThreaded && SystemInfo.graphicsDeviceType != GraphicsDeviceType.Vulkan) {
-                StartCoroutine(_renderPluginOncePerFrame());
-            }
-        }
+        void OnEnable() => StartCoroutine(_renderPluginOncePerFrame());
 
         void _pointerDown(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount, bool preventStealingFocus) {
 
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             _callInstanceMethod("pointerDown", pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount, preventStealingFocus);
         }
 
         void _pointerUp(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount) {
 
-            var pixelsPoint = _convertNormalizedToPixels(normalizedPoint);
+            var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
             _callInstanceMethod("pointerUp", pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount);
         }
 
@@ -1185,6 +1320,9 @@ namespace Vuplex.WebView {
 
         [DllImport(DllName)]
         static extern void WebView_destroyVulkanTexture(IntPtr texture);
+
+        [DllImport(DllName)]
+        static extern IntPtr WebView_getCreateOpenGLTextureFunction();
 
         [DllImport(DllName)]
         static extern IntPtr WebView_getRenderFunction();
@@ -1240,10 +1378,6 @@ namespace Vuplex.WebView {
         // Added in v3.1, removed in v3.11.
         [Obsolete("AndroidWebView.SetCustomUriSchemesEnabled() has been removed. Now when a page redirects to a URI with a custom scheme, 3D WebView will automatically emit the UrlChanged and LoadProgressChanged events for the navigation, but a deep link (i.e. to an external application) won't occur.", true)]
         public static void SetCustomUriSchemesEnabled(bool enabled) {}
-
-        // Added in v3.10, removed in v3.12.
-        [Obsolete("AndroidWebView.SetForceDrawEnabled() has been removed because it is no longer needed.", true)]
-        public static void SetForceDrawEnabled(bool enabled) {}
 
         // Deprecated in v4.3.2.
         [Obsolete("AndroidWebView.SetGeolocationPermissionEnabled() has been renamed to SetGeolocationEnabled(). Please use AndroidWebView.SetGeolocationEnabled() instead.")]

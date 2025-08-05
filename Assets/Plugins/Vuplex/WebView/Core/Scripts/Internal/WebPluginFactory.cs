@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -20,10 +20,15 @@ namespace Vuplex.WebView.Internal {
 
     public class WebPluginFactory {
 
-        public virtual List<IWebPlugin> GetAllPlugins() => _allPlugins.ToList();
+        public virtual List<IWebPlugin> GetAllPlugins() {
+
+            _assertNotTooEarly();
+            return _allPlugins.ToList();
+        }
 
         public virtual IWebPlugin GetDefaultPlugin(WebPluginType[] preferredPlugins = null) {
 
+            _assertNotTooEarly();
             var isServerBuild = false;
             #if UNITY_SERVER
                 isServerBuild = true;
@@ -48,6 +53,8 @@ namespace Vuplex.WebView.Internal {
                 return _choosePlugin(_iosPlugin, "iOS", "3D WebView for iOS", "ios");
             #elif UNITY_WSA
                 return _choosePlugin(_uwpPlugin, "UWP", "3D WebView for UWP", "uwp");
+            #elif UNITY_VISIONOS
+                return _choosePlugin(_visionOSPlugin, "visionOS", "3D WebView for visionOS", "visionos");
             #elif UNITY_WEBGL
                 return _choosePlugin(_webGLPlugin, "WebGL", "2D WebView for WebGL", "webgl");
             #else
@@ -70,9 +77,19 @@ namespace Vuplex.WebView.Internal {
             _addPlugin(_iosPlugin = plugin);
         }
 
+        public static void RegisterStandalonePlugin(IWebPlugin plugin) {
+
+            _addPlugin(_standalonePlugin = plugin);
+        }
+
         public static void RegisterUwpPlugin(IWebPlugin plugin) {
 
             _addPlugin(_uwpPlugin = plugin);
+        }
+
+        public static void RegisterVisionOSPlugin(IWebPlugin plugin) {
+
+            _addPlugin(_visionOSPlugin = plugin);
         }
 
         public static void RegisterWebGLPlugin(IWebPlugin plugin) {
@@ -80,18 +97,15 @@ namespace Vuplex.WebView.Internal {
             _addPlugin(_webGLPlugin = plugin);
         }
 
-        public static void RegisterStandalonePlugin(IWebPlugin plugin) {
-
-            _addPlugin(_standalonePlugin = plugin);
-        }
-
         protected static HashSet<IWebPlugin> _allPlugins = new HashSet<IWebPlugin>();
         protected static IWebPlugin _androidPlugin;
         protected static IWebPlugin _androidGeckoPlugin;
+        static bool _beforeSceneLoadCalled;
         protected static IWebPlugin _iosPlugin;
         bool _mockWarningLogged;
         protected static IWebPlugin _standalonePlugin;
         protected static IWebPlugin _uwpPlugin;
+        protected static IWebPlugin _visionOSPlugin;
         protected static IWebPlugin _webGLPlugin;
 
         static void _addPlugin(IWebPlugin plugin) {
@@ -101,8 +115,26 @@ namespace Vuplex.WebView.Internal {
             }
         }
 
+        void _assertNotTooEarly() {
+
+            if (!_beforeSceneLoadCalled) {
+                // The plugin registrant classes (like StandaloneWebPluginRegistrant) call their corresponding methods (like RegisterStandalonePlugin)
+                // in BeforeSceneLoad. So, if the application calls a Web method prior to Awake() (e.g. in BeforeSceneLoad), not all the plugins may be registered yet.
+                // For example, the MockWebPlugin may be registered (e.g. via RegisterAndroidPlugin), but the StandaloneWebPlugin may not be registered yet.
+                throw new InvalidOperationException("A Web class method was called too early, prior to Awake(). This can happen, for example, if the application calls a Web method in a function decorated with `[RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]`. Please wait until Awake() or later to call Web class methods.");
+            }
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void _beforeSceneLoad() => _beforeSceneLoadCalled = true;
+
         IWebPlugin _choosePlugin(IWebPlugin plugin, string buildPlatform, string packageName, string storeUrlPath) {
 
+            #if UNITY_EDITOR
+                if (IgnoreMissingPluginInEditor && plugin == null) {
+                    plugin = MockWebPlugin.Instance;
+                }
+            #endif
             if (plugin == null) {
                 throw new WebViewUnavailableException($"The build platform is set to {buildPlatform}, but {packageName} isn't installed in the project. {packageName} is required in order for 3D WebView to work on {buildPlatform}." + _getMoreInfoText(storeUrlPath));
             }
@@ -118,6 +150,21 @@ namespace Vuplex.WebView.Internal {
             }
             return plugin;
         }
+
+        /// <summary>
+        /// If the corresponding 3D WebView package for the current build platform isn't installed and the application attempts to instantiate a webview,
+        /// then by default, 3D WebView throws an exception warning about the missing package. The application can set this field to true to cause 3D WebView
+        /// to ignore the missing package in the Editor and instead use 3D WebView for Windows and macOS if it's installed or the mock webview implementation if it's not.
+        /// This option only impacts the Editor and doesn't affect the Player, so an exception is still thrown in the Player at runtime in this scenario.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// void Awake() {
+        ///     Vuplex.WebView.Internal.WebPluginFactory.IgnoreMissingPluginInEditor = true;
+        /// }
+        /// </code>
+        /// </example>
+        public static bool IgnoreMissingPluginInEditor;
 
         string _getMoreInfoText(string storeUrlPath) => $" For more info, please visit https://store.vuplex.com/webview/{storeUrlPath} .";
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #if UNITY_ANDROID && UNITY_EDITOR
+#pragma warning disable CS0618
 using UnityEditor;
 using UnityEngine;
 using Vuplex.WebView.Internal;
@@ -37,7 +38,7 @@ namespace Vuplex.WebView {
             if (url == null) {
                 return;
             }
-            if (!PlayerSettings.Android.splitApplicationBinary) {
+            if (!PlayerSettings.Android.useAPKExpansionFiles) {
                 return;
             }
             if (url.StartsWith("streaming-assets://") || url.Contains(Application.streamingAssetsPath)) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -31,26 +31,37 @@ namespace Vuplex.WebView.Internal {
             }
             if (cursorInfo == null) {
                 Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-                return;
+            } else {
+                Cursor.SetCursor(cursorInfo.Texture, cursorInfo.HotSpot, CursorMode.Auto);
             }
-            if (cursorInfo.Texture == null) {
-                cursorInfo.Texture = Resources.Load<Texture2D>(cursorType);
-            }
-            var hotspot = cursorInfo.Centered ? new Vector2(16, 16) : Vector2.zero;
-            Cursor.SetCursor(cursorInfo.Texture, hotspot, CursorMode.Auto);
         }
 
         class CursorInfo {
-            public CursorInfo(bool centered = false) {
-                Centered = centered;
+
+            public CursorInfo(string textureName, Vector2 hotSpot) {
+                
+                _textureName = textureName;
+                HotSpot = hotSpot;
             }
-            public bool Centered;
-            public Texture2D Texture;
+
+            public Vector2 HotSpot { get; private set; } 
+
+            public Texture2D Texture {
+                get {
+                    if (_texture == null) {
+                        _texture = Resources.Load<Texture2D>(_textureName);
+                    }
+                    return _texture;
+                }
+            }
+
+            private Texture2D _texture;
+            private string _textureName;
         }
 
         static Dictionary<string, CursorInfo> _supportedCursors = new Dictionary<string, CursorInfo> {
-            ["pointer"] = new CursorInfo(),
-            ["text"] = new CursorInfo(true)
+            ["pointer"] = new CursorInfo("pointer", new Vector2(5, 0)),
+            ["text"] = new CursorInfo("text", new Vector2(16, 16))
         };
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -31,29 +31,23 @@ namespace Vuplex.WebView.Editor {
 
             _validateGraphicsApi(native2DSupported);
             _forceInternetPermission();
-            _assertThatOculusLowOverheadModeIsDisabled();
-            _assertSrpBatcherCompatibility();
+            _warnIfMuteOtherAudioSourcesIsEnabled();
             _updateNativePluginSettings(nativeLibraryName);
             _updateProguardFileIfNeeded(productName, proguardRulesExpectedRelativePath);
-        }
-
-        static void _assertSrpBatcherCompatibility() {
-
-            // Note: 3D WebView's shaders aren't compatible with SRP Batcher, which is fine because Unity
-            // just uses the standard SRP code path for GameObjects that use incompatible shaders:
-            // https://docs.unity3d.com/Manual/SRPBatcher.html#:~:text=GameObject%20compatibility
-            // However, in 2020.3 and older, that Unity behavior doesn't work correctly with WebViewPrefab on Android,
-            // so it's necessary to either disable SRP Batcher, upgrade to Unity >= 2021.1, or switch to CanvasWebViewPrefab.
-            #if !(UNITY_2021_1_OR_NEWER || VUPLEX_DISABLE_SRP_WARNING)
-                if (VXUtils.IsSrpBatcherEnabled()) {
-                    throw new BuildFailedException("URP settings error: \"SRP Batcher\" is enabled in Universal Render Pipeline (URP) settings, but URP for Android has an issue in versions of Unity older than 2021.1 that prevents 3D WebView's textures from showing up outside of a Canvas. If the project uses a WebViewPrefab, please either upgrade to Unity 2021.1 or newer or go to the URP Asset and disable \"SRP Batcher\". In newer versions of URP, it's necessary to click \"Show Additional Properties\" in order to show the SRP Batcher option, like described here: https://docs.unity3d.com/2021.3/Documentation/Manual/SRPBatcher.html . If the project only uses CanvasWebViewPrefab and not WebViewPrefab, you can instead add the scripting symbol VUPLEX_DISABLE_SRP_WARNING to the project to ignore this warning.");
-                }
-            #endif
+            _assertThatOculusLowOverheadModeIsDisabled();
+            _disableOculusForceRemoveInternetPermission();
         }
 
         static void _assertThatOculusLowOverheadModeIsDisabled() {
 
             if (!EditorUtils.XRSdkIsEnabled("oculus")) {
+                return;
+            }
+            var autoGraphicsApiEnabled = PlayerSettings.GetUseDefaultGraphicsAPIs(BuildTarget.Android);
+            var selectedGraphicsApi = PlayerSettings.GetGraphicsAPIs(BuildTarget.Android)[0];
+            var vulkanEnabled = selectedGraphicsApi == GraphicsDeviceType.Vulkan;
+            if (vulkanEnabled || autoGraphicsApiEnabled) {
+                // Low Overhead Mode only applies to OpenGLES and doesn't impact Vulkan.
                 return;
             }
             var lowOverheadModeEnabled = false;
@@ -67,8 +61,36 @@ namespace Vuplex.WebView.Editor {
                 lowOverheadModeEnabled = PlayerSettings.VROculus.lowOverheadMode;
             #endif
             if (lowOverheadModeEnabled) {
-                throw new BuildFailedException("XR settings error: Vuplex 3D WebView requires that \"Low Overhead Mode\" be disabled in Oculus XR settings. Please disable Low Overhead Mode in Oculus XR settings.");
+                throw new BuildFailedException("XR settings error: Vuplex 3D WebView requires that \"Low Overhead Mode\" be disabled in Oculus XR settings when using the OpenGLES graphics API. Please either disable Low Overhead Mode in Oculus XR settings or set the Graphics API to Vulkan instead. More details: the Oculus XR plugin's \"Low Overhead Mode\" causes the OpenGLES graphics driver to bypass validation code, which breaks some graphics functionality. Unfortunately, one of the functionalities impacted is the GL_OES_EGL_image_external OpenGL extension required by 3D WebView. So, it's not possible to use 3D WebView with OpenGL when Low Overhead Mode is enabled.");
             }
+        }
+
+        static void _disableOculusForceRemoveInternetPermission() {
+
+            #if VUPLEX_OPENXR_META_QUEST
+                var settings = UnityEngine.XR.OpenXR.OpenXRSettings.GetSettingsForBuildTargetGroup(BuildTargetGroup.Android);
+                var questFeature = settings.GetFeature<UnityEngine.XR.OpenXR.Features.MetaQuestSupport.MetaQuestFeature>();
+                var updatedSetting = false;
+                #if UNITY_2021_3_OR_NEWER
+                    // MetaQuestFeature.ForceRemoveInternetPermission was added in OpenXR v1.9.1, which requires Unity 2021.3 or newer.
+                    // If you experience a compiler error here, please upgrade your OpenXR package.
+                    if (questFeature.ForceRemoveInternetPermission) {
+                        questFeature.ForceRemoveInternetPermission = false;
+                        updatedSetting = true;
+                    }
+                #else
+                    var serializedFeature = new UnityEditor.SerializedObject(questFeature);
+                    var property = serializedFeature.FindProperty("forceRemoveInternetPermission");
+                    if (property != null && property.boolValue) {
+                        property.boolValue = false;
+                        serializedFeature.ApplyModifiedProperties();
+                        updatedSetting = true;
+                    }
+                #endif
+                if (updatedSetting) {
+                    WebViewLogger.LogWarning("Just a heads-up: 3D WebView automatically disabled the OpenXR Meta Quest Support setting \"Force Remove Internet Permission\" to ensure that it can fetch web pages from the internet. (This message will only be logged once.)");
+                }
+            #endif
         }
 
         static void _forceInternetPermission() {
@@ -83,7 +105,10 @@ namespace Vuplex.WebView.Editor {
 
         static void _updateNativePluginSettings(string fileName) {
 
-            #if UNITY_2019_1_OR_NEWER
+            // Allow the application to define VUPLEX_ANDROID_DISABLE_FORCE_PLUGIN_PRELOAD in the case where
+            // it uses Vulkan with Native 2D Mode and needs to avoid preloading the native plugins because
+            // not all of the target devices support the required VK_ANDROID_external_memory_android_hardware_buffer extension.
+            #if UNITY_2019_1_OR_NEWER && !VUPLEX_ANDROID_DISABLE_FORCE_PLUGIN_PRELOAD
                 var pluginAbsolutePaths = Directory.GetFiles(Application.dataPath, fileName, SearchOption.AllDirectories).ToList();
                 // PluginImporter.GetAtPath() requires a relative path and doesn't support absolute paths.
                 var pluginRelativePaths = pluginAbsolutePaths.Select(path => path.Replace(Application.dataPath, "Assets"));
@@ -194,6 +219,13 @@ namespace Vuplex.WebView.Editor {
                     throw new BuildFailedException(warningPrefix + " 3D WebView for Android requires Unity 2020.2 or newer in order to support Vulkan. So, please either upgrade to a newer version of Unity or change the selected Graphics API to OpenGLES in Player Settings.");
                 #endif
             #endif
+        }
+
+        static void _warnIfMuteOtherAudioSourcesIsEnabled() {
+
+            if (PlayerSettings.muteOtherAudioSources) {
+                WebViewLogger.LogWarning("\"Mute Other Audio Sources\" is enabled in Player Settings, which can cause Unity audio sources to stop playing when a webview plays audio. To prevent this issue from occurring, go to Android Player Settings -> Other Settings -> Configuration and disable \"Mute Other Audio Sources\".");
+            }
         }
     }
 }

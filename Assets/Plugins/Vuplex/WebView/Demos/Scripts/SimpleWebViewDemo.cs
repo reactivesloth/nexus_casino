@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -29,14 +29,11 @@ namespace Vuplex.Demos {
 
         WebViewPrefab webViewPrefab;
 
-        void Awake() {
+        async void Start() {
 
             // Use a desktop User-Agent to request the desktop versions of websites.
             // https://developer.vuplex.com/webview/Web#SetUserAgent
             Web.SetUserAgent(false);
-        }
-
-        async void Start() {
 
             // Get a reference to the WebViewPrefab.
             // https://support.vuplex.com/articles/how-to-reference-a-webview

@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -21,11 +21,14 @@ namespace Vuplex.WebView {
 
         partial void OnInit() {
 
-            #if !UNITY_2021_2_OR_NEWER
-                if (_canvas?.renderMode == RenderMode.ScreenSpaceOverlay) {
-                    WebViewLogger.LogWarning("Versions of Unity older than 2021.2 have a bug on macOS that sometimes prevents 3D WebView's external textures from appearing properly in a \"Screen Space - Overlay\" Canvas. To avoid the issue, it's recommended to either upgrade to Unity 2021.3 or switch the Canvas's render mode to \"Screen Space - Camera\". https://issuetracker.unity3d.com/issues/external-texture-is-not-visible-in-player-slash-build-when-canvas-render-mode-is-set-to-screen-space-overlay");
-                }
-            #endif
+            var version = VXUnityVersion.Instance;
+            var isUnityVersionWithScreenSpaceOverlayBugFixed = version.Major >= 7000 ||
+                                                               (version.String.StartsWith("6000.0") && version.Patch >= 22) ||
+                                                               (version.String.StartsWith("2022.3") && version.Patch >= 51) ||
+                                                               (version.String.StartsWith("2021.3") && version.Patch >= 45);
+            if (!isUnityVersionWithScreenSpaceOverlayBugFixed) {
+                WebViewLogger.LogWarning($"This version of Unity ({version.String}) has a bug on macOS that sometimes prevents 3D WebView's external textures from appearing correctly in a \"Screen Space - Overlay\" Canvas, especially on Apple Silicon Macs. To avoid the issue, please either upgrade to the latest patch release of your Unity LTS version or switch the Canvas's render mode to \"Screen Space - Camera\". <em>https://issuetracker.unity3d.com/issues/raw-image-that-uses-a-material-with-a-custom-shader-is-invisible-in-canvas-when-screen-space-overlay-is-set-and-the-player-is-in-windowed-mode</em>");
+            }
         }
     }
 }

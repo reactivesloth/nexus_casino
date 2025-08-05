@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -63,7 +63,7 @@ namespace Vuplex.WebView {
             return taskSource.Task;
         }
 
-        internal BaseWebViewPrefab BaseWebViewPrefab { get { return _webViewPrefab; }}
+        internal BaseWebViewPrefab BaseWebViewPrefab { get => _webViewPrefab; }
 
         bool _isInitialized;
         [SerializeField]
@@ -96,11 +96,10 @@ namespace Vuplex.WebView {
             _webViewPrefab.ScrollingEnabled = false;
             _webViewPrefab.DragMode = DragMode.Disabled;
             _webViewPrefab.WebView.MessageEmitted += WebView_MessageEmitted;
-            // Android Gecko and Hololens don't support transparent webviews, so set the cutout
-            // rect to the entire view so that the shader makes its black background
-            // pixels transparent.
+            // Android Gecko and Hololens don't support transparent webviews, so as a workaround, set the
+            // the shader to turn black pixels transparent.
             if (pluginType == WebPluginType.AndroidGecko || pluginType == WebPluginType.UniversalWindowsPlatform) {
-                _webViewPrefab.SetCutoutRect(new Rect(0, 0, 1, 1));
+                _webViewPrefab.SetRenderBlackAsTransparent(true);
             }
             if (!String.IsNullOrWhiteSpace(CustomKeyboardUrl)) {
                 _webViewPrefab.WebView.LoadUrl(CustomKeyboardUrl.Trim());
@@ -116,6 +115,8 @@ namespace Vuplex.WebView {
                 keyboardInstance.RemoveKeyboard(this);
             }
         }
+
+        void OnDisable() => _webViewPrefab.WebView.PostMessage("{\"type\": \"keyboard.hidden\"}");
 
         void WebView_MessageEmitted(object sender, EventArgs<string> e) {
 

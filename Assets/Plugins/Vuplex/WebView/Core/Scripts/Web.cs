@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -19,9 +19,13 @@ using Vuplex.WebView.Internal;
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// `Web` is the top-level static class for the 3D WebView plugin.
-    /// It contains static methods for configuring the module and creating resources.
+    /// The Web static class contains APIs that globally impact the behavior of all IWebView instances, such as configuration options
+    /// and global actions. It also contains the CreateWebView() method for creating an IWebView directly.
     /// </summary>
+    /// <remarks>
+    /// The Web class's APIs cannot be used before Awake() is first called for the app. Attempting to use a Web API prior to Awake() will
+    /// result in an InvalidOperationException.
+    /// </remarks>
     /// <seealso cref="WebViewPrefab"/>
     /// <seealso cref="CanvasWebViewPrefab"/>
     /// <seealso cref="IWebView"/>
@@ -37,7 +41,7 @@ namespace Vuplex.WebView {
         /// - 2D WebView for WebGL
         /// </remarks>
         public static ICookieManager CookieManager {
-            get { return _pluginFactory.GetDefaultPlugin().CookieManager; }
+            get => _pluginFactory.GetDefaultPlugin().CookieManager;
         }
 
         /// <summary>
@@ -45,7 +49,7 @@ namespace Vuplex.WebView {
         /// installed for the current platform.
         /// </summary>
         public static WebPluginType DefaultPluginType {
-            get { return _pluginFactory.GetDefaultPlugin().Type; }
+            get => _pluginFactory.GetDefaultPlugin().Type;
         }
 
         /// <summary>
@@ -166,7 +170,7 @@ namespace Vuplex.WebView {
         /// camera or microphone via JavaScript, but this method can
         /// be used to grant **all web pages** access to the camera and microphone.
         /// This is useful, for example, to enable WebRTC support. Note that on
-        /// Android, iOS, and UWP, [additional project configuration is needed in order to enable
+        /// macOS, Android, iOS, and UWP, [additional project configuration is needed in order to enable
         /// permission for the camera and microphone](https://support.vuplex.com/articles/webrtc).
         /// Camera and microphone permissions are enabled together with a single method because on some platforms (Windows, macOS, UWP),
         /// these permissions can only be enabled together and cannot be enabled separately.
@@ -251,9 +255,6 @@ namespace Vuplex.WebView {
         /// can force them to use a mobile User-Agent by calling `Web.SetUserAgent(true)` or a
         /// desktop User-Agent with `Web.SetUserAgent(false)`.
         /// </summary>
-        /// <remarks>
-        /// On Windows and macOS, this method cannot be executed while the Chromium browser process is running. So, you will likely need to call it from Awake() to ensure that it's executed before Chromium is started. Alternatively, you can manually terminate Chromium prior to calling this method using StandaloneWebView.TerminateBrowserProcess().
-        /// </remarks>
         /// <example>
         /// <code>
         /// void Awake() {
@@ -272,9 +273,6 @@ namespace Vuplex.WebView {
         /// Globally configures all webviews to use a custom
         /// [User-Agent](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/User-Agent).
         /// </summary>
-        /// <remarks>
-        /// On Windows and macOS, this method cannot be executed while the Chromium browser process is running. So, you will likely need to call it from Awake() to ensure that it's executed before Chromium is started. Alternatively, you can manually terminate Chromium prior to calling this method using StandaloneWebView.TerminateBrowserProcess().
-        /// </remarks>
         /// <example>
         /// <code>
         /// void Awake() {

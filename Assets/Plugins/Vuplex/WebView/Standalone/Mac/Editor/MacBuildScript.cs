@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -13,9 +13,7 @@
 // limitations under the License.
 #if UNITY_STANDALONE_OSX
 #pragma warning disable CS0618
-using System;
 using System.IO;
-using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Callbacks;
@@ -26,7 +24,7 @@ namespace Vuplex.WebView.Editor {
 
     public class MacBuildScript : IPreprocessBuild {
 
-        public int callbackOrder { get { return 0; } }
+        public int callbackOrder { get => 0; }
 
         public void OnPreprocessBuild(BuildTarget buildTarget, string buildPath) {
 

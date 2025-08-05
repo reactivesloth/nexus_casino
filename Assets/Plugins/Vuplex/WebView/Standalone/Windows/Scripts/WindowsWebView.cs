@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Vuplex Inc. All rights reserved.
+// Copyright (c) 2025 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Vuplex.WebView.Internal;
 
 namespace Vuplex.WebView {
@@ -38,16 +39,17 @@ namespace Vuplex.WebView {
 
         public static WindowsWebView Instantiate() => new GameObject().AddComponent<WindowsWebView>();
 
-        public static bool ValidateGraphicsApi() {
-
-            var isValid = SystemInfo.graphicsDeviceType == UnityEngine.Rendering.GraphicsDeviceType.Direct3D11;
-            if (!isValid) {
-                WebViewLogger.LogError("Unsupported graphics API: 3D WebView for Windows requires Direct3D11. Please go to Player Settings and set \"Graphics APIs for Windows\" to Direct3D11.");
-            }
-            return isValid;
-        }
-
         readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
+
+        protected override GraphicsDeviceType[] _getSupportedGraphicsApis() => new [] { GraphicsDeviceType.Direct3D11, GraphicsDeviceType.Direct3D12 };
+
+        protected override TextureFormat _getTextureFormat() {
+
+            // - BGRA32 needs to be specified for D3D12 or else the graphics device will be removed with reason DXGI_ERROR_INVALID_CALL.
+            // - BGRA32 is specified for D3D11 (both with and without hardware acceleration) in order to avoid the following warning:
+            // > d3d11: Creating a default shader resource view with dxgi-fmt=28 for a texture that uses dxgi-fmt=87
+            return TextureFormat.BGRA32;
+        }
 
         protected override StandaloneWebView _instantiate() => Instantiate();
 
