@@ -113,14 +113,20 @@ namespace Code.InteractionSystem
             {
                 _webView = Instantiate(webViewPrefab, computerCanvas.transform);
                 _webView.transform.SetAsFirstSibling();
+                Invoke(nameof(OpenWebView), 2f);
                 
-                if (_webView.WebView == null)
-                    _webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
-                else
-                    _webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
-                networkImageStream.SetTexture();
                 //networkImageStream.StartStreaming();
             }
+        }
+
+        private void OpenWebView()
+        {
+            if (_webView.WebView == null)
+                _webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
+            else
+                _webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
+            
+            networkImageStream.SetTexture();
         }
     }
 }
