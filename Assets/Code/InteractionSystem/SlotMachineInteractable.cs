@@ -107,7 +107,8 @@ namespace Code.InteractionSystem
                 _webView.WebView?.Dispose();
                 DestroyImmediate(_webView);
                 networkImageStream.ClearTexture();
-                //networkImageStream.StopStreaming();
+                
+                if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
             }
             else
             {
@@ -115,7 +116,7 @@ namespace Code.InteractionSystem
                 _webView.transform.SetAsFirstSibling();
                 Invoke(nameof(OpenWebView), 2f);
                 
-                //networkImageStream.StartStreaming();
+                if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
             }
         }
 

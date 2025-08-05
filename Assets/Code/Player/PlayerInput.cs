@@ -2,7 +2,8 @@
 using Code.UI;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using Code.Utility; // если нужно, как было у тебя
+using Code.Utility;
+using UnityEngine.UI; // если нужно, как было у тебя
 // Предполагается, что VirtualJoystick, TouchLook и MobileActionButton уже есть в проекте (из предыдущего ответа).
 
 [DefaultExecutionOrder(-100)]
@@ -35,6 +36,7 @@ public class PlayerInput : MonoBehaviour
 
     [SerializeField] private bool ForceMobile;
     public bool IsUsingMobileFallback { get; set; }
+    public bool HideMobileFallback { get; set; }
     
     private void Awake()
     {
@@ -56,6 +58,8 @@ public class PlayerInput : MonoBehaviour
         _player.Disable();
         
         foreach (Transform child in mobileCanvas.transform) child.gameObject.SetActive(false);
+        Canvas.ForceUpdateCanvases();
+        LayoutRebuilder.ForceRebuildLayoutImmediate(mobileCanvas.GetComponent<RectTransform>());
     }
 
     private void OnDestroy()
@@ -71,7 +75,18 @@ public class PlayerInput : MonoBehaviour
         if (IsUsingMobileFallback != mobileCanvas.activeSelf)
         {
             foreach (Transform child in mobileCanvas.transform) child.gameObject.SetActive(IsUsingMobileFallback);
-            Canvas.ForceUpdateCanvases();
+        }
+
+        if (IsUsingMobileFallback)
+        {
+            if (HideMobileFallback != MoveJoystick.gameObject.activeSelf)
+            {
+                MoveJoystick.gameObject.SetActive(!HideMobileFallback);
+                LookArea.gameObject.SetActive(!HideMobileFallback);
+                JumpButton.gameObject.SetActive(!HideMobileFallback);
+                SprintButton.gameObject.SetActive(!HideMobileFallback);
+                CameraSwitchButton.gameObject.SetActive(!HideMobileFallback);
+            }
         }
     }
 
