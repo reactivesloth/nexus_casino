@@ -108,7 +108,7 @@ namespace Code.InteractionSystem
                 DestroyImmediate(_webView);
                 networkImageStream.ClearTexture();
                 
-                if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
+                if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = false;
             }
             else
             {

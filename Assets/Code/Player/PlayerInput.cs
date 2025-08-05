@@ -35,6 +35,7 @@ public class PlayerInput : MonoBehaviour
     
 
     [SerializeField] private bool ForceMobile;
+    private bool savedHideMobileFallback;
     public bool IsUsingMobileFallback { get; set; }
     public bool HideMobileFallback { get; set; }
     
@@ -74,18 +75,19 @@ public class PlayerInput : MonoBehaviour
 
         if (IsUsingMobileFallback != mobileCanvas.activeSelf)
         {
-            foreach (Transform child in mobileCanvas.transform) child.gameObject.SetActive(IsUsingMobileFallback);
+            mobileCanvas.SetActive(IsUsingMobileFallback);
         }
 
         if (IsUsingMobileFallback)
         {
-            if (HideMobileFallback != MoveJoystick.gameObject.activeSelf)
+            if (HideMobileFallback != savedHideMobileFallback)
             {
                 MoveJoystick.gameObject.SetActive(!HideMobileFallback);
                 LookArea.gameObject.SetActive(!HideMobileFallback);
                 JumpButton.gameObject.SetActive(!HideMobileFallback);
                 SprintButton.gameObject.SetActive(!HideMobileFallback);
                 CameraSwitchButton.gameObject.SetActive(!HideMobileFallback);
+                savedHideMobileFallback = HideMobileFallback;
             }
         }
     }
