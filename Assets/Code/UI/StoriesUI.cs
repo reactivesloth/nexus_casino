@@ -220,9 +220,12 @@ namespace Code.UI
             print($"[Stories] ClearCash");
             foreach (var sprite in _idSpriteDictionaryCash.Values)
             {
-                if (sprite.texture != null)
-                    DestroyImmediate(sprite.texture);
-                DestroyImmediate(sprite);
+                if (sprite != null)
+                {
+                    if (sprite.texture != null)
+                        DestroyImmediate(sprite.texture);
+                    DestroyImmediate(sprite);
+                }
             }
             
             _idSpriteDictionaryCash.Clear();
