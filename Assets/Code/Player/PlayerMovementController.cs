@@ -204,6 +204,11 @@ namespace Code.Player
         {
             if (!IsOwner) return;
             
+            if ((CanMove || LookCameraLimitRotation) && _cursorVisible)
+            {
+                UpdateCameraDistance();
+            }
+            
             if (!CanMove) return;
 
             virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>();
@@ -214,11 +219,6 @@ namespace Code.Player
             GroundedCheck();
             JumpAndGravity();
             Move();
-            
-            if ((CanMove || LookCameraLimitRotation) && _cursorVisible)
-            {
-                UpdateCameraDistance();
-            }
         }
 
         private void LateUpdate()
