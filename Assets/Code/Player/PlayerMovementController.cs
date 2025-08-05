@@ -214,14 +214,16 @@ namespace Code.Player
             GroundedCheck();
             JumpAndGravity();
             Move();
+            
+            if ((CanMove || LookCameraLimitRotation) && _cursorVisible)
+            {
+                UpdateCameraDistance();
+            }
         }
 
         private void LateUpdate()
         {
             if (!IsOwner) return;
-            
-            if ((CanMove || LookCameraLimitRotation) && _cursorVisible)
-                UpdateCameraDistance();
             
             if (LookCameraLimitRotation && FirstPersonView)
                 SitCameraRotation();
