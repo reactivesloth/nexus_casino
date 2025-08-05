@@ -59,8 +59,6 @@ public class PlayerInput : MonoBehaviour
         _player.Disable();
         
         foreach (Transform child in mobileCanvas.transform) child.gameObject.SetActive(false);
-        Canvas.ForceUpdateCanvases();
-        LayoutRebuilder.ForceRebuildLayoutImmediate(mobileCanvas.GetComponent<RectTransform>());
     }
 
     private void OnDestroy()
@@ -86,7 +84,6 @@ public class PlayerInput : MonoBehaviour
                 LookArea.gameObject.SetActive(!HideMobileFallback);
                 JumpButton.gameObject.SetActive(!HideMobileFallback);
                 SprintButton.gameObject.SetActive(!HideMobileFallback);
-                CameraSwitchButton.gameObject.SetActive(!HideMobileFallback);
                 savedHideMobileFallback = HideMobileFallback;
             }
         }

@@ -45,7 +45,7 @@ namespace Code.Utility
         private const int DefaultFPSLimit = 60;
         private const bool DefaultEffectsEnabled = true;
         private const int DefaultAntiAliasingLevel = 2;
-        private const float DefaultCameraSensitivity = 100f;
+        private const float DefaultCameraSensitivity = 40f;
         private const bool DefaultInvertCamera = false;
         private const string DefaultLanguageCode = "en";
 
