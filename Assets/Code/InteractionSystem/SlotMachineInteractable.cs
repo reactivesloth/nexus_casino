@@ -14,6 +14,7 @@ namespace Code.InteractionSystem
         [Header("UI Settings")]
         [Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
         [SerializeField]private Canvas computerCanvas;
+        [SerializeField]private Canvas computerFSCanvas;
         [SerializeField]private Canvas contentCanvas;
         
         
@@ -55,6 +56,8 @@ namespace Code.InteractionSystem
         {
             if (computerCanvas)
                 computerCanvas.gameObject.SetActive(false);
+            if (computerFSCanvas)
+                computerFSCanvas.gameObject.SetActive(false);
             if (contentCanvas)
                 contentCanvas.gameObject.SetActive(false);
         }
@@ -99,7 +102,12 @@ namespace Code.InteractionSystem
                 return;
             }
 
+#if UNITY_IOS || UNITY_ANDROID
+            computerFSCanvas.gameObject.SetActive(open);
+#else
             computerCanvas.gameObject.SetActive(open);
+#endif
+            
             contentCanvas.gameObject.SetActive(open);
             
             if (!open)
@@ -112,7 +120,12 @@ namespace Code.InteractionSystem
             }
             else
             {
+                
+#if UNITY_IOS || UNITY_ANDROID
+                _webView = Instantiate(webViewPrefab, computerFSCanvas.transform);
+#else
                 _webView = Instantiate(webViewPrefab, computerCanvas.transform);
+#endif
                 _webView.transform.SetAsFirstSibling();
                 Invoke(nameof(OpenWebView), 2f);
                 
