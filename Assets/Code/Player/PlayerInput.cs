@@ -32,6 +32,8 @@ public class PlayerInput : MonoBehaviour
     public UltimateButton CameraSwitchButton;
     public UltimateButton PauseButton;
     public UltimateButton VoiceButton;
+    public UltimateButton OpenChatButton;
+    public UltimateButton SwitchChatButton;
     
 
     [SerializeField] private bool ForceMobile;
@@ -42,6 +44,8 @@ public class PlayerInput : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        
+        IsUsingMobileFallback = ForceMobile || Application.isMobilePlatform;
 
         _inputAsset = new InputAsset();
         _player = _inputAsset.Player;
@@ -198,6 +202,27 @@ public class PlayerInput : MonoBehaviour
             return _player.Pause != null && _player.Pause.triggered;
         }
     }
+    
+    public bool IsOpenChatDown
+    {
+        get
+        {
+            if (IsUsingMobileFallback && PauseButton != null)
+                return OpenChatButton.GetButtonDown();
+            return _player.ChatOpen != null && _player.ChatOpen.triggered;
+        }
+    }
+    
+    public bool IsSwitchChatDown
+    {
+        get
+        {
+            if (IsUsingMobileFallback && PauseButton != null)
+                return SwitchChatButton.GetButtonDown();
+            return _player.SwitсhChat != null && _player.SwitсhChat.triggered;
+        }
+    }
+    
     public bool IsRMB => _player.RMB != null && _player.RMB.triggered;
     public bool IsRMBDown => _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f;
     public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;

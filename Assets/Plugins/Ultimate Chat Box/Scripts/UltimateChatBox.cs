@@ -218,7 +218,7 @@ namespace TankAndHealerStudioAssets
 		[SerializeField] [Tooltip( "The overall size of the chat box." )]
 		private float chatBoxSize = 5.0f;
 		[SerializeField] [Tooltip( "The position of the chat box on the screen. These values are calculated as percentages, so they are divided by 100 and calculated off the canvas size so that it will be consistent across all screen sizes." )]
-		private Vector2 chatBoxPosition = new Vector2( 5.0f, 10.0f );
+		public Vector2 chatBoxPosition = new Vector2( 5.0f, 10.0f );
 		[SerializeField] [Tooltip( "The visible bounding box for the chat in the chat box." )]
 		private RectTransform visibleChatBoundingBox;
 		/// <summary>
@@ -1729,14 +1729,14 @@ namespace TankAndHealerStudioAssets
 			if( !useInputField )
 				return;
 
-#if ENABLE_INPUT_SYSTEM
+/*#if ENABLE_INPUT_SYSTEM
 			// If the input system keyboard enter key was pressed, then toggle the input field.
 			if( InputSystem.GetDevice<Keyboard>().enterKey.wasPressedThisFrame || InputSystem.GetDevice<Keyboard>().numpadEnterKey.wasPressedThisFrame )
 #else
 			// If the enter key is pressed this frame, then toggle the input field.
 			if( Input.GetKeyDown( KeyCode.Return ) || Input.GetKeyDown( KeyCode.KeypadEnter ) )
 #endif
-				ToggleInputField();
+				ToggleInputField();*/
 
 			// If the input is pressed down this frame, and the input field contains the input position, enable the input field.
 			if( !InputFieldEnabled && GetButtonDown && inputFieldRect.Contains( InputPosition ) )

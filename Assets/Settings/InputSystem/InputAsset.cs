@@ -180,6 +180,24 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ChatOpen"",
+                    ""type"": ""Button"",
+                    ""id"": ""37b9e96d-2d01-40e5-b98e-21ba32c93f4f"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""SwitсhChat"",
+                    ""type"": ""Button"",
+                    ""id"": ""8960909f-761b-463a-9c1d-2d54618f13a7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -479,6 +497,28 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
                     ""action"": ""RMB"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""8f0bc2af-14c6-46c6-8587-7e7589acf7a6"",
+                    ""path"": ""<Keyboard>/enter"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""ChatOpen"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""fbc910c1-f6e2-47d1-901a-4cbbc28bf694"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""SwitсhChat"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -545,6 +585,8 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
         m_Player_Pause = m_Player.FindAction("Pause", throwIfNotFound: true);
         m_Player_Voice = m_Player.FindAction("Voice", throwIfNotFound: true);
         m_Player_RMB = m_Player.FindAction("RMB", throwIfNotFound: true);
+        m_Player_ChatOpen = m_Player.FindAction("ChatOpen", throwIfNotFound: true);
+        m_Player_SwitсhChat = m_Player.FindAction("SwitсhChat", throwIfNotFound: true);
     }
 
     ~@InputAsset()
@@ -635,6 +677,8 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Pause;
     private readonly InputAction m_Player_Voice;
     private readonly InputAction m_Player_RMB;
+    private readonly InputAction m_Player_ChatOpen;
+    private readonly InputAction m_Player_SwitсhChat;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -686,6 +730,14 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/RMB".
         /// </summary>
         public InputAction @RMB => m_Wrapper.m_Player_RMB;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/ChatOpen".
+        /// </summary>
+        public InputAction @ChatOpen => m_Wrapper.m_Player_ChatOpen;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/SwitсhChat".
+        /// </summary>
+        public InputAction @SwitсhChat => m_Wrapper.m_Player_SwitсhChat;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -742,6 +794,12 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
             @RMB.started += instance.OnRMB;
             @RMB.performed += instance.OnRMB;
             @RMB.canceled += instance.OnRMB;
+            @ChatOpen.started += instance.OnChatOpen;
+            @ChatOpen.performed += instance.OnChatOpen;
+            @ChatOpen.canceled += instance.OnChatOpen;
+            @SwitсhChat.started += instance.OnSwitсhChat;
+            @SwitсhChat.performed += instance.OnSwitсhChat;
+            @SwitсhChat.canceled += instance.OnSwitсhChat;
         }
 
         /// <summary>
@@ -783,6 +841,12 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
             @RMB.started -= instance.OnRMB;
             @RMB.performed -= instance.OnRMB;
             @RMB.canceled -= instance.OnRMB;
+            @ChatOpen.started -= instance.OnChatOpen;
+            @ChatOpen.performed -= instance.OnChatOpen;
+            @ChatOpen.canceled -= instance.OnChatOpen;
+            @SwitсhChat.started -= instance.OnSwitсhChat;
+            @SwitсhChat.performed -= instance.OnSwitсhChat;
+            @SwitсhChat.canceled -= instance.OnSwitсhChat;
         }
 
         /// <summary>
@@ -945,5 +1009,19 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRMB(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ChatOpen" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnChatOpen(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "SwitсhChat" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnSwitсhChat(InputAction.CallbackContext context);
     }
 }
