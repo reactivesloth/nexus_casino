@@ -11,38 +11,49 @@ using Proyecto26;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.Pool;
 using UnityEngine.UI;
 
 namespace Code.UI
 {
     public class StoriesUI : MonoBehaviour
     {
-        [Header("UI References")] [SerializeField]
-        private Image image;
-
+        [Header("UI References")]
+        [SerializeField] private Image image;
         [SerializeField] private TMP_Text playerName;
         [SerializeField] private Transform progressBarContainer;
         [SerializeField] private GameObject progressBarPrefab;
 
-        [Header("Story Settings")] [SerializeField]
-        private int storiesPerCycle = 5;
-
+        [Header("Story Settings")]
+        [SerializeField] private int storiesPerCycle = 5;
         [SerializeField] private float storyDisplayTime = 3f;
 
-        [Header("Additional settings")] [SerializeField]
-        private SlotMachineInteractable slotMachineInteractable;
+        [Header("Additional settings")]
+        [SerializeField] private SlotMachineInteractable slotMachineInteractable;
 
         private Coroutine _storyCoroutine;
         private Coroutine _waitCoroutine;
         private bool _isCurved;
-        
+
         private readonly List<Image> _progressBars = new();
         private readonly List<GetStoryData> _stories = new();
         private readonly Dictionary<int, Sprite> _idSpriteDictionaryCash = new();
 
+        private ObjectPool<GameObject> _progressBarPool;
+
         private void Awake()
         {
             _isCurved = TryGetComponent(out CurvedUIRaycaster _) || TryGetComponent(out CurvedUIVertexEffect _);
+
+            _progressBarPool = new ObjectPool<GameObject>(
+                createFunc: () => Instantiate(progressBarPrefab, progressBarContainer),
+                actionOnGet: bar => bar.SetActive(true),
+                actionOnRelease: bar => bar.SetActive(false),
+                actionOnDestroy: Destroy,
+                collectionCheck: false,
+                defaultCapacity: 10,
+                maxSize: 20
+            );
         }
 
         private void OnEnable()
@@ -56,8 +67,9 @@ namespace Code.UI
                 StopCoroutine(_storyCoroutine);
             if (_waitCoroutine != null)
                 StopCoroutine(_waitCoroutine);
-            
+
             ClearCash();
+            ClearProgressBars();
         }
 
         private void TryFetchStories(Action onStoriesFetched)
@@ -137,14 +149,14 @@ namespace Code.UI
 
         private IEnumerator PlayStories(List<GetStoryData> batch)
         {
-            foreach (Transform child in progressBarContainer)
-                Destroy(child.gameObject);
-
+            ClearProgressBars();
             _progressBars.Clear();
 
             for (int i = 0; i < batch.Count; i++)
             {
-                var go = Instantiate(progressBarPrefab, progressBarContainer);
+                var go = _progressBarPool.Get();
+                go.transform.SetParent(progressBarContainer, false);
+                go.transform.SetAsLastSibling();
                 var fillImage = go.transform.GetChild(0).GetComponent<Image>();
 
                 if (_isCurved)
@@ -187,7 +199,7 @@ namespace Code.UI
                 yield return AnimateProgressBar(_progressBars[i], storyDisplayTime);
             }
 
-            StartNewCycle(); // новый цикл после показа всех историй
+            StartNewCycle();
         }
 
         private IEnumerator AnimateProgressBar(Image bar, float duration)
@@ -217,7 +229,6 @@ namespace Code.UI
 
         private void ClearCash()
         {
-            print($"[Stories] ClearCash");
             foreach (var sprite in _idSpriteDictionaryCash.Values)
             {
                 if (sprite != null)
@@ -227,9 +238,16 @@ namespace Code.UI
                     DestroyImmediate(sprite);
                 }
             }
-            
+
             _idSpriteDictionaryCash.Clear();
         }
-        
+
+        private void ClearProgressBars()
+        {
+            foreach (Transform child in progressBarContainer)
+            {
+                _progressBarPool.Release(child.gameObject);
+            }
+        }
     }
 }

@@ -215,7 +215,6 @@ namespace Code.Player
             input ??= PlayerInput.Instance;
 
             _cursorVisible = PlayerInput.Instance.IsUsingMobileFallback || !CursorManager.Instance.IsVisible();
-            Debug.Log(_cursorVisible);
             
             GroundedCheck();
             JumpAndGravity();

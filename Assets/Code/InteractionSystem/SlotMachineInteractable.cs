@@ -13,11 +13,13 @@ namespace Code.InteractionSystem
     {
         [Header("UI Settings")]
         [Tooltip("Drag сюда ваш Canvas (может быть Screen-Space или World-Space)")]
-        [SerializeField]private Canvas computerCanvas;
-        [SerializeField]private Canvas computerFSCanvas;
-        [SerializeField]private Canvas contentCanvas;
-        
-        
+        [SerializeField]
+        private Canvas computerCanvas;
+
+        [SerializeField] private Canvas computerFSCanvas;
+        [SerializeField] private Canvas contentCanvas;
+
+
         [SerializeField] private TextMeshPro idNumberText;
 
         [SerializeField] private CanvasWebViewPrefab webViewPrefab;
@@ -33,19 +35,19 @@ namespace Code.InteractionSystem
         public int IDNumber;
         private CanvasWebViewPrefab _webView;
         public IWebView WebView => _webView.WebView;
-        
+
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
             //webView ??= GetComponentInChildren<CanvasWebViewPrefab>(true);
             networkImageStream ??= GetComponentInChildren<NetworkImageStream>(true);
-            
+
             if (idNumberText != null)
                 idNumberText.text = IDNumber.ToString();
         }
 #endif
-        
+
         private void Awake()
         {
             if (idNumberText != null)
@@ -107,20 +109,20 @@ namespace Code.InteractionSystem
 #else
             computerCanvas.gameObject.SetActive(open);
 #endif
-            
+
             contentCanvas.gameObject.SetActive(open);
-            
+
             if (!open)
             {
-                _webView.WebView?.Dispose();
-                DestroyImmediate(_webView);
+                ClearWebView();
+                
+                //DestroyImmediate(_webView);
                 networkImageStream.ClearTexture();
                 
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = false;
             }
             else
             {
-                
 #if UNITY_IOS || UNITY_ANDROID
                 _webView = Instantiate(webViewPrefab, computerFSCanvas.transform);
 #else
@@ -128,9 +130,21 @@ namespace Code.InteractionSystem
 #endif
                 _webView.transform.SetAsFirstSibling();
                 Invoke(nameof(OpenWebView), 2f);
-                
+
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
             }
+        }
+
+        private async void ClearWebView()
+        {
+#if UNITY_STANDALONE || UNITY_EDITOR
+            await StandaloneWebView.TerminateBrowserProcess();
+#endif
+            Web.ClearAllData();
+            
+            _webView.WebView?.Dispose();
+            _webView.Destroy();
+            
         }
 
         private void OpenWebView()
@@ -139,7 +153,7 @@ namespace Code.InteractionSystem
                 _webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
             else
                 _webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
-            
+
             networkImageStream.SetTexture();
         }
     }
