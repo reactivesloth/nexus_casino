@@ -6,7 +6,6 @@ using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using SRF;
 using UnityEngine;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
@@ -193,8 +192,6 @@ namespace Code.Player
                 var head = animator.GetBoneTransform(HumanBodyBones.Head);
                 currentLookAtPos = head.position + cinemachineCameraTarget.transform.forward * 10f;
             }
-            
-            gameObject.SetLayerRecursive(LayerMask.NameToLayer("Player"));
             
             Own = this;
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();

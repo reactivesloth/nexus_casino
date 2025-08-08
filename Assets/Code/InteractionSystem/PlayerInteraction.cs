@@ -8,7 +8,6 @@ using Code.Network.HostMigration.Components;
 using Code.Network.Player;
 using Code.Utility;
 using FishNet.Connection;
-using SRF;
 using Unity.VisualScripting;
 
 namespace Code.Player
@@ -104,7 +103,8 @@ namespace Code.Player
                 {
                     foreach (var go in outlineGameObjects)
                     {
-                        go.RemoveComponentIfExists<OutlineMesh>();
+                        if (go.GetComponent<OutlineMesh>() != null)
+                            Destroy(go.GetComponent<OutlineMesh>());
                     }
                 }
 
