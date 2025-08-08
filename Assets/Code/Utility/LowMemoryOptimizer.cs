@@ -1,4 +1,5 @@
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace Code.Utility
@@ -18,7 +19,11 @@ namespace Code.Utility
         private void ApplicationOnLowMemory()
         {
             GC.Collect();
+            #if UNITY_EDITOR
+            EditorUtility.UnloadUnusedAssetsImmediate();
+            #endif
             Resources.UnloadUnusedAssets();
+            GC.Collect();
         }
     }
 }

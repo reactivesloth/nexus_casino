@@ -138,13 +138,20 @@ namespace Code.InteractionSystem
         private async void ClearWebView()
         {
 #if UNITY_STANDALONE || UNITY_EDITOR
+            var webViewPrefabs = GameObject.FindObjectsOfType<BaseWebViewPrefab>();
+            foreach (var prefab in webViewPrefabs) {
+                prefab.WebView?.Dispose();
+                prefab.Destroy();
+            }
+
             await StandaloneWebView.TerminateBrowserProcess();
-#endif
             Web.ClearAllData();
-            
+#else
             _webView.WebView?.Dispose();
             _webView.Destroy();
             
+            Web.ClearAllData();
+#endif
         }
 
         private void OpenWebView()
