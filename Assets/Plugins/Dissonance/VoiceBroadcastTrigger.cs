@@ -105,17 +105,8 @@ namespace Dissonance
             }
         }
 
-        [SerializeField]private string _inputName;
-        /// <summary>
-        /// Get or set the input axis name (only applicable if this trigger is using Push-To-Talk)
-        /// </summary>
-        public string InputName
-        {
-            get => _inputName;
-            set => _inputName = value;
-        }
-
         [SerializeField]private CommActivationMode _mode = CommActivationMode.VoiceActivation;
+
         /// <summary>
         /// Get or set how the player indicates speaking intent to this trigger
         /// </summary>
@@ -206,6 +197,8 @@ namespace Dissonance
         }
 
         [SerializeField]private ChannelPriority _priority = ChannelPriority.None;
+        public bool VoiceHeld { get; set; }
+
         /// <summary>
         /// Get or set the priority of voice sent with this trigger
         /// </summary>
@@ -441,7 +434,7 @@ namespace Dissonance
                     return _isVadSpeaking;
 
                 case CommActivationMode.PushToTalk:
-                    return Input.GetAxis(InputName) > 0.5f;
+                    return VoiceHeld;
 
                 case CommActivationMode.Open:
                     return true;

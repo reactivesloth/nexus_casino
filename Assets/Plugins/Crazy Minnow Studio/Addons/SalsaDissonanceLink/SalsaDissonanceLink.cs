@@ -99,6 +99,9 @@ namespace CrazyMinnow.SALSA.DissonanceLink
             if (!isPlayerStateReady)
                 return 0f;
 
+            if (!playerState.IsSpeaking)
+                return 0f;
+            
             if ( dissonancePlayer.Type == NetworkPlayerType.Local && !useLocalLipSync )
                 return 0f;     // Bail out: local player and lip-sync not desired
 

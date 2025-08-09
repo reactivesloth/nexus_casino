@@ -2,8 +2,6 @@
 {
     public interface IVoiceBroadcastTrigger
     {
-        string InputName { get; set; }
-
         CommActivationMode Mode { get; set; }
 
         bool IsMuted { get; set; }

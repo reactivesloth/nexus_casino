@@ -15,7 +15,7 @@ namespace Code.Player
 
         private void Update()
         {
-            voiceBroadcastTrigger.IsMuted = !PlayerInput.Instance.VoiceHeld;
+            voiceBroadcastTrigger.VoiceHeld = PlayerInput.Instance.VoiceHeld;
         }
     }
 }

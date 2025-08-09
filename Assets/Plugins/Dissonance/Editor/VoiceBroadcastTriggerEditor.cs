@@ -246,21 +246,7 @@ namespace Dissonance.Editor
 
             if (transmitter.Mode == CommActivationMode.PushToTalk)
             {
-                transmitter.ChangeWithUndo(
-                    "Changed Dissonance Push To Talk Axis",
-                    EditorGUILayout.TextField(new GUIContent("Input Axis Name", "Which input axis indicates the user is speaking"), transmitter.InputName),
-                    transmitter.InputName,
-                    a => transmitter.InputName = a
-                );
-
-                try
-                {
-                    Input.GetAxis(transmitter.InputName);
-                }
-                catch
-                {
-                    EditorGUILayout.HelpBox($"Input axis '{transmitter.InputName}' does not exist. Create it in the Input Manager (Edit > Project Settings > Input Manager)", MessageType.Error);
-                }
+                
             }
         }
 
