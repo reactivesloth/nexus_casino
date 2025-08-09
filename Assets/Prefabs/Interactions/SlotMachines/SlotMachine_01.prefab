@@ -8,6 +8,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 5298312307050830123}
     m_Modifications:
+    - target: {fileID: 210578367227674831, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 791084595948481418, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: WasActiveDuringEdit
       value: 0
@@ -68,9 +72,41 @@ PrefabInstance:
       propertyPath: m_IsTrigger
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 2468262533865154617, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedPos.x
+      value: 560.03
+      objectReference: {fileID: 0}
+    - target: {fileID: 2468262533865154617, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedPos.y
+      value: 334.9974
+      objectReference: {fileID: 0}
+    - target: {fileID: 2468262533865154617, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedPos.z
+      value: 0.000047470137
+      objectReference: {fileID: 0}
     - target: {fileID: 6154966392846168794, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: m_Name
       value: Slot Machine Interactable
+      objectReference: {fileID: 0}
+    - target: {fileID: 6946819248201781716, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: m_PresetInfoIsWorld
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441317121637977880, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedPos.x
+      value: 0.000037791677
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441317121637977880, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedPos.y
+      value: 334.9978
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441317121637977880, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedPos.z
+      value: 0.000028357585
+      objectReference: {fileID: 0}
+    - target: {fileID: 7441317121637977880, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: savedRectSize.x
+      value: 1280
       objectReference: {fileID: 0}
     - target: {fileID: 8031360426403040890, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: m_LocalPosition.z
@@ -130,7 +166,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9141442648563448162, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9141442648569433180, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: angle
+      value: 31
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

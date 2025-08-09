@@ -920,6 +920,8 @@ MonoBehaviour:
   contentCanvas: {fileID: 8031360426403005734}
   idNumberText: {fileID: 4658051661201525424}
   webViewPrefab: {fileID: 114949863196309792, guid: 3e10f3b6a733e441c8352020cff2f1f6, type: 3}
+  deepCleanupStandalone: 1
+  clearAllDataOnClose: 1
   networkImageStream: {fileID: 2377678613824972991}
   IDNumber: 0
 --- !u!114 &2377678613824972991
@@ -1864,7 +1866,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 123
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &8031360426403040890
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1874,7 +1876,7 @@ RectTransform:
   m_GameObject: {fileID: 8031360426417051286}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 0.15, y: 0.15, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3542749645596242901}
@@ -1886,7 +1888,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 123.7}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_SizeDelta: {x: 1280, y: 720}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &8031360426403005734
 Canvas:
@@ -2013,7 +2015,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 123
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &9141442648583643534
 RectTransform:
   m_ObjectHideFlags: 0
@@ -2023,7 +2025,7 @@ RectTransform:
   m_GameObject: {fileID: 9141442648563448162}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 0.15, y: 0.15, z: 0.1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2924487306765949345}
@@ -2032,7 +2034,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_SizeDelta: {x: 1280, y: 720}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &9141442648583482066
 Canvas:
