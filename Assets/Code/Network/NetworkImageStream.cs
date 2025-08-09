@@ -27,7 +27,11 @@ namespace Code.Network
         [SerializeField] private int materialIndex;
 
         [Header("Stream Quality")] [SerializeField, Min(0.1f)]
-        private float fps = 12f;
+        private float sendMaxFps = 12f;
+
+        [SerializeField, Range(0, 1)] float sendMaxFramePercent = 0.1f;
+        [SerializeField, Min(0.1f)] private float receiveMaxFps = 12f;
+        [SerializeField, Range(0f, 1f)] private float receiveMaxFramePercent = 0.1f;
 
         [SerializeField, Range(0.1f, 1f)] private float downscale = 0.5f;
         [SerializeField] private bool useJpg = true;
@@ -50,7 +54,9 @@ namespace Code.Network
 
         private Color _savedColor;
         private Texture _savedTexture;
-        
+
+        private float _currentResiveInterval = 0;
+
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -76,7 +82,7 @@ namespace Code.Network
             base.OnOwnershipClient(prevOwner);
             ApplyOwnerState(prevOwner);
         }
-        
+
         private void ApplyOwnerState(NetworkConnection prev)
         {
             bool iAmOwner = Owner == NetworkManager.ClientManager.Connection;
@@ -100,18 +106,25 @@ namespace Code.Network
 
         private void OnEnable()
         {
+            _currentResiveInterval = 0;
             var mat = computerMeshRenderer.materials[materialIndex];
             _savedTexture = mat.GetTexture("_BaseMap");
             _savedColor = mat.GetColor("_BaseColor");
-            
+
             if (IsOwner) StartSendLoop();
             else if (Owner == null) ShowIdleTexture();
+        }
+
+        private void Update()
+        {
+            _currentResiveInterval += Time.deltaTime;
         }
 
         private void OnDisable()
         {
             StopSendLoop();
             ReleaseResources();
+            _currentResiveInterval = 0;
         }
 
         private void StartSendLoop()
@@ -162,18 +175,17 @@ namespace Code.Network
             mat.SetTexture("_BaseMap", _savedTexture);
             mat.SetColor("_BaseColor", _savedColor);
         }
-
-
+        
         private IEnumerator SendLoop()
         {
-            var wait = new WaitForSeconds(1f / fps);
             while (true)
             {
-                yield return wait;
+                yield return new WaitForSeconds(GetWait(sendMaxFps, sendMaxFramePercent));
                 CaptureAndSend();
             }
         }
-        
+
+
         private void CaptureAndSend()
         {
             if (rawImage == null || rawImage.texture == null)
@@ -222,12 +234,18 @@ namespace Code.Network
         [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 10_000)]
         private void RelayFrame(byte[] data, int width, int height)
         {
+            var wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
+
+            if (IsOwner || _currentResiveInterval < wait)
+                return;
+
             if (Owner == null || OwnerId == -1)
             {
                 ShowIdleTexture();
                 return;
             }
 
+            _currentResiveInterval = 0;
             byte[] raw = data;
             if (lz4Compress)
                 raw = LZ4Pickler.Unpickle(raw);
@@ -267,10 +285,23 @@ namespace Code.Network
         public void ClearTexture()
         {
             if (rawImage == null) return;
-            
+
             Destroy(rawImage.texture);
             rawImage.texture = null;
             rawImage = null;
+        }
+
+        public float GetWait(float maxFrameRate, float percent)
+        {
+            // Определяем текущий FPS игры
+            var currentGameFps = 1f / Time.deltaTime;
+
+            // Рассчитываем максимально допустимое количество кадров для стрима
+            var maxAllowedFps = Mathf.Min(currentGameFps, currentGameFps * percent);
+
+            // Обновляем задержку между кадрами стрима в зависимости от FPS игры
+            var targetStreamFps = Mathf.Min(maxFrameRate, maxAllowedFps);
+            return 1f / targetStreamFps;
         }
     }
 }
