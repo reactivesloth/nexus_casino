@@ -127,16 +127,16 @@ namespace Code.UI
             StartNewCycle();
         }
 
-        private void StartNewCycle()
+        public void StartNewCycle()
         {
             if (slotMachineInteractable && !slotMachineInteractable.IsUsing)
                 return;
 
-            if (_storyCoroutine != null)
-                StopCoroutine(_storyCoroutine);
-
             TryFetchStories(() =>
             {
+                if (_storyCoroutine != null)
+                    StopCoroutine(_storyCoroutine);
+                
                 if (_stories == null || _stories.Count == 0)
                 {
                     StartNewWaitStories();
@@ -169,7 +169,7 @@ namespace Code.UI
                 _progressBars.Add(fillImage);
             }
 
-            for (int i = 0; i < batch.Count; i++)
+            for (var i = 0; i < batch.Count; i++)
             {
                 var story = batch[i];
                 if (playerName.text != story.user.username)

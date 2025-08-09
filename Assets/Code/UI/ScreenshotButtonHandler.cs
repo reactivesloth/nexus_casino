@@ -4,6 +4,7 @@ using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network.Lobby;
+using JetBrains.Annotations;
 using Proyecto26;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +14,8 @@ namespace Code.UI
     public class ScreenshotButtonHandler : MonoBehaviour
     {
         [SerializeField] private Button screenshotButton;
-        [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        [SerializeField, CanBeNull] private SlotMachineInteractable slotMachineInteractable;
+        [SerializeField, CanBeNull] private StoriesUI updateStoryUiOnLoad;
         [SerializeField] private float timeout = 10f;
 
         private Coroutine _timeoutCoroutine;
@@ -61,7 +63,7 @@ namespace Code.UI
         private void APIHandle(byte[] screenshotBytes)
         {
 
-            var filename = $"{Guid.NewGuid()}_{ClientDataStorage.UserData.username}_{DateTime.Now}.png".Replace(' ','_');
+            var filename = $"{Guid.NewGuid()}_{ClientDataStorage.UserData.id}_{DateTime.Now}.png".Replace(' ','_');
             var form = new WWWForm();
             form.AddBinaryData("file", screenshotBytes, filename);
 
@@ -95,6 +97,8 @@ namespace Code.UI
             })?.Then(loadStoryResponse =>
             {
                 Debug.Log(loadStoryResponse.Text);
+                if(updateStoryUiOnLoad != null)
+                    updateStoryUiOnLoad.StartNewCycle();
             });
         }
     }
