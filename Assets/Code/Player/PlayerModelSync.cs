@@ -1,3 +1,4 @@
+using System.Collections;
 using CC;
 using FishNet.Connection;
 using FishNet.Object;
@@ -18,22 +19,32 @@ namespace Code.Player
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            Invoke(nameof(TransmitLocalCharacter), 1f);
+            StartCoroutine(WaitAndSendLocalCharacter());
         }
 
-        [ServerRpc]
+        [ServerRpc(RunLocally = true)]
         public void SendCharacterJsonServerRpc(string json, NetworkConnection sender = null)
         {
             Debug.Log($"[Server] Получен JSON ({json.Length} симв.) от {sender.ClientId}");
             SendCharacterJsonObserversRpc(json);
         }
 
-        [ObserversRpc(BufferLast = true)]
+        [ObserversRpc(BufferLast = true, RunLocally = true)]
         private void SendCharacterJsonObserversRpc(string json)
         {
             Debug.Log($"[Client] Получил JSON ({json.Length} симв.)");
             _characterCustomization.Initialize();
             _characterCustomization.LoadFromJSON(json);
+        }
+        
+        private IEnumerator WaitAndSendLocalCharacter()
+        {
+            while (!IsClientInitialized || !IsClientStarted || !IsSpawned)
+                yield return null;
+
+            yield return null;
+
+            TransmitLocalCharacter();
         }
 
         public void TransmitLocalCharacter()
