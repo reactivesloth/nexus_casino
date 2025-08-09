@@ -172,7 +172,8 @@ namespace Code.UI
             for (int i = 0; i < batch.Count; i++)
             {
                 var story = batch[i];
-                playerName.text = story.user.username;
+                if (playerName.text != story.user.username)
+                    playerName.text = story.user.username;
 
                 var imageUrl = Uri.EscapeUriString(story.image_url);
 

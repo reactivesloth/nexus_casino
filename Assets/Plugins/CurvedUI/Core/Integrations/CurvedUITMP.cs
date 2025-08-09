@@ -6,16 +6,18 @@ using UnityEngine;
 
 namespace CurvedUI.Core.Integrations
 {
-    [ExecuteInEditMode][DefaultExecutionOrder(110)]
+    [ExecuteInEditMode]
+    [DefaultExecutionOrder(110)]
     public class CurvedUITMP : MonoBehaviour
     {
-
 #if CURVEDUI_TMP || TMP_PRESENT
-        //internal
+        // internals
         private CurvedUIVertexEffect crvdVE;
         private TextMeshProUGUI tmpText;
         private CurvedUISettings mySettings;
+        private CanvasRenderer canvasRenderer;
 
+        // reusable buffers (без выделений каждый кадр)
         private List<UIVertex> m_UIVerts = new();
         private UIVertex m_tempVertex;
         private CurvedUITMPSubmesh m_tempSubMsh;
@@ -25,36 +27,22 @@ namespace CurvedUI.Core.Integrations
         private Vector3 savedPos;
         private Vector3 savedLocalScale;
         private Vector3 savedGlobalScale;
-        private List<CurvedUITMPSubmesh> subMeshes = new();
+        private readonly List<CurvedUITMPSubmesh> subMeshes = new();
 
-        //flags
-        public bool Dirty; // set this to true to force mesh update.
+        // flags
+        public bool Dirty; // внешняя принудительная перестройка
         private bool curvingRequired;
         private bool tesselationRequired;
         private bool quitting;
 
-        //mesh data
-        private Vector3[] vertices;
-        //These are commented here and throught the script,
-        //cause CurvedUI operates only on vertex positions,
-        //but left here for future-proofing against some TMP features.
-        //private Color32[] colors32;
-        //private Vector2[] uv;
-        //private Vector2[] uv2;
-        //private Vector2[] uv3;
-        //private Vector2[] uv4;
-        //private Vector3[] normals;
-        //private Vector4[] tangents;
-        //private int[] indices;
-
-        #region LIFECYCLE
+        // текущий массив вершин главного меша TMP (ссылка на внутренний буфер TMP)
+        private Vector3[] verticesRef;
 
         private void Start()
         {
             if (mySettings == null)
                 mySettings = GetComponentInParent<CurvedUISettings>();
         }
-
 
         private void OnEnable()
         {
@@ -65,7 +53,9 @@ namespace CurvedUI.Core.Integrations
                 tmpText.RegisterDirtyMaterialCallback(TesselationRequiredCallback);
                 TMPro_EventManager.TEXT_CHANGED_EVENT.Add(TMPTextChangedCallback);
 
+                // триггерим первичную перестройку
                 tmpText.SetText(tmpText.text);
+                Dirty = true;
             }
 
 #if UNITY_EDITOR
@@ -73,7 +63,6 @@ namespace CurvedUI.Core.Integrations
                 UnityEditor.EditorApplication.update += LateUpdate;
 #endif
         }
-
 
         private void OnDisable()
         {
@@ -86,29 +75,28 @@ namespace CurvedUI.Core.Integrations
                 tmpText.UnregisterDirtyMaterialCallback(TesselationRequiredCallback);
                 TMPro_EventManager.TEXT_CHANGED_EVENT.Remove(TMPTextChangedCallback);
             }
-        }
 
+            // Важно: отпускаем CanvasRenderer, чтобы он не держал ссылку на прежний меш.
+            if (canvasRenderer != null)
+                canvasRenderer.Clear();
+
+            verticesRef = null;
+        }
 
         private void OnDestroy()
         {
             quitting = true;
         }
 
-
         private void LateUpdate()
         {
-            //if we're missing stuff, find it
             if (!tmpText) FindTMP();
+            if (mySettings == null || tmpText == null || quitting) return;
 
-            if (mySettings == null) return;
-
-           if (tmpText == null || quitting) return;
-            
-           
-            //Edit Mesh on TextMeshPro component
             if (ShouldTesselate())
                 tesselationRequired = true;
 
+            // Перестраиваем только при необходимости
             if (Dirty || tesselationRequired || (curvingRequired && !Application.isPlaying))
             {
                 if (mySettings == null)
@@ -116,156 +104,107 @@ namespace CurvedUI.Core.Integrations
                     enabled = false;
                     return;
                 }
-                    
-                //Get the flat vertices from TMP object.
-                //store a copy of flat UIVertices for later so we dont have to retrieve the Mesh every framee.
-                tmpText.renderMode = TextRenderFlags.Render;
-                tmpText.SetAllDirty(); 
-                tmpText.ForceMeshUpdate(true);
-                CreateUIVertexList(tmpText.mesh);
 
-                //Tesselate and Curve the flat UIVertices stored in Vertex Helper
+                // Обновляем textInfo, но без лишних аллокаций
+                tmpText.renderMode = TextRenderFlags.Render;
+                tmpText.ForceMeshUpdate(false, false); // не игнорируем activeState и не создаём новые массивы
+
+                // Получаем ПРЯМЫЕ ссылки на массивы вершин TMP (никаких mesh.vertices!)
+                // Главный сабмеш для основного текста — index 0
+                var ti = tmpText.textInfo;
+                if (ti.meshInfo == null || ti.meshInfo.Length == 0)
+                {
+                    canvasRenderer?.Clear();
+                    tmpText.renderMode = TextRenderFlags.DontRender;
+                    ResetSavedTransformData();
+                    ResetFlags();
+                    return;
+                }
+
+                var mi0 = ti.meshInfo[0];
+                verticesRef = mi0.vertices; // это ссылка на внутренний массив TMP
+
+                // Сформировать/обновить список UIVertex без аллокаций
+                CreateUIVertexListFromVerticesArray(verticesRef);
+
+                // Применяем кривизну (в твоём эффекте ничего менять не нужно)
                 crvdVE.ModifyTMPMesh(ref m_UIVerts);
 
-                //fill curved vertices back to TMP mesh
-                FillMeshWithUIVertexList(tmpText.mesh, m_UIVerts);
+                // Записываем изменённые позиции обратно в тот же массив
+                for (int i = 0; i < m_UIVerts.Count; i++)
+                    verticesRef[i] = m_UIVerts[i].position;
 
-                //cleanup
-                tmpText.renderMode = TextRenderFlags.DontRender;
+                // Обновляем отрисовку без SetMesh и без RecalculateBounds
+                tmpText.UpdateVertexData(TMP_VertexDataUpdateFlags.Vertices);
 
-                //save current data
+                // Запоминаем параметры кривизны/трансформа для ShouldTesselate()
                 savedLocalScale = mySettings.transform.localScale;
                 savedGlobalScale = mySettings.transform.lossyScale;
-                savedSize = (transform as RectTransform).rect.size;
+                savedSize = ((RectTransform)transform).rect.size;
                 savedUp = mySettings.transform.worldToLocalMatrix.MultiplyVector(transform.up);
                 savedPos = mySettings.transform.worldToLocalMatrix.MultiplyPoint3x4(transform.position);
-                    
-                //reset flags
-                tesselationRequired = false;
-                curvingRequired = false;
-                Dirty = false;
 
-                //prompt submeshes to update
+                // Сбрасываем флаги
+                ResetFlags();
+
+                // Обновляем сабмеши TMP (спрайты/маттеги) без создания новых мешей
                 FindSubmeshes();
-                foreach (var mesh in subMeshes)
-                    mesh.UpdateSubmesh(true, false);
+                for (int i = 0; i < subMeshes.Count; i++)
+                    subMeshes[i].UpdateSubmesh(true, false);
+
+                // снимаем рендер у модуля TMP, отрисовка уже в CanvasRenderer
+                tmpText.renderMode = TextRenderFlags.DontRender;
             }
 
-            //Upload mesh to TMP Object's renderer
-            if(tmpText.text.Length > 0)
-                tmpText.canvasRenderer.SetMesh(tmpText.mesh);
-            else 
-                tmpText.canvasRenderer.Clear();
+            // Если текста нет — чистим CanvasRenderer (важно для удержания ссылок)
+            if (tmpText.text.Length == 0) canvasRenderer?.Clear();
         }
-        #endregion
 
-
-
-
-        #region UIVERTEX MANAGEMENT
-
-        private void CreateUIVertexList(Mesh mesh)
+        // ---------- UIVERTEX (без копий mesh.vertices) ----------
+        private void CreateUIVertexListFromVerticesArray(Vector3[] verts)
         {
-            //trim if too long list
-            if (mesh.vertexCount < m_UIVerts.Count)
-                m_UIVerts.RemoveRange(mesh.vertexCount, m_UIVerts.Count - mesh.vertexCount);
+            // подрезаем список, если вершин стало меньше
+            if (verts.Length < m_UIVerts.Count)
+                m_UIVerts.RemoveRange(verts.Length, m_UIVerts.Count - verts.Length);
 
-            //extract mesh data
-            vertices = mesh.vertices;
-            //colors32 = mesh.colors32;
-            //uv = mesh.uv;
-            //uv2 = mesh.uv2;
-            //uv3 = mesh.uv3;
-            //uv4 = mesh.uv4;
-            //normals = mesh.normals;
-            //tangents = mesh.tangents;
-
-            for (int i = 0; i < mesh.vertexCount; i++)
+            for (int i = 0; i < verts.Length; i++)
             {
-                //add if list too short
                 if (m_UIVerts.Count <= i)
                 {
-                    m_tempVertex = new UIVertex();
-                    GetUIVertexFromMesh(ref m_tempVertex, i);
+                    // добавляем новый UIVertex без дополнительной инициализации
+                    m_tempVertex = new UIVertex { position = verts[i] };
                     m_UIVerts.Add(m_tempVertex);
                 }
-                else //modify
+                else
                 {
                     m_tempVertex = m_UIVerts[i];
-                    GetUIVertexFromMesh(ref m_tempVertex, i);
+                    m_tempVertex.position = verts[i];
                     m_UIVerts[i] = m_tempVertex;
                 }
             }
-            //indices = mesh.GetIndices(0);
         }
 
-        private void GetUIVertexFromMesh(ref UIVertex vert, int i)
-        {
-            vert.position = vertices[i];
-            //vert.color = colors32[i];
-            //vert.uv0 = uv[i];
-            //vert.uv1 = uv2.Length > i ? uv2[i] : Vector2.zero;
-            //vert.uv2 = uv3.Length > i ? uv3[i] : Vector2.zero;
-            //vert.uv3 = uv4.Length > i ? uv4[i] : Vector2.zero;
-            //vert.normal = normals[i];
-            //vert.tangent = tangents[i];
-        }
-
-        private void FillMeshWithUIVertexList(Mesh mesh, List<UIVertex> list)
-        {
-            if (list.Count >= 65536)
-            {
-                Debug.LogError("CURVEDUI: Unity UI Mesh can not have more than 65536 vertices. Remove some UI elements or lower quality.");
-                return;
-            }
-
-            for (var i = 0; i < list.Count; i++)
-            {
-                vertices[i] = list[i].position;
-                //colors32[i] = list[i].color;
-                //uv[i] = list[i].uv0;
-                //if (uv2.Length < i) uv2[i] = list[i].uv1;
-                ////if (uv3.Length < i) uv3[i] = list[i].uv2;
-                ////if (uv4.Length < i) uv4[i] = list[i].uv3;
-                //normals[i] = list[i].normal;
-                //tangents[i] = list[i].tangent;
-            }
-            
-            //Fill mesh with data
-            mesh.vertices = vertices;
-            //mesh.colors32 = colors32;
-            //mesh.uv = uv;
-            //mesh.uv2 = uv2;
-            ////mesh.uv3 = uv3;
-            ////mesh.uv4 = uv4;
-            //mesh.normals = normals;
-            //mesh.tangents = tangents;
-            //mesh.SetTriangles(indices, 0);
-            mesh.RecalculateBounds();
-        }
-        #endregion
-
-
-
-        #region PRIVATE
+        // ---------- PRIVATE ----------
         private void FindTMP()
         {
             if (GetComponent<TextMeshProUGUI>() == null) return;
-            
-            tmpText = gameObject.GetComponent<TextMeshProUGUI>();
-            crvdVE = gameObject.GetComponent<CurvedUIVertexEffect>();
+
+            tmpText = GetComponent<TextMeshProUGUI>();
+            crvdVE = GetComponent<CurvedUIVertexEffect>();
             mySettings = GetComponentInParent<CurvedUISettings>();
+            canvasRenderer = tmpText != null ? tmpText.canvasRenderer : null;
             transform.hasChanged = false;
 
             FindSubmeshes();
         }
 
-
         private void FindSubmeshes()
         {
-            foreach (var sub in GetComponentsInChildren<TMP_SubMeshUI>())
+            subMeshes.Clear();
+            var subs = GetComponentsInChildren<TMP_SubMeshUI>(true);
+            for (int i = 0; i < subs.Length; i++)
             {
-                m_tempSubMsh = sub.gameObject.AddComponentIfMissing<CurvedUITMPSubmesh>();
+                m_tempSubMsh = subs[i].gameObject.AddComponentIfMissing<CurvedUITMPSubmesh>();
                 if (!subMeshes.Contains(m_tempSubMsh))
                     subMeshes.Add(m_tempSubMsh);
             }
@@ -273,37 +212,44 @@ namespace CurvedUI.Core.Integrations
 
         private bool ShouldTesselate()
         {
-            if (savedSize != ((RectTransform)transform).rect.size)
-                return true;
-            if (savedLocalScale != mySettings.transform.localScale)
-                return true;
-            if (savedGlobalScale != mySettings.transform.lossyScale)
-                return true;
-            if (!savedUp.AlmostEqual(mySettings.transform.worldToLocalMatrix.MultiplyVector(transform.up)))
-                return true;
+            if (savedSize != ((RectTransform)transform).rect.size) return true;
+            if (savedLocalScale != mySettings.transform.localScale) return true;
+            if (savedGlobalScale != mySettings.transform.lossyScale) return true;
+            if (!savedUp.AlmostEqual(mySettings.transform.worldToLocalMatrix.MultiplyVector(transform.up))) return true;
 
             var testedPos = mySettings.transform.worldToLocalMatrix.MultiplyPoint3x4(transform.position);
-            
             if (!savedPos.AlmostEqual(testedPos))
             {
-                if (mySettings.Shape != CurvedUISettings.CurvedUIShape.CYLINDER || Mathf.Pow(testedPos.x - savedPos.x, 2) > 0.00001 || Mathf.Pow(testedPos.z - savedPos.z, 2) > 0.00001)
+                if (mySettings.Shape != CurvedUISettings.CurvedUIShape.CYLINDER ||
+                    Mathf.Pow(testedPos.x - savedPos.x, 2) > 0.00001f ||
+                    Mathf.Pow(testedPos.z - savedPos.z, 2) > 0.00001f)
                 {
                     return true;
                 }
             }
-
             return false;
         }
-        #endregion
 
+        private void ResetSavedTransformData()
+        {
+            savedLocalScale = mySettings.transform.localScale;
+            savedGlobalScale = mySettings.transform.lossyScale;
+            savedSize = ((RectTransform)transform).rect.size;
+            savedUp = mySettings.transform.worldToLocalMatrix.MultiplyVector(transform.up);
+            savedPos = mySettings.transform.worldToLocalMatrix.MultiplyPoint3x4(transform.position);
+        }
 
+        private void ResetFlags()
+        {
+            tesselationRequired = false;
+            curvingRequired = false;
+            Dirty = false;
+        }
 
-
-        #region EVENTS AND CALLBACKS
+        // ---------- EVENTS ----------
         private void TMPTextChangedCallback(object obj)
         {
             if (obj != (object)tmpText) return;
-
             tesselationRequired = true;
         }
 
@@ -312,11 +258,6 @@ namespace CurvedUI.Core.Integrations
             tesselationRequired = true;
             curvingRequired = true;
         }
-        #endregion
-
 #endif
     }
 }
-
-
-
