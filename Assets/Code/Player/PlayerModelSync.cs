@@ -24,8 +24,8 @@ namespace Code.Player
 
         [ServerRpc(RunLocally = true)]
         public void SendCharacterJsonServerRpc(string json, NetworkConnection sender = null)
-        {
-            Debug.Log($"[Server] Получен JSON ({json.Length} симв.) от {sender.ClientId}");
+        { 
+            Debug.Log($"[Server] Получен JSON ({json.Length} симв.)");
             SendCharacterJsonObserversRpc(json);
         }
 
