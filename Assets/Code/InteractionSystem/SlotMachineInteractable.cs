@@ -160,7 +160,7 @@ namespace Code.InteractionSystem
                 _webView.InitialUrl = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
             else
                 _webView.WebView?.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
-
+            
             networkImageStream.SetTexture();
         }
     }
