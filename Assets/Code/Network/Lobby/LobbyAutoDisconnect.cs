@@ -1,5 +1,4 @@
-﻿using Code.Utility;
-using UnityEngine;
+﻿using UnityEngine;
 using FishNet;
 using FishNet.Managing.Client;
 using FishNet.Managing.Server;
@@ -20,15 +19,14 @@ namespace Code.Network.Lobby
             
         }
 
-        private void OnApplicationQuit()
+        private void OnDestroy()
         {
             Disconnect();
         }
 
-        private void OnApplicationPause(bool pause)
+        private void OnApplicationQuit()
         {
-            if (pause)
-                Disconnect();
+            Disconnect();
         }
 
         public static void Disconnect()
