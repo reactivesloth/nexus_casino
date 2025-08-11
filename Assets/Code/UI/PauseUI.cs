@@ -1,7 +1,4 @@
-using System;
-using TMPro;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 namespace Code.UI
@@ -15,80 +12,67 @@ namespace Code.UI
         [SerializeField] private GameObject pausePanel;
         [SerializeField] private GameObject settingsPanel;
 
-        private bool isPaused;
-        
+        private bool _isPaused;
+
         private void OnEnable()
         {
-            continueButton.onClick.AddListener(OnContinueClick);
-            settingsButton.onClick.AddListener(OnSettingsClick);
-            quitButton.onClick.AddListener(OnQuitClick);
+            if (continueButton != null) continueButton.onClick.AddListener(OnContinueClick);
+            if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClick);
+            if (quitButton != null) quitButton.onClick.AddListener(OnQuitClick);
         }
 
         private void OnDisable()
         {
-            continueButton.onClick.RemoveListener(OnContinueClick);
-            settingsButton.onClick.RemoveListener(OnSettingsClick);
-            quitButton.onClick.RemoveListener(OnQuitClick);
-        }
-
-        private void OnPauseClick()
-        {
-            if (!pausePanel.activeSelf)
-                pausePanel.SetActive(true);
-            if (settingsPanel.activeSelf)
-                settingsPanel.SetActive(false);
-
-            isPaused = true;
-        }
-        
-        private void OnContinueClick()
-        {
-            if (pausePanel.activeSelf)
-                pausePanel.SetActive(false);
-            if (settingsPanel.activeSelf)
-                settingsPanel.SetActive(false);
-
-            isPaused = false;
-            CursorManager.Instance.HideCursor();
-        }
-        
-        private void OnSettingsClick()
-        {
-            if (pausePanel.activeSelf)
-                pausePanel.SetActive(false);
-            if (!settingsPanel.activeSelf)
-                settingsPanel.SetActive(true);
-        }
-
-        public void CloseSettings()
-        {
-            if (!pausePanel.activeSelf)
-                pausePanel.SetActive(true);
-            if (settingsPanel.activeSelf)
-                settingsPanel.SetActive(false);
+            if (continueButton != null) continueButton.onClick.RemoveListener(OnContinueClick);
+            if (settingsButton != null) settingsButton.onClick.RemoveListener(OnSettingsClick);
+            if (quitButton != null) quitButton.onClick.RemoveListener(OnQuitClick);
         }
 
         private void Update()
         {
-            if (isPaused)
-                if (CursorManager.Instance != null)
-                    CursorManager.Instance.ShowCursor();
-            
-            if (settingsPanel.activeSelf)
-                return;
-            
-            if (PlayerInput.Instance.IsPausedDown)
+            // поддерживаем видимость курсора только когда на паузе
+            if (_isPaused && CursorManager.Instance != null)
+                CursorManager.Instance.ShowCursor();
+
+            if (settingsPanel != null && settingsPanel.activeSelf) return;
+
+            var input = PlayerInput.Instance;
+            if (input != null && input.IsPausedDown)
+                _isPaused = !_isPaused;
+
+            if (pausePanel != null && pausePanel.activeSelf != _isPaused)
             {
-                isPaused = !isPaused;
+                if (_isPaused) OnPauseClick();
+                else OnContinueClick();
             }
-            
-            if (pausePanel.activeSelf != isPaused)
-            {
-                if (isPaused)
-                    OnPauseClick();
-                else
-                    OnContinueClick();
-            }
+        }
+
+        private void OnPauseClick()
+        {
+            if (pausePanel != null && !pausePanel.activeSelf) pausePanel.SetActive(true);
+            if (settingsPanel != null && settingsPanel.activeSelf) settingsPanel.SetActive(false);
+            _isPaused = true;
+        }
+
+        private void OnContinueClick()
+        {
+            if (pausePanel != null && pausePanel.activeSelf) pausePanel.SetActive(false);
+            if (settingsPanel != null && settingsPanel.activeSelf) settingsPanel.SetActive(false);
+
+            _isPaused = false;
+            if (CursorManager.Instance != null) CursorManager.Instance.HideCursor();
+        }
+
+        private void OnSettingsClick()
+        {
+            if (pausePanel != null && pausePanel.activeSelf) pausePanel.SetActive(false);
+            if (settingsPanel != null && !settingsPanel.activeSelf) settingsPanel.SetActive(true);
+        }
+
+        public void CloseSettings()
+        {
+            if (pausePanel != null && !pausePanel.activeSelf) pausePanel.SetActive(true);
+            if (settingsPanel != null && settingsPanel.activeSelf) settingsPanel.SetActive(false);
         }
 
         private void OnQuitClick()

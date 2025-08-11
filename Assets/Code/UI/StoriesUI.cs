@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
@@ -13,6 +12,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.Pool;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace Code.UI
 {
@@ -35,9 +35,9 @@ namespace Code.UI
         private Coroutine _waitCoroutine;
         private bool _isCurved;
 
-        private readonly List<Image> _progressBars = new();
-        private readonly List<GetStoryData> _stories = new();
-        private readonly Dictionary<int, Sprite> _idSpriteDictionaryCash = new();
+        private readonly List<Image> _progressBars = new List<Image>(16);
+        private readonly List<GetStoryData> _stories = new List<GetStoryData>(16);
+        private readonly Dictionary<int, Sprite> _idSpriteCache = new Dictionary<int, Sprite>(32);
 
         private ObjectPool<GameObject> _progressBarPool;
 
@@ -47,8 +47,8 @@ namespace Code.UI
 
             _progressBarPool = new ObjectPool<GameObject>(
                 createFunc: () => Instantiate(progressBarPrefab, progressBarContainer),
-                actionOnGet: bar => bar.SetActive(true),
-                actionOnRelease: bar => bar.SetActive(false),
+                actionOnGet: go => go.SetActive(true),
+                actionOnRelease: go => go.SetActive(false),
                 actionOnDestroy: Destroy,
                 collectionCheck: false,
                 defaultCapacity: 10,
@@ -63,81 +63,23 @@ namespace Code.UI
 
         private void OnDisable()
         {
-            if (_storyCoroutine != null)
-                StopCoroutine(_storyCoroutine);
-            if (_waitCoroutine != null)
-                StopCoroutine(_waitCoroutine);
+            if (_storyCoroutine != null) { StopCoroutine(_storyCoroutine); _storyCoroutine = null; }
+            if (_waitCoroutine != null) { StopCoroutine(_waitCoroutine); _waitCoroutine = null; }
 
-            ClearCash();
+            ClearCache();
             ClearProgressBars();
-        }
-
-        private void TryFetchStories(Action onStoriesFetched)
-        {
-            var queryParams = new Dictionary<string, string>
-            {
-                { "limit", storiesPerCycle.ToString() }
-            };
-
-            if (slotMachineInteractable)
-                queryParams.Add("slot_id", slotMachineInteractable.IDNumber.ToString());
-
-            var getStoriesRequest = new RequestHelper
-            {
-                Uri = ApiRoutes.GetStoriesUrl(),
-                Params = queryParams,
-                Headers = ClientDataStorage.GetJwtHeader()
-            };
-
-            RestClient.Get(getStoriesRequest).Then(response =>
-            {
-                if (response.StatusCode != 200)
-                {
-                    StartNewWaitStories();
-                    return;
-                }
-
-                var responseResult = JsonUtility.FromJson<SuccessResponse<StoryCollection>>(response.Text);
-
-                if (responseResult.success != true)
-                {
-                    StartNewWaitStories();
-                    return;
-                }
-
-                _stories.Clear();
-                _stories.AddRange(responseResult.data.screenshots);
-                ClearOldSprites();
-
-                onStoriesFetched?.Invoke();
-            }).Catch(error => { StartNewWaitStories(); });
-        }
-
-        private void StartNewWaitStories()
-        {
-            if (_waitCoroutine != null)
-                StopCoroutine(_waitCoroutine);
-
-            _waitCoroutine = StartCoroutine(WaitForStoriesCoroutine());
-        }
-
-        private IEnumerator WaitForStoriesCoroutine()
-        {
-            yield return new WaitForSeconds(storyDisplayTime);
-            StartNewCycle();
         }
 
         public void StartNewCycle()
         {
-            if (slotMachineInteractable && !slotMachineInteractable.IsUsing)
+            if (slotMachineInteractable != null && !slotMachineInteractable.IsUsing)
                 return;
 
             TryFetchStories(() =>
             {
-                if (_storyCoroutine != null)
-                    StopCoroutine(_storyCoroutine);
-                
-                if (_stories == null || _stories.Count == 0)
+                if (_storyCoroutine != null) { StopCoroutine(_storyCoroutine); _storyCoroutine = null; }
+
+                if (_stories.Count == 0)
                 {
                     StartNewWaitStories();
                     return;
@@ -147,64 +89,136 @@ namespace Code.UI
             });
         }
 
+        private void TryFetchStories(Action onStoriesFetched)
+        {
+            var queryParams = new Dictionary<string, string> { { "limit", storiesPerCycle.ToString() } };
+            if (slotMachineInteractable != null)
+                queryParams["slot_id"] = slotMachineInteractable.IDNumber.ToString();
+
+            var req = new RequestHelper
+            {
+                Uri = ApiRoutes.GetStoriesUrl(),
+                Params = queryParams,
+                Headers = ClientDataStorage.GetJwtHeader()
+            };
+
+            RestClient.Get(req).Then(resp =>
+            {
+                if (resp.StatusCode != 200) { StartNewWaitStories(); return; }
+
+                var result = JsonUtility.FromJson<SuccessResponse<StoryCollection>>(resp.Text);
+                if (result == null || !result.success)
+                {
+                    StartNewWaitStories();
+                    return;
+                }
+
+                _stories.Clear();
+                if (result.data != null && result.data.screenshots != null)
+                    _stories.AddRange(result.data.screenshots);
+
+                ClearOldSprites(); // держим кэш свежим
+                onStoriesFetched?.Invoke();
+            }).Catch(_ => { StartNewWaitStories(); });
+        }
+
+        private void StartNewWaitStories()
+        {
+            if (_waitCoroutine != null) { StopCoroutine(_waitCoroutine); _waitCoroutine = null; }
+            _waitCoroutine = StartCoroutine(WaitForStoriesCoroutine());
+        }
+
+        private IEnumerator WaitForStoriesCoroutine()
+        {
+            yield return new WaitForSeconds(storyDisplayTime);
+            StartNewCycle();
+        }
+
         private IEnumerator PlayStories(List<GetStoryData> batch)
         {
             ClearProgressBars();
             _progressBars.Clear();
 
+            // создать полоски прогресса
             for (int i = 0; i < batch.Count; i++)
             {
                 var go = _progressBarPool.Get();
                 go.transform.SetParent(progressBarContainer, false);
                 go.transform.SetAsLastSibling();
-                var fillImage = go.transform.GetChild(0).GetComponent<Image>();
+
+                var fill = go.transform.GetChild(0).GetComponent<Image>();
+                if (fill == null) continue;
 
                 if (_isCurved)
                 {
                     go.AddComponentIfMissing<CurvedUIVertexEffect>();
-                    fillImage.AddComponentIfMissing<CurvedUIVertexEffect>();
+                    fill.AddComponentIfMissing<CurvedUIVertexEffect>();
                 }
 
-                fillImage.fillAmount = 0f;
-                _progressBars.Add(fillImage);
+                fill.fillAmount = 0f;
+                _progressBars.Add(fill);
             }
 
-            for (var i = 0; i < batch.Count; i++)
+            // показ историй
+            for (int i = 0; i < batch.Count; i++)
             {
                 var story = batch[i];
-                if (playerName.text != story.user.username)
-                    playerName.text = story.user.username;
-
-                var imageUrl = Uri.EscapeUriString(story.image_url);
-
-                if (_idSpriteDictionaryCash.TryGetValue(story.id, out var cashedSprite))
+                if (playerName != null)
                 {
-                    image.sprite = cashedSprite;
+                    var name = story != null && story.user != null ? story.user.username : "";
+                    if (playerName.text != name) playerName.text = name;
                 }
+
+                if (story != null)
+                    yield return LoadAndShowStoryImage(story);
+
+                if (i < _progressBars.Count)
+                    yield return AnimateProgressBar(_progressBars[i], storyDisplayTime);
                 else
-                {
-                    using var imageLoadRequest = UnityWebRequest.Get(imageUrl);
-                    yield return imageLoadRequest.SendWebRequest();
-                    if (imageLoadRequest.result != UnityWebRequest.Result.Success)
-                    {
-                        Debug.LogWarning($"Request failed: {imageLoadRequest.error}");
-                    }
-                    else
-                    {
-                        var texture = imageLoadRequest.downloadHandler.data;
-                        image.sprite = ImageByteConverter.CreateSpriteFromBytes(texture);
-                        _idSpriteDictionaryCash.TryAdd(story.id, image.sprite);
-                    }
-                }
-
-                yield return AnimateProgressBar(_progressBars[i], storyDisplayTime);
+                    yield return new WaitForSeconds(storyDisplayTime);
             }
 
             StartNewCycle();
         }
 
+        private IEnumerator LoadAndShowStoryImage(GetStoryData story)
+        {
+            if (story == null || image == null) yield break;
+
+            // из кэша
+            if (_idSpriteCache.TryGetValue(story.id, out var cached))
+            {
+                image.sprite = cached;
+                yield break;
+            }
+
+            string url = string.IsNullOrEmpty(story.image_url) ? "" : Uri.EscapeUriString(story.image_url);
+            if (string.IsNullOrEmpty(url)) yield break;
+
+            using (var req = UnityWebRequest.Get(url))
+            {
+                yield return req.SendWebRequest();
+                if (req.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning("StoriesUI: download failed: " + req.error);
+                    yield break;
+                }
+
+                var data = req.downloadHandler.data;
+                var sprite = ImageByteConverter.CreateSpriteFromBytes(data);
+                if (sprite != null)
+                {
+                    image.sprite = sprite;
+                    if (!_idSpriteCache.ContainsKey(story.id))
+                        _idSpriteCache.Add(story.id, sprite);
+                }
+            }
+        }
+
         private IEnumerator AnimateProgressBar(Image bar, float duration)
         {
+            if (bar == null || duration <= 0f) yield break;
+
             float t = 0f;
             while (t < duration)
             {
@@ -212,42 +226,64 @@ namespace Code.UI
                 t += Time.deltaTime;
                 yield return null;
             }
-
             bar.fillAmount = 1f;
         }
 
         private void ClearOldSprites()
         {
-            foreach (var storyId in _idSpriteDictionaryCash.Keys.Where(storyId =>
-                         _stories.FirstOrDefault(s => s.id == storyId) == null))
+            // удаляем из кэша те, которых нет в свежем списке
+            if (_idSpriteCache.Count == 0) return;
+
+            // построим список id актуальных историй
+            // (без LINQ)
+            var keepIds = new HashSet<int>();
+            for (int i = 0; i < _stories.Count; i++)
+                keepIds.Add(_stories[i].id);
+
+            // соберём удаляемые
+            var toRemove = new List<int>(_idSpriteCache.Count);
+            foreach (var kv in _idSpriteCache)
+                if (!keepIds.Contains(kv.Key)) toRemove.Add(kv.Key);
+
+            // уничтожаем
+            for (int i = 0; i < toRemove.Count; i++)
             {
-                var sprite = _idSpriteDictionaryCash[storyId];
-                DestroyImmediate(sprite.texture);
-                DestroyImmediate(sprite);
-                _idSpriteDictionaryCash.Remove(storyId);
+                int id = toRemove[i];
+                var spr = _idSpriteCache[id];
+#if UNITY_EDITOR
+                if (spr != null && spr.texture != null) Object.DestroyImmediate(spr.texture);
+                if (spr != null) Object.DestroyImmediate(spr);
+#else
+                if (spr != null && spr.texture != null) Object.Destroy(spr.texture);
+                if (spr != null) Object.Destroy(spr);
+#endif
+                _idSpriteCache.Remove(id);
             }
         }
 
-        private void ClearCash()
+        private void ClearCache()
         {
-            foreach (var sprite in _idSpriteDictionaryCash.Values)
+            foreach (var kv in _idSpriteCache)
             {
-                if (sprite != null)
-                {
-                    if (sprite.texture != null)
-                        DestroyImmediate(sprite.texture);
-                    DestroyImmediate(sprite);
-                }
+                var spr = kv.Value;
+#if UNITY_EDITOR
+                if (spr != null && spr.texture != null) Object.DestroyImmediate(spr.texture);
+                if (spr != null) Object.DestroyImmediate(spr);
+#else
+                if (spr != null && spr.texture != null) Object.Destroy(spr.texture);
+                if (spr != null) Object.Destroy(spr);
+#endif
             }
-
-            _idSpriteDictionaryCash.Clear();
+            _idSpriteCache.Clear();
         }
 
         private void ClearProgressBars()
         {
-            foreach (Transform child in progressBarContainer)
+            if (progressBarContainer == null) return;
+            for (int i = progressBarContainer.childCount - 1; i >= 0; i--)
             {
-                _progressBarPool.Release(child.gameObject);
+                var child = progressBarContainer.GetChild(i);
+                if (child != null) _progressBarPool.Release(child.gameObject);
             }
         }
     }

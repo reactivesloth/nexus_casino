@@ -26,49 +26,75 @@ namespace Code.UI
 
         private void OnEnable()
         {
-            resultText.text = string.Empty;
-            screenshotButton.onClick.AddListener(OnScreenshotClicked);
+            if (resultText != null) resultText.text = string.Empty;
+            if (screenshotButton != null) screenshotButton.onClick.AddListener(OnScreenshotClicked);
         }
 
         private void OnDisable()
         {
-            screenshotButton.onClick.RemoveListener(OnScreenshotClicked);
+            if (screenshotButton != null) screenshotButton.onClick.RemoveListener(OnScreenshotClicked);
 
-            // Сброс таймера и разблокировка кнопки
             if (_timeoutCoroutine != null)
             {
                 StopCoroutine(_timeoutCoroutine);
                 _timeoutCoroutine = null;
+            }
+            if (screenshotButton != null)
                 screenshotButton.interactable = true;
+
+            if (_resultShowCoroutine != null)
+            {
+                StopCoroutine(_resultShowCoroutine);
+                _resultShowCoroutine = null;
             }
         }
 
         private async void OnScreenshotClicked()
         {
-            // Деактивировать кнопку
-            screenshotButton.interactable = false;
+            if (screenshotButton != null) screenshotButton.interactable = false;
 
-            if (slotMachineInteractable == null || slotMachineInteractable.WebView == null)
-                return;
+            try
+            {
+                if (slotMachineInteractable == null || slotMachineInteractable.WebView == null)
+                {
+                    ShowResult("No WebView available.", Color.red);
+                    return;
+                }
 
-            byte[] screenshotBytes = await slotMachineInteractable.WebView.CaptureScreenshot();
-            APIHandle(screenshotBytes);
-
-            // Запустить таймер разблокировки
-            _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
+                var bytes = await slotMachineInteractable.WebView.CaptureScreenshot();
+                if (bytes == null || bytes.Length == 0)
+                {
+                    ShowResult("Empty screenshot.", Color.red);
+                }
+                else
+                {
+                    APIHandle(bytes);
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowResult("Screenshot failed: " + ex.Message, Color.red);
+            }
+            finally
+            {
+                if (_timeoutCoroutine != null) StopCoroutine(_timeoutCoroutine);
+                _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
+            }
         }
 
         private IEnumerator TimeoutRoutine()
         {
             yield return new WaitForSeconds(timeout);
-            screenshotButton.interactable = true;
+            if (screenshotButton != null) screenshotButton.interactable = true;
             _timeoutCoroutine = null;
         }
 
         private void APIHandle(byte[] screenshotBytes)
         {
+            string baseName = Guid.NewGuid().ToString("N");
+            string uid = ClientDataStorage.UserData != null ? ClientDataStorage.UserData.id.ToString() : "unknown";
+            string filename = $"{baseName}_{uid}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
 
-            var filename = $"{Guid.NewGuid()}_{ClientDataStorage.UserData.id}_{DateTime.Now}.png".Replace(' ','_');
             var form = new WWWForm();
             form.AddBinaryData("file", screenshotBytes, filename);
 
@@ -96,8 +122,10 @@ namespace Code.UI
                     Body = new PostStoryData
                     {
                         image_url = fileUri,
-                        slot_id = slotMachineInteractable.IDNumber,
-                        lobby_id = LobbyVariables.Instance.currentLobby.lobbyId
+                        slot_id = slotMachineInteractable != null ? slotMachineInteractable.IDNumber : 0,
+                        lobby_id = LobbyVariables.Instance != null && LobbyVariables.Instance.currentLobby != null
+                            ? LobbyVariables.Instance.currentLobby.lobbyId
+                            : 0.ToString()
                     }
                 };
                 return RestClient.Post(loadStoryRequest);
@@ -109,37 +137,37 @@ namespace Code.UI
                     return;
                 }
 
-                var loadStoryResponseParsed =
-                    JsonUtility.FromJson<SuccessResponse<GetStoryData>>(loadStoryResponse.Text);
-
-                if (!loadStoryResponseParsed.success)
+                var parsed = JsonUtility.FromJson<SuccessResponse<GetStoryData>>(loadStoryResponse.Text);
+                if (parsed == null || !parsed.success)
                 {
-                    ShowResult($"Story load error. {loadStoryResponseParsed.code}: {loadStoryResponseParsed.detail}", Color.red);
+                    ShowResult($"Story load error. {(parsed != null ? parsed.code : "Error")}: {(parsed != null ? parsed.detail : "Invalid response")}", Color.red);
                     return;
                 }
-                
-                ShowResult($"Story load success id = {loadStoryResponseParsed.data?.id}", Color.black);
-                if(updateStoryUiOnLoad != null)
+
+                ShowResult($"Story load success id = {parsed.data?.id}", Color.black);
+                if (updateStoryUiOnLoad != null)
                     updateStoryUiOnLoad.StartNewCycle();
             });
         }
 
         private void ShowResult(string text, Color color)
         {
-            if(_resultShowCoroutine != null)
-                StopCoroutine(_resultShowCoroutine);
-            
-            _resultShowCoroutine = StartCoroutine(ShowResultCoroutine(text, color));
+            if (_resultShowCoroutine != null) StopCoroutine(_resultShowCoroutine);
+            _resultShowCoroutine = StartCoroutine(ShowResultCoroutine(text ?? string.Empty, color));
         }
-        
+
         private IEnumerator ShowResultCoroutine(string text, Color color)
         {
-            resultText.color = color;
-            resultText.text = text;
+            if (resultText != null)
+            {
+                resultText.color = color;
+                resultText.text = text;
+            }
 
             yield return new WaitForSeconds(resultShowTime);
-            
-            resultText.text = string.Empty;
+
+            if (resultText != null)
+                resultText.text = string.Empty;
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,24 +11,23 @@ namespace Code.UI
 
         private void OnEnable()
         {
-            okButton.onClick.AddListener(Close);
+            if (okButton != null)
+                okButton.onClick.AddListener(Close);
         }
 
         private void OnDisable()
         {
-            okButton.onClick.RemoveListener(Close);
+            if (okButton != null)
+                okButton.onClick.RemoveListener(Close);
         }
 
         public void Show(string title, string description = "")
         {
-            titleText.text = title;
-            descriptionText.text = description;
+            if (titleText != null) titleText.text = title ?? string.Empty;
+            if (descriptionText != null) descriptionText.text = description ?? string.Empty;
             gameObject.SetActive(true);
         }
 
-        public void Close()
-        {
-            gameObject.SetActive(false);
-        }
+        public void Close() => gameObject.SetActive(false);
     }
 }

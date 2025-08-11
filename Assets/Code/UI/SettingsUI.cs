@@ -1,19 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Code.Utility;
 using Ricimi;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace Code.UI
 {
     /// <summary>
-    /// Привязывает UI-элементы к SettingsManager: заполняет значения, слушает изменения и применяет / сохраняет / сбрасывает.
+    /// Связка UI ↔ SettingsManager с отложенным применением:
+    /// - Изменения пишутся в локальный снапшот (_draft), не применяются сразу.
+    /// - Apply() → сохраняет в PlayerPrefs и применяет через SettingsManager.
+    /// - Cancel() → возвращает UI к текущим активным настройкам (что сейчас в SettingsManager).
+    /// - ResetToDefaults() → заполняет UI дефолтами (не применяет, пока не нажмёшь Apply).
     /// </summary>
     public class SettingsUI : MonoBehaviour
     {
-        [Header("Audio")]
+        [Header("Audio (0..100)")]
         public Slider voiceChatSlider;
         public Slider musicSlider;
         public Slider slotsSlider;
@@ -21,288 +23,197 @@ namespace Code.UI
 
         [Header("Graphics")]
         public TextSelectionSlider qualityDropdown;
-        //public TextSelectionSlider resolutionDropdown;
-        // public InputField fpsInputField;
-        // public Toggle effectsToggle;
-        // public Dropdown antiAliasingDropdown;
 
         [Header("Camera & Controls")]
         public Slider cameraSensitivitySlider;
-
-        public Toggle invertCameraToggleOn;
-        public Toggle invertCameraToggleOff;
-
-        // [Header("Localization")]
-        // [Tooltip("Список языковых кодов, например: en, ru")]
-        // public List<string> languageCodes;
-        // public List<string> languageDisplayNames; // то, что показывается в дропдауне
-        // public Dropdown languageDropdown;
+        public Toggle invertCameraToggleOn;   // true  = invert on
+        public Toggle invertCameraToggleOff;  // false = invert off
 
         [Header("Buttons")]
         public Button applyButton;
         public Button cancelButton;
         public Button resetDefaultsButton;
 
-        // Вспомогательные структуры
-        //private List<int> resolutionOriginalIndices = new List<int>(); // для маппинга фильтрованных в оригинальные
+        private struct SettingsSnapshot
+        {
+            public float Voice, Music, Slots, Sfx;   // 0..100
+            public int QualityLevel;
+            public float CameraSensitivity;
+            public bool InvertCamera;
 
-        // Антиалиасинг: отображаемые + реальные значения
-        private readonly int[] aaLevels = new[] { 0, 2, 4, 8 };
-        private readonly string[] aaDisplay = new[] { "Off", "2x", "4x", "8x" };
+            public void LoadFromManager(SettingsManager sm)
+            {
+                Voice            = sm.VoiceChatVolume;
+                Music            = sm.MusicVolume;
+                Slots            = sm.SlotsVolume;
+                Sfx              = sm.SFXVolume;
+                QualityLevel     = sm.QualityLevel;
+                CameraSensitivity= sm.CameraSensitivity;
+                InvertCamera     = sm.InvertCamera;
+            }
 
-        
+            public void LoadDefaults()
+            {
+                // Берём дефолты из менеджера через reset в теневом режиме:
+                // трюк: создаём временный снапшот и заполняем его, не трогая живые настройки
+                var sm = SettingsManager.Instance;
+                if (sm == null) return;
+
+                // Значения из ResetToDefaults: чтобы не модифицировать глобальные настройки,
+                // читаем из PlayerPrefs после временного сброса в локальные переменные — но это шумно.
+                // Проще — зафиксируем те же дефолты, что и в SettingsManager:
+                Voice             = 50f;  // см. Defaults в SettingsManager
+                Music             = 30f;
+                Slots             = 30f;
+                Sfx               = 30f;
+                QualityLevel      = QualitySettings.GetQualityLevel();
+                CameraSensitivity = 40f;
+                InvertCamera      = false;
+            }
+
+            public void ApplyToManager(SettingsManager sm)
+            {
+                sm.SetVoiceVolume(Voice);
+                sm.SetMusicVolume(Music);
+                sm.SetSlotsVolume(Slots);
+                sm.SetSFXVolume(Sfx);
+
+                sm.SetGraphicsQuality(QualityLevel);
+                sm.SetCameraSensitivity(CameraSensitivity);
+                sm.SetInvertCamera(InvertCamera);
+            }
+        }
+
+        private SettingsSnapshot _draft;   // то, что редактирует пользователь в UI
+        private bool _suppressUiEvents;    // чтобы не ловить колбеки, когда программно выставляем значения
+
         private void Start()
         {
             if (SettingsManager.Instance == null)
             {
-                Debug.LogError("SettingsManager.Instance == null. UI не может инициализироваться.");
+                Debug.LogError("SettingsManager.Instance == null. SettingsUI init aborted.");
+                enabled = false;
                 return;
             }
 
             PopulateQualityDropdown();
-            //PopulateResolutionDropdown();
-            // PopulateAntiAliasingDropdown();
-            // PopulateLanguageDropdown();
+            HookUiEvents();
 
-            AddListeners();
-            LoadUIFromSettings();
+            // загрузить текущие активные настройки в черновик и в UI
+            _draft.LoadFromManager(SettingsManager.Instance);
+            PushDraftToUI();
 
-            applyButton.onClick.AddListener(ApplySettings);
-            cancelButton.onClick.AddListener(RevertUI);
-            resetDefaultsButton.onClick.AddListener(ResetToDefaults);
+            if (applyButton != null)        applyButton.onClick.AddListener(ApplySettings);
+            if (cancelButton != null)       cancelButton.onClick.AddListener(CancelChanges);
+            if (resetDefaultsButton != null)resetDefaultsButton.onClick.AddListener(ResetToDefaultsDraft);
         }
 
         private void OnEnable()
         {
-            SettingsManager.Instance.OnSettingsApplied += LoadUIFromSettings;
+            if (SettingsManager.Instance != null)
+                SettingsManager.Instance.OnSettingsApplied += OnSettingsApplied;
         }
-
         private void OnDisable()
         {
-            SettingsManager.Instance.OnSettingsApplied -= LoadUIFromSettings;
+            if (SettingsManager.Instance != null)
+                SettingsManager.Instance.OnSettingsApplied -= OnSettingsApplied;
+        }
+
+        private void OnSettingsApplied()
+        {
+            // Если в другом месте применили — подтянем актуальные значения в наш черновик и UI
+            _draft.LoadFromManager(SettingsManager.Instance);
+            PushDraftToUI();
         }
 
         private void PopulateQualityDropdown()
         {
+            if (qualityDropdown == null) return;
             qualityDropdown.ClearOptions();
             var names = new List<string>(QualitySettings.names);
             qualityDropdown.AddOptions(names);
         }
 
-        /*private void PopulateResolutionDropdown()
+        private void HookUiEvents()
         {
-            resolutionDropdown.ClearOptions();
-            resolutionOriginalIndices.Clear();
+            if (voiceChatSlider != null) voiceChatSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Voice = v; });
+            if (musicSlider != null)     musicSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Music = v; });
+            if (slotsSlider != null)     slotsSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Slots = v; });
+            if (sfxSlider != null)       sfxSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Sfx = v; });
 
-            var allRes = Screen.resolutions;
-            // Убираем дубликаты (по ширине, высоте, частоте): берем первую встречу
-            var seen = new HashSet<string>();
-            var displayOptions = new List<string>();
-            for (int i = 0; i < allRes.Length; i++)
+            if (qualityDropdown != null) qualityDropdown.onValueChanged.AddListener(i => { if (!_suppressUiEvents) _draft.QualityLevel = i; });
+
+            if (cameraSensitivitySlider != null) cameraSensitivitySlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.CameraSensitivity = v; });
+
+            if (invertCameraToggleOn != null)  invertCameraToggleOn.onValueChanged.AddListener(v =>
             {
-                var r = allRes[i];
-                string key = $"{r.width}x{r.height}@{r.refreshRate}";
-                if (seen.Add(key))
+                if (_suppressUiEvents) return;
+                if (v)
                 {
-                    displayOptions.Add($"{r.width}x{r.height} {r.refreshRate}Hz");
-                    resolutionOriginalIndices.Add(i); // запоминаем оригинальный индекс
+                    _draft.InvertCamera = true;
+                    if (invertCameraToggleOff != null) { _suppressUiEvents = true; invertCameraToggleOff.isOn = false; _suppressUiEvents = false; }
                 }
-            }
-
-#if UNITY_ANDROID
-            resolutionOriginalIndices.Reverse();
-#endif
-            resolutionDropdown.AddOptions(displayOptions);
-            
-        }*/
-
-        // private void PopulateAntiAliasingDropdown()
-        // {
-        //     antiAliasingDropdown.ClearOptions();
-        //     antiAliasingDropdown.AddOptions(new List<string>(aaDisplay));
-        // }
-
-        // private void PopulateLanguageDropdown()
-        // {
-        //     languageDropdown.ClearOptions();
-        //     if (languageCodes.Count != languageDisplayNames.Count)
-        //     {
-        //         Debug.LogWarning("languageCodes и languageDisplayNames разной длины.");
-        //     }
-        //
-        //     languageDropdown.AddOptions(new List<string>(languageDisplayNames));
-        // }
-
-        private void AddListeners()
-        {
-            voiceChatSlider.onValueChanged.AddListener(OnVoiceVolumeChanged);
-            musicSlider.onValueChanged.AddListener(OnMusicVolumeChanged);
-            slotsSlider.onValueChanged.AddListener(OnSlotsVolumeChanged);
-            sfxSlider.onValueChanged.AddListener(OnSFXVolumeChanged);
-
-            qualityDropdown.onValueChanged.AddListener(OnQualityChanged);
-            //resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
-            // fpsInputField.onEndEdit.AddListener(OnFPSLimitEdited);
-            // effectsToggle.onValueChanged.AddListener(OnEffectsToggled);
-            // antiAliasingDropdown.onValueChanged.AddListener(OnAntiAliasingChanged);
-
-            cameraSensitivitySlider.onValueChanged.AddListener(OnCameraSensitivityChanged);
-            invertCameraToggleOn.onValueChanged.AddListener(OnInvertCameraChanged);
-
-            // languageDropdown.onValueChanged.AddListener(OnLanguageChanged);
-        }
-
-        private void LoadUIFromSettings()
-        {
-            var sm = SettingsManager.Instance;
-
-            // Audio
-            voiceChatSlider.value = sm.VoiceChatVolume;
-            musicSlider.value = sm.MusicVolume;
-            slotsSlider.value = sm.SlotsVolume;
-            sfxSlider.value = sm.SFXVolume;
-
-            // Graphics
-            qualityDropdown.value = Mathf.Clamp(sm.QualityLevel, 0, qualityDropdown.Options.Count - 1);
-            qualityDropdown.RefreshShownValue();
-
-            // Resolution: найти отображаемый индекс, соответствующий текущему ResolutionIndex
-            // int uiResIndex = resolutionOriginalIndices.FindIndex(orig => orig == sm.ResolutionIndex);
-            // if (uiResIndex >= 0)
-            //     resolutionDropdown.value = uiResIndex;
-            // else
-            //     resolutionDropdown.value = 0;
-            // resolutionDropdown.RefreshShownValue();
-
-            // fpsInputField.text = sm.FPSLimit.ToString();
-            // effectsToggle.isOn = sm.EffectsEnabled;
-            //
-            // int aaIndex = Array.IndexOf(aaLevels, sm.AntiAliasingLevel);
-            // if (aaIndex < 0) aaIndex = 0;
-            // antiAliasingDropdown.value = aaIndex;
-            // antiAliasingDropdown.RefreshShownValue();
-
-            // Camera & Controls
-            cameraSensitivitySlider.value = sm.CameraSensitivity;
-            invertCameraToggleOn.isOn = sm.InvertCamera;
-            invertCameraToggleOff.isOn = !sm.InvertCamera;
-            
-            // Localization
-            // int langIndex = languageCodes.IndexOf(sm.LanguageCode);
-            // if (langIndex >= 0 && langIndex < languageDropdown.options.Count)
-            //     languageDropdown.value = langIndex;
-            // else
-            //     languageDropdown.value = 0;
-            // languageDropdown.RefreshShownValue();
-        }
-
-        #region UI Callbacks
-
-        private void OnVoiceVolumeChanged(float v)
-        {
-            SettingsManager.Instance.SetVoiceVolume(v);
-            // Немедленно применим звук, если SetVoiceVolume не делает этого (в зависимости от патча)
-            AudioManager.Instance.SetVolume("VoiceChat", v);
-        }
-
-        private void OnMusicVolumeChanged(float v)
-        {
-            SettingsManager.Instance.SetMusicVolume(v);
-            AudioManager.Instance.SetVolume("Music", v);
-        }
-
-        private void OnSlotsVolumeChanged(float v)
-        {
-            SettingsManager.Instance.SetSlotsVolume(v);
-            AudioManager.Instance.SetVolume("Slots", v);
-        }
-
-        private void OnSFXVolumeChanged(float v)
-        {
-            SettingsManager.Instance.SetSFXVolume(v);
-            AudioManager.Instance.SetVolume("SFX", v);
-        }
-
-        private void OnQualityChanged(int idx)
-        {
-            SettingsManager.Instance.SetGraphicsQuality(idx);
-            QualitySettings.SetQualityLevel(idx); // визуально сразу
-        }
-
-        // private void OnResolutionChanged(int uiIndex)
-        // {
-        //     if (uiIndex < 0 || uiIndex >= resolutionOriginalIndices.Count)
-        //         return;
-        //     int originalIndex = resolutionOriginalIndices[uiIndex];
-        //     SettingsManager.Instance.SetResolution(originalIndex);
-        // }
-
-        /*private void OnFPSLimitEdited(string str)
-        {
-            if (int.TryParse(str, out int fps))
+            });
+            if (invertCameraToggleOff != null) invertCameraToggleOff.onValueChanged.AddListener(v =>
             {
-                SettingsManager.Instance.SetFPSLimit(fps);
-                Application.targetFrameRate = fps;
-            }
-            else
+                if (_suppressUiEvents) return;
+                if (v)
+                {
+                    _draft.InvertCamera = false;
+                    if (invertCameraToggleOn != null) { _suppressUiEvents = true; invertCameraToggleOn.isOn = false; _suppressUiEvents = false; }
+                }
+            });
+        }
+
+        private void PushDraftToUI()
+        {
+            _suppressUiEvents = true;
+
+            if (voiceChatSlider != null) voiceChatSlider.value = _draft.Voice;
+            if (musicSlider != null)     musicSlider.value     = _draft.Music;
+            if (slotsSlider != null)     slotsSlider.value     = _draft.Slots;
+            if (sfxSlider != null)       sfxSlider.value       = _draft.Sfx;
+
+            if (qualityDropdown != null)
             {
-                // восстановить прежнее корректное
-                fpsInputField.text = SettingsManager.Instance.FPSLimit.ToString();
+                int max = qualityDropdown.Options.Count > 0 ? qualityDropdown.Options.Count - 1 : 0;
+                qualityDropdown.value = Mathf.Clamp(_draft.QualityLevel, 0, max);
+                qualityDropdown.RefreshShownValue();
             }
-        }*/
 
-        private void OnEffectsToggled(bool enabled)
-        {
-            SettingsManager.Instance.SetEffectsEnabled(enabled);
-            PostProcessingManager.Instance.SetEnabled(enabled);
+            if (cameraSensitivitySlider != null) cameraSensitivitySlider.value = _draft.CameraSensitivity;
+
+            if (invertCameraToggleOn != null)  invertCameraToggleOn.isOn  = _draft.InvertCamera;
+            if (invertCameraToggleOff != null) invertCameraToggleOff.isOn = !_draft.InvertCamera;
+
+            _suppressUiEvents = false;
         }
 
-        private void OnAntiAliasingChanged(int idx)
-        {
-            int level = aaLevels[Mathf.Clamp(idx, 0, aaLevels.Length - 1)];
-            SettingsManager.Instance.SetAntiAliasing(level);
-            QualitySettings.antiAliasing = level;
-        }
-
-        private void OnCameraSensitivityChanged(float v)
-        {
-            SettingsManager.Instance.SetCameraSensitivity(v);
-        }
-
-        private void OnInvertCameraChanged(bool invert)
-        {
-            SettingsManager.Instance.SetInvertCamera(invert);
-        }
-
-        // private void OnLanguageChanged(int idx)
-        // {
-        //     if (idx >= 0 && idx < languageCodes.Count)
-        //     {
-        //         string code = languageCodes[idx];
-        //         // Если есть метод установки языка — его нужно раскомментировать / реализовать
-        //         // SettingsManager.Instance.SetLanguage(code);
-        //         // Пока просто сохраняем
-        //         // Дополнительно: здесь можно вызывать локализацию напрямую, если есть система
-        //     }
-        // }
-
-        #endregion
+        // === Кнопки ===
 
         private void ApplySettings()
         {
-            SettingsManager.Instance.SaveAllSettings();
-            SettingsManager.Instance.ApplyAllSettings();
+            var sm = SettingsManager.Instance;
+            if (sm == null) return;
+
+            _draft.ApplyToManager(sm);
+            sm.SaveAllSettings();
+            sm.ApplyAllSettings(); // единая точка применения (AudioManager/Quality/PostFX и т.д.)
         }
 
-        private void RevertUI()
+        private void CancelChanges()
         {
-            SettingsManager.Instance.LoadAllSettings();
-            LoadUIFromSettings();
+            var sm = SettingsManager.Instance;
+            if (sm == null) return;
+
+            _draft.LoadFromManager(sm);
+            PushDraftToUI(); // просто вернули UI к текущим активным настройкам
         }
 
-        private void ResetToDefaults()
+        private void ResetToDefaultsDraft()
         {
-            SettingsManager.Instance.ResetToDefaults();
+            _draft.LoadDefaults(); // заполняем «черновик» дефолтами (не трогаем систему)
+            PushDraftToUI();
         }
     }
 }

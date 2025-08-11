@@ -17,7 +17,7 @@ namespace Code.UI
             TransmitLocalCharacter();
         }
 
-        [ServerRpc]
+        [ServerRpc] // при необходимости можно добавить RequireOwnership=false
         public void SendCharacterDataServerRpc(string _nickname, string _role, NetworkConnection sender = null)
         {
             SendCharacterDataObserversRpc(_nickname, _role);
@@ -26,14 +26,18 @@ namespace Code.UI
         [ObserversRpc(BufferLast = true)]
         private void SendCharacterDataObserversRpc(string _nickname, string _role)
         {
-            playerName.text = _nickname;
-            playerRole.text = _role;
+            if (playerName != null) playerName.text = _nickname ?? string.Empty;
+            if (playerRole != null) playerRole.text = _role ?? string.Empty;
         }
 
         public void TransmitLocalCharacter()
         {
             if (!IsOwner) return;
-            SendCharacterDataServerRpc(ClientDataStorage.UserData.username, ClientDataStorage.UserData.role);
+
+            var user = ClientDataStorage.UserData;
+            if (user == null) return;
+
+            SendCharacterDataServerRpc(user.username ?? "", user.role ?? "");
         }
     }
 }

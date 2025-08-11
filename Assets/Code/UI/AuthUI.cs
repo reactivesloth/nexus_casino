@@ -13,52 +13,59 @@ namespace Code.UI
 {
     public class AuthUI : MonoBehaviour
     {
-        [Header("UI Elements")] public TMP_InputField nicknameInput;
+        [Header("UI Elements")]
+        public TMP_InputField nicknameInput;
         public TMP_InputField phoneInput;
         public TMP_InputField codeInput;
         public Button getConfirmCodeButton;
         public Button authButton;
         public Button resendCodeButton;
         public GameObject termsAndConditions;
-        
-        [Header("Texts")] 
+
+        [Header("Texts")]
         public TMP_Text authButtonText;
         public TMP_Text titleText;
 
-        [Header("Resend Settings")] public int resendCooldownSeconds = 60;
+        [Header("Resend Settings")]
+        public int resendCooldownSeconds = 60;
         public string resendButtonText = "Resend";
         public string resendButtonTextWithTimer = "Resend ({0})";
-        
+
         [Header("Results Handle")]
         public ModularPopupOpener popupPanel;
 
-        private bool isResendTimerActive = false;
-        private float resendTimer = 0f;
-        private bool isRegistered = false; // Новый флаг: зарегистрирован ли номер
+        private bool _isResendTimerActive;
+        private float _resendTimer;
+        private bool _isRegistered; // вернулся ли check-номер как зарегистрированный
+        private TMP_Text _resendText; // кеш компонента текста на кнопке
+
+        private void Awake()
+        {
+            if (resendCodeButton != null)
+                _resendText = resendCodeButton.GetComponentInChildren<TMP_Text>(true);
+        }
 
         private void OnEnable()
         {
-            authButton.onClick.AddListener(OnAuthClicked);
-            getConfirmCodeButton.onClick.AddListener(OnGetCodeClicked);
-            resendCodeButton.onClick.AddListener(OnResendCodeClicked);
+            if (authButton != null) authButton.onClick.AddListener(OnAuthClicked);
+            if (getConfirmCodeButton != null) getConfirmCodeButton.onClick.AddListener(OnGetCodeClicked);
+            if (resendCodeButton != null) resendCodeButton.onClick.AddListener(OnResendCodeClicked);
         }
 
         private void OnDisable()
         {
-            authButton.onClick.RemoveListener(OnAuthClicked);
-            getConfirmCodeButton.onClick.RemoveListener(OnGetCodeClicked);
-            resendCodeButton.onClick.RemoveListener(OnResendCodeClicked);
+            if (authButton != null) authButton.onClick.RemoveListener(OnAuthClicked);
+            if (getConfirmCodeButton != null) getConfirmCodeButton.onClick.RemoveListener(OnGetCodeClicked);
+            if (resendCodeButton != null) resendCodeButton.onClick.RemoveListener(OnResendCodeClicked);
         }
 
         private void Start()
         {
             ToStartState();
             InitializeResendButton();
-            
+
             if (CursorManager.Instance != null)
-            {
                 CursorManager.Instance.ShowCursor();
-            }
         }
 
         private void Update()
@@ -68,98 +75,114 @@ namespace Code.UI
 
         private void ToStartState()
         {
-            phoneInput.interactable = true;
-            phoneInput.text = PlayerPrefs.GetString("auth_phoneInput",  string.Empty);
-            codeInput.text = string.Empty;
+            if (phoneInput != null)
+            {
+                phoneInput.interactable = true;
+                phoneInput.text = PlayerPrefs.GetString("auth_phoneInput", string.Empty);
+            }
+
+            if (codeInput != null) codeInput.text = string.Empty;
             if (nicknameInput != null)
-                nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput",  string.Empty);
-            
-            getConfirmCodeButton.gameObject.SetActive(true);
-            authButton.gameObject.SetActive(false);
-            //codeInput.gameObject.SetActive(false);
-            nicknameInput.gameObject.SetActive(false);
-            resendCodeButton.gameObject.SetActive(false);
-            isResendTimerActive = false;
-            titleText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Welcome back" : "Welcome";
-            authButtonText.text = isRegistered ? "Login" : "Sign up";
-            termsAndConditions.SetActive(false);
+                nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput", string.Empty);
+
+            if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(true);
+            if (authButton != null) authButton.gameObject.SetActive(false);
+            if (nicknameInput != null) nicknameInput.gameObject.SetActive(false);
+            if (resendCodeButton != null) resendCodeButton.gameObject.SetActive(false);
+            _isResendTimerActive = false;
+
+            if (titleText != null)
+                titleText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Welcome back" : "Welcome";
+
+            if (authButtonText != null)
+                authButtonText.text = _isRegistered ? "Login" : "Sign up";
+
+            if (termsAndConditions != null)
+                termsAndConditions.SetActive(false);
         }
 
         private void OnGetCodeClicked()
         {
-            getConfirmCodeButton.interactable = false;
-            var phone = phoneInput.text;
-            var checkPhoneRequest = new CheckPhoneRequest()
+            if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = false;
+
+            var phone = phoneInput != null ? phoneInput.text : string.Empty;
+            if (string.IsNullOrEmpty(phone))
             {
-                phone = phone
-            };
+                HandleError("Error", "Phone is empty");
+                if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
+                return;
+            }
+
+            var checkPhoneRequest = new CheckPhoneRequest { phone = phone };
             RestClient.Post(ApiRoutes.GetCheckNumberUrl(), checkPhoneRequest).Then(checkResponse =>
             {
                 if (checkResponse.StatusCode != 200)
                 {
                     HandleError(checkResponse.StatusCode.ToString(), checkResponse.Error);
-                    getConfirmCodeButton.interactable = true;
+                    if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                     return;
                 }
+
                 var checkResult = JsonUtility.FromJson<SuccessResponse<bool>>(checkResponse.Text);
-                if (!checkResult.success)
+                if (checkResult == null || !checkResult.success)
                 {
-                    HandleError(checkResult.code, checkResult.detail);
-                    getConfirmCodeButton.interactable = true;
+                    HandleError(checkResult != null ? checkResult.code : "Error", checkResult != null ? checkResult.detail : "Invalid response");
+                    if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                     return;
                 }
-                isRegistered = checkResult.data;
-                // Теперь отправляем запрос на отправку кода
-                var sendCodeRequest = new SendCodeRequest
-                {
-                    phone = phone,
-                    requested_by = ""
-                };
+
+                _isRegistered = checkResult.data;
+
+                var sendCodeRequest = new SendCodeRequest { phone = phone, requested_by = "" };
                 RestClient.Post(ApiRoutes.GetSendCodeUrl(), sendCodeRequest).Then(sendCodeResponse =>
                 {
                     if (sendCodeResponse.StatusCode != 200)
                     {
                         HandleError(sendCodeResponse.StatusCode.ToString(), sendCodeResponse.Error);
-                        getConfirmCodeButton.interactable = true;
+                        if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                         return;
                     }
+
                     var sendCodeResult = JsonUtility.FromJson<SuccessResponse<object>>(sendCodeResponse.Text);
-                    if (!sendCodeResult.success)
+                    if (sendCodeResult == null || !sendCodeResult.success)
                     {
-                        HandleError(sendCodeResult.code, sendCodeResult.detail);
-                        getConfirmCodeButton.interactable = true;
+                        HandleError(sendCodeResult != null ? sendCodeResult.code : "Error", sendCodeResult != null ? sendCodeResult.detail : "Invalid response");
+                        if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                         return;
                     }
-                    // Только после успешной отправки кода показываем поля
-                    phoneInput.interactable = false;
-                    codeInput.gameObject.SetActive(true);
-                    getConfirmCodeButton.gameObject.SetActive(false);
-                    authButton.gameObject.SetActive(true);
-                    nicknameInput.gameObject.SetActive(!isRegistered); // Показываем nickname только если не зарегистрирован
-                    titleText.text = isRegistered ? "Login" : "Sign up";
-                    authButtonText.text = isRegistered ? "Login" : "Sign up";
-                    termsAndConditions.SetActive(!isRegistered);
+
+                    if (phoneInput != null) phoneInput.interactable = false;
+                    if (codeInput != null) codeInput.gameObject.SetActive(true);
+                    if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
+                    if (authButton != null) authButton.gameObject.SetActive(true);
+                    if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
+                    if (titleText != null) titleText.text = _isRegistered ? "Login" : "Sign up";
+                    if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
+                    if (termsAndConditions != null) termsAndConditions.SetActive(!_isRegistered);
+
                     StartResendTimer();
-                }).Finally(() => getConfirmCodeButton.interactable = true);
+                }).Finally(() =>
+                {
+                    if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
+                });
             });
         }
 
         private void OnAuthClicked()
         {
-            authButton.interactable = false;
-            if (isRegistered)
-                PerformLogin();
-            else
-                PerformRegister();
+            if (authButton != null) authButton.interactable = false;
+            if (_isRegistered) PerformLogin();
+            else PerformRegister();
         }
 
         private void PerformLogin()
         {
             var loginRequest = new LoginRequest
             {
-                phone = phoneInput.text,
-                confirmation_code = codeInput.text
+                phone = phoneInput != null ? phoneInput.text : string.Empty,
+                confirmation_code = codeInput != null ? codeInput.text : string.Empty
             };
+
             RestClient.Post(ApiRoutes.GetLoginUrl(), loginRequest).Then(response =>
             {
                 if (response.StatusCode != 200)
@@ -167,21 +190,19 @@ namespace Code.UI
                     HandleError(response.StatusCode.ToString(), response.Error);
                     return;
                 }
+
                 var responseData = JsonUtility.FromJson<SuccessResponse<AuthResponse>>(response.Text);
-                if (responseData.success)
-                {
+                if (responseData != null && responseData.success)
                     OnAuthSuccess(responseData.data);
-                }
                 else
                 {
-                    Debug.LogWarning(responseData.detail);
-                    HandleError(responseData.code, responseData.detail);
+                    HandleError(responseData != null ? responseData.code : "Error", responseData != null ? responseData.detail : "Invalid response");
                     ToStartState();
                 }
             }).Finally(() =>
             {
-                authButton.interactable = true;
-                PlayerPrefs.SetString("auth_phoneInput",  phoneInput.text);
+                if (authButton != null) authButton.interactable = true;
+                if (phoneInput != null) PlayerPrefs.SetString("auth_phoneInput", phoneInput.text);
             });
         }
 
@@ -189,10 +210,11 @@ namespace Code.UI
         {
             var signUpRequest = new SignUpRequest
             {
-                username = nicknameInput.text,
-                phone = phoneInput.text,
-                confirmation_code = codeInput.text
+                username = nicknameInput != null ? nicknameInput.text : string.Empty,
+                phone = phoneInput != null ? phoneInput.text : string.Empty,
+                confirmation_code = codeInput != null ? codeInput.text : string.Empty
             };
+
             RestClient.Post(ApiRoutes.GetSignUpUrl(), signUpRequest).Then(response =>
             {
                 if (response.StatusCode != 200)
@@ -200,35 +222,38 @@ namespace Code.UI
                     HandleError(response.StatusCode.ToString(), response.Error);
                     return;
                 }
+
                 var responseData = JsonUtility.FromJson<SuccessResponse<AuthResponse>>(response.Text);
-                if (responseData.success)
-                {
+                if (responseData != null && responseData.success)
                     OnAuthSuccess(responseData.data);
-                }
                 else
                 {
-                    Debug.LogWarning(responseData.detail);
-                    HandleError(responseData.code, responseData.detail);
+                    HandleError(responseData != null ? responseData.code : "Error", responseData != null ? responseData.detail : "Invalid response");
                     ToStartState();
                 }
             }).Finally(() =>
             {
-                authButton.interactable = true;
-                PlayerPrefs.SetString("auth_nicknameInput",  nicknameInput.text);
-                PlayerPrefs.SetString("auth_phoneInput",  phoneInput.text);
+                if (authButton != null) authButton.interactable = true;
+                if (nicknameInput != null) PlayerPrefs.SetString("auth_nicknameInput", nicknameInput.text);
+                if (phoneInput != null) PlayerPrefs.SetString("auth_phoneInput", phoneInput.text);
             });
         }
 
         private void InitializeResendButton()
         {
+            if (resendCodeButton == null) return;
             resendCodeButton.gameObject.SetActive(false);
             resendCodeButton.interactable = false;
+            if (_resendText != null) _resendText.text = resendButtonText;
         }
 
         private void StartResendTimer()
         {
-            resendTimer = resendCooldownSeconds;
-            isResendTimerActive = true;
+            if (resendCodeButton == null) return;
+
+            _resendTimer = resendCooldownSeconds;
+            _isResendTimerActive = true;
+
             resendCodeButton.gameObject.SetActive(true);
             resendCodeButton.interactable = false;
             UpdateResendButtonText();
@@ -236,64 +261,65 @@ namespace Code.UI
 
         private void UpdateResendTimer()
         {
-            if (!isResendTimerActive) return;
-            resendTimer -= Time.deltaTime;
-            if (resendTimer <= 0)
+            if (!_isResendTimerActive) return;
+
+            _resendTimer -= Time.deltaTime;
+            if (_resendTimer <= 0f)
             {
-                resendCodeButton.interactable = true;
-                isResendTimerActive = false;
-                UpdateResendButtonText();
+                _isResendTimerActive = false;
+                if (resendCodeButton != null) resendCodeButton.interactable = true;
             }
-            else
-            {
-                UpdateResendButtonText();
-            }
+            UpdateResendButtonText();
         }
 
         private void UpdateResendButtonText()
         {
-            if (isResendTimerActive && resendTimer > 0)
+            if (_resendText == null) return;
+
+            if (_isResendTimerActive && _resendTimer > 0f)
             {
-                int remainingSeconds = Mathf.CeilToInt(resendTimer);
-                resendCodeButton.GetComponentInChildren<TMP_Text>().text =
-                    string.Format(resendButtonTextWithTimer, remainingSeconds);
+                int remainingSeconds = Mathf.CeilToInt(_resendTimer);
+                _resendText.text = string.Format(resendButtonTextWithTimer, remainingSeconds);
             }
             else
             {
-                resendCodeButton.GetComponentInChildren<TMP_Text>().text = resendButtonText;
+                _resendText.text = resendButtonText;
             }
         }
 
         private void OnResendCodeClicked()
         {
-            if (!resendCodeButton.interactable) return;
+            if (resendCodeButton == null || !resendCodeButton.interactable) return;
             resendCodeButton.interactable = false;
             OnGetCodeClicked();
         }
 
         private void OnAuthSuccess(AuthResponse authResponse)
         {
+            if (authResponse == null) { HandleError("Error", "Empty auth response"); return; }
+
             ClientDataStorage.AccessToken = authResponse.access_jwt;
             ClientDataStorage.RefreshToken = authResponse.refresh_jwt;
-            Debug.Log(JsonUtility.ToJson(authResponse));
-            var userDataRequest = new RequestHelper { 
+
+            var userDataRequest = new RequestHelper
+            {
                 Uri = ApiRoutes.GetMeUrl(),
                 Headers = ClientDataStorage.GetJwtHeader()
             };
+
             RestClient.Get(userDataRequest).Then(userDataResponse =>
             {
-                if (userDataResponse.StatusCode != 200)
-                    return;
+                if (userDataResponse.StatusCode != 200) { HandleError("Error", "Get user failed"); return; }
+
                 var successResponse = JsonUtility.FromJson<SuccessResponse<MeSchema>>(userDataResponse.Text);
-                if (successResponse.success)
+                if (successResponse != null && successResponse.success)
                 {
                     ClientDataStorage.UserData = successResponse.data;
                     OnUserCanStartGame();
                 }
                 else
                 {
-                    Debug.LogWarning(successResponse.detail);
-                    HandleError(successResponse.code, successResponse.detail);
+                    HandleError(successResponse != null ? successResponse.code : "Error", successResponse != null ? successResponse.detail : "Invalid response");
                     ToStartState();
                 }
             });
@@ -301,27 +327,30 @@ namespace Code.UI
 
         private void OnUserCanStartGame()
         {
-            var savePath = "";
-            savePath = Application.persistentDataPath + "/CharacterCustomizer.json";
+            string savePath = Application.persistentDataPath + "/CharacterCustomizer.json";
 #if UNITY_EDITOR
             savePath = Application.dataPath + "/CharacterCustomizer.json";
 #endif
-            if (File.Exists(savePath)) {
+            bool hasCC = false;
+            if (File.Exists(savePath))
+            {
                 string jsonLoad = File.ReadAllText(savePath);
-                if (jsonLoad.Length > 200)
-                {
-                    SceneManager.LoadSceneAsync("Main");
-                    return;
-                }
-            } 
-            SceneManager.LoadSceneAsync("Character Customization");
+                hasCC = !string.IsNullOrEmpty(jsonLoad) && jsonLoad.Length > 200;
+            }
+
+            SceneManager.LoadSceneAsync(hasCC ? "Main" : "Character Customization");
         }
 
         private void HandleError(string title, string errorMessage)
         {
-            popupPanel.Title = title;
-            popupPanel.Message = errorMessage;
-            popupPanel.OpenPopup();
+            if (popupPanel != null)
+            {
+                popupPanel.Title = title ?? "Error";
+                popupPanel.Message = errorMessage ?? "Unknown error";
+                popupPanel.OpenPopup();
+            }
+            else
+                Debug.LogWarning($"{title}: {errorMessage}");
         }
     }
 }
