@@ -76,6 +76,9 @@ namespace Code.Chat
             SendSystemMessage(
                 $"Chat connection close, close code is {(int)closeCode} {closeCode.ToString()}",
                 UltimateChatBoxStyles.noticeMessage);
+
+            if (closeCode != WebSocketCloseCode.Normal)
+                chatWebSocket.Connect();
         }
 
         private void ChatWebSocketOnOnError(string errorMsg)
