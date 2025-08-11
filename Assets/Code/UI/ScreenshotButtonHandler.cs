@@ -6,6 +6,7 @@ using Code.InteractionSystem;
 using Code.Network.Lobby;
 using JetBrains.Annotations;
 using Proyecto26;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,14 +15,18 @@ namespace Code.UI
     public class ScreenshotButtonHandler : MonoBehaviour
     {
         [SerializeField] private Button screenshotButton;
+        [SerializeField] private TMP_Text resultText;
         [SerializeField, CanBeNull] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField, CanBeNull] private StoriesUI updateStoryUiOnLoad;
         [SerializeField] private float timeout = 10f;
+        [SerializeField] private float resultShowTime = 5f;
 
+        private Coroutine _resultShowCoroutine;
         private Coroutine _timeoutCoroutine;
 
         private void OnEnable()
         {
+            resultText.text = string.Empty;
             screenshotButton.onClick.AddListener(OnScreenshotClicked);
         }
 
@@ -77,10 +82,12 @@ namespace Code.UI
             RestClient.Post(loadFileRequest).Then(fileLoadResponse =>
             {
                 if (fileLoadResponse.StatusCode != 200)
+                {
+                    ShowResult($"File load error. {fileLoadResponse.StatusCode}: {fileLoadResponse.Error}", Color.red);
                     return null;
+                }
 
                 var fileUri = fileLoadResponse.Text.Trim('\"');
-                Debug.Log(fileUri);
 
                 var loadStoryRequest = new RequestHelper
                 {
@@ -96,10 +103,43 @@ namespace Code.UI
                 return RestClient.Post(loadStoryRequest);
             })?.Then(loadStoryResponse =>
             {
-                Debug.Log(loadStoryResponse.Text);
+                if (loadStoryResponse.StatusCode != 200)
+                {
+                    ShowResult($"Story load error. {loadStoryResponse.StatusCode}: {loadStoryResponse.Error}", Color.red);
+                    return;
+                }
+
+                var loadStoryResponseParsed =
+                    JsonUtility.FromJson<SuccessResponse<GetStoryData>>(loadStoryResponse.Text);
+
+                if (!loadStoryResponseParsed.success)
+                {
+                    ShowResult($"Story load error. {loadStoryResponseParsed.code}: {loadStoryResponseParsed.detail}", Color.red);
+                    return;
+                }
+                
+                ShowResult($"Story load success id = {loadStoryResponseParsed.data?.id}", Color.black);
                 if(updateStoryUiOnLoad != null)
                     updateStoryUiOnLoad.StartNewCycle();
             });
+        }
+
+        private void ShowResult(string text, Color color)
+        {
+            if(_resultShowCoroutine != null)
+                StopCoroutine(_resultShowCoroutine);
+            
+            _resultShowCoroutine = StartCoroutine(ShowResultCoroutine(text, color));
+        }
+        
+        private IEnumerator ShowResultCoroutine(string text, Color color)
+        {
+            resultText.color = color;
+            resultText.text = text;
+
+            yield return new WaitForSeconds(resultShowTime);
+            
+            resultText.text = string.Empty;
         }
     }
 }
