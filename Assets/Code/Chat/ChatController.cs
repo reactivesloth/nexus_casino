@@ -17,11 +17,12 @@ namespace Code.Chat
         [SerializeField] private UltimateChatBox lobbyChatBox;
         [SerializeField] private UltimateChatBox globalChatBox;
         [SerializeField] private List<CommandData> commands;
-        
-        [Header("ChatPosition settings")]
-        [SerializeField] private Vector2 desktopPosition;
+
+        [Header("ChatPosition settings")] [SerializeField]
+        private Vector2 desktopPosition;
+
         [SerializeField] private Vector2 mobilePosition;
-        
+
         public readonly Dictionary<string, CommandData> CommandsDictionary = new();
         private PlayerMovementController PlayerMovementController => PlayerMovementController.Own;
         private WebSocket chatWebSocket;
@@ -34,10 +35,12 @@ namespace Code.Chat
         private void Start()
         {
             commands.ForEach(c => CommandsDictionary.Add(c.commandValue, c));
-            
-            lobbyChatBox.chatBoxPosition = PlayerInput.Instance.IsUsingMobileFallback ? mobilePosition : desktopPosition;
+
+            lobbyChatBox.chatBoxPosition =
+                PlayerInput.Instance.IsUsingMobileFallback ? mobilePosition : desktopPosition;
             lobbyChatBox.UpdatePositioning();
-            globalChatBox.chatBoxPosition = PlayerInput.Instance.IsUsingMobileFallback ? mobilePosition : desktopPosition;
+            globalChatBox.chatBoxPosition =
+                PlayerInput.Instance.IsUsingMobileFallback ? mobilePosition : desktopPosition;
             globalChatBox.UpdatePositioning();
         }
 
@@ -46,38 +49,63 @@ namespace Code.Chat
             SetCurrentChat(lobbyChatBox);
             CurrentChatBox.Disable();
             CurrentChatBox.DisableInputField();
-            
-            chatWebSocket = new WebSocket($"ws://back.nexusmetaclub.com/api/client/ws/lobby?jwt={ClientDataStorage.AccessToken}&lobby_id={"main"}");
-            
+
+            chatWebSocket =
+                new WebSocket(
+                    $"ws://back.nexusmetaclub.com/api/client/ws/lobby?jwt={ClientDataStorage.AccessToken}&lobby_id={"main"}");
+
+            chatWebSocket.OnOpen += ChatWebSocketOnOnOpen;
             chatWebSocket.OnMessage += OnMessageRecived;
-            
+            chatWebSocket.OnError += ChatWebSocketOnOnError;
+            chatWebSocket.OnClose += ChatWebSocketOnOnClose;
+
             chatWebSocket.Connect();
-            
+
             PlayerInput.Instance.SwitchChatButton.gameObject.SetActive(false);
+        }
+
+        private void ChatWebSocketOnOnOpen()
+        {
+            SendSystemMessage(
+                $"Chat connection open.",
+                UltimateChatBoxStyles.noticeMessage);
+        }
+
+        private void ChatWebSocketOnOnClose(WebSocketCloseCode closeCode)
+        {
+            SendSystemMessage(
+                $"Chat connection close, close code is {(int)closeCode} {closeCode.ToString()}",
+                UltimateChatBoxStyles.noticeMessage);
+        }
+
+        private void ChatWebSocketOnOnError(string errorMsg)
+        {
+            SendSystemMessage(errorMsg, UltimateChatBoxStyles.errorMessage);
         }
 
         private void Update()
         {
             var input = PlayerInput.Instance;
-            if(input.IsOpenChatDown)
+            if (input.IsOpenChatDown)
                 OpenChat();
-            
+
             if (input.IsSwitchChatDown && CurrentChatBox.IsEnabled)
                 ChangeChat();
-            
-            if(PlayerInput.Instance.IsPausedDown)
+
+            if (PlayerInput.Instance.IsPausedDown)
                 CurrentChatBox.Disable();
-            
+
 #if !UNITY_WEBGL || UNITY_EDITOR
             chatWebSocket.DispatchMessageQueue();
 #endif
-            
+
             if (chatWebSocket.State == WebSocketState.Open)
                 PingChatConnection();
         }
 
         private float _pingInterval = 5f;
         private float _currentPingInterval = 0;
+
         private void PingChatConnection()
         {
             _currentPingInterval += Time.deltaTime;
@@ -90,7 +118,10 @@ namespace Code.Chat
 
         private void OnDisable()
         {
+            chatWebSocket.OnOpen -= ChatWebSocketOnOnOpen;
             chatWebSocket.OnMessage -= OnMessageRecived;
+            chatWebSocket.OnError -= ChatWebSocketOnOnError;
+            chatWebSocket.OnClose -= ChatWebSocketOnOnClose;;
             chatWebSocket.Close();
         }
 
@@ -109,7 +140,7 @@ namespace Code.Chat
                 CurrentChatBox.Disable();
             }
         }
-        
+
         private void ChangeChat()
         {
             SetCurrentChat(CurrentChatBox == lobbyChatBox ? globalChatBox : lobbyChatBox);
@@ -125,7 +156,7 @@ namespace Code.Chat
                 CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
                 CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
                 CurrentChatBox.OnInputFieldUpdated -= CurrentChatBoxOnOnInputFieldUpdated;
-                
+
                 CurrentChatBox.Disable();
             }
 
@@ -140,7 +171,7 @@ namespace Code.Chat
             CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
             CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
             CurrentChatBox.OnInputFieldUpdated += CurrentChatBoxOnOnInputFieldUpdated;
-            
+
             CurrentChatBox.EnableInputField();
             CurrentChatBox.Enable();
         }
@@ -164,7 +195,7 @@ namespace Code.Chat
             {
                 CursorManager.Instance.ShowCursor();
             }
-            
+
             PlayerInput.Instance.SwitchChatButton.gameObject.SetActive(true);
         }
 
@@ -174,7 +205,7 @@ namespace Code.Chat
             {
                 CursorManager.Instance.HideCursor();
             }
-            
+
             PlayerInput.Instance.SwitchChatButton.gameObject.SetActive(false);
         }
 
@@ -182,13 +213,13 @@ namespace Code.Chat
         {
             if (!CommandsDictionary.TryGetValue(command, out var commandData))
             {
-                CurrentChatBox.RegisterChat(systemName, "command not found", UltimateChatBoxStyles.errorMessage);
+                SendSystemMessage("command not found", UltimateChatBoxStyles.errorMessage);
                 return;
             }
 
             if (commandData.requireMessageValue && string.IsNullOrEmpty(message))
             {
-                CurrentChatBox.RegisterChat(systemName, "command need value", UltimateChatBoxStyles.errorMessage);
+                SendSystemMessage("command need value", UltimateChatBoxStyles.errorMessage);
                 return;
             }
 
@@ -200,12 +231,19 @@ namespace Code.Chat
             var dataText = System.Text.Encoding.UTF8.GetString(byteData);
             var reciveData = JsonUtility.FromJson<ChatModel<Empty>>(dataText);
             ChatModel<NewMessageData> chatMessageData;
-            if(reciveData.@event is ChatSocketEvents.NewMessage or ChatSocketEvents.NewImportantMessage)
-                chatMessageData =  JsonUtility.FromJson<ChatModel<NewMessageData>>(dataText);
-            else 
+            ChatModel<Error> error;
+            if (reciveData.@event is ChatSocketEvents.NewMessage or ChatSocketEvents.NewImportantMessage)
+                chatMessageData = JsonUtility.FromJson<ChatModel<NewMessageData>>(dataText);
+            else if (reciveData.@event is ChatSocketEvents.Error)
+            {
+                error = JsonUtility.FromJson<ChatModel<Error>>(dataText);
+                SendSystemMessage(error.data.message, UltimateChatBoxStyles.errorMessage);
                 return;
-            
-            if(chatMessageData.data.message.lobby_id == LobbyVariables.Instance.currentLobby.lobbyId)
+            }
+            else
+                return;
+
+            if (chatMessageData.data.message.lobby_id == LobbyVariables.Instance.currentLobby.lobbyId)
                 HandleLobbyMassage(chatMessageData.data.message);
             HandleGlobalMassage(chatMessageData.data.message);
         }
@@ -244,6 +282,12 @@ namespace Code.Chat
         public void HandleLobbyMassage(MessageData message)
         {
             lobbyChatBox.RegisterChat($"{message.user.username}", message.message);
+        }
+
+        public void SendSystemMessage(string message, UltimateChatBox.ChatStyle style)
+        {
+            lobbyChatBox.RegisterChat(systemName, message, style);
+            globalChatBox.RegisterChat(systemName, message, style);
         }
     }
 }
