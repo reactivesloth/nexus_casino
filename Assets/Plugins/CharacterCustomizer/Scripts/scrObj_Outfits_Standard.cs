@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -22,62 +20,89 @@ namespace CC
             public List<string> Options;
             public float DefaultChance;
             public bool MatchMaterials;
+            /// <summary>
+            /// If MatchMaterials == true, copy the material index from this slot index.
+            /// </summary>
             public int IndexToMatch;
         }
 
-        public List<Outfit_Definition> Outfits;
+        public List<Outfit_Definition> Outfits = new List<Outfit_Definition>();
 
         public override bool GetRandomOutfit(CharacterCustomization script, out List<string> apparelOptions, out List<int> apparelMaterials)
         {
-            if (Outfits.Count < 1)
+            apparelOptions = null;
+            apparelMaterials = null;
+
+            if (script == null)
             {
-                Debug.LogError("Tried to set random outfit but no outfits have been defined");
-                apparelOptions = null;
-                apparelMaterials = null;
+                Debug.LogError("GetRandomOutfit: script is null");
                 return false;
             }
 
-            var outfit = Outfits[Random.Range(0, Outfits.Count)]; //Get random outfit definition (each outfit definition can have multiple options per slot)
+            if (Outfits == null || Outfits.Count == 0)
+            {
+                Debug.LogError("Tried to set random outfit but no outfits have been defined");
+                return false;
+            }
 
-            apparelOptions = new List<string>();
-            apparelMaterials = new List<int>();
+            var outfit = Outfits[Random.Range(0, Outfits.Count)];
+            if (outfit.OutfitOptions == null || outfit.OutfitOptions.Count == 0)
+            {
+                Debug.LogError("Outfit options not found");
+                return false;
+            }
 
-            //One Outfit_Options per apparel slot
+            if (script.ApparelTables == null || script.ApparelTables.Count == 0)
+            {
+                Debug.LogError("GetRandomOutfit: script.ApparelTables is empty");
+                return false;
+            }
+
+            apparelOptions = new List<string>(script.ApparelTables.Count);
+            apparelMaterials = new List<int>(script.ApparelTables.Count);
+
+            // One Outfit_Options per apparel slot
             for (int i = 0; i < script.ApparelTables.Count; i++)
             {
                 if (outfit.OutfitOptions.Count <= i)
                 {
-                    Debug.LogError("Outfit options not found");
+                    Debug.LogError("Outfit options not found for slot index: " + i);
+                    apparelOptions.Clear();
+                    apparelMaterials.Clear();
                     return false;
                 }
 
-                //Get available options
-                var options = outfit.OutfitOptions[i].Options;
+                var opt = outfit.OutfitOptions[i];
+                var options = opt.Options; // can be null
 
-                //Get random chance
+                // Random chance for default
                 float rand = Random.Range(0f, 1f);
 
-                //If no options available or if it rolls default, set default name
-                if (options.Count <= 0 || rand < outfit.OutfitOptions[i].DefaultChance)
+                // If no options available or if it rolls default, set default name
+                if (options == null || options.Count == 0 || rand < opt.DefaultChance)
                 {
-                    apparelOptions.Add(outfit.OutfitOptions[i].DefaultName);
+                    apparelOptions.Add(opt.DefaultName ?? string.Empty);
                     apparelMaterials.Add(0);
                     continue;
                 }
 
-                //Otherwise get random option
+                // Otherwise get random option from table
                 GetRandomApparel(script.ApparelTables[i], options, out string apparelOption, out int apparelMaterial);
-
                 apparelOptions.Add(apparelOption);
                 apparelMaterials.Add(apparelMaterial);
             }
 
-            //Match materials
-            for (int i = 0; i < outfit.OutfitOptions.Count; i++)
+            // Match materials: copy material index from IndexToMatch -> i
+            for (int i = 0; i < outfit.OutfitOptions.Count && i < apparelMaterials.Count; i++)
             {
-                if (outfit.OutfitOptions[i].MatchMaterials)
+                var opt = outfit.OutfitOptions[i];
+                if (!opt.MatchMaterials)
+                    continue;
+
+                int src = opt.IndexToMatch;
+                if (src >= 0 && src < apparelMaterials.Count)
                 {
-                    apparelMaterials[i] = outfit.OutfitOptions[i].IndexToMatch;
+                    apparelMaterials[i] = apparelMaterials[src];
                 }
             }
 

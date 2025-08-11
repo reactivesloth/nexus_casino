@@ -1,10 +1,10 @@
 using System;
-using System.Linq;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-using System.IO;
 using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
 
 namespace CC
 {
@@ -18,19 +18,17 @@ namespace CC
         public bool Autoload = false;
         public bool LoadAsync = false;
 
-        public List<scrObj_Hair> HairTables = new List<scrObj_Hair>(); //Available hair prefabs
+        public List<scrObj_Hair> HairTables = new List<scrObj_Hair>();
+        private List<GameObject> HairObjects = new List<GameObject>();
 
-        private List<GameObject> HairObjects = new List<GameObject>(); //Active hair prefabs
-
-        public List<scrObj_Apparel> ApparelTables = new List<scrObj_Apparel>(); //Available apparel prefabs
-
-        private List<GameObject> ApparelObjects = new List<GameObject>(); //Active apparel prefabs
+        public List<scrObj_Apparel> ApparelTables = new List<scrObj_Apparel>();
+        private List<GameObject> ApparelObjects = new List<GameObject>();
 
         public scrObj_Outfits Outfits;
         public scrObj_Randomizer Randomizer;
 
-        public scrObj_Presets Presets; //Available presets
-        public CC_CharacterData StoredCharacterData; //Current character data
+        public scrObj_Presets Presets;
+        public CC_CharacterData StoredCharacterData;
 
         private string SavePath
         {
@@ -44,20 +42,14 @@ namespace CC
             }
         }
 
-        //Event you can bind to notify when character has finished loading
         public delegate void OnCharacterLoaded(CharacterCustomization script);
-
         public event OnCharacterLoaded onCharacterLoaded;
 
-        //Hover customization
         private int lastHoverIndex = 0;
-
-        //Async loading
         private Coroutine activeCoroutine;
         [SerializeField] private bool initializeOnStartInsteadOfAwake;
 
         #region Initialize script
-
         private void Awake()
         {
             if (!initializeOnStartInsteadOfAwake)
@@ -70,11 +62,13 @@ namespace CC
                 InitializeScript();
         }
 
-        private void InitializeScript ()
+        private void InitializeScript()
         {
-            foreach (var item in GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            var meshesAll = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            for (int i = 0; i < meshesAll.Length; i++)
             {
-                item.gameObject.SetActive(true);
+                var m = meshesAll[i];
+                if (m != null) m.gameObject.SetActive(true);
             }
 
             if (CC_UI_Manager.instance != null)
@@ -94,7 +88,6 @@ namespace CC
         private void OnPartHovered(string hoveredPart)
         {
             int hoverIndex = 0;
-
             if (hoveredPart == "") hoverIndex = 0;
             else if (hoveredPart.Contains("spine_05")) hoverIndex = 1;
             else if (hoveredPart.Contains("spine")) hoverIndex = 2;
@@ -117,65 +110,69 @@ namespace CC
             if (hoverIndex != lastHoverIndex)
             {
                 setFloatProperty(new CC_Property { propertyName = "_HoverSamplePoint", floatValue = hoverIndex });
-
-                //Upper torso intersects head and body
                 if (hoverIndex == 1) setFloatProperty(new CC_Property { propertyName = "_HoverSamplePoint", floatValue = 11, meshTag = "Head" });
                 lastHoverIndex = hoverIndex;
             }
         }
 
-        //Initializes this script - run on Start by default but you can run it whenever, see InstantiateCharacter for example
         public void Initialize()
         {
-            foreach (var toDelete in GetComponentsInChildren<DeleteOnStart>())
+            var toDelete = GetComponentsInChildren<DeleteOnStart>();
+            for (int i = 0; i < toDelete.Length; i++)
             {
-                Destroy(toDelete.gameObject);
+                if (toDelete[i] != null)
+                    Destroy(toDelete[i].gameObject);
             }
 
-            foreach (var mesh in GetComponentsInChildren<SkinnedMeshRenderer>())
+            var meshes = GetComponentsInChildren<SkinnedMeshRenderer>();
+            for (int i = 0; i < meshes.Length; i++)
             {
-                //Add a blendshape manager script to every mesh
-                if (mesh.gameObject.GetComponent<BlendshapeManager>() == null) mesh.gameObject.AddComponent<BlendshapeManager>().parseBlendshapes();
+                var mesh = meshes[i];
+                if (mesh == null) continue;
 
-                //If UI prefab is valid
+                if (mesh.gameObject.GetComponent<BlendshapeManager>() == null)
+                    mesh.gameObject.AddComponent<BlendshapeManager>().parseBlendshapes();
+
                 if (UI != null)
                 {
-                    //Set Customization bool in material for hover effects etc
-                    foreach (var material in mesh.materials)
+                    var mats = mesh.materials; // material instances (expected behavior for per-instance edits)
+                    for (int m = 0; m < mats.Length; m++)
                     {
-                        if (material.shader.keywordSpace.keywordNames.Contains("_CUSTOMIZATION")) material.SetKeyword(new UnityEngine.Rendering.LocalKeyword(material.shader, "_CUSTOMIZATION"), true);
+                        var mat = mats[m];
+                        if (mat == null) continue;
+                        // avoid LINQ Contains()
+                        var kws = mat.shader.keywordSpace.keywordNames;
+                        bool hasCustomization = false;
+                        for (int k = 0; k < kws.Length; k++)
+                        {
+                            if (kws[k] == "_CUSTOMIZATION") { hasCustomization = true; break; }
+                        }
+                        if (hasCustomization)
+                            mat.SetKeyword(new UnityEngine.Rendering.LocalKeyword(mat.shader, "_CUSTOMIZATION"), true);
                     }
                 }
             }
 
-            //Initialize hair/apparel objects
             HairObjects = new List<GameObject>(new GameObject[HairTables.Count]);
             ApparelObjects = new List<GameObject>(new GameObject[ApparelTables.Count]);
 
-            //Load character
             if (Autoload) LoadFromJSON();
 
-            //UI prefab should be valid in the scene where you're customizing the character and blank elsewhere
-            if (UI != null)
+            if (UI != null && CC_UI_Manager.instance != null)
             {
-                //Setup customization colliders for hover effects
                 var physicsManager = GetComponentInChildren<PhysicsManager>();
-                if (physicsManager != null)
-                {
-                    physicsManager.customizationSetup();
-                }
+                if (physicsManager != null) physicsManager.customizationSetup();
 
                 if (UI_Instance == null)
                 {
-                    //Create UI
                     UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
-                    if (UI_Instance.GetComponent<CC_UI_Util>() == null)
+                    var util = UI_Instance != null ? UI_Instance.GetComponent<CC_UI_Util>() : null;
+                    if (util == null)
                     {
                         Debug.LogError("UI is missing CC_UI_Util script");
                         return;
                     }
-
-                    UI_Instance.GetComponent<CC_UI_Util>().Initialize(this);
+                    util.Initialize(this);
                 }
             }
         }
@@ -189,111 +186,105 @@ namespace CC
         {
             if (UI_Instance != null) UI_Instance.SetActive(false);
         }
-
-        #endregion Initialize script
+        #endregion
 
         public void SwitchHead(bool value)
-        { 
-            if (MainMesh != null)
-                MainMesh.enabled = value;
-    
-            if (HairObjects != null)
-                if (HairObjects.Count > 0)
-                    foreach (var o in HairObjects)
-                        if  (o != null)
-                            if (o.GetComponentInChildren<Renderer>() != null)
-                                o.GetComponentInChildren<Renderer>().enabled = value;
+        {
+            if (MainMesh != null) MainMesh.enabled = value;
+            if (HairObjects != null && HairObjects.Count > 0)
+            {
+                for (int i = 0; i < HairObjects.Count; i++)
+                {
+                    var o = HairObjects[i];
+                    if (o == null) continue;
+                    var r = o.GetComponentInChildren<Renderer>();
+                    if (r != null) r.enabled = value;
+                }
+            }
         }
-        
-        
-        #region Save & Load
 
+        #region Save & Load
         public void SaveToJSON(string name = null)
         {
-            //Save if file exists, otherwise create a save file
             if (!File.Exists(SavePath)) createSaveFile();
 
-            if (name == null)
-                name = CharacterName;
-            
-            if (name != "")
+            if (string.IsNullOrEmpty(name)) name = CharacterName;
+            if (!string.IsNullOrEmpty(name))
             {
-                //Load CC_SaveData from JSON file
                 string jsonLoad = File.ReadAllText(SavePath);
                 CC_SaveData CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
-                //Clone character data
+                // clone data
                 string characterDataJSON = JsonUtility.ToJson(StoredCharacterData, true);
                 var characterDataCopy = JsonUtility.FromJson<CC_CharacterData>(characterDataJSON);
                 characterDataCopy.CharacterName = name;
                 characterDataCopy.CharacterPrefab = gameObject.name;
 
-                //Find character index by CharacterName
-                int index = CC_SaveData.SavedCharacters.FindIndex(t => t.CharacterName == name);
-
-                //If found, overwrite save data
-                if (index != -1)
+                int index = -1;
+                for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
                 {
-                    CC_SaveData.SavedCharacters[index] = characterDataCopy;
-                }
-                //Otherwise add new character
-                else
-                {
-                    CC_SaveData.SavedCharacters.Add(characterDataCopy);
+                    if (CC_SaveData.SavedCharacters[i].CharacterName == name) { index = i; break; }
                 }
 
-                
-                
-                //Save to JSON
+                if (index != -1) CC_SaveData.SavedCharacters[index] = characterDataCopy;
+                else CC_SaveData.SavedCharacters.Add(characterDataCopy);
+
                 string jsonSave = JsonUtility.ToJson(CC_SaveData, true);
                 File.WriteAllText(SavePath, jsonSave);
-                
-                
 
                 ApplyCharacterVars(StoredCharacterData);
             }
         }
 
-        //Instantiate a character from name, not used anywhere but this is how you could do it
         public void InstantiateCharacter(string name, Transform _transform)
         {
             if (!File.Exists(SavePath)) createSaveFile();
 
-            //Load CC_SaveData from JSON file
             string jsonLoad = File.ReadAllText(SavePath);
             var CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
-            //Find character index by CharacterName and load character data
-            int index = CC_SaveData.SavedCharacters.FindIndex(t => t.CharacterName == name);
+            int index = -1;
+            for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
+            {
+                if (CC_SaveData.SavedCharacters[i].CharacterName == name) { index = i; break; }
+            }
+
             if (index != -1)
             {
-                //Instantiate character from resources folder, set name and initialize the script
-                var newCharacter = (GameObject)Instantiate(Resources.Load(CC_SaveData.SavedCharacters[index].CharacterPrefab), _transform);
-                newCharacter.GetComponent<CharacterCustomization>().CharacterName = name;
-                newCharacter.GetComponent<CharacterCustomization>().Initialize();
+                var prefabPath = CC_SaveData.SavedCharacters[index].CharacterPrefab;
+                var loaded = Resources.Load(prefabPath);
+                if (loaded != null)
+                {
+                    var newCharacter = (GameObject)Instantiate(loaded, _transform);
+                    var cc = newCharacter.GetComponent<CharacterCustomization>();
+                    if (cc != null)
+                    {
+                        cc.CharacterName = name;
+                        cc.Initialize();
+                    }
+                }
             }
         }
 
         public void SaveToPrefab()
         {
 #if UNITY_EDITOR
-
-            //Clone character data
             string characterDataJSON = JsonUtility.ToJson(StoredCharacterData, true);
             var characterDataCopy = JsonUtility.FromJson<CC_CharacterData>(characterDataJSON);
 
-            //Load original prefab to duplicate
             var ogPrefab = Resources.Load(StoredCharacterData.CharacterPrefab);
-            if (ogPrefab == null) throw new System.Exception("Prefab not assigned in character data");
+            if (ogPrefab == null) throw new Exception("Prefab not assigned in character data");
             var newPrefab = (GameObject)PrefabUtility.InstantiatePrefab(ogPrefab);
 
-            //Delete character in JSON file
             if (File.Exists(SavePath))
             {
-                //Load CC_SaveData from JSON file
                 string jsonLoad = File.ReadAllText(SavePath);
                 var CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
-                int index = CC_SaveData.SavedCharacters.FindIndex(t => t.CharacterName == StoredCharacterData.CharacterName);
+                int index = -1;
+                for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
+                {
+                    if (CC_SaveData.SavedCharacters[i].CharacterName == StoredCharacterData.CharacterName) { index = i; break; }
+                }
                 if (index != -1)
                 {
                     CC_SaveData.SavedCharacters.RemoveAt(index);
@@ -302,25 +293,28 @@ namespace CC
                 }
             }
 
-            //Update name and prefab
             string prefabSuffix = "_" + CharacterName;
             characterDataCopy.CharacterName = CharacterName;
 
-            //Create new prefab
             string prefabPath = AssetDatabase.GetAssetPath(ogPrefab);
             string newPath = prefabPath.Replace(".prefab", prefabSuffix + ".prefab");
-            newPrefab.GetComponent<CharacterCustomization>().CharacterName = CharacterName;
-            newPrefab.GetComponent<CharacterCustomization>().Autoload = true;
-            PrefabUtility.SaveAsPrefabAsset(newPrefab, newPath);
-
-            //Overwrite or add new preset
-            int presetIndex = Presets.Presets.FindIndex(t => t.CharacterName == characterDataCopy.CharacterName);
-            if (presetIndex != -1)
+            var cc = newPrefab.GetComponent<CharacterCustomization>();
+            if (cc != null)
             {
-                Presets.Presets[presetIndex] = characterDataCopy;
+                cc.CharacterName = CharacterName;
+                cc.Autoload = true;
             }
-            else Presets.Presets.Add(characterDataCopy);
-
+            PrefabUtility.SaveAsPrefabAsset(newPrefab, newPath);
+            if (Presets != null)
+            {
+                int presetIndex = -1;
+                for (int i = 0; i < Presets.Presets.Count; i++)
+                {
+                    if (Presets.Presets[i].CharacterName == characterDataCopy.CharacterName) { presetIndex = i; break; }
+                }
+                if (presetIndex != -1) Presets.Presets[presetIndex] = characterDataCopy;
+                else Presets.Presets.Add(characterDataCopy);
+            }
             DestroyImmediate(newPrefab);
 #endif
         }
@@ -328,55 +322,53 @@ namespace CC
         public void SaveToPreset(string presetName)
         {
 #if UNITY_EDITOR
-
-            //Clone character data
             string characterDataJSON = JsonUtility.ToJson(StoredCharacterData, true);
             var characterDataCopy = JsonUtility.FromJson<CC_CharacterData>(characterDataJSON);
             characterDataCopy.CharacterName = presetName;
 
-            //Overwrite or add new preset
-            int presetIndex = Presets.Presets.FindIndex(t => t.CharacterName == presetName);
-            if (presetIndex != -1)
+            if (Presets != null)
             {
-                Presets.Presets[presetIndex] = characterDataCopy;
+                int presetIndex = -1;
+                for (int i = 0; i < Presets.Presets.Count; i++)
+                {
+                    if (Presets.Presets[i].CharacterName == presetName) { presetIndex = i; break; }
+                }
+                if (presetIndex != -1) Presets.Presets[presetIndex] = characterDataCopy;
+                else Presets.Presets.Add(characterDataCopy);
             }
-            else Presets.Presets.Add(characterDataCopy);
 #endif
         }
 
         public void LoadFromJSON(string jsonString = "")
         {
-            //Load if file exists, otherwise create a save file and rerun the function
             if (!File.Exists(SavePath))
             {
                 createSaveFile();
             }
-            
-            if (CharacterName != "")
+
+            if (!string.IsNullOrEmpty(CharacterName))
             {
-                //Load CC_SaveData from JSON file
                 string jsonLoad = File.ReadAllText(SavePath);
-
-                if (jsonString != "")
-                {
-                    jsonLoad = jsonString;
-                }
-
+                if (!string.IsNullOrEmpty(jsonString)) jsonLoad = jsonString;
                 CC_SaveData CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
-                //Find character index by CharacterName and load character data
-                StoredCharacterData = CC_SaveData.SavedCharacters.Find(t => t.CharacterName == CharacterName);
+                // find by name
+                StoredCharacterData = null;
+                for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
+                {
+                    if (CC_SaveData.SavedCharacters[i].CharacterName == CharacterName)
+                    {
+                        StoredCharacterData = CC_SaveData.SavedCharacters[i];
+                        break;
+                    }
+                }
 
-                //If saved character was not found, load preset character
                 if (StoredCharacterData == null)
                 {
-                    //if (!LoadFromPreset(CharacterName)) Debug.LogError("Failed to load character: No save data or presets found");
-                    //return;
                     randomizeAll();
                     randomizeCharacterAndOutfit();
                 }
-                
-                //Apply stored data to character
+
                 ApplyCharacterVars(StoredCharacterData);
             }
         }
@@ -384,7 +376,7 @@ namespace CC
         public string GetJSON()
         {
             if (!File.Exists(SavePath)) createSaveFile();
-            return CharacterName != "" ? File.ReadAllText(SavePath) : string.Empty;
+            return !string.IsNullOrEmpty(CharacterName) ? File.ReadAllText(SavePath) : string.Empty;
         }
 
         public bool LoadFromPreset(string presetName)
@@ -396,154 +388,103 @@ namespace CC
                 ApplyCharacterVars(StoredCharacterData);
                 return true;
             }
-
-            //No presets available
             return false;
         }
 
         public bool GetPresetData(string presetName, out CC_CharacterData preset)
         {
-            //Try to find a preset matching the character name
-            preset = Presets.Presets.Find(t => t.CharacterName == presetName) ?? Presets.Presets.FirstOrDefault();
+            preset = null;
+            if (Presets != null)
+            {
+                for (int i = 0; i < Presets.Presets.Count; i++)
+                {
+                    if (Presets.Presets[i].CharacterName == presetName)
+                    {
+                        preset = Presets.Presets[i];
+                        break;
+                    }
+                }
+                if (preset == null && Presets.Presets.Count > 0) preset = Presets.Presets[0];
+            }
             return preset != null;
+        }
+
+        private void EnsureCharacterData(ref CC_CharacterData characterData)
+        {
+            if (characterData == null)
+            {
+                characterData = new CC_CharacterData
+                {
+                    CharacterName = CharacterName,
+                    CharacterPrefab = gameObject.name,
+                    Blendshapes = new List<CC_Property>(),
+                    HairNames = new List<string>(),
+                    ApparelNames = new List<string>(),
+                    ApparelMaterials = new List<int>(),
+                    FloatProperties = new List<CC_Property>(),
+                    TextureProperties = new List<CC_Property>(),
+                    ColorProperties = new List<CC_Property>()
+                };
+            }
         }
 
         public void ApplyCharacterVars(CC_CharacterData characterData)
         {
-            //Start coroutine if async
-            if (LoadAsync)
-            {
-                if (activeCoroutine != null) StopCoroutine(activeCoroutine);
-                activeCoroutine = StartCoroutine(ApplyCharacterVarsAsync(characterData));
-                return;
-            }
+            EnsureCharacterData(ref characterData);
+            StoredCharacterData = characterData;
 
-            //Resize lists
-            while (StoredCharacterData.HairNames.Count < HairObjects.Count)
-            {
-                StoredCharacterData.HairNames.Add("");
-            }
-            while (StoredCharacterData.ApparelNames.Count < ApparelObjects.Count)
-            {
-                StoredCharacterData.ApparelNames.Add("");
-            }
-            while (StoredCharacterData.ApparelMaterials.Count < ApparelObjects.Count)
-            {
-                StoredCharacterData.ApparelMaterials.Add(0);
-            }
+            while (StoredCharacterData.HairNames.Count < HairObjects.Count) StoredCharacterData.HairNames.Add("");
+            while (StoredCharacterData.ApparelNames.Count < ApparelObjects.Count) StoredCharacterData.ApparelNames.Add("");
+            while (StoredCharacterData.ApparelMaterials.Count < ApparelObjects.Count) StoredCharacterData.ApparelMaterials.Add(0);
 
-            //Set blendshapes
             for (int i = 0; i < characterData.Blendshapes.Count; i++)
             {
-                setBlendshapeByName(characterData.Blendshapes[i].propertyName, characterData.Blendshapes[i].floatValue, false);
+                var bs = characterData.Blendshapes[i];
+                setBlendshapeByName(bs.propertyName, bs.floatValue, false);
             }
 
-            //Set hair
-            for (int i = 0; i < characterData.HairNames.Count; i++)
+            for (int i = 0; i < characterData.HairNames.Count; i++) setHairByName(characterData.HairNames[i], i);
+            for (int i = 0; i < characterData.ApparelNames.Count; i++) setApparelByName(characterData.ApparelNames[i], i, characterData.ApparelMaterials[i]);
+
+            for (int i = 0; i < characterData.TextureProperties.Count; i++) setTextureProperty(characterData.TextureProperties[i], false);
+            for (int i = 0; i < characterData.FloatProperties.Count; i++) setFloatProperty(characterData.FloatProperties[i], false);
+            for (int i = 0; i < characterData.ColorProperties.Count; i++) setColorProperty(characterData.ColorProperties[i], false);
+
+            if (UI_Instance != null)
             {
-                setHairByName(characterData.HairNames[i], i);
+                var util = UI_Instance.GetComponent<CC_UI_Util>();
+                if (util != null) util.refreshUI();
             }
-
-            //Set apparel
-            for (int i = 0; i < characterData.ApparelNames.Count; i++)
-            {
-                setApparelByName(characterData.ApparelNames[i], i, characterData.ApparelMaterials[i]);
-            }
-
-            //Set texture properties
-            foreach (var textureData in characterData.TextureProperties)
-            {
-                setTextureProperty(textureData, false);
-            }
-
-            //Set float properties
-            foreach (var floatData in characterData.FloatProperties)
-            {
-                setFloatProperty(floatData, false);
-            }
-
-            //Set color properties
-            foreach (var colorData in characterData.ColorProperties)
-            {
-                setColorProperty(colorData, false);
-            }
-
-            if (UI_Instance != null) UI_Instance.GetComponent<CC_UI_Util>().refreshUI();
             onCharacterLoaded?.Invoke(this);
         }
 
         public IEnumerator ApplyCharacterVarsAsync(CC_CharacterData characterData)
         {
-            //Create material instances
-            var meshes = GetComponentsInChildren<Renderer>();
-            var materials = new List<Material>();
-            foreach (var mesh in meshes)
-            {
-                if (mesh == null) continue;
-                foreach (var material in mesh.sharedMaterials)
-                {
-                    materials.Add(new Material(material));
-                    yield return null;
-                }
-            }
+            EnsureCharacterData(ref characterData);
+            StoredCharacterData = characterData;
 
-            //Resize lists
-            while (StoredCharacterData.HairNames.Count < HairObjects.Count)
-            {
-                StoredCharacterData.HairNames.Add("");
-            }
-            while (StoredCharacterData.ApparelNames.Count < ApparelObjects.Count)
-            {
-                StoredCharacterData.ApparelNames.Add("");
-            }
-            while (StoredCharacterData.ApparelMaterials.Count < ApparelObjects.Count)
-            {
-                StoredCharacterData.ApparelMaterials.Add(0);
-            }
+            while (StoredCharacterData.HairNames.Count < HairObjects.Count) StoredCharacterData.HairNames.Add("");
+            while (StoredCharacterData.ApparelNames.Count < ApparelObjects.Count) StoredCharacterData.ApparelNames.Add("");
+            while (StoredCharacterData.ApparelMaterials.Count < ApparelObjects.Count) StoredCharacterData.ApparelMaterials.Add(0);
 
-            //Set blendshapes
             for (int i = 0; i < characterData.Blendshapes.Count; i++)
             {
-                setBlendshapeByName(characterData.Blendshapes[i].propertyName, characterData.Blendshapes[i].floatValue, false);
+                var bs = characterData.Blendshapes[i];
+                setBlendshapeByName(bs.propertyName, bs.floatValue, false);
                 if (i % 5 == 0) yield return null;
             }
 
-            //Set hair
-            for (int i = 0; i < characterData.HairNames.Count; i++)
-            {
-                setHairByName(characterData.HairNames[i], i);
-                yield return null;
-            }
+            for (int i = 0; i < characterData.HairNames.Count; i++) { setHairByName(characterData.HairNames[i], i); yield return null; }
+            for (int i = 0; i < characterData.ApparelNames.Count; i++) { setApparelByName(characterData.ApparelNames[i], i, characterData.ApparelMaterials[i]); yield return null; }
+            for (int i = 0; i < characterData.TextureProperties.Count; i++) { setTextureProperty(characterData.TextureProperties[i], false); yield return null; }
+            for (int i = 0; i < characterData.FloatProperties.Count; i++) { setFloatProperty(characterData.FloatProperties[i], false); yield return null; }
+            for (int i = 0; i < characterData.ColorProperties.Count; i++) { setColorProperty(characterData.ColorProperties[i], false); yield return null; }
 
-            //Set apparel
-            for (int i = 0; i < characterData.ApparelNames.Count; i++)
+            if (UI_Instance != null)
             {
-                setApparelByName(characterData.ApparelNames[i], i, characterData.ApparelMaterials[i]);
-                yield return null;
+                var util = UI_Instance.GetComponent<CC_UI_Util>();
+                if (util != null) util.refreshUI();
             }
-
-            //Set texture properties
-            foreach (var textureData in characterData.TextureProperties)
-            {
-                setTextureProperty(textureData, false);
-                yield return null;
-            }
-
-            //Set float properties
-            foreach (var floatData in characterData.FloatProperties)
-            {
-                setFloatProperty(floatData, false);
-                yield return null;
-            }
-
-            //Set color properties
-            foreach (var colorData in characterData.ColorProperties)
-            {
-                setColorProperty(colorData, false);
-                yield return null;
-            }
-
-            if (UI_Instance != null) UI_Instance.GetComponent<CC_UI_Util>().refreshUI();
             onCharacterLoaded?.Invoke(this);
         }
 
@@ -556,222 +497,211 @@ namespace CC
         public void setCharacterName(string newName)
         {
             CharacterName = newName;
-            StoredCharacterData.CharacterName = newName;
+            if (StoredCharacterData != null) StoredCharacterData.CharacterName = newName;
         }
-
-        #endregion Save & Load
+        #endregion
 
         #region Customization
-
         public void setHair(int selection, int slot)
         {
-            if (slot >= HairTables.Count) Debug.LogError("Tried to set hair from non-existing hair table");
+            if (slot >= HairTables.Count) { Debug.LogError("Tried to set hair from non-existing hair table"); return; }
+            var table = HairTables[slot];
+            if (selection >= table.Hairstyles.Count) return;
 
-            if (HairTables[slot].Hairstyles.Count > selection)
+            var HairData = table.Hairstyles[selection];
+
+            if (HairObjects[slot] != null) Destroy(HairObjects[slot]);
+
+            if (HairData.Mesh != null)
             {
-                scrObj_Hair.Hairstyle HairData = HairTables[slot].Hairstyles[selection];
+                HairObjects[slot] = Instantiate(HairData.Mesh, transform);
+                var HairObject = HairObjects[slot];
 
-                //Destroy active GameObject
-                if (HairObjects[slot] != null) Destroy(HairObjects[slot]);
-
-                //Set mesh if valid
-                if (HairTables[slot].Hairstyles[selection].Mesh != null)
+                var skinned = HairObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+                for (int i = 0; i < skinned.Length; i++)
                 {
-                    HairObjects[slot] = Instantiate(HairData.Mesh, gameObject.transform);
-
-                    var HairObject = HairObjects[slot];
-
-                    //Add blendshape managers and update shapes
-                    foreach (var mesh in HairObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+                    var mesh = skinned[i];
+                    if (mesh == null) continue;
+                    var manager = mesh.gameObject.AddComponent<BlendshapeManager>();
+                    manager.parseBlendshapes();
+                    for (int s = 0; s < StoredCharacterData.Blendshapes.Count; s++)
                     {
-                        var manager = mesh.gameObject.AddComponent<BlendshapeManager>();
-                        manager.parseBlendshapes();
-                        foreach (var shapeData in StoredCharacterData.Blendshapes)
-                        {
-                            manager.setBlendshape(shapeData.propertyName, shapeData.floatValue);
-                        }
-                    }
-
-                    //Add CopyPose script
-                    if (HairData.AddCopyPoseScript)
-                    {
-                        HairObject.AddComponent<CopyPose>();
-                    }
-                    //Otherwise assume hierarchy is the same
-                    else
-                    {
-                        foreach (var mesh in HairObject.GetComponentsInChildren<SkinnedMeshRenderer>())
-                        {
-                            var mainMeshTransforms = MainMesh.rootBone.GetComponentsInChildren<Transform>();
-                            var mainMeshBoneMap = mainMeshTransforms.ToDictionary(t => t.name, t => t);
-
-                            var mainMeshBones = new Transform[mesh.bones.Length];
-                            var oldMeshRoot = mesh.rootBone;
-
-                            //Map old bones to new bones
-                            for (var i = 0; i < mesh.bones.Length; i++)
-                            {
-                                if (mesh.bones[i] == null) continue;
-                                mainMeshBoneMap.TryGetValue(mesh.bones[i].name, out mainMeshBones[i]);
-                            }
-
-                            //Clean up old root and reassign properties
-                            Destroy(oldMeshRoot.gameObject);
-                            mesh.bones = mainMeshBones;
-                            mesh.rootBone = MainMesh.rootBone;
-                            mesh.localBounds = MainMesh.localBounds;
-                        }
-
-                        //Recalculate bounds
-                        var lodGroup = HairObject.GetComponentInChildren<LODGroup>();
-                        if (lodGroup != null) { lodGroup.RecalculateBounds(); lodGroup.size = 0.5f; }
+                        var shapeData = StoredCharacterData.Blendshapes[s];
+                        manager.setBlendshape(shapeData.propertyName, shapeData.floatValue);
                     }
                 }
 
-                //Set shadow map
-                var shadowMapProperty = HairTables[slot].SkinShadowMapProperty;
-                if (shadowMapProperty.propertyName != "" && HairData.ShadowMap != null) setTextureProperty(shadowMapProperty, false, HairData.ShadowMap);
+                if (HairData.AddCopyPoseScript)
+                {
+                    HairObject.AddComponent<CopyPose>();
+                }
+                else if (MainMesh != null && MainMesh.rootBone != null)
+                {
+                    // bone map without LINQ
+                    var mainTransforms = MainMesh.rootBone.GetComponentsInChildren<Transform>();
+                    var boneMap = new Dictionary<string, Transform>(mainTransforms.Length);
+                    for (int i = 0; i < mainTransforms.Length; i++)
+                    {
+                        var t = mainTransforms[i]; if (t == null) continue;
+                        if (!boneMap.ContainsKey(t.name)) boneMap.Add(t.name, t);
+                    }
 
-                //Update hair color
-                setColorProperty(HairTables[slot].HairTintProperty, false);
+                    for (int i = 0; i < skinned.Length; i++)
+                    {
+                        var mesh = skinned[i];
+                        if (mesh == null) continue;
+                        var oldRoot = mesh.rootBone;
+                        var newBones = new Transform[mesh.bones.Length];
+                        for (int b = 0; b < mesh.bones.Length; b++)
+                        {
+                            var ob = mesh.bones[b];
+                            if (ob == null) { newBones[b] = null; continue; }
+                            if (!boneMap.TryGetValue(ob.name, out newBones[b])) newBones[b] = null;
+                        }
+                        if (oldRoot != null) Destroy(oldRoot.gameObject);
+                        mesh.bones = newBones;
+                        mesh.rootBone = MainMesh.rootBone;
+                        mesh.localBounds = MainMesh.localBounds;
+                    }
 
-                //Update hair name in StoredCharacterData
-                StoredCharacterData.HairNames[slot] = HairData.Name;
+                    var lodGroup = HairObject.GetComponentInChildren<LODGroup>();
+                    if (lodGroup != null) { lodGroup.RecalculateBounds(); lodGroup.size = 0.5f; }
+                }
             }
+
+            var shadowMapProperty = table.SkinShadowMapProperty;
+            if (!string.IsNullOrEmpty(shadowMapProperty.propertyName) && HairData.ShadowMap != null)
+                setTextureProperty(shadowMapProperty, false, HairData.ShadowMap);
+
+            setColorProperty(table.HairTintProperty, false);
+
+            StoredCharacterData.HairNames[slot] = HairData.Name;
         }
 
         public void setHairByName(string name, int slot)
         {
-            int index = HairTables[slot].Hairstyles.FindIndex(t => t.Name == name);
+            if (slot >= HairTables.Count) return;
+            var list = HairTables[slot].Hairstyles;
+            int index = -1;
+            for (int i = 0; i < list.Count; i++) if (list[i].Name == name) { index = i; break; }
             if (index != -1) setHair(index, slot);
         }
 
         public void setApparel(int selection, int slot, int materialSelection)
         {
-            if (slot >= ApparelTables.Count)
+            if (slot >= ApparelTables.Count) { Debug.LogError("Tried to set apparel from non-existing apparel table"); return; }
+            var table = ApparelTables[slot];
+            if (selection >= table.Items.Count) return;
+
+            var ApparelData = table.Items[selection];
+
+            if (ApparelObjects[slot] != null) Destroy(ApparelObjects[slot]);
+
+            if (ApparelData.Mesh != null)
             {
-                Debug.LogError("Tried to set apparel from non-existing apparel table");
-                return;
-            }
+                ApparelObjects[slot] = Instantiate(ApparelData.Mesh, transform);
+                var ApparelObject = ApparelObjects[slot];
 
-            if (ApparelTables[slot].Items.Count > selection)
-            {
-                scrObj_Apparel.Apparel ApparelData = ApparelTables[slot].Items[selection];
-
-                //Destroy active GameObject
-                if (ApparelObjects[slot] != null) Destroy(ApparelObjects[slot]);
-
-                //Set mesh if valid
-                if (ApparelTables[slot].Items[selection].Mesh != null)
+                var skinned = ApparelObject.GetComponentsInChildren<SkinnedMeshRenderer>();
+                for (int i = 0; i < skinned.Length; i++)
                 {
-                    ApparelObjects[slot] = Instantiate(ApparelData.Mesh, gameObject.transform);
-
-                    var ApparelObject = ApparelObjects[slot];
-
-                    //Add blendshape managers and update shapes
-                    foreach (var mesh in ApparelObject.GetComponentsInChildren<SkinnedMeshRenderer>())
+                    var mesh = skinned[i];
+                    if (mesh == null) continue;
+                    var manager = mesh.gameObject.AddComponent<BlendshapeManager>();
+                    manager.parseBlendshapes();
+                    for (int s = 0; s < StoredCharacterData.Blendshapes.Count; s++)
                     {
-                        var manager = mesh.gameObject.AddComponent<BlendshapeManager>();
-                        manager.parseBlendshapes();
-                        foreach (var shapeData in StoredCharacterData.Blendshapes)
-                        {
-                            manager.setBlendshape(shapeData.propertyName, shapeData.floatValue);
-                        }
-                    }
-
-                    //Set tints
-                    foreach (var mesh in ApparelObject.GetComponentsInChildren<SkinnedMeshRenderer>())
-                    {
-                        if (materialSelection >= ApparelData.Materials.Count) break;
-
-                        var matDefinitions = ApparelData.Materials[materialSelection].MaterialDefinitions;
-
-                        for (int i = 0; i < matDefinitions.Count; i++)
-                        {
-                            if (i >= mesh.materials.Length) break;
-
-                            mesh.materials[i].SetColor("_Tint", matDefinitions[i].MainTint);
-                            mesh.materials[i].SetColor("_Tint_R", matDefinitions[i].TintR);
-                            mesh.materials[i].SetColor("_Tint_G", matDefinitions[i].TintG);
-                            mesh.materials[i].SetColor("_Tint_B", matDefinitions[i].TintB);
-
-                            if (matDefinitions[i].Print)
-                            {
-                                mesh.materials[i].SetTexture("_Print", matDefinitions[i].Print);
-                            }
-                            else
-                            {
-                                mesh.materials[i].SetTexture("_Print", Resources.Load<Texture2D>("T_Transparent"));
-                            }
-                        }
-                    }
-
-                    //Add CopyPose script
-                    if (ApparelData.AddCopyPoseScript)
-                    {
-                        ApparelObject.AddComponent<CopyPose>();
-                    }
-                    //Otherwise assume hierarchy is the same
-                    else
-                    {
-                        foreach (var mesh in ApparelObject.GetComponentsInChildren<SkinnedMeshRenderer>())
-                        {
-                            var mainMeshTransforms = MainMesh.rootBone.GetComponentsInChildren<Transform>();
-                            var mainMeshBoneMap = mainMeshTransforms.ToDictionary(t => t.name, t => t);
-
-                            var mainMeshBones = new Transform[mesh.bones.Length];
-                            var oldMeshRoot = mesh.rootBone;
-
-                            //Map old bones to new bones
-                            for (var i = 0; i < mesh.bones.Length; i++)
-                            {
-                                if (mesh.bones[i] == null) continue;
-                                mainMeshBoneMap.TryGetValue(mesh.bones[i].name, out mainMeshBones[i]);
-                            }
-
-                            //Clean up old root and reassign properties
-                            Destroy(oldMeshRoot.gameObject);
-                            mesh.bones = mainMeshBones;
-                            mesh.rootBone = MainMesh.rootBone;
-                            mesh.localBounds = MainMesh.localBounds;
-                        }
-
-                        //Recalculate bounds
-                        var lodGroup = ApparelObject.GetComponentInChildren<LODGroup>();
-                        if (lodGroup != null) { lodGroup.RecalculateBounds(); lodGroup.size = 0.5f; }
+                        var shapeData = StoredCharacterData.Blendshapes[s];
+                        manager.setBlendshape(shapeData.propertyName, shapeData.floatValue);
                     }
                 }
 
-                //Set foot offset
-                if (ApparelData.FootOffset.HeightOffset >= 0)
+                // set tints
+                for (int i = 0; i < skinned.Length; i++)
                 {
-                    setBodyCustomization("BodyCustomization_FootRotation", ApparelData.FootOffset.FootRotation);
-                    setBodyCustomization("BodyCustomization_BallRotation", ApparelData.FootOffset.BallRotation);
-                    setBodyCustomization("BodyCustomization_HeightOffset", ApparelData.FootOffset.HeightOffset);
+                    var mesh = skinned[i]; if (mesh == null) continue;
+                    if (materialSelection >= ApparelData.Materials.Count) break;
+                    var defs = ApparelData.Materials[materialSelection].MaterialDefinitions;
+                    var mats = mesh.materials;
+                    int count = mats.Length < defs.Count ? mats.Length : defs.Count;
+                    for (int m = 0; m < count; m++)
+                    {
+                        var mat = mats[m]; var def = defs[m];
+                        if (mat == null) continue;
+                        mat.SetColor("_Tint", def.MainTint);
+                        mat.SetColor("_Tint_R", def.TintR);
+                        mat.SetColor("_Tint_G", def.TintG);
+                        mat.SetColor("_Tint_B", def.TintB);
+                        mat.SetTexture("_Print", def.Print != null ? def.Print : Resources.Load<Texture2D>("T_Transparent"));
+                    }
                 }
 
-                //Set neck shrink
-                if (ApparelData.NeckShrink >= 0) setFloatProperty(new CC_Property() { propertyName = "_Neck_Shrink", materialIndex = 0, meshTag = "Head", floatValue = ApparelData.NeckShrink / 100 });
+                if (ApparelData.AddCopyPoseScript)
+                {
+                    ApparelObject.AddComponent<CopyPose>();
+                }
+                else if (MainMesh != null && MainMesh.rootBone != null)
+                {
+                    var mainTransforms = MainMesh.rootBone.GetComponentsInChildren<Transform>();
+                    var boneMap = new Dictionary<string, Transform>(mainTransforms.Length);
+                    for (int i = 0; i < mainTransforms.Length; i++)
+                    {
+                        var t = mainTransforms[i]; if (t == null) continue;
+                        if (!boneMap.ContainsKey(t.name)) boneMap.Add(t.name, t);
+                    }
 
-                //Set mask
-                setTextureProperty(ApparelTables[slot].SkinMaskProperty, false, ApparelData.Mask);
+                    for (int i = 0; i < skinned.Length; i++)
+                    {
+                        var mesh = skinned[i]; if (mesh == null) continue;
+                        var oldRoot = mesh.rootBone;
+                        var newBones = new Transform[mesh.bones.Length];
+                        for (int b = 0; b < mesh.bones.Length; b++)
+                        {
+                            var ob = mesh.bones[b];
+                            if (ob == null) { newBones[b] = null; continue; }
+                            if (!boneMap.TryGetValue(ob.name, out newBones[b])) newBones[b] = null;
+                        }
+                        if (oldRoot != null) Destroy(oldRoot.gameObject);
+                        mesh.bones = newBones;
+                        mesh.rootBone = MainMesh.rootBone;
+                        mesh.localBounds = MainMesh.localBounds;
+                    }
 
-                //Update apparel name in StoredCharacterData
-                StoredCharacterData.ApparelNames[slot] = ApparelData.Name;
-                StoredCharacterData.ApparelMaterials[slot] = materialSelection;
+                    var lodGroup = ApparelObject.GetComponentInChildren<LODGroup>();
+                    if (lodGroup != null) { lodGroup.RecalculateBounds(); lodGroup.size = 0.5f; }
+                }
             }
+
+            if (ApparelData.FootOffset.HeightOffset >= 0)
+            {
+                setBodyCustomization("BodyCustomization_FootRotation", ApparelData.FootOffset.FootRotation);
+                setBodyCustomization("BodyCustomization_BallRotation", ApparelData.FootOffset.BallRotation);
+                setBodyCustomization("BodyCustomization_HeightOffset", ApparelData.FootOffset.HeightOffset);
+            }
+
+            if (ApparelData.NeckShrink >= 0)
+            {
+                setFloatProperty(new CC_Property { propertyName = "_Neck_Shrink", materialIndex = 0, meshTag = "Head", floatValue = ApparelData.NeckShrink / 100f }, false);
+            }
+
+            setTextureProperty(table.SkinMaskProperty, false, ApparelData.Mask);
+
+            StoredCharacterData.ApparelNames[slot] = ApparelData.Name;
+            StoredCharacterData.ApparelMaterials[slot] = materialSelection;
         }
 
         public void setApparelByName(string name, int slot, int materialSelection)
         {
-            if (ApparelTables.Count <= slot) return;
-            int index = ApparelTables[slot].Items.FindIndex(t => t.Name == name);
+            if (slot >= ApparelTables.Count) return;
+            var items = ApparelTables[slot].Items;
+            int index = -1;
+            for (int i = 0; i < items.Count; i++) if (items[i].Name == name) { index = i; break; }
             if (index != -1) setApparel(index, slot, materialSelection);
         }
 
         public void setRandomOutfit()
         {
-            if (Outfits.GetRandomOutfit(this, out var apparelOptions, out var apparelMaterials))
+            if (Outfits != null && Outfits.GetRandomOutfit(this, out var apparelOptions, out var apparelMaterials))
             {
                 if (activeCoroutine != null) StopCoroutine(activeCoroutine);
                 activeCoroutine = StartCoroutine(setRandomOutfitAsync());
@@ -790,17 +720,14 @@ namespace CC
         public void randomizeAll()
         {
             if (Randomizer == null) return;
-
             if (activeCoroutine != null) StopCoroutine(activeCoroutine);
             activeCoroutine = StartCoroutine(Randomizer.randomizeAll(this));
-
-            if (UI_Instance != null) UI_Instance.GetComponent<CC_UI_Util>().refreshUI();
+            if (UI_Instance != null) { var u = UI_Instance.GetComponent<CC_UI_Util>(); if (u != null) u.refreshUI(); }
         }
 
         public void randomizeCharacterAndOutfit()
         {
             if (Randomizer == null || Outfits == null) return;
-
             if (activeCoroutine != null) StopCoroutine(activeCoroutine);
             activeCoroutine = StartCoroutine(doRandomize());
 
@@ -813,20 +740,14 @@ namespace CC
 
         public void setBlendshapeByName(string name, float value, bool save = true)
         {
-            if (name != "")
+            if (string.IsNullOrEmpty(name)) return;
+            if (save) saveProperty(ref StoredCharacterData.Blendshapes, new CC_Property { propertyName = name, floatValue = value });
+            if (name.Contains("BodyCustomization")) { setBodyCustomization(name, value); return; }
+
+            var managers = GetComponentsInChildren<BlendshapeManager>();
+            for (int i = 0; i < managers.Length; i++)
             {
-                //Save property
-                if (save) saveProperty(ref StoredCharacterData.Blendshapes, new CC_Property() { propertyName = name, floatValue = value });
-
-                //Set body customization
-                if (name.Contains("BodyCustomization")) { setBodyCustomization(name, value); return; }
-
-                //Set blendshape on every mesh with a blendshape manager
-
-                foreach (var manager in gameObject.GetComponentsInChildren<BlendshapeManager>())
-                {
-                    manager.setBlendshape(name, value);
-                }
+                var m = managers[i]; if (m != null) m.setBlendshape(name, value);
             }
         }
 
@@ -836,112 +757,132 @@ namespace CC
             if (modifyBoneManager != null) modifyBoneManager.setModifyValue(name, value);
         }
 
-        public List<Material> getRelevantMaterials(int materialIndex, string meshTag)
+        // Optimized setters to avoid building large temp lists
+        public void setTextureProperty(CC_Property p, bool save = false, Texture2D t = null)
         {
-            IEnumerable<Renderer> meshes = string.IsNullOrEmpty(meshTag)
-                ? gameObject.GetComponentsInChildren<Renderer>()
-                : getMeshByTag(meshTag);
-
-            //Convert to list of materials
-            var materials = new List<Material>();
-            foreach (var mesh in meshes)
+            if (t != null) p.stringValue = t.name;
+            var renderers = string.IsNullOrEmpty(p.meshTag) ? GetComponentsInChildren<Renderer>().ToList() : getMeshByTag(p.meshTag);
+            for (int i = 0; i < renderers.Count; i++)
             {
-                if (materialIndex != -1)
+                var r = renderers[i]; if (r == null) continue;
+                var mats = r.materials;
+                if (p.materialIndex >= 0)
                 {
-                    //Add single material at index if it exists
-                    if (mesh.materials.Length > materialIndex)
+                    if (p.materialIndex < mats.Length)
                     {
-                        materials.Add(mesh.materials[materialIndex]);
+                        var mat = mats[p.materialIndex];
+                        if (mat != null && mat.HasProperty(p.propertyName)) mat.SetTexture(p.propertyName, t != null ? t : Resources.Load<Texture2D>(p.stringValue));
                     }
                 }
                 else
                 {
-                    //Add all materials
-                    materials.AddRange(mesh.materials);
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        var mat = mats[m]; if (mat == null) continue;
+                        if (mat.HasProperty(p.propertyName)) mat.SetTexture(p.propertyName, t != null ? t : Resources.Load<Texture2D>(p.stringValue));
+                    }
                 }
             }
+            if (save) saveProperty(ref StoredCharacterData.TextureProperties, p);
+        }
 
-            return materials;
+        public void setFloatProperty(CC_Property p, bool save = false)
+        {
+            var renderers = string.IsNullOrEmpty(p.meshTag) ? GetComponentsInChildren<Renderer>().ToList() : getMeshByTag(p.meshTag);
+            for (int i = 0; i < renderers.Count; i++)
+            {
+                var r = renderers[i]; if (r == null) continue;
+                var mats = r.materials;
+                if (p.materialIndex >= 0)
+                {
+                    if (p.materialIndex < mats.Length)
+                    {
+                        var mat = mats[p.materialIndex];
+                        if (mat != null && mat.HasProperty(p.propertyName)) mat.SetFloat(p.propertyName, p.floatValue);
+                    }
+                }
+                else
+                {
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        var mat = mats[m]; if (mat == null) continue;
+                        if (mat.HasProperty(p.propertyName)) mat.SetFloat(p.propertyName, p.floatValue);
+                    }
+                }
+            }
+            if (save) saveProperty(ref StoredCharacterData.FloatProperties, p);
+        }
+
+        public void setColorProperty(CC_Property p, bool save = false)
+        {
+            var renderers = string.IsNullOrEmpty(p.meshTag) ? GetComponentsInChildren<Renderer>().ToList() : getMeshByTag(p.meshTag);
+            for (int i = 0; i < renderers.Count; i++)
+            {
+                var r = renderers[i]; if (r == null) continue;
+                var mats = r.materials;
+                if (p.materialIndex >= 0)
+                {
+                    if (p.materialIndex < mats.Length)
+                    {
+                        var mat = mats[p.materialIndex];
+                        if (mat != null && mat.HasProperty(p.propertyName)) mat.SetColor(p.propertyName, p.colorValue);
+                    }
+                }
+                else
+                {
+                    for (int m = 0; m < mats.Length; m++)
+                    {
+                        var mat = mats[m]; if (mat == null) continue;
+                        if (mat.HasProperty(p.propertyName)) mat.SetColor(p.propertyName, p.colorValue);
+                    }
+                }
+            }
+            if (save) saveProperty(ref StoredCharacterData.ColorProperties, p);
         }
 
         public List<Renderer> getMeshByTag(string tag)
         {
-            return gameObject.GetComponentsInChildren<Renderer>().Where(m => m.gameObject.tag == tag).ToList();
-        }
-
-        //Set texture property
-        public void setTextureProperty(CC_Property p, bool save = false, Texture2D t = null)
-        {
-            if (t != null) p.stringValue = t.name;
-            //Get relevant materials and set texture
-            foreach (var material in getRelevantMaterials(p.materialIndex, p.meshTag))
+            var all = GetComponentsInChildren<Renderer>();
+            var list = new List<Renderer>(all.Length);
+            for (int i = 0; i < all.Length; i++)
             {
-                if (material.HasProperty(p.propertyName)) material.SetTexture(p.propertyName, (t != null) ? t : (Texture2D)Resources.Load(p.stringValue));
+                var r = all[i]; if (r != null && r.gameObject.tag == tag) list.Add(r);
             }
-
-            if (save) saveProperty(ref StoredCharacterData.TextureProperties, p);
-        }
-
-        //Set float property
-        public void setFloatProperty(CC_Property p, bool save = false)
-        {
-            //Get relevant materials and set float
-            foreach (var material in getRelevantMaterials(p.materialIndex, p.meshTag))
-            {
-                if (material.HasProperty(p.propertyName)) material.SetFloat(p.propertyName, p.floatValue);
-            }
-
-            if (save) saveProperty(ref StoredCharacterData.FloatProperties, p);
-        }
-
-        //Set color property
-        public void setColorProperty(CC_Property p, bool save = false)
-        {
-            //Get relevant materials and set color
-            foreach (var material in getRelevantMaterials(p.materialIndex, p.meshTag))
-            {
-                if (material.HasProperty(p.propertyName)) material.SetColor(p.propertyName, p.colorValue);
-            }
-
-            if (save) saveProperty(ref StoredCharacterData.ColorProperties, p);
+            return list;
         }
 
         public bool findProperty(List<CC_Property> properties, CC_Property p, out CC_Property pOut, out int index)
         {
-            int i = properties.FindIndex(t => t.propertyName == p.propertyName && t.materialIndex == p.materialIndex && t.meshTag == p.meshTag);
-            if (i >= 0)
+            index = -1;
+            for (int i = 0; i < properties.Count; i++)
             {
-                pOut = properties[i];
-                index = i;
+                var it = properties[i];
+                if (it.propertyName == p.propertyName && it.materialIndex == p.materialIndex && it.meshTag == p.meshTag)
+                { index = i; break; }
+            }
+            if (index >= 0)
+            {
+                pOut = properties[index];
                 return true;
             }
-            else
-            {
-                pOut = p;
-                index = -1;
-                return false;
-            }
+            pOut = p;
+            return false;
         }
 
-        //Save property to list, overwrite if already exists
         public void saveProperty(ref List<CC_Property> properties, CC_Property p)
         {
-            var propertyIndex = properties.FindIndex(t => t.materialIndex == p.materialIndex && t.propertyName == p.propertyName && t.meshTag == p.meshTag);
-
-            if (propertyIndex == -1)
+            int index = -1;
+            for (int i = 0; i < properties.Count; i++)
             {
-                properties.Add(p);
+                var it = properties[i];
+                if (it.materialIndex == p.materialIndex && it.propertyName == p.propertyName && it.meshTag == p.meshTag)
+                { index = i; break; }
             }
-            else
-            {
-                properties[propertyIndex] = p;
-            }
+            if (index == -1) properties.Add(p); else properties[index] = p;
         }
-
-        #endregion Customization
+        #endregion
 
 #if UNITY_EDITOR
-
         [CustomEditor(typeof(CharacterCustomization))]
         public class CharacterSelectorEditor : Editor
         {
@@ -949,28 +890,26 @@ namespace CC
 
             private void OnEnable()
             {
-                //Cache the serialized property for CharacterName
                 characterNameProp = serializedObject.FindProperty("CharacterName");
             }
 
             public override void OnInspectorGUI()
             {
                 CharacterCustomization characterSelector = (CharacterCustomization)target;
-
                 serializedObject.Update();
 
-                //Check if scrObj_Presets is assigned
                 if (characterSelector.Presets != null && characterSelector.Presets.Presets.Count > 0)
                 {
-                    //Get the current selected index
-                    string[] characterNames = characterSelector.Presets.Presets.Select(p => p.CharacterName).ToArray();
+                    var presets = characterSelector.Presets.Presets;
+                    string[] characterNames = new string[presets.Count];
+                    for (int i = 0; i < presets.Count; i++) characterNames[i] = presets[i].CharacterName;
+
                     int oldIndex = ArrayUtility.IndexOf(characterNames, characterNameProp.stringValue);
                     int newIndex = EditorGUILayout.Popup(oldIndex, characterNames);
 
-                    //Update the CharacterName when selection changes
                     if (newIndex != oldIndex && newIndex >= 0 && newIndex < characterNames.Length)
                     {
-                        characterNameProp.stringValue = characterSelector.Presets.Presets[newIndex].CharacterName;
+                        characterNameProp.stringValue = presets[newIndex].CharacterName;
                     }
                 }
                 else
@@ -978,14 +917,10 @@ namespace CC
                     EditorGUILayout.HelpBox("Please assign a Presets ScriptableObject.", MessageType.Warning);
                 }
 
-                //Apply any changes made to the serialized object
                 serializedObject.ApplyModifiedProperties();
-
-                //Optionally, draw the default inspector for other variables
                 DrawDefaultInspector();
             }
         }
-
 #endif
     }
 }

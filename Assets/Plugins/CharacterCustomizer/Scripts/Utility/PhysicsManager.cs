@@ -13,22 +13,23 @@ namespace CC
         private ModifyBone[] modifyBones;
 
         public bool useGravity;
-
         public bool ragdolling;
-        public bool customizing; //If customizing, colliders should be activated for hover detection
+        public bool customizing;
 
         private void Awake()
         {
-            if (animator == null) animator = gameObject.GetComponent<Animator>();
-            if (capsule == null) capsule = gameObject.GetComponent<CapsuleCollider>();
-            rigidBodies = gameObject.GetComponentsInChildren<Rigidbody>();
-            colliders = gameObject.GetComponentsInChildren<Collider>();
-            modifyBones = gameObject.GetComponentsInChildren<ModifyBone>();
+            if (animator == null) animator = GetComponent<Animator>();
+            if (capsule == null) capsule = GetComponent<CapsuleCollider>();
+            rigidBodies = GetComponentsInChildren<Rigidbody>(true);
+            colliders = GetComponentsInChildren<Collider>(true);
+            modifyBones = GetComponentsInChildren<ModifyBone>(true);
 
-            foreach (var item in rigidBodies)
+            for (int i = 0; i < rigidBodies.Length; i++)
             {
-                item.useGravity = useGravity;
-                item.isKinematic = true;
+                var rb = rigidBodies[i];
+                if (rb == null) continue;
+                rb.useGravity = useGravity;
+                rb.isKinematic = true;
             }
         }
 
@@ -39,21 +40,16 @@ namespace CC
 
         public void customizationSetup()
         {
-            //Create head rig
-            var headRig = GetComponentInChildren<HeadColliders>();
-            if (headRig != null)
-            {
-                headRig.createColliders();
-            }
+            var headRig = GetComponentInChildren<HeadColliders>(true);
+            if (headRig != null) headRig.createColliders();
 
-            //Enable colliders
-            foreach (var item in colliders)
+            for (int i = 0; i < colliders.Length; i++)
             {
-                item.enabled = true;
+                var c = colliders[i];
+                if (c != null) c.enabled = true;
             }
 
             if (capsule != null) capsule.enabled = false;
-
             customizing = true;
         }
 
@@ -61,34 +57,31 @@ namespace CC
         {
             ragdolling = shouldRagdoll;
 
-            //Enable colliders when ragdolling or customizing
-            foreach (var item in colliders)
+            for (int i = 0; i < colliders.Length; i++)
             {
-                item.enabled = ragdolling || customizing;
+                var c = colliders[i];
+                if (c != null) c.enabled = ragdolling || customizing;
             }
 
-            //Notify modifyBone scripts
-            foreach (var item in modifyBones)
+            for (int i = 0; i < modifyBones.Length; i++)
             {
-                item.onSimulate(ragdolling);
+                var mb = modifyBones[i];
+                if (mb != null) mb.onSimulate(ragdolling);
             }
 
             if (ragdolling) yield return new WaitForFixedUpdate();
 
-            //Disable capsule when ragdolling or customizing
             if (capsule != null) capsule.enabled = !ragdolling && !customizing;
 
-            //Enable physics
-            foreach (var item in rigidBodies)
+            for (int i = 0; i < rigidBodies.Length; i++)
             {
-                item.angularVelocity = Vector3.zero;
-                item.isKinematic = !ragdolling;
+                var rb = rigidBodies[i];
+                if (rb == null) continue;
+                rb.angularVelocity = Vector3.zero;
+                rb.isKinematic = !ragdolling;
             }
 
-            //Disable animator when ragdolling
             if (animator != null) animator.enabled = !ragdolling;
-
-            yield break;
         }
     }
 }

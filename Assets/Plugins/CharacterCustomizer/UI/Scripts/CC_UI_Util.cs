@@ -4,82 +4,83 @@ namespace CC
 {
     public class CC_UI_Util : MonoBehaviour
     {
-        private CharacterCustomization customizer;
+        private CharacterCustomization _customizer;
 
-        //Initialize all child UI elements
         public void Initialize(CharacterCustomization customizerScript)
         {
-            customizer = customizerScript;
+            _customizer = customizerScript;
 
             var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
+            if (interfaces == null) return;
 
-            foreach (var element in interfaces)
+            for (int i = 0; i < interfaces.Length; i++)
             {
-                element.InitializeUIElement(customizerScript, this);
+                interfaces[i]?.InitializeUIElement(customizerScript, this);
             }
         }
 
-        //Refresh UI elements, for example after loading a different preset
         public void refreshUI()
         {
             var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
+            if (interfaces == null) return;
 
-            foreach (var element in interfaces)
+            for (int i = 0; i < interfaces.Length; i++)
             {
-                element.RefreshUIElement();
+                interfaces[i]?.RefreshUIElement();
             }
         }
 
         public void characterNext()
         {
             saveToJSON();
-            CC_UI_Manager.instance.characterNext();
+            if (CC_UI_Manager.instance != null) CC_UI_Manager.instance.characterNext();
         }
 
         public void characterPrev()
         {
             saveToJSON();
-            CC_UI_Manager.instance.characterPrev();
+            if (CC_UI_Manager.instance != null) CC_UI_Manager.instance.characterPrev();
         }
 
         public void saveToPreset(string name)
         {
-            customizer.SaveToPreset(name);
+            _customizer?.SaveToPreset(name);
         }
 
         public void saveToJSON()
         {
-            customizer?.SaveToJSON();
+            _customizer?.SaveToJSON();
         }
 
         public void loadCharacter()
         {
-            customizer.LoadFromJSON();
+            _customizer?.LoadFromJSON();
             refreshUI();
         }
 
         public void setCharacterName(string newName)
         {
-            customizer.setCharacterName(newName);
+            _customizer?.setCharacterName(newName);
         }
 
         public void setCharacterPreset(string preset)
         {
+            // reserved (no-op)
         }
 
         public void randomizeCharacter()
         {
-            customizer.randomizeAll();
+            _customizer?.randomizeAll();
         }
 
         public void randomizeOutfit()
         {
-            customizer.setRandomOutfit();
+            _customizer?.setRandomOutfit();
         }
 
         public void randomizeCharacterAndOutfit()
         {
-            customizer.randomizeCharacterAndOutfit();
+            _customizer?.randomizeCharacterAndOutfit();
         }
     }
 }

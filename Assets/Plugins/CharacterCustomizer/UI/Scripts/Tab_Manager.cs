@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.UI;
 
 namespace CC
 {
-    public class Tab_Manager : MonoBehaviour
+    public sealed class Tab_Manager : MonoBehaviour
     {
         [Header("Button Active Colors")]
         public ColorBlock TabColorActive;
@@ -14,47 +13,89 @@ namespace CC
         public ColorBlock TabColorInactive;
 
         public GameObject TabParent;
-        private List<GameObject> tabs = new List<GameObject>();
-        private List<GameObject> tabMenus = new List<GameObject>();
-
-        private SmoothScroll scrollRect;
         public SmoothScroll targetScroll;
+
+        private readonly List<GameObject> _tabs = new List<GameObject>(8);
+        private readonly List<GameObject> _tabMenus = new List<GameObject>(8);
+        private SmoothScroll _scrollRect;
+        private RectTransform _tabParentRT;
 
         private void Start()
         {
-            for (int i = 0; i < transform.childCount; i++)
+            // Собираем вкладки (кнопки)
+            int childCount = transform.childCount;
+            for (int i = 0; i < childCount; i++)
             {
-                var tab = transform.GetChild(i).gameObject;
-                var index = i;
-                tabs.Add(tab);
+                var tr = transform.GetChild(i);
+                if (tr == null) continue;
 
-                tab.GetComponentInChildren<Button>().onClick.AddListener(() => switchTab(index));
+                var tabGO = tr.gameObject;
+                _tabs.Add(tabGO);
+
+                var btn = tabGO.GetComponentInChildren<Button>(true);
+                if (btn == null) continue;
+
+                int idx = i; // фиксируем индекс
+                btn.onClick.AddListener(() => switchTab(idx));
             }
 
-            if (TabParent != null) foreach (Transform child in TabParent.transform)
+            // Собираем панели содержимого
+            if (TabParent != null)
+            {
+                _tabParentRT = TabParent.GetComponent<RectTransform>();
+                var parentTr = TabParent.transform;
+                int cnt = parentTr.childCount;
+                for (int i = 0; i < cnt; i++)
                 {
-                    tabMenus.Add(child.gameObject);
+                    var child = parentTr.GetChild(i);
+                    if (child != null) _tabMenus.Add(child.gameObject);
                 }
+            }
 
-            scrollRect = GetComponentInParent<SmoothScroll>();
+            _scrollRect = GetComponentInParent<SmoothScroll>();
             switchTab(0);
-            if (scrollRect != null) scrollRect.resetScroll();
+
+            if (_scrollRect != null) _scrollRect.resetScroll();
         }
 
-        public void switchTab(int tab)
+        public void switchTab(int tabIndex)
         {
-            for (int i = 0; i < tabs.Count; i++)
-            {
-                //Set tab color
-                tabs[i].GetComponentInChildren<Button>().colors = tab == i ? TabColorActive : TabColorInactive;
+            if (_tabs.Count == 0) return;
+            if (tabIndex < 0 || tabIndex >= _tabs.Count) tabIndex = 0;
 
-                //Set tab active state
-                if (tabMenus.Count > i) tabMenus[i].SetActive(tab == i);
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                var tabGO = _tabs[i];
+                if (tabGO == null) continue;
+
+                var btn = tabGO.GetComponentInChildren<Button>(true);
+                if (btn != null) btn.colors = (tabIndex == i) ? TabColorActive : TabColorInactive;
+
+                if (i < _tabMenus.Count && _tabMenus[i] != null)
+                    _tabMenus[i].SetActive(tabIndex == i);
             }
 
-            if (scrollRect != null) scrollRect.ScrollToContent(tabs[tab].GetComponent<RectTransform>());
-            if (TabParent != null) LayoutRebuilder.ForceRebuildLayoutImmediate(TabParent.GetComponent<RectTransform>());
-            if (targetScroll != null) targetScroll.resetScroll();
+            var rt = _tabs[tabIndex] != null ? _tabs[tabIndex].GetComponent<RectTransform>() : null;
+            if (_scrollRect != null && rt != null) _scrollRect.ScrollToContent(rt);
+
+            if (_tabParentRT != null)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_tabParentRT);
+
+            if (targetScroll != null)
+                targetScroll.resetScroll();
+        }
+
+        private void OnDestroy()
+        {
+            // Чистим подписки у кнопок, чтобы не висели делегаты
+            for (int i = 0; i < _tabs.Count; i++)
+            {
+                var tabGO = _tabs[i];
+                if (tabGO == null) continue;
+
+                var btn = tabGO.GetComponentInChildren<Button>(true);
+                if (btn != null) btn.onClick.RemoveAllListeners();
+            }
         }
     }
 }

@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,8 +7,8 @@ namespace CC
 {
     public class Option_Proportional_Sliders : MonoBehaviour, ICustomizerUI
     {
-        private CharacterCustomization customizer;
-        private CC_UI_Util parentUI;
+        private CharacterCustomization _customizer;
+        private CC_UI_Util _parentUI;
 
         public List<CC_Property> Properties = new List<CC_Property>();
 
@@ -19,79 +18,112 @@ namespace CC
         public GameObject SliderObject;
         public Transform SliderContainer;
 
-        private List<Slider> sliders = new List<Slider>();
-        private List<Option_Slider> sliderScripts = new List<Option_Slider>();
-
-        private float sliderSum;
+        private readonly List<Slider> _sliders = new List<Slider>();
+        private readonly List<Option_Slider> _sliderScripts = new List<Option_Slider>();
+        private float _sliderSum;
 
         public void InitializeUIElement(CharacterCustomization customizerScript, CC_UI_Util ParentUI)
         {
-            customizer = customizerScript;
-            parentUI = ParentUI;
+            _customizer = customizerScript;
+            _parentUI = ParentUI;
 
-            foreach (var slider in sliderScripts)
+            // Cleanup previous
+            for (int i = 0; i < _sliderScripts.Count; i++)
             {
-                Destroy(slider.gameObject);
+                if (_sliderScripts[i] != null)
+                    Destroy(_sliderScripts[i].gameObject);
             }
+            _sliderScripts.Clear();
+            _sliders.Clear();
 
-            sliderScripts.Clear();
-            sliders.Clear();
+            if (SliderObject == null || SliderContainer == null || Properties == null) return;
 
             for (int i = 0; i < Properties.Count; i++)
             {
-                //Create sliders, assign to reference and add delegate
                 var sliderObj = Instantiate(SliderObject, SliderContainer);
-                Option_Slider sliderScript = sliderObj.AddComponent<Option_Slider>();
+                if (sliderObj == null) continue;
 
-                if (RemoveText) sliderObj.GetComponentInChildren<TMP_Text>().gameObject.SetActive(false);
+                var sliderScript = sliderObj.AddComponent<Option_Slider>();
+                if (RemoveText)
+                {
+                    var txt = sliderObj.GetComponentInChildren<TMP_Text>(true);
+                    if (txt != null) txt.gameObject.SetActive(false);
+                }
 
-                sliderScripts.Add(sliderScript);
+                _sliderScripts.Add(sliderScript);
                 sliderScript.Property = Properties[i];
                 sliderScript.CustomizationType = Option_Slider.Type.Blendshape;
                 sliderScript.InitializeUIElement(customizerScript, ParentUI);
 
-                Slider slider = sliderScript.GetComponentInChildren<Slider>();
-                if (Vertical) slider.SetDirection(Slider.Direction.BottomToTop, true);
-                sliders.Add(slider);
-                slider.onValueChanged.AddListener(delegate { checkExcess(slider); });
+                var slider = sliderScript.GetComponentInChildren<Slider>(true);
+                if (slider != null)
+                {
+                    if (Vertical) slider.SetDirection(Slider.Direction.BottomToTop, true);
+                    _sliders.Add(slider);
+                    slider.onValueChanged.AddListener(_ => checkExcess(slider));
+                }
             }
 
-            LayoutRebuilder.ForceRebuildLayoutImmediate(transform.parent.GetComponent<RectTransform>());
+            var parentRT = transform.parent as RectTransform;
+            if (parentRT != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(parentRT);
+            }
         }
 
         public void RefreshUIElement()
         {
-            foreach (var slider in sliderScripts)
+            for (int i = 0; i < _sliderScripts.Count; i++)
             {
-                slider.RefreshUIElement();
+                _sliderScripts[i]?.RefreshUIElement();
             }
         }
 
         public void checkExcess(Slider mainSlider)
         {
-            sliderSum = 0;
+            if (mainSlider == null) return;
 
-            foreach (Slider slider in sliders)
+            _sliderSum = 0f;
+            for (int i = 0; i < _sliders.Count; i++)
             {
-                sliderSum = slider.value + sliderSum;
+                var s = _sliders[i];
+                if (s != null) _sliderSum += s.value;
             }
 
-            if (sliderSum > 1)
+            if (_sliderSum > 1f)
             {
-                for (int i = 0; i < sliders.Count; i++)
+                float sumWithoutMain = _sliderSum - mainSlider.value;
+                float excess = _sliderSum - 1f;
+
+                if (sumWithoutMain <= 0f) return;
+
+                for (int i = 0; i < _sliders.Count; i++)
                 {
-                    if (mainSlider != sliders[i])
-                    {
-                        distributeExcess(sliderSum - mainSlider.value, sliderSum - 1, i);
-                    }
+                    if (_sliders[i] == null || _sliders[i] == mainSlider) continue;
+                    distributeExcess(sumWithoutMain, excess, i);
                 }
             }
         }
 
         public void distributeExcess(float sum, float excess, int index)
         {
-            sliders[index].SetValueWithoutNotify(sliders[index].value - (sliders[index].value / sum * excess));
-            sliderScripts[index].setProperty(sliders[index].value);
+            var s = _sliders[index];
+            var sc = _sliderScripts[index];
+            if (s == null || sc == null || sum <= 0f) return;
+
+            float newVal = s.value - (s.value / sum) * excess;
+            s.SetValueWithoutNotify(newVal);
+            sc.setProperty(newVal);
+        }
+
+        private void OnDestroy()
+        {
+            // best-effort cleanup
+            for (int i = 0; i < _sliders.Count; i++)
+            {
+                var s = _sliders[i];
+                if (s != null) s.onValueChanged.RemoveAllListeners();
+            }
         }
     }
 }

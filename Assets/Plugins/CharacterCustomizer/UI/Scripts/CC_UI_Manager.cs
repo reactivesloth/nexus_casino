@@ -10,198 +10,211 @@ namespace CC
         public static CC_UI_Manager instance;
 
         public delegate void OnHover(string partHovered);
-
         public event OnHover onHover;
 
         public delegate void OnDrag(string partX, string partY, float deltaX, float deltaY, bool first, bool last);
-
         public event OnDrag onDrag;
-
-        private bool Dragging;
-        private string hoveredPart = "";
-        private string partX, partY = "";
-        private float multX, multY = 1f;
-        public float mouseDeltaScale = 0.01f;
-        private Vector3 mousePos;
-
-        private Canvas canvas;
-
-        private void Awake()
-        {
-            if (instance == null)
-            {
-                instance = this;
-            }
-            else
-            {
-                Destroy(gameObject);
-            }
-        }
 
         [Tooltip("The parent object of your customizable characters")]
         public GameObject CharacterParent;
 
-        private int currentCharacter;
-
         public List<AudioClip> UISounds = new List<AudioClip>();
+        public float mouseDeltaScale = 0.01f;
+
+        private bool _dragging;
+        private string _hoveredPart = "";
+        private string _partX = "", _partY = "";
+        private float _multX = 1f, _multY = 1f;
+        private Vector3 _mousePos;
+        private Canvas _canvas;
+        private Camera _mainCam;
+        private int _currentCharacter;
+
+        private void Awake()
+        {
+            if (instance == null) instance = this;
+            else { Destroy(gameObject); return; }
+        }
 
         public void Start()
         {
-            string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
+            _mainCam = Camera.main;
 
-            switch (playerModelType)
-            {
-                case "Female":
-                    SetActiveCharacter(0);
-                    break;
-                case "Male":
-                    SetActiveCharacter(1);
-                    break;
-                case "PlayerM1":
-                    SetActiveCharacter(2);
-                    break;
-                case "PlayerM2":
-                    SetActiveCharacter(3);
-                    break;
-                case "PlayerM3":
-                    SetActiveCharacter(4);
-                    break;
-                default:
-                    SetActiveCharacter(1);
-                    break;
-            }
+            string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
+            int index = PlayerModelTypeToIndex(playerModelType);
+            SetActiveCharacter(index);
         }
 
         private void Update()
         {
-            bool first = !Dragging && Input.GetMouseButton(0);
-            bool last = Dragging && !Input.GetMouseButton(0);
+            bool first = !_dragging && Input.GetMouseButton(0);
+            bool last = _dragging && !Input.GetMouseButton(0);
 
-            //Set shape on first drag
             if (first)
             {
-                partX = ""; partY = "";
-                multX = hoveredPart.Contains("_r") ? -1 : 1; multY = -1f;
+                _partX = ""; _partY = "";
+                _multX = _hoveredPart != null && _hoveredPart.Contains("_r") ? -1f : 1f;
+                _multY = -1f;
 
-                if (hoveredPart.Contains("spine_05")) { partX = "BodyCustomization_ShoulderWidth"; partY = "BodyCustomization_TorsoHeight"; }
-                else if (hoveredPart.Contains("spine")) { partX = "BodyCustomization_WaistSize"; partY = ""; }
-                else if (hoveredPart.Contains("pelvis")) { partX = "BodyCustomization_HipWidth"; partY = ""; }
-                else if (hoveredPart.Contains("lowerarm")) { partX = "BodyCustomization_LowerArmScale"; partY = ""; }
-                else if (hoveredPart.Contains("upperarm")) { partX = "BodyCustomization_UpperArmScale"; partY = ""; }
-                else if (hoveredPart.Contains("thigh")) { partX = "BodyCustomization_ThighScale"; partY = ""; }
-                else if (hoveredPart.Contains("calf")) { partX = "BodyCustomization_CalfScale"; partY = ""; }
-                else if (hoveredPart.Contains("head")) { partX = "BodyCustomization_HeadSize"; partY = "BodyCustomization_NeckLength"; }
-                else if (hoveredPart.Contains("neck")) { partX = "BodyCustomization_NeckScale"; partY = "BodyCustomization_NeckLength"; }
-                else if (hoveredPart.Contains("collider_nose")) { partX = "mod_nose_size"; partY = "mod_nose_height"; multY = 1; }
-                else if (hoveredPart.Contains("collider_mouth")) { partX = "mod_mouth_size"; partY = "mod_mouth_height"; multY = 1; }
-                else if (hoveredPart.Contains("collider_cheekbones")) { partX = "mod_cheekbone_size"; partY = ""; multX *= -1; }
-                else if (hoveredPart.Contains("collider_cheeks")) { partX = "mod_cheeks_size"; partY = ""; multX *= -1; }
-                else if (hoveredPart.Contains("collider_jaw")) { partX = "mod_jaw_width"; partY = "mod_jaw_height"; multX *= -1; }
-                else if (hoveredPart.Contains("collider_chin")) { partX = ""; partY = "mod_chin_size"; }
-                else if (hoveredPart.Contains("collider_eye")) { partX = "mod_eyes_narrow"; partY = "mod_eyes_height"; multY = 1; }
-                else if (hoveredPart.Contains("collider_brow")) { partX = ""; partY = "mod_brow_height"; }
+                if (!string.IsNullOrEmpty(_hoveredPart))
+                {
+                    if (_hoveredPart.Contains("spine_05")) { _partX = "BodyCustomization_ShoulderWidth"; _partY = "BodyCustomization_TorsoHeight"; }
+                    else if (_hoveredPart.Contains("spine")) { _partX = "BodyCustomization_WaistSize"; _partY = ""; }
+                    else if (_hoveredPart.Contains("pelvis")) { _partX = "BodyCustomization_HipWidth"; _partY = ""; }
+                    else if (_hoveredPart.Contains("lowerarm")) { _partX = "BodyCustomization_LowerArmScale"; _partY = ""; }
+                    else if (_hoveredPart.Contains("upperarm")) { _partX = "BodyCustomization_UpperArmScale"; _partY = ""; }
+                    else if (_hoveredPart.Contains("thigh")) { _partX = "BodyCustomization_ThighScale"; _partY = ""; }
+                    else if (_hoveredPart.Contains("calf")) { _partX = "BodyCustomization_CalfScale"; _partY = ""; }
+                    else if (_hoveredPart.Contains("head")) { _partX = "BodyCustomization_HeadSize"; _partY = "BodyCustomization_NeckLength"; }
+                    else if (_hoveredPart.Contains("neck")) { _partX = "BodyCustomization_NeckScale"; _partY = "BodyCustomization_NeckLength"; }
+                    else if (_hoveredPart.Contains("collider_nose")) { _partX = "mod_nose_size"; _partY = "mod_nose_height"; _multY = 1f; }
+                    else if (_hoveredPart.Contains("collider_mouth")) { _partX = "mod_mouth_size"; _partY = "mod_mouth_height"; _multY = 1f; }
+                    else if (_hoveredPart.Contains("collider_cheekbones")) { _partX = "mod_cheekbone_size"; _partY = ""; _multX *= -1f; }
+                    else if (_hoveredPart.Contains("collider_cheeks")) { _partX = "mod_cheeks_size"; _partY = ""; _multX *= -1f; }
+                    else if (_hoveredPart.Contains("collider_jaw")) { _partX = "mod_jaw_width"; _partY = "mod_jaw_height"; _multX *= -1f; }
+                    else if (_hoveredPart.Contains("collider_chin")) { _partX = ""; _partY = "mod_chin_size"; }
+                    else if (_hoveredPart.Contains("collider_eye")) { _partX = "mod_eyes_narrow"; _partY = "mod_eyes_height"; _multY = 1f; }
+                    else if (_hoveredPart.Contains("collider_brow")) { _partX = ""; _partY = "mod_brow_height"; }
+                }
             }
 
-            Dragging = Input.GetMouseButton(0);
+            _dragging = Input.GetMouseButton(0);
 
-            if (Dragging && getCanvas() != null)
+            var canvas = GetCanvas();
+            if (_dragging && canvas != null)
             {
-                Vector3 mouseDelta = (Input.mousePosition - mousePos) * mouseDeltaScale / canvas.scaleFactor;
-                onDrag?.Invoke(partX, partY, mouseDelta.x * multX, mouseDelta.y * multY, first, last);
+                Vector3 mouseDelta = (Input.mousePosition - _mousePos) * mouseDeltaScale / canvas.scaleFactor;
+                onDrag?.Invoke(_partX, _partY, mouseDelta.x * _multX, mouseDelta.y * _multY, first, last);
             }
-            mousePos = Input.mousePosition;
+            _mousePos = Input.mousePosition;
         }
 
-        private Canvas getCanvas()
+        private Canvas GetCanvas()
         {
-            if (canvas != null) return canvas;
-            else
-            {
-                canvas = GetComponentInChildren<Canvas>();
-                return canvas;
-            }
+            if (_canvas != null) return _canvas;
+            _canvas = GetComponentInChildren<Canvas>();
+            return _canvas;
         }
 
         private void LateUpdate()
         {
-            if (Dragging) return;
-            onHover?.Invoke(hoveredPart);
+            if (_dragging) return;
+            onHover?.Invoke(_hoveredPart);
 
             Physics.SyncTransforms();
 
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (_mainCam == null) _mainCam = Camera.main;
+            if (_mainCam == null) { _hoveredPart = ""; return; }
 
-            if (Physics.Raycast(ray, out RaycastHit hit) && !EventSystem.current.IsPointerOverGameObject())
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
             {
-                hoveredPart = hit.collider.name;
+                _hoveredPart = "";
+                return;
             }
-            else hoveredPart = "";
+
+            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+                _hoveredPart = hit.collider != null ? hit.collider.name : "";
+            else
+                _hoveredPart = "";
         }
 
-        public void playUIAudio(int Index)
+        public void playUIAudio(int index)
         {
             var audioSource = gameObject.GetComponent<AudioSource>();
-            if (audioSource && UISounds.Count > Index) audioSource.clip = UISounds[Index]; audioSource.Play();
+            if (audioSource != null && UISounds != null && index >= 0 && index < UISounds.Count)
+            {
+                audioSource.clip = UISounds[index];
+                audioSource.Play();
+            }
         }
 
         public void SetActiveCharacter(int i)
         {
             if (CharacterParent == null) return;
 
-            currentCharacter = i;
+            int childCount = CharacterParent.transform.childCount;
+            if (childCount == 0) return;
 
-            SavePlayerModelType (i);
+            if (i < 0 || i >= childCount) i = 0;
+            _currentCharacter = i;
 
-            for (int j = 0; j < CharacterParent.transform.childCount; j++)
+            SavePlayerModelType(i);
+
+            for (int j = 0; j < childCount; j++)
             {
-                var character = CharacterParent.transform.GetChild(j).gameObject;
+                Transform tr = CharacterParent.transform.GetChild(j);
+                if (tr == null) continue;
 
-                //Reset active character and disable it
-                if (character.activeSelf && i != j)
+                GameObject character = tr.gameObject;
+                if (character == null) continue;
+
+                if (j == i)
                 {
-                    var script = character.GetComponentInChildren<CharacterCustomization>();
-                    //script?.LoadFromPreset(script.CharacterName);
-                    script?.LoadFromJSON();
-                    character.SetActive(false);
+                    character.SetActive(true);
                 }
-                //Enable selected character (its UI is automatically activated)
-                else if (i == j) character.SetActive(true);
+                else
+                {
+                    if (character.activeSelf)
+                    {
+                        var script = character.GetComponentInChildren<CharacterCustomization>();
+                        if (script != null)
+                        {
+                            //script.LoadFromPreset(script.CharacterName);
+                            script.LoadFromJSON();
+                        }
+                        character.SetActive(false);
+                    }
+                }
+            }
+        }
+
+        public void characterNext()
+        {
+            if (CharacterParent == null) return;
+            int count = CharacterParent.transform.childCount;
+            if (count == 0) return;
+
+            int next = (_currentCharacter == count - 1) ? 0 : _currentCharacter + 1;
+            SetActiveCharacter(next);
+        }
+
+        public void characterPrev()
+        {
+            if (CharacterParent == null) return;
+            int count = CharacterParent.transform.childCount;
+            if (count == 0) return;
+
+            int prev = (_currentCharacter == 0) ? count - 1 : _currentCharacter - 1;
+            SetActiveCharacter(prev);
+        }
+
+        private static int PlayerModelTypeToIndex(string type)
+        {
+            // map known types
+            switch (type)
+            {
+                case "Female": return 0;
+                case "Male": return 1;
+                case "PlayerM1": return 2;
+                case "PlayerM2": return 3;
+                case "PlayerM3": return 4;
+                default: return 1;
             }
         }
 
         private void SavePlayerModelType(int index)
         {
+            string val = "Male";
             switch (index)
             {
-                case 0:
-                    PlayerPrefs.SetString("PlayerModelType", "Female");
-                    break;
-                case 1:
-                    PlayerPrefs.SetString("PlayerModelType", "Male");
-                    break;
-                case 2:
-                    PlayerPrefs.SetString("PlayerModelType", "PlayerM1");
-                    break;
-                case 3:
-                    PlayerPrefs.SetString("PlayerModelType", "PlayerM2");
-                    break;
-                case 4:
-                    PlayerPrefs.SetString("PlayerModelType", "PlayerM3");
-                    break;
-                default:
-                    PlayerPrefs.SetString("PlayerModelType", "Male");
-                    break;
+                case 0: val = "Female"; break;
+                case 1: val = "Male"; break;
+                case 2: val = "PlayerM1"; break;
+                case 3: val = "PlayerM2"; break;
+                case 4: val = "PlayerM3"; break;
             }
-        }
-        
-        public void characterNext()
-        {
-            SetActiveCharacter(currentCharacter == CharacterParent.transform.childCount - 1 ? 0 : currentCharacter + 1);
-        }
-
-        public void characterPrev()
-        {
-            SetActiveCharacter(currentCharacter == 0 ? CharacterParent.transform.childCount - 1 : currentCharacter - 1);
+            PlayerPrefs.SetString("PlayerModelType", val);
         }
     }
 }

@@ -3,18 +3,22 @@ using UnityEngine.EventSystems;
 
 namespace CC
 {
-    public class SetCursor : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public sealed class SetCursor : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         public Texture2D cursorTexture;
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            Cursor_Manager.instance.setCursor(cursorTexture);
+            var inst = Cursor_Manager.instance;
+            if (inst != null && cursorTexture != null)
+                inst.setCursor(cursorTexture);
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            Cursor_Manager.instance.setDefaultCursor();
+            var inst = Cursor_Manager.instance;
+            if (inst != null)
+                inst.setDefaultCursor();
         }
     }
 }
