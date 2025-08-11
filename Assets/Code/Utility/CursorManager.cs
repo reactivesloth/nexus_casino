@@ -4,12 +4,12 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
-public class CursorManager : MonoBehaviour
+public sealed class CursorManager : MonoBehaviour
 {
     public static CursorManager Instance { get; private set; }
 
     [Header("Cursor Images (hardware)")]
-    [SerializeField] private List<Texture2D> cursorTextures = new();
+    [SerializeField] private List<Texture2D> cursorTextures = new List<Texture2D>();
     [SerializeField] private Vector2 hardwareHotspot = Vector2.zero;
     [SerializeField] private CursorMode hardwareMode = CursorMode.Auto;
 
@@ -20,15 +20,13 @@ public class CursorManager : MonoBehaviour
     [SerializeField] private Vector2 customCursorOffset = Vector2.zero;
 
     [Header("Tap / Hold tuning")]
-    [Tooltip("Максимальная длительность для считания как tap (в секундах)")]
     [SerializeField] private float tapMaxTime = 0.2f;
-    [Tooltip("Минимальная длительность удержания для long press (в секундах)")]
     [SerializeField] private float longPressThreshold = 0.5f;
     [SerializeField] private bool enableTapToCycle = true;
     [SerializeField] private bool enableLongPressToggleLock = true;
 
     [SerializeField] private bool forceShowCursor;
-    
+
     public event Action<bool> OnVisibilityChanged;
     public event Action<int> OnCursorImageChanged;
     public event Action<CursorLockMode> OnLockModeChanged;
@@ -40,27 +38,50 @@ public class CursorManager : MonoBehaviour
     private bool wasActionHeldLastFrame = false;
     private float actionHeldDuration = 0f;
 
+    // cached sprite to avoid leaks
+    private Sprite _customCursorSprite;
+
     private void Awake()
     {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
     private void OnEnable()
     {
         ApplyCurrentCursor();
-        UpdateCursorVisibility(false); // по умолчанию скрыт/в норме
+        UpdateCursorVisibility(false);
     }
-    
+
+    private void OnDisable()
+    {
+        // return system cursor back
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
+    private void OnDestroy()
+    {
+        if (_customCursorSprite != null)
+        {
+            Destroy(_customCursorSprite);
+            _customCursorSprite = null;
+        }
+    }
+
     private void Update()
     {
+#if UNITY_ANDROID || UNITY_IOS
+        return;
+#else
         if (forceShowCursor)
         {
             ShowCursor();
-            SetLockMode(CursorLockMode.None);
-            return;
         }
-        
-        HandlePrimaryAction();
+        else
+        {
+            HandlePrimaryAction();
+        }
 
         if (useCustomCursor && customCursorRect != null)
         {
@@ -70,36 +91,27 @@ public class CursorManager : MonoBehaviour
 
             customCursorRect.anchoredPosition = mousePos + customCursorOffset;
         }
+#endif
     }
 
     private void HandlePrimaryAction()
     {
-        if (PlayerInput.Instance == null)
-            return;
-
-        bool isHeld = PlayerInput.Instance.ForceCursorHeld;
+        // В проекте может не быть PlayerInput.Instance — просто выходим
+        bool isHeld = false;
+        var playerInputSingleton = PlayerInput.Instance; // если есть
+        if (playerInputSingleton != null)
+            isHeld = playerInputSingleton.ForceCursorHeld;
 
         if (isHeld)
         {
             actionHeldDuration += Time.unscaledDeltaTime;
-
             if (!wasActionHeldLastFrame)
-            {
-                // старт удержания
                 ShowCursor();
-            }
         }
         else if (wasActionHeldLastFrame)
         {
-            // отпускание — решаем, был ли tap или long press
-            if (enableTapToCycle && actionHeldDuration <= tapMaxTime)
-            {
-                CycleCursor();
-            }
-            else if (enableLongPressToggleLock && actionHeldDuration >= longPressThreshold)
-            {
-                ToggleLock();
-            }
+            if (enableTapToCycle && actionHeldDuration <= tapMaxTime) CycleCursor();
+            else if (enableLongPressToggleLock && actionHeldDuration >= longPressThreshold) ToggleLock();
 
             HideCursor();
             actionHeldDuration = 0f;
@@ -121,10 +133,9 @@ public class CursorManager : MonoBehaviour
                 customCursorImage.gameObject.SetActive(true);
             Cursor.visible = false;
         }
-        else
-        {
-            Cursor.visible = true;
-        }
+        else Cursor.visible = true;
+
+        SetLockMode(CursorLockMode.None);
         OnVisibilityChanged?.Invoke(true);
 #endif
     }
@@ -139,11 +150,9 @@ public class CursorManager : MonoBehaviour
             if (customCursorImage != null)
                 customCursorImage.gameObject.SetActive(false);
         }
-        else
-        {
-            Cursor.visible = false;
-        }
+        else Cursor.visible = false;
 
+        SetLockMode(CursorLockMode.Locked);
         OnVisibilityChanged?.Invoke(false);
 #endif
     }
@@ -153,9 +162,8 @@ public class CursorManager : MonoBehaviour
 #if UNITY_ANDROID || UNITY_IOS
         return;
 #else
-        if (visible) ShowCursor();
-        else HideCursor();
-#endif 
+        if (visible) ShowCursor(); else HideCursor();
+#endif
     }
 
     public bool IsVisible()
@@ -179,14 +187,16 @@ public class CursorManager : MonoBehaviour
         hardwareMode = mode ?? hardwareMode;
 
         Cursor.SetCursor(texture, hardwareHotspot, hardwareMode);
+
         if (useCustomCursor && customCursorImage != null)
         {
+            if (_customCursorSprite != null) { Destroy(_customCursorSprite); _customCursorSprite = null; }
             if (texture != null)
             {
-                customCursorImage.sprite = Sprite.Create(texture,
-                    new Rect(0, 0, texture.width, texture.height),
-                    new Vector2(0.5f, 0.5f));
+                _customCursorSprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+                customCursorImage.sprite = _customCursorSprite;
             }
+            else customCursorImage.sprite = null;
         }
 
         OnCursorImageChanged?.Invoke(currentCursorIndex);
@@ -194,19 +204,12 @@ public class CursorManager : MonoBehaviour
 
     public void ResetCursorToDefault()
     {
-        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
-        if (useCustomCursor && customCursorImage != null)
-        {
-            customCursorImage.sprite = null;
-        }
-        OnCursorImageChanged?.Invoke(currentCursorIndex);
+        SetCursorTexture(null, Vector2.zero, CursorMode.Auto);
     }
 
     public void CycleCursor()
     {
-        if (cursorTextures == null || cursorTextures.Count == 0)
-            return;
-
+        if (cursorTextures == null || cursorTextures.Count == 0) return;
         currentCursorIndex = (currentCursorIndex + 1) % cursorTextures.Count;
         SetCursorTexture(cursorTextures[currentCursorIndex], hardwareHotspot, hardwareMode);
     }
@@ -217,8 +220,6 @@ public class CursorManager : MonoBehaviour
         currentCursorIndex = index;
         SetCursorTexture(cursorTextures[currentCursorIndex], hardwareHotspot, hardwareMode);
     }
-
-    public int GetCurrentCursorIndex() => currentCursorIndex;
 
     private void ApplyCurrentCursor()
     {
@@ -239,25 +240,8 @@ public class CursorManager : MonoBehaviour
         OnLockModeChanged?.Invoke(mode);
     }
 
-    public void ToggleLock()
-    {
-        if (isLocked)
-            SetLockMode(CursorLockMode.None);
-        else
-            SetLockMode(CursorLockMode.Locked);
-    }
-
+    public void ToggleLock() => SetLockMode(isLocked ? CursorLockMode.None : CursorLockMode.Locked);
     public CursorLockMode GetLockMode() => Cursor.lockState;
-
-    #endregion
-
-    #region Utilities
-
-    public void SetCustomCursorSprite(Sprite sprite)
-    {
-        if (!useCustomCursor || customCursorImage == null) return;
-        customCursorImage.sprite = sprite;
-    }
 
     #endregion
 }

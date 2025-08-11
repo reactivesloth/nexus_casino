@@ -3,7 +3,11 @@ using UnityEngine.Audio;
 
 namespace Code.Utility
 {
-    public class AudioManager : MonoBehaviour
+    /// <summary>
+    /// Хранит громкости в линейном 0..1 и конвертирует в dB для AudioMixer.
+    /// Параметры в миксере: "<Category>Volume" (например, "MusicVolume").
+    /// </summary>
+    public sealed class AudioManager : MonoBehaviour
     {
         public static AudioManager Instance { get; private set; }
 
@@ -11,19 +15,30 @@ namespace Code.Utility
 
         private void Awake()
         {
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
         }
 
-        public void SetVolume(string category, float volume)
+        /// <param name="category">Префикс параметра в миксере, например "Music"</param>
+        /// <param name="volume01">Линейный 0..1</param>
+        public void SetVolume(string category, float volume01)
         {
-            float dbVolume = Mathf.Log10(Mathf.Clamp(volume, 0.001f, 1f)) * 20f;
-            audioMixer.SetFloat($"{category}Volume", dbVolume * 100);
+            if (audioMixer == null || string.IsNullOrEmpty(category)) return;
+
+            // 0 -> -80 dB (почти mute), 1 -> 0 dB
+            float v = Mathf.Clamp01(volume01);
+            float dB = v <= 0.0001f ? -80f : 20f * Mathf.Log10(v);
+            audioMixer.SetFloat($"{category}Volume", dB);
         }
 
-        public float GetVolume(string category)
+        /// <returns>Линейный уровень 0..1 (если параметр есть), иначе 1</returns>
+        public float GetVolume01(string category)
         {
-            if (audioMixer.GetFloat($"{category}Volume", out float db))
-                return Mathf.Pow(10f, db / 20f)/100;
+            if (audioMixer != null && audioMixer.GetFloat($"{category}Volume", out float dB))
+            {
+                if (dB <= -80f) return 0f;
+                return Mathf.Clamp01(Mathf.Pow(10f, dB / 20f));
+            }
             return 1f;
         }
     }

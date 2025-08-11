@@ -1,27 +1,22 @@
 using System;
-using UnityEditor;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace Code.Utility
 {
-    public class LowMemoryOptimizer: MonoBehaviour
+    public sealed class LowMemoryOptimizer : MonoBehaviour
     {
-        private void OnEnable()
-        {
-            Application.lowMemory += ApplicationOnLowMemory;
-        }
-
-        private void OnDisable()
-        {
-            Application.lowMemory -= ApplicationOnLowMemory;
-        }
+        private void OnEnable()  => Application.lowMemory += ApplicationOnLowMemory;
+        private void OnDisable() => Application.lowMemory -= ApplicationOnLowMemory;
 
         private void ApplicationOnLowMemory()
         {
             GC.Collect();
-            #if UNITY_EDITOR
+#if UNITY_EDITOR
             EditorUtility.UnloadUnusedAssetsImmediate();
-            #endif
+#endif
             Resources.UnloadUnusedAssets();
             GC.Collect();
         }

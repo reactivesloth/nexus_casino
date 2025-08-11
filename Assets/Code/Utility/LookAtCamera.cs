@@ -1,20 +1,29 @@
-using System;
 using UnityEngine;
 
 namespace Code.Utility
 {
-    public class LookAtCamera : MonoBehaviour
+    public sealed class LookAtCamera : MonoBehaviour
     {
-        private Transform _transform;
+        private Transform _tr;
+        private Transform _cam;
 
         private void Awake()
         {
-            _transform = GetComponent<Transform>();
+            _tr = transform;
+            var cam = Camera.main;
+            _cam = cam != null ? cam.transform : null;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
-            _transform.LookAt(Camera.main.transform.position);
+            if (_cam == null)
+            {
+                var cam = Camera.main;
+                _cam = cam != null ? cam.transform : null;
+                if (_cam == null) return;
+            }
+
+            _tr.LookAt(_cam.position, Vector3.up);
         }
     }
 }

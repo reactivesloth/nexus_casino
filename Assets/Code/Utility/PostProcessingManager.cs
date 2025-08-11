@@ -1,10 +1,9 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
 
 namespace Code.Utility
 {
-    public class PostProcessingManager : MonoBehaviour
+    public sealed class PostProcessingManager : MonoBehaviour
     {
         public static PostProcessingManager Instance { get; private set; }
 
@@ -12,6 +11,7 @@ namespace Code.Utility
 
         private void Awake()
         {
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
         }
 
