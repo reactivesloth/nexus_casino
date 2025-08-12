@@ -1,5 +1,3 @@
-using System;
-using Code.Network.Lobby;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -13,25 +11,31 @@ namespace Code.Tests
 
         private void Update()
         {
-            if (key != KeyCode.None)
-            {
-                if (Input.GetKeyDown(key))
-                {
-                    Load (sceneName);
-                }
-            }
+            if (key == KeyCode.None) return;
+            if (Input.GetKeyDown(key))
+                Load(sceneName);
         }
 
-        public void Load(string sceneName)
+        public async void Load(string nameOrPath)
         {
-            SceneManager.LoadSceneAsync(sceneName);
+            if (string.IsNullOrEmpty(nameOrPath)) return;
+
+            var op = SceneManager.LoadSceneAsync(nameOrPath);
+            if (op != null)
+            {
+                op.allowSceneActivation = true;
+                while (!op.isDone) await System.Threading.Tasks.Task.Yield();
+            }
+
             if (isDisconnect)
-                LobbyAutoDisconnect.Disconnect();
+                Code.Network.Lobby.LobbyAutoDisconnect.Disconnect();
         }
-        
-        public void Load(int id)
+
+        public void Load(int buildIndex)
         {
-            SceneManager.LoadScene(id);
+            SceneManager.LoadScene(buildIndex);
+            if (isDisconnect)
+                Code.Network.Lobby.LobbyAutoDisconnect.Disconnect();
         }
     }
 }

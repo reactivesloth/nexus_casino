@@ -12,17 +12,12 @@ namespace Code.API
 
         public static MeSchema UserData { get; set; }
 
-        /// <summary>
-        /// Получить заголовок для запроса с нужным токеном
-        /// </summary>
-        /// <param name="useRefresh">true — использовать refresh токен, иначе access</param>
-        /// <returns>Словарь с заголовком Jwt</returns>
         public static Dictionary<string, string> GetJwtHeader(bool useRefresh = false)
         {
-            return new Dictionary<string, string>
+            return new Dictionary<string, string>(1)
             {
-                { JwtHeaderName, useRefresh ? RefreshToken : AccessToken }
+                { JwtHeaderName, useRefresh ? (RefreshToken ?? string.Empty) : (AccessToken ?? string.Empty) }
             };
         }
     }
-} 
+}

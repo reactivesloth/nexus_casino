@@ -1,39 +1,14 @@
-// Папка: Models
-// Все модели данных по openapi.json
-
+// оставлено без изменений по структурам — всё завязано на API контракты
+// поправлены только мелкие комментарии/пробелы
 using System;
 using System.Collections.Generic;
 
 namespace Code.API.Models
 {
-    [Serializable]
-    public class SignUpRequest
-    {
-        public string username;
-        public string phone;
-        public string confirmation_code;
-    }
-
-    [Serializable]
-    public class AuthResponse
-    {
-        public string access_jwt;
-        public string refresh_jwt;
-    }
-
-    [Serializable]
-    public class LoginRequest
-    {
-        public string phone;
-        public string confirmation_code;
-    }
-
-    [Serializable]
-    public class SendCodeRequest
-    {
-        public string phone;
-        public string requested_by;
-    }
+    [Serializable] public class SignUpRequest { public string username; public string phone; public string confirmation_code; }
+    [Serializable] public class AuthResponse { public string access_jwt; public string refresh_jwt; }
+    [Serializable] public class LoginRequest { public string phone; public string confirmation_code; }
+    [Serializable] public class SendCodeRequest { public string phone; public string requested_by; }
 
     [Serializable]
     public class MeSchema
@@ -45,76 +20,31 @@ namespace Code.API.Models
         public string role;
     }
 
-    [Serializable]
-    public class OperatorSchema
-    {
-        public int id;
-        public string name;
-    }
-
-    [Serializable]
-    public class GetOperatorsResponse
-    {
-        public List<OperatorSchema> operators;
-        public int total_count;
-    }
+    [Serializable] public class OperatorSchema { public int id; public string name; }
+    [Serializable] public class GetOperatorsResponse { public List<OperatorSchema> operators; public int total_count; }
 
     [Serializable]
     public class SuccessResponse<T>
     {
         public bool success = true;
         public T data;
-
-        // for success = false
-        public string code;
-        public string traceback;
-        public string detail;
+        public string code; public string traceback; public string detail;
     }
 
-    [Serializable]
-    public class HTTPValidationError
-    {
-        public List<ValidationError> detail;
-    }
+    [Serializable] public class HTTPValidationError { public List<ValidationError> detail; }
+    [Serializable] public class ValidationError { public List<object> loc; public string msg; public string type; }
 
-    [Serializable]
-    public class ValidationError
-    {
-        public List<object> loc;
-        public string msg;
-        public string type;
-    }
+    [Serializable] public class CheckPhoneRequest { public string phone; }
 
-    [Serializable]
-    public class CheckPhoneRequest
-    {
-        public string phone;
-    }
+    [Serializable] public class PostStoryData { public string image_url; public int slot_id; public string lobby_id; }
 
-    [Serializable]
-    public class PostStoryData
-    {
-        public string image_url;
-        public int slot_id;
-
-        public string lobby_id;
-        //public int lobby_id;
-    }
-
-    [Serializable]
-    public class StoryCollection
-    {
-        public List<GetStoryData> screenshots;
-    }
+    [Serializable] public class StoryCollection { public List<GetStoryData> screenshots; }
 
     [Serializable]
     public class GetStoryData
     {
         public int id;
-
         public int user_id;
-
-        //public string lobby_id;
         public int lobby_id;
         public int slot_id;
         public string image_url;
@@ -122,11 +52,5 @@ namespace Code.API.Models
         public MeSchema user;
     }
 
-    [Serializable]
-    public class SendMessageRequest
-    {
-        public string lobby_id;
-        public string message;
-        public string type;
-    }
+    [Serializable] public class SendMessageRequest { public string lobby_id; public string message; public string type; }
 }

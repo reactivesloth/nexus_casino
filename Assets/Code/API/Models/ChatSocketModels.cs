@@ -2,42 +2,17 @@ using System;
 
 namespace Code.API.Models
 {
-    [Serializable]
-    public class ChatModel<T>
-    {
-        public string @event;
-        public T data;
-    }
-    
-    [Serializable]
-    public class Empty{}
+    [Serializable] public class ChatModel<T> { public string @event; public T data; }
+    [Serializable] public class Empty { }
 
-    [Serializable]
-    public class SendMassage
-    {
-        public string lobby_id = "main";
-        public string message;
-        public string type;
-    }
-    
-    [Serializable]
-    public class SendMassageSuccess
-    {
-        public int message_id;
-    }
+    // NB: 'SendMassage' — сохранено как в исходном коде для совместимости
+    [Serializable] public class SendMassage { public string lobby_id = "main"; public string message; public string type; }
+    [Serializable] public class SendMassageSuccess { public int message_id; }
 
-    [Serializable]
-    public class SendImportantMessage
-    {
-        public string message;
-    }
+    [Serializable] public class SendImportantMessage { public string message; }
 
-    [Serializable]
-    public class NewMessageData
-    {
-        public MessageData message;
-    }
-    
+    [Serializable] public class NewMessageData { public MessageData message; }
+
     [Serializable]
     public class MessageData
     {
@@ -45,19 +20,12 @@ namespace Code.API.Models
         public string lobby_id;
         public string message;
         public string type;
-
         public MeSchema user;
-        
         public int user_id;
-        
     }
-    
-    [Serializable]
-    public class Error
-    {
-        public string message;
-    }
-    
+
+    [Serializable] public class Error { public string message; }
+
     public static class ChatSocketEvents
     {
         public const string Ping = "ping";

@@ -8,7 +8,7 @@ namespace Code.Tests
 
         private void Update()
         {
-            if(enableComponent && enableComponent.enabled == false)
+            if (enableComponent != null && !enableComponent.enabled)
                 enableComponent.enabled = true;
         }
     }
