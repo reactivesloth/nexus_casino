@@ -39057,15 +39057,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c9de86042b941409b5cf66b4cb33bb3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  closeDistance: 10
-  fullOpenDistance: 2
-  doorElementsSettings:
-  - doorTransform: {fileID: 329022830}
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 1571924065}
+  _networkObjectCache: {fileID: 0}
+  _interactionDistance: 3
+  outlineGameObjects:
+  - {fileID: 1527733487}
+  _interactableEnabled: 1
+  _manualRelease: 0
+  mode: 1
+  elements:
+  - transform: {fileID: 329022830}
     closedRot: {x: 0, y: 0, z: 0}
     openRot: {x: 0, y: 0, z: -90}
-  - doorTransform: {fileID: 2024261743}
+  - transform: {fileID: 2024261743}
     closedRot: {x: 0, y: 0, z: 0}
     openRot: {x: 0, y: 0, z: 90}
+  manualSpeed: 2
+  closeDistance: 10
+  fullOpenDistance: 2
+  sensitivity: 0.2
   openCurve:
     serializedVersion: 2
     m_Curve:
@@ -39114,7 +39125,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  sensitivity: 0.2
   animationDuration: 0.5
 --- !u!114 &1571924065
 MonoBehaviour:
@@ -39210,8 +39220,8 @@ MonoBehaviour:
   _interactableEnabled: 0
   _manualRelease: 0
   children:
-  - {fileID: 1508772787}
-  - {fileID: 1222496763}
+  - {fileID: 0}
+  - {fileID: 0}
   generateColliderFromChildren: 0
 --- !u!33 &1571924069
 MeshFilter:
