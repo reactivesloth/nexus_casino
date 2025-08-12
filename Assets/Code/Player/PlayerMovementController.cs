@@ -45,7 +45,7 @@ namespace Code.Player
         [SerializeField] private AudioClip landingAudioClip;
         [SerializeField] private AudioClip[] footstepAudioClips;
         [Range(0, 1)] [SerializeField] private float footstepAudioVolume = 0.5f;
-
+        
         public bool CanMove = true;
         public bool LockCameraPosition = true;
 
@@ -97,7 +97,10 @@ namespace Code.Player
         [SerializeField] private float ikTransitionSpeed = 5f;
         [SerializeField] private float lookAtSmoothSpeed = 5f;
         [SerializeField, Range(0f,1f)] private float lookAtClampWeight = 0.5f;
-
+        public bool SuppressLookAtIK { get; set; } = false;
+        private float _ikSuppressUntil = 0f;
+        public void BeginIkGrace(float seconds) => _ikSuppressUntil = Time.time + Mathf.Max(0f, seconds);
+        
         private float currentIkWeight;
         private Vector3 currentLookAtPos;
 
@@ -531,10 +534,36 @@ namespace Code.Player
             networkIkWeight.Value  = weight;
         }
 
+        // Быстро подогнать таргеты под текущий поворот камеры (без плавности)
+        public void SnapAimToCurrentCamera()
+        {
+            if (cinemachineCameraTarget == null) return;
+            var e = cinemachineCameraTarget.transform.rotation.eulerAngles;
+            cinemachineTargetPitch = e.x - cameraAngleOverride;
+            cinemachineTargetYaw   = e.y;
+        }
+
         private void OnAnimatorIK(int layerIndex)
         {
             if (animator == null) return;
 
+            if (SuppressLookAtIK || Time.time < _ikSuppressUntil || !FirstPersonView)
+            {
+                currentIkWeight = 0f;
+                _syncWeight = 0f;
+
+                var head = animator.GetBoneTransform(HumanBodyBones.Head);
+                var fwd  = (head != null ? head.forward : transform.forward);
+                var look = (head != null ? head.position : transform.position) + fwd * 2f;
+
+                animator.SetLookAtWeight(0f, 0f, 0f, 0f, lookAtClampWeight);
+                animator.SetLookAtPosition(look);
+
+                // синхронизируем нулевой вес (RunLocally = true)
+                if (IsOwner) SyncIKServerRpc(transform.position + transform.forward * 2f, 0f);
+                return;
+            }
+            
             if (IsOwner)
             {
                 float targetWeight = FirstPersonView ? 1f : 0f;
