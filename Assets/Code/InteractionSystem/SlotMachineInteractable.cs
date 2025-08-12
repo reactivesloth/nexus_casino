@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Code.API;
 using Code.Network;
+using Code.Network.HostMigration;
 using FishNet.Connection;
 using FishNet.Object;
 using TMPro;
@@ -67,7 +68,7 @@ namespace Code.InteractionSystem
         private void OnDisable()
         {
             // Если объект выключили посреди сессии — корректно закроем UI и WebView
-            if (_isUsing) _ = CloseAndCleanupAsync();
+            //if (_isUsing) _ = CloseAndCleanupAsync();
         }
 
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
@@ -76,7 +77,7 @@ namespace Code.InteractionSystem
         {
             base.OnStopNetwork();
             _isUsing = false;
-            _ = CloseAndCleanupAsync();
+            //_ = CloseAndCleanupAsync();
         }
 
         protected internal override void OnInteract(NetworkConnection conn)
@@ -175,7 +176,7 @@ namespace Code.InteractionSystem
 
         private async Task CloseAndCleanupAsync()
         {
-            if (_closing) return;
+            if (_closing || HostMigrator.Instance.IsHostMigrating) return;
             _closing = true;
 
             try

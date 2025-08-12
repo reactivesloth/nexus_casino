@@ -121,6 +121,8 @@ namespace Code.InteractionSystem
         {
             IsBusy = true;
 
+            move.SuppressLookAtIK = true;
+            
             _savedPos = tf.position;
             _savedRot = tf.rotation;
 
@@ -180,6 +182,7 @@ namespace Code.InteractionSystem
             if (anim != null) anim.applyRootMotion = false;
             _sitRoutine = null;
             _isSitting = true;
+            move.SuppressLookAtIK = !move.FirstPersonView;
 
             // ВКЛЮЧАЕМ ОГРАНИЧЕНИЯ ТОЛЬКО ТЕПЕРЬ (после посадки!)
             if (allowRotateCamera)
@@ -203,6 +206,8 @@ namespace Code.InteractionSystem
 
         private IEnumerator StandUpFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc, Transform tf)
         {
+            move.SuppressLookAtIK = true;
+
             if (allowRotateCamera)
             {
                 move.LookCameraLimitRotation = false;
@@ -262,12 +267,27 @@ namespace Code.InteractionSystem
 
             _sitRoutine = null;
             IsBusy = false;
-
-            if (allowRotateCamera && useRightMouseButtonToRotate)
+            move.SuppressLookAtIK = !move.FirstPersonView;
+            
+            // после восстановления контроллера и движения
+            move.SnapAimToCurrentCamera();   // выравниваем таргеты под текущую камеру
+            move.BeginIkGrace(0.2f);         // 200 мс без IK, чтобы камера «встала» стабильно
+            
+            // завершаем флаги RMB-режима
+            if (allowRotateCamera)
             {
-                var cm = CursorManager.Instance;
-                if (cm != null) cm.HideCursor();
+                move.LookCameraLimitRotation = false;
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = false;
+                    move.LockCursor = true;
+                    if (CursorManager.Instance != null)
+                        CursorManager.Instance.HideCursor();
+                }
             }
+
+            // финальный статус подавления IK: в FPV разрешаем, в 3Л — выключено
+            move.SuppressLookAtIK = !move.FirstPersonView;
         }
 
         private EntryData FindClosestEntryPoint(Vector3 from)
