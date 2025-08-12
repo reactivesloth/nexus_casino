@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using UnityEngine;
 
 namespace Code.Network.HostMigration.Components
@@ -8,41 +7,52 @@ namespace Code.Network.HostMigration.Components
     {
         [SerializeField] private string objectId;
 
-        public Guid ObjectGuid => Guid.Parse(objectId);
+        public Guid ObjectGuid => Guid.TryParse(objectId, out var g) ? g : Guid.Empty;
 
-        #if UNITY_EDITOR
-        private void OnValidate()
-        {
-            GenId();
-        }
+#if UNITY_EDITOR
+        private void OnValidate() => GenId();
 
         private void GenId()
         {
-            if(!gameObject.scene.IsValid() || gameObject.scene.name == null)
+            if (!gameObject.scene.IsValid() || string.IsNullOrEmpty(gameObject.scene.name))
             {
                 objectId = string.Empty;
                 return;
             }
-                
-            if (!Guid.TryParse(objectId, out var guid))
+
+            if (!Guid.TryParse(objectId, out _))
                 objectId = Guid.NewGuid().ToString();
-            
-            while (!IsUniqueness())
+
+            // проверка уникальности
+            int safety = 0;
+            while (!IsUnique() && safety++ < 1000)
                 objectId = Guid.NewGuid().ToString();
         }
 
-        private bool IsUniqueness()
+        private bool IsUnique()
         {
-            var allSceneObjects = FindObjectsByType<SceneObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-
-            return allSceneObjects.Where(o => o != this).All(o => o.ObjectGuid != ObjectGuid);
+            var all = FindObjectsByType<SceneObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var meGuid = ObjectGuid;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var other = all[i];
+                if (other == null || other == this) continue;
+                if (other.ObjectGuid == meGuid) return false;
+            }
+            return true;
         }
-        #endif
+#endif
 
-        public static SceneObject GetObjectById(string objectId)
+        public static SceneObject GetObjectById(string id)
         {
-            var objects = FindObjectsByType<SceneObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            return objects.FirstOrDefault(o => o.objectId == objectId);
+            if (string.IsNullOrEmpty(id)) return null;
+            var all = FindObjectsByType<SceneObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
+            for (int i = 0; i < all.Length; i++)
+            {
+                var so = all[i];
+                if (so != null && so.objectId == id) return so;
+            }
+            return null;
         }
     }
 }

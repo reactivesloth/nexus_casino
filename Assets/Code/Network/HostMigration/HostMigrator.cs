@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Code.Network.HostMigration.Data;
 using Code.Network.HostMigration.Utility;
 using FishNet;
@@ -18,126 +17,137 @@ namespace Code.Network.HostMigration
     public class HostMigrator : MonoBehaviour
     {
         public static HostMigrator Instance;
-        
+
         private ServerManager _serverManager;
         private ClientManager _clientManager;
 
         private MigratePlayerData _migrateData;
-        
-        private bool _isMigrating = false;
+        private bool _isMigrating;
 
         public UnityEvent<NetworkConnection> hostMigrateProcessConnection;
-        
-        public bool IsHostMigrating => _isMigrating;
 
-        #region Unity Callbacks
+        public bool IsHostMigrating => _isMigrating;
 
         private void Awake()
         {
-            Instance = this;
-            
-            _serverManager = InstanceFinder.ServerManager;
-            _clientManager = InstanceFinder.ClientManager;
+            Instance        = this;
+            _serverManager  = InstanceFinder.ServerManager;
+            _clientManager  = InstanceFinder.ClientManager;
         }
 
         private void OnEnable()
         {
             ClientObjectsSaver.OnOwnObjectsUpdated += UpdateLastPlayerSessionState;
-            _clientManager.OnAuthenticated += ClientManagerOnOnAuthenticated;
-            
-            _serverManager.RegisterBroadcast<MigratePlayerData>(OnServerReceiveMigrateBroadcast);
+
+            if (_clientManager != null)
+                _clientManager.OnAuthenticated += OnClientAuthenticated;
+
+            if (_serverManager != null)
+                _serverManager.RegisterBroadcast<MigratePlayerData>(OnServerReceiveMigrateBroadcast);
         }
-        
+
         private void OnDisable()
         {
             ClientObjectsSaver.OnOwnObjectsUpdated -= UpdateLastPlayerSessionState;
-            _clientManager.OnAuthenticated -= ClientManagerOnOnAuthenticated;
-            
-            _serverManager.UnregisterBroadcast<MigratePlayerData>(OnServerReceiveMigrateBroadcast);
+
+            if (_clientManager != null)
+                _clientManager.OnAuthenticated -= OnClientAuthenticated;
+
+            if (_serverManager != null)
+                _serverManager.UnregisterBroadcast<MigratePlayerData>(OnServerReceiveMigrateBroadcast);
         }
 
-        #endregion
-            
-        /// <summary>
-        /// For auto run mark migrating
-        /// </summary>
+        /// <summary> Пометить, что сейчас идёт миграция. Вызывается до переподключения. </summary>
         public void MarkMigrating() => _isMigrating = true;
-        
-        /// <summary>
-        /// Execute where the client connected to new host on migrate
-        /// </summary>
+
+        /// <summary> Клиент успешно подсоединился к новому хосту. </summary>
         public void RunClient()
         {
-            Debug.Log("Client start migrating");
-            _clientManager.Broadcast(_migrateData);
+            Debug.Log("[HostMigrator] Client start migrating");
+            if (_clientManager != null)
+                _clientManager.Broadcast(_migrateData);
             _isMigrating = false;
         }
-        
-        /// <summary>
-        /// Execute where the host started on migrate
-        /// </summary>
+
+        /// <summary> Хост поднят после миграции. Если нужна спец-логика — добавь тут. </summary>
         public void RunHost()
         {
-            throw new NotImplementedException("Host handle on migrate dont implemented");
+            Debug.Log("[HostMigrator] Host ready after migration.");
             _isMigrating = false;
         }
-        
-        private void OnServerReceiveMigrateBroadcast(NetworkConnection connection, MigratePlayerData data,
-            Channel channel)
+
+        private void OnServerReceiveMigrateBroadcast(NetworkConnection connection, MigratePlayerData data, Channel _)
         {
-            Debug.Log(JsonConvert.SerializeObject(data, Formatting.Indented));
-            if(data.objects == null)
-                return;
-            
+            Debug.Log($"[HostMigrator] Received migrate data:\n{JsonConvert.SerializeObject(data, Formatting.Indented)}");
+
             hostMigrateProcessConnection?.Invoke(connection);
             HostSessionRestorer.RestorePlayerData(data, connection);
         }
-        
-        private void ClientManagerOnOnAuthenticated()
+
+        private void OnClientAuthenticated()
         {
-            if(_isMigrating)
+            if (_isMigrating)
                 RunClient();
         }
 
         private void UpdateLastPlayerSessionState(List<NetworkObject> ownObjects)
         {
-            _migrateData = new MigratePlayerData
+            var result = new MigratePlayerData { objects = new List<NetworkObjectData>(ownObjects != null ? ownObjects.Count : 0) };
+            if (ownObjects == null)
             {
-                objects = new List<NetworkObjectData>()
-            };
+                _migrateData = result;
+                return;
+            }
 
-            foreach (var currentGameObject in ownObjects)
+            for (int i = 0; i < ownObjects.Count; i++)
             {
-                var migratableComponents =
-                    currentGameObject.GetComponents<MonoBehaviour>().OfType<IMigratableBase>().ToList();
+                var nob = ownObjects[i];
+                if (nob == null) continue;
 
-                if (migratableComponents.Count == 0)
+                // собираем компоненты, реализующие IMigratableBase
+                var migratables = nob.GetComponents<MonoBehaviour>();
+                var compDatas = new List<MigratableComponentData>(migratables.Length);
+                for (int c = 0; c < migratables.Length; c++)
+                {
+                    var mb = migratables[c] as IMigratableBase;
+                    if (mb == null) continue;
+
+                    var data = mb.GetMigrateData();
+                    compDatas.Add(new MigratableComponentData
+                    {
+                        componentName = migratables[c].GetType().FullName,
+                        jsonData      = mb.GetJson(data)
+                    });
+                }
+
+                if (compDatas.Count == 0)
                     continue;
 
-                var migrateObject = new NetworkObjectData
+                string sceneGuid = null;
+                if (nob.IsSceneObject)
                 {
-                    objectName = currentGameObject.name,
-                    networkObjectId = currentGameObject.ObjectId,
-                    prefabId = currentGameObject.PrefabId,
-                    ownerId = currentGameObject.OwnerId,
-                    isSceneObject = currentGameObject.IsSceneObject,
-                    transformData = SerializableTransform.SetFromUnityTransform(currentGameObject.transform),
-                    componentsData = new List<MigratableComponentData>()
+                    var so = nob.GetComponent<Code.Network.HostMigration.Components.SceneObject>();
+                    if (so != null)
+                        sceneGuid = so.ObjectGuid.ToString();
+                }
+
+                var objData = new NetworkObjectData
+                {
+                    objectName     = nob.name,
+                    networkObjectId= nob.ObjectId,
+                    prefabId       = nob.PrefabId,
+                    ownerId        = nob.OwnerId,
+                    isSceneObject  = nob.IsSceneObject,
+                    isNetworkObject= true,
+                    sceneObjectId  = sceneGuid,
+                    transformData  = Data.SerializableTransform.SetFromUnityTransform(nob.transform),
+                    componentsData = compDatas
                 };
 
-                _migrateData.objects.Add(migrateObject);
-
-                foreach (var migratableComponent in migratableComponents)
-                {
-                    var componentAbstractData = migratableComponent.GetMigrateData();
-                    var migratableComponentData = new MigratableComponentData
-                    {
-                        componentName = migratableComponent.GetType().FullName,
-                        jsonData = migratableComponent.GetJson(componentAbstractData)
-                    };
-                    migrateObject.componentsData.Add(migratableComponentData);
-                }
+                result.objects.Add(objData);
             }
+
+            _migrateData = result;
         }
     }
 }

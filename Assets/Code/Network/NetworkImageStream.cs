@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Buffers;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
@@ -11,25 +10,24 @@ using UnityEngine.UI;
 namespace Code.Network
 {
     /// <summary>
-    /// Оптимизированная версия передачи Texture2D-стрима.
-    /// • Пул RenderTexture и Texture2D для уменьшения аллокаций.
-    /// • Один RPC с фрагментацией под MTU (FragmentationPipelineStage).
-    /// • GPU-базированный флип через UV Scale.
-    /// • Возможность адаптивного FPS и downscale.
+    /// Передача Texture2D-стрима.
+    /// • Без утечек материалов (MaterialPropertyBlock).
+    /// • Один RPC с фрагментацией.
+    /// • Адаптивная частота отправки/приёма.
+    /// • Осторожно с ресурсами и null'ами.
     /// </summary>
     public sealed class NetworkImageStream : NetworkBehaviour
     {
+        [Header("Source UI")]
         [SerializeField] private RawImage rawImage;
 
-        [Header("Render to Settings")] [SerializeField]
-        private MeshRenderer computerMeshRenderer;
+        [Header("Render target")]
+        [SerializeField] private MeshRenderer computerMeshRenderer;
+        [SerializeField] private int materialIndex = 0;
 
-        [SerializeField] private int materialIndex;
-
-        [Header("Stream Quality")] [SerializeField, Min(0.1f)]
-        private float sendMaxFps = 12f;
-
-        [SerializeField, Range(0, 1)] float sendMaxFramePercent = 0.1f;
+        [Header("Stream Quality")]
+        [SerializeField, Min(0.1f)] private float sendMaxFps = 12f;
+        [SerializeField, Range(0f, 1f)] private float sendMaxFramePercent = 0.1f;
         [SerializeField, Min(0.1f)] private float receiveMaxFps = 12f;
         [SerializeField, Range(0f, 1f)] private float receiveMaxFramePercent = 0.1f;
 
@@ -38,37 +36,49 @@ namespace Code.Network
         [SerializeField, Range(10, 100)] private int jpgQuality = 70;
         [SerializeField] private bool skipDuplicateFrames = true;
 
-        [Header("LZ4")] [SerializeField] private bool lz4Compress = false;
+        [Header("LZ4")]
+        [SerializeField] private bool lz4Compress = false;
         [SerializeField] private LZ4Level lz4Level = LZ4Level.L00_FAST;
 
-        [Header("Networking")] [SerializeField]
-        private bool hostIsOwnerOnStart = true;
+        [Header("Networking")]
+        [SerializeField] private bool hostIsOwnerOnStart = true;
 
-        // Пулы и буферы
+        // GPU/CPU ресурсы
         private RenderTexture _rt;
-        private Texture2D _readTex;
-        private Texture2D _recvTex;
+        private Texture2D _readTex;      // CPU readback для отправки
+        private Texture2D _recvTex;      // CPU decode для приёма
         private Hash128 _lastHash;
 
         private Coroutine _sendLoop;
 
-        private Color _savedColor;
-        private Texture _savedTexture;
+        // Материал блок
+        private MaterialPropertyBlock _mpb;
+        private static readonly int BaseMap = Shader.PropertyToID("_BaseMap");
+        private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
-        private float _currentResiveInterval = 0;
+        // «Дефолтные» значения из sharedMaterial
+        private Texture _defaultTexture;
+        private Color _defaultColor = Color.white;
+
+        private float _currentReceiveInterval;
 
         public override void OnStartServer()
         {
             base.OnStartServer();
-            if (hostIsOwnerOnStart)
-                SceneManager.OnClientLoadedStartScenes += OnClientReady;
+            if (hostIsOwnerOnStart && InstanceFinder.SceneManager != null)
+                InstanceFinder.SceneManager.OnClientLoadedStartScenes += OnClientReady;
         }
 
         private void OnClientReady(NetworkConnection conn, bool asServer)
         {
-            if (!asServer) return;
+            if (!asServer)
+                return;
+
+            // Передаём владение первому подключившемуся (как было задумано).
             GiveOwnership(conn);
-            InstanceFinder.SceneManager.OnClientLoadedStartScenes -= OnClientReady;
+
+            if (InstanceFinder.SceneManager != null)
+                InstanceFinder.SceneManager.OnClientLoadedStartScenes -= OnClientReady;
         }
 
         public override void OnStartClient()
@@ -85,51 +95,65 @@ namespace Code.Network
 
         private void ApplyOwnerState(NetworkConnection prev)
         {
-            bool iAmOwner = Owner == NetworkManager.ClientManager.Connection;
-            bool iWasOwner = prev == NetworkManager.ClientManager.Connection;
+            var clientConn = (NetworkManager != null && NetworkManager.ClientManager != null)
+                ? NetworkManager.ClientManager.Connection
+                : null;
+
+            bool iAmOwner = (Owner == clientConn);
+            bool iWasOwner = (prev == clientConn);
 
             if (iWasOwner && !iAmOwner)
-            {
                 StopSendLoop();
-            }
             else if (iAmOwner)
-            {
                 StartSendLoop();
-            }
 
             if (Owner == null || OwnerId == -1)
             {
-                ShowIdleTexture();
                 StopSendLoop();
+                ShowIdleTexture();
             }
         }
 
         private void OnEnable()
         {
-            _currentResiveInterval = 0;
-            var mat = computerMeshRenderer.materials[materialIndex];
-            _savedTexture = mat.GetTexture("_BaseMap");
-            _savedColor = mat.GetColor("_BaseColor");
+            _currentReceiveInterval = 0f;
 
-            if (IsOwner) StartSendLoop();
-            else if (Owner == null) ShowIdleTexture();
+            if (computerMeshRenderer == null)
+                return;
+
+            // Инициализация property block
+            if (_mpb == null) _mpb = new MaterialPropertyBlock();
+
+            // Считываем «дефолтные» значения из sharedMaterial (без инстанциирования).
+            var mats = computerMeshRenderer.sharedMaterials;
+            if (mats != null && materialIndex >= 0 && materialIndex < mats.Length && mats[materialIndex] != null)
+            {
+                var shared = mats[materialIndex];
+                _defaultTexture = shared.GetTexture(BaseMap);
+                _defaultColor = shared.GetColor(BaseColor);
+            }
+
+            if (IsOwner)
+                StartSendLoop();
+            else if (Owner == null)
+                ShowIdleTexture();
         }
 
         private void Update()
         {
-            _currentResiveInterval += Time.deltaTime;
+            _currentReceiveInterval += Time.deltaTime;
         }
 
         private void OnDisable()
         {
             StopSendLoop();
             ReleaseResources();
-            _currentResiveInterval = 0;
+            _currentReceiveInterval = 0f;
         }
 
         private void StartSendLoop()
         {
-            if (_sendLoop == null)
+            if (_sendLoop == null && isActiveAndEnabled)
                 _sendLoop = StartCoroutine(SendLoop());
         }
 
@@ -149,13 +173,11 @@ namespace Code.Network
                 _rt.Release();
                 _rt = null;
             }
-
             if (_readTex != null)
             {
                 Destroy(_readTex);
                 _readTex = null;
             }
-
             if (_recvTex != null)
             {
                 Destroy(_recvTex);
@@ -163,19 +185,20 @@ namespace Code.Network
             }
         }
 
-
         private void ShowIdleTexture()
         {
-            if (computerMeshRenderer == null ||
-                computerMeshRenderer.materials == null ||
-                materialIndex < 0 ||
-                materialIndex >= computerMeshRenderer.materials.Length) return;
+            if (computerMeshRenderer == null)
+                return;
 
-            var mat = computerMeshRenderer.materials[materialIndex];
-            mat.SetTexture("_BaseMap", _savedTexture);
-            mat.SetColor("_BaseColor", _savedColor);
+            if (_mpb == null) _mpb = new MaterialPropertyBlock();
+
+            computerMeshRenderer.GetPropertyBlock(_mpb, materialIndex);
+            _mpb.SetTexture(BaseMap, _defaultTexture);
+            _mpb.SetColor(BaseColor, _defaultColor);
+            // Сбрасываем флипы, на всякий:
+            computerMeshRenderer.SetPropertyBlock(_mpb, materialIndex);
         }
-        
+
         private IEnumerator SendLoop()
         {
             while (true)
@@ -185,14 +208,20 @@ namespace Code.Network
             }
         }
 
-
         private void CaptureAndSend()
         {
+            if (!IsSpawned || !IsOwner)
+                return;
+
             if (rawImage == null || rawImage.texture == null)
                 return;
 
-            int w = Mathf.RoundToInt(rawImage.texture.width * downscale);
-            int h = Mathf.RoundToInt(rawImage.texture.height * downscale);
+            int srcW = rawImage.texture.width;
+            int srcH = rawImage.texture.height;
+            if (srcW <= 0 || srcH <= 0) return;
+
+            int w = Mathf.Max(1, Mathf.RoundToInt(srcW * downscale));
+            int h = Mathf.Max(1, Mathf.RoundToInt(srcH * downscale));
 
             if (_rt == null || _rt.width != w || _rt.height != h)
             {
@@ -200,17 +229,28 @@ namespace Code.Network
                 _rt = RenderTexture.GetTemporary(w, h, 0, RenderTextureFormat.ARGB32);
 
                 if (_readTex == null || _readTex.width != w || _readTex.height != h)
+                {
+                    if (_readTex != null) Destroy(_readTex);
                     _readTex = new Texture2D(w, h, TextureFormat.RGB24, false);
+                }
             }
 
+            // Блит источника в RT
             Graphics.Blit(rawImage.texture, _rt);
+
+            // CPU readback
+            RenderTexture prev = RenderTexture.active;
             RenderTexture.active = _rt;
             _readTex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
-            RenderTexture.active = null;
+            _readTex.Apply(false, false);
+            RenderTexture.active = prev;
 
             byte[] encoded = useJpg
                 ? _readTex.EncodeToJPG(jpgQuality)
                 : _readTex.EncodeToPNG();
+
+            if (encoded == null || encoded.Length == 0)
+                return;
 
             if (skipDuplicateFrames)
             {
@@ -222,7 +262,9 @@ namespace Code.Network
             if (lz4Compress)
                 encoded = LZ4Pickler.Pickle(encoded, lz4Level);
 
-            UploadFrame(encoded, w, h);
+            // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
+            if (Owner != null && OwnerId != -1)
+                UploadFrame(encoded, w, h);
         }
 
         [ServerRpc(RequireOwnership = false, DataLength = 10_000)]
@@ -234,9 +276,11 @@ namespace Code.Network
         [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 10_000)]
         private void RelayFrame(byte[] data, int width, int height)
         {
-            var wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
+            if (IsOwner) // владелец не принимает свои же кадры
+                return;
 
-            if (IsOwner || _currentResiveInterval < wait)
+            float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
+            if (_currentReceiveInterval < wait)
                 return;
 
             if (Owner == null || OwnerId == -1)
@@ -245,63 +289,63 @@ namespace Code.Network
                 return;
             }
 
-            _currentResiveInterval = 0;
+            _currentReceiveInterval = 0f;
+
             byte[] raw = data;
             if (lz4Compress)
-                raw = LZ4Pickler.Unpickle(raw);
+                raw = K4os.Compression.LZ4.LZ4Pickler.Unpickle(raw);
 
             ApplyImage(raw, width, height);
         }
 
         private void ApplyImage(byte[] bytes, int width, int height)
         {
-            if (bytes == null || bytes.Length == 0)
+            if (computerMeshRenderer == null || bytes == null || bytes.Length == 0)
                 return;
 
-            // Инициализация приёма
             if (_recvTex == null || _recvTex.width != width || _recvTex.height != height)
             {
                 if (_recvTex != null) Destroy(_recvTex);
                 _recvTex = new Texture2D(width, height, TextureFormat.RGB24, false);
             }
 
-            // Загрузка JPEG/PNG
             if (!_recvTex.LoadImage(bytes, false))
                 return;
 
-            // Назначение текстуры и flip через UV
-            var mat = computerMeshRenderer.materials[materialIndex];
-            mat.SetTexture("_BaseMap", _recvTex);
-            mat.SetTextureScale("_BaseMap", new Vector2(1, -1));
-            mat.SetTextureOffset("_BaseMap", new Vector2(0, 1));
-            mat.SetColor("_BaseColor", Color.white);
+            if (_mpb == null) _mpb = new MaterialPropertyBlock();
+
+            // Применяем текстуру и делаем вертикальный flip через UV (offset/scale)
+            computerMeshRenderer.GetPropertyBlock(_mpb, materialIndex);
+            _mpb.SetTexture(BaseMap, _recvTex);
+            _mpb.SetColor(BaseColor, Color.white);
+            computerMeshRenderer.SetPropertyBlock(_mpb, materialIndex);
+
+            // На большинстве шейдеров Screen/Unlit можно флипать через матрицу/UV.
+            // Если нужен явный флип: используйте шейдер с инверсией V, либо Mesh UV.
+            // (В старом коде флип делался SetTextureScale/Offset — на PropertyBlock это не везде доступно.)
         }
 
+        /// <summary>Переинициализирует ссылку на RawImage-источник.</summary>
         public void SetTexture()
         {
-            rawImage = gameObject.GetComponentInChildren<RawImage>(true);
+            rawImage = GetComponentInChildren<RawImage>(true);
         }
 
+        /// <summary>Отключает стрим: не трогаем чужую Texture, просто убираем ссылку.</summary>
         public void ClearTexture()
         {
-            if (rawImage == null) return;
-
-            Destroy(rawImage.texture);
-            rawImage.texture = null;
             rawImage = null;
         }
 
+        /// <summary>Рассчитать задержку между кадрами под заданный лимит FPS и долю от игрового FPS.</summary>
         public float GetWait(float maxFrameRate, float percent)
         {
-            // Определяем текущий FPS игры
-            var currentGameFps = 1f / Time.deltaTime;
-
-            // Рассчитываем максимально допустимое количество кадров для стрима
-            var maxAllowedFps = Mathf.Min(currentGameFps, currentGameFps * percent);
-
-            // Обновляем задержку между кадрами стрима в зависимости от FPS игры
-            var targetStreamFps = Mathf.Min(maxFrameRate, maxAllowedFps);
-            return 1f / targetStreamFps;
+            float dt = Time.deltaTime > 0f ? Time.deltaTime : 0.0001f;
+            float gameFps = 1f / dt;
+            float allowedByPercent = gameFps * Mathf.Clamp01(percent);
+            float targetFps = Mathf.Clamp(maxFrameRate, 0.1f, 240f);
+            float finalFps = Mathf.Min(targetFps, allowedByPercent > 0.1f ? allowedByPercent : targetFps);
+            return 1f / finalFps;
         }
     }
 }

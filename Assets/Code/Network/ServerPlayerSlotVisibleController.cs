@@ -9,79 +9,124 @@ using UnityEngine;
 
 namespace Code.Network
 {
-    public class ServerPlayerSlotVisibleController : MonoBehaviour
+    /// <summary>
+    /// Клиент: периодически отправляет на сервер ID видимых SlotMachineInteractable.
+    /// Сервер: поддерживает карту "соединение -> список видимых слотов".
+    /// </summary>
+    public sealed class ServerPlayerSlotVisibleController : MonoBehaviour
     {
-        [SerializeField] private float updateIntervalSecs = 1f;
+        [SerializeField, Min(0.05f)] private float updateIntervalSecs = 1f;
 
         public static readonly Dictionary<NetworkConnection, PlayerSlotViewInfo> ServerInfoForPlayerViewSlots = new();
 
-        private float _currentIntervalSecs = 0;
+        private float _timer;
+        private readonly List<SlotMachineInteractable> _visibleTargetsCache = new(32);
 
         private void OnEnable()
         {
-            InstanceFinder.ServerManager.RegisterBroadcast<PlayerSlotViewInfo>(PlayerSlotViewReceive);
-            InstanceFinder.ServerManager.OnRemoteConnectionState += ServerManagerOnOnRemoteConnectionState;
+            // Регистрируем серверный обработчик, если сервер существует.
+            if (InstanceFinder.ServerManager != null)
+            {
+                InstanceFinder.ServerManager.RegisterBroadcast<PlayerSlotViewInfo>(OnPlayerSlotViewReceive);
+                InstanceFinder.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
+            }
         }
 
         private void OnDisable()
         {
-            InstanceFinder.ServerManager.UnregisterBroadcast<PlayerSlotViewInfo>(PlayerSlotViewReceive);
-            InstanceFinder.ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
+            if (InstanceFinder.ServerManager != null)
+            {
+                InstanceFinder.ServerManager.UnregisterBroadcast<PlayerSlotViewInfo>(OnPlayerSlotViewReceive);
+                InstanceFinder.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
+            }
         }
 
         private void Update()
         {
-            _currentIntervalSecs += Time.deltaTime;
+            // Работает только на клиенте: отправляем серверу свою видимость.
+            var cm = InstanceFinder.ClientManager;
+            if (cm == null || !cm.Started || InstanceFinder.IsServerStarted) // не слать с хоста-сервера
+                return;
 
-            if (_currentIntervalSecs >= updateIntervalSecs)
+            _timer += Time.deltaTime;
+            if (_timer < updateIntervalSecs)
+                return;
+
+            _timer = 0f;
+            SendVisibilityToServer();
+        }
+
+        private void SendVisibilityToServer()
+        {
+            var cm = InstanceFinder.ClientManager;
+            if (cm == null || !cm.Started)
+                return;
+
+            var visibleSlots = GetVisibleTargets(_visibleTargetsCache);
+            int count = visibleSlots.Count;
+            if (count == 0)
             {
-                _currentIntervalSecs = 0;
-                UpdateVisibilityForServer();
+                // Отправим пустой список — сервер воспримет как «ничего не видно».
+                cm.Broadcast(new PlayerSlotViewInfo { viewSlotsNumbers = Array.Empty<byte>() });
+                return;
             }
-        }
 
-        private void UpdateVisibilityForServer()
-        {
-            var visibleSlots = GetVisibleTargets();
-            var ids = new byte[visibleSlots.Count];
-
-            for (var i = 0; i < visibleSlots.Count; i++)
-                ids[i] = (byte)visibleSlots[i].IDNumber;
-
-            InstanceFinder.ClientManager.Broadcast(new PlayerSlotViewInfo
+            // Собираем компактный массив ID (byte).
+            var ids = new byte[count];
+            for (int i = 0; i < count; i++)
             {
-                viewSlotsNumbers = ids
-            });
+                var s = visibleSlots[i];
+                ids[i] = (byte)(s != null ? s.IDNumber : 0);
+            }
+
+            cm.Broadcast(new PlayerSlotViewInfo { viewSlotsNumbers = ids });
         }
 
-        public List<SlotMachineInteractable> GetVisibleTargets()
+        /// <summary>
+        /// Собирает видимые цели в переданный список; без LINQ, с нулевыми аллокациями.
+        /// </summary>
+        private static List<SlotMachineInteractable> GetVisibleTargets(List<SlotMachineInteractable> buffer)
         {
-            var visibleTargets = new List<SlotMachineInteractable>();
+            buffer.Clear();
+
+            var cam = Camera.main;
+            if (cam == null)
+                return buffer;
+
+            // FindObjectsByType с IncludeInactive, как было — но не каждый кадр, а по интервалу.
             var allTargets = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (allTargets == null || allTargets.Length == 0)
+                return buffer;
 
-            foreach (var target in allTargets)
+            for (int i = 0; i < allTargets.Length; i++)
             {
-                var viewportPos = Camera.main.WorldToViewportPoint(target.transform.position);
+                var t = allTargets[i];
+                if (t == null) continue;
 
-                // Проверка: объект в передней полуплоскости камеры и внутри экрана
-                var isVisible = viewportPos is { z: > 0, x: >= 0 and <= 1, y: >= 0 and <= 1 };
-
-                if (isVisible)
-                    visibleTargets.Add(target);
+                Vector3 vp = cam.WorldToViewportPoint(t.transform.position);
+                // Внутри фрустума и перед камерой.
+                if (vp.z > 0f && vp.x >= 0f && vp.x <= 1f && vp.y >= 0f && vp.y <= 1f)
+                    buffer.Add(t);
             }
 
-            return visibleTargets;
+            return buffer;
         }
 
-        private void PlayerSlotViewReceive(NetworkConnection sender, PlayerSlotViewInfo slotViewInfo, Channel channel)
+        // === Серверная часть ===
+
+        private static void OnPlayerSlotViewReceive(NetworkConnection sender, PlayerSlotViewInfo slotViewInfo, Channel channel)
         {
+            if (sender == null)
+                return;
+
+            // Обновляем или добавляем.
             if (!ServerInfoForPlayerViewSlots.TryAdd(sender, slotViewInfo))
                 ServerInfoForPlayerViewSlots[sender] = slotViewInfo;
         }
 
-        private void ServerManagerOnOnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs stateArgs)
+        private static void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs stateArgs)
         {
-            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped)
+            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped && conn != null)
                 ServerInfoForPlayerViewSlots.Remove(conn);
         }
     }
