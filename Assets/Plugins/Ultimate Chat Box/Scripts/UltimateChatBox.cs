@@ -126,6 +126,10 @@ namespace TankAndHealerStudioAssets
 		/// The list of all the registered chat informations.
 		/// </summary>
 		public List<ChatInformation> ChatInformations { get; private set; } = new List<ChatInformation>();
+		public event System.Action ReachedTop;
+		private bool _wasTop = true;
+		public bool IsAtTop => chatContentBox != null && chatContentBox.anchoredPosition.y <= 2f;
+
 		/// <summary>
 		/// The list of all the text objects that have been created to display the registered chat information.
 		/// </summary>
@@ -2009,6 +2013,12 @@ namespace TankAndHealerStudioAssets
 			else if( chatContentBox.anchoredPosition.y > chatContentBox.sizeDelta.y - visibleChatBoundingBox.sizeDelta.y )
 				chatContentBox.anchoredPosition = new Vector2( chatContentBox.anchoredPosition.x, chatContentBox.sizeDelta.y - visibleChatBoundingBox.sizeDelta.y );
 
+			// Notify when reached top (first frame only)
+			bool nowTop = IsAtTop;
+			if (!_wasTop && nowTop)
+				ReachedTop?.Invoke();
+			_wasTop = nowTop;
+
 			// Update the visibility of the chat box.
 			UpdateChatBoxVisibility();
 
@@ -2860,6 +2870,101 @@ namespace TankAndHealerStudioAssets
 			// If the chat box is disabled, then call the DisableChatBoxImmeditate function to make sure the chat box is displaying correctly.
 			if( !IsEnabled )
 				Disable( true );
+		}
+
+		public void PrependChats(
+			System.Collections.Generic.IEnumerable<(string username, string message, ChatStyle style)> batch)
+		{
+			if (batch == null || chatContentBox == null)
+				return;
+
+			float addedHeight = 0f;
+			var newInfos = new System.Collections.Generic.List<ChatInformation>();
+			float localTotalContentSpace = 0f;
+
+			foreach (var item in batch)
+			{
+				var safeUser = item.username ?? string.Empty;
+				var safeMsg  = item.message  ?? string.Empty;
+				var style    = item.style != null ? item.style : UltimateChatBoxStyles.none;
+
+				var tmp = GetTextFromPool();
+				var info = new ChatInformation { chatBox = this, chatText = tmp, chatBoxStyle = style };
+
+				if (!string.IsNullOrEmpty(item.username))
+				{
+					info.Username = item.username;
+					info.DisplayUsername = item.username.Contains("#") ? item.username.Split('#')[0] : item.username;
+				}
+				else
+				{
+					info.Username = string.Empty;
+					info.DisplayUsername = string.Empty;
+				}
+
+				info.Message = item.message ?? string.Empty;
+				info.DisplayMessage =
+					(info.Username != string.Empty
+						? $"{(!style.noUsernameFollowupText ? usernameFollowup : " ")}"
+						: "") + info.Message;
+
+				info.UpdateText();
+				tmp.ForceMeshUpdate();
+
+				info.lineCount = tmp.textInfo.lineCount;
+				info.lineHeight = tmp.renderedHeight / Mathf.Max(1, info.lineCount);
+				if (info.lineHeight < 0.1f)
+					info.lineHeight = LineHeight;
+
+				var contentSpace = info.lineHeight * info.lineCount;
+				info.contentSpace = contentSpace;
+
+				info.chatText.rectTransform.sizeDelta = new Vector2(chatContentBox.sizeDelta.x, info.contentSpace);
+				info.chatText.rectTransform.anchoredPosition = new Vector2(0, -localTotalContentSpace);
+				info.anchoredPosition = info.chatText.rectTransform.anchoredPosition;
+
+				CalculateUsernameRect(info);
+
+				newInfos.Add(info);
+				localTotalContentSpace += contentSpace;
+
+				if (spaceBetweenChats > 0.0f)
+				{
+					info.contentSpace += LineHeight * spaceBetweenChats;
+					localTotalContentSpace += LineHeight * spaceBetweenChats;
+					info.chatText.rectTransform.sizeDelta = new Vector2(chatContentBox.sizeDelta.x, info.contentSpace);
+				}
+			}
+
+			if (newInfos.Count > 0 && spaceBetweenChats > 0.0f)
+			{
+				var last = newInfos[newInfos.Count - 1];
+				last.contentSpace -= LineHeight * spaceBetweenChats;
+				localTotalContentSpace -= LineHeight * spaceBetweenChats;
+				last.chatText.rectTransform.sizeDelta = new Vector2(chatContentBox.sizeDelta.x, last.contentSpace);
+			}
+
+			addedHeight = localTotalContentSpace;
+
+			ChatInformations.InsertRange(0, newInfos);
+
+			for (int i = 0; i < newInfos.Count; i++)
+			{
+				if (newInfos[i].chatText != null)
+				{
+					SendTextToPool(newInfos[i].chatText);
+					newInfos[i].chatText = null;
+				}
+			}
+
+			chatContentBox.anchoredPosition = new Vector2(
+				chatContentBox.anchoredPosition.x,
+				chatContentBox.anchoredPosition.y + addedHeight
+			);
+
+			RepositionAllChats();
+			UpdateChatBoxComponentSizes();
+			ConstrainContentBox();
 		}
 
 		/// <summary>
