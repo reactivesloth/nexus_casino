@@ -14,31 +14,32 @@ namespace Code.InteractionSystem
         public float InteractionDistance => _interactionDistance;
 
         public GameObject[] outlineGameObjects;
-        
+
         [Header("Enable/Disable")]
         [SerializeField, Tooltip("Enable or disable this interactable.")] private bool _interactableEnabled = true;
         public bool IsEnabled => _interactableEnabled;
 
         [Header("Release Mode")]
-        [SerializeField, Tooltip("If true, requires manual EndInteract to free the interactable.")] private bool _manualRelease = false;
+        [SerializeField, Tooltip("If true, requires manual EndInteract to free the interactable.")]
+        private bool _manualRelease = false;
         public bool ManualRelease => _manualRelease;
 
         protected int OccupiedConnectionId;
-        // Synchronize occupied state across clients using SyncVar
-        protected readonly SyncVar<bool> _isOccupied = new (new SyncTypeSettings()
+
+        protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
         public bool IsOccupied => _isOccupied.Value;
         public bool IsBusy { get; set; }
-        
+
         public virtual string InteractionPrompt
         {
             get
             {
                 if (!_interactableEnabled) return "Disabled";
-                if (!_isOccupied.Value) return "Press E to interact";
+                if (!_isOccupied.Value)    return "Press E to interact";
                 return _manualRelease ? "Press E to end" : "Occupied";
             }
         }
@@ -46,19 +47,20 @@ namespace Code.InteractionSystem
         public override void OnStartServer()
         {
             base.OnStartServer();
-            ServerManager.OnRemoteConnectionState += ServerManagerOnOnRemoteConnectionState;
+            ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
         }
 
         public override void OnStopServer()
         {
             base.OnStopServer();
-            ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
+            ServerManager.OnRemoteConnectionState -= ServerManagerOnRemoteConnectionState;
         }
 
         [Server]
-        private void ServerManagerOnOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
+        private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
         {
-            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped && stateArgs.ConnectionId == OccupiedConnectionId)
+            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped &&
+                stateArgs.ConnectionId == OccupiedConnectionId)
                 ReleaseInteractable();
         }
 
@@ -66,23 +68,17 @@ namespace Code.InteractionSystem
         protected override void OnValidate()
         {
             base.OnValidate();
-            
-            Collider collider = GetComponent<Collider>();
-            if (collider != null)
-                collider.isTrigger = true;
+            var col = GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
         }
-        #endif
-        
-        
+#endif
 
-        /// <summary>Client-side call to request interaction start.</summary>
         public void RequestInteract()
         {
             if (!_interactableEnabled || _isOccupied.Value) return;
             Server_HandleInteract(ClientManager.Connection);
         }
 
-        /// <summary>Client-side call to request interaction end (for manualRelease).</summary>
         public void RequestEndInteract()
         {
             if (!_interactableEnabled || !_isOccupied.Value || !_manualRelease) return;
@@ -92,15 +88,13 @@ namespace Code.InteractionSystem
         [ServerRpc(RequireOwnership = false)]
         private void Server_HandleInteract(NetworkConnection conn)
         {
-            if (!_interactableEnabled || _isOccupied.Value) return;
+            if (!_interactableEnabled || _isOccupied.Value || conn == null) return;
             OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
             OnInteract(conn);
+
             if (!ManualRelease)
-            {
-                // auto release immediately
-                _isOccupied.Value = false;
-            }
+                _isOccupied.Value = false; // автосброс
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -111,27 +105,16 @@ namespace Code.InteractionSystem
             _isOccupied.Value = false;
         }
 
-        /// <summary>Releases occupancy, making object free again.</summary>
-        [Server]
-        public void ReleaseInteractable()
+        [Server] public void ReleaseInteractable()
         {
             _isOccupied.Value = false;
             OnEndInteract();
         }
 
-        /// <summary>Optional server call to toggle enabled state.</summary>
-        [Server]
-        public void SetEnabled(bool enabled)
-        {
-            _interactableEnabled = enabled;
-        }
+        [Server] public void SetEnabled(bool enabled) => _interactableEnabled = enabled;
 
-        // Override for custom logic on start
-        protected internal virtual void OnInteract(NetworkConnection conn)
-        {
-            GiveOwnership(conn);
-        }
-        // Override for custom logic on end (for manualRelease)
+        protected internal virtual void OnInteract(NetworkConnection conn) => GiveOwnership(conn);
+
         protected internal virtual void OnEndInteract(NetworkConnection conn = null)
         {
             OccupiedConnectionId = -1;

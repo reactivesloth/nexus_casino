@@ -14,67 +14,68 @@ namespace Code.InteractionSystem
         [Header("UI Settings")]
         [Tooltip("Canvas для десктопа (Screen Space / World Space)")]
         [SerializeField] private Canvas computerCanvas;
-
         [Tooltip("Полноэкранный Canvas для iOS/Android (Screen Space - Overlay)")]
         [SerializeField] private Canvas computerFSCanvas;
-
-        [Tooltip("Canvas с вашим остальным UI, если нужно включать/выключать вместе")]
+        [Tooltip("Canvas с остальным UI, если нужно включать/выключать вместе")]
         [SerializeField] private Canvas contentCanvas;
-
         [SerializeField] private TextMeshPro idNumberText;
 
         [Header("Vuplex")]
-        [Tooltip("Префаб CanvasWebViewPrefab с нужными настройками (резолюшн, курсоры и т.д.)")]
         [SerializeField] private CanvasWebViewPrefab webViewPrefab;
+        [SerializeField, Tooltip("Терминировать Chromium-процесс при закрытии (Standalone).")]
+        private bool deepCleanupStandalone = true;
+        [SerializeField, Tooltip("Очищать кэши/Storage/cookies при закрытии (влияет на все WebView).")]
+        private bool clearAllDataOnClose = true;
 
-        [Tooltip("Отключить ВСЕ WebView и убить Chromium-процесс при закрытии (Win/Mac). " +
-                 "Внимание: затронет другие окна WebView, если они есть.")]
-        [SerializeField] private bool deepCleanupStandalone = true;
-
-        [Tooltip("Очищать кэши/Storage/cookies при закрытии (влияет на все WebView).")]
-        [SerializeField] private bool clearAllDataOnClose = true;
-
-        [Header("Streaming (как было)")]
+        [Header("Streaming")]
         [SerializeField] private NetworkImageStream networkImageStream;
 
-        private bool _isUsing;
-        public bool IsUsing => _isUsing;
-
         public int IDNumber;
+        public bool IsUsing => _isUsing;
+        public IWebView WebView => _webView != null ? _webView.WebView : null;
 
-        private CanvasWebViewPrefab _webView; // активный инстанс
-        public IWebView WebView => _webView ? _webView.WebView : null;
+        private bool _isUsing;
+        private CanvasWebViewPrefab _webView; // живой инстанс
 
-        public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
+        // флаги против гонок открытия/закрытия
+        private bool _opening;
+        private bool _closing;
+        private bool _wasStarted;
 
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
             base.OnValidate();
-            networkImageStream ??= GetComponentInChildren<NetworkImageStream>(true);
-            if (idNumberText != null)
-                idNumberText.text = IDNumber.ToString();
+            if (idNumberText != null) idNumberText.text = IDNumber.ToString();
+            if (networkImageStream == null) networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
         }
 #endif
 
         private void Awake()
         {
-            if (idNumberText != null)
-                idNumberText.text = IDNumber.ToString();
+            if (idNumberText != null) idNumberText.text = IDNumber.ToString();
         }
 
         private void Start()
         {
+            _wasStarted = true;
             if (computerCanvas) computerCanvas.gameObject.SetActive(false);
             if (computerFSCanvas) computerFSCanvas.gameObject.SetActive(false);
             if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
+        private void OnDisable()
+        {
+            // Если объект выключили посреди сессии — корректно закроем UI и WebView
+            if (_isUsing) _ = CloseAndCleanupAsync();
+        }
+
+        public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
+
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
             _isUsing = false;
-            // На всякий случай, если сетевая остановка случилась посреди интеракции
             _ = CloseAndCleanupAsync();
         }
 
@@ -97,11 +98,8 @@ namespace Code.InteractionSystem
         [TargetRpc]
         private void TargetToggleComputerUI(NetworkConnection conn, bool open)
         {
-            if (!computerCanvas && !computerFSCanvas)
-            {
-                Debug.LogError("[SlotMachineInteractable] Assign canvases in Inspector!");
-                return;
-            }
+            // сцену ещё не проинициализировали?
+            if (!_wasStarted) return;
 
             var targetCanvas = GetTargetCanvas();
             if (!targetCanvas)
@@ -110,7 +108,6 @@ namespace Code.InteractionSystem
                 return;
             }
 
-            // Включаем/выключаем UI
             targetCanvas.gameObject.SetActive(open);
             if (contentCanvas) contentCanvas.gameObject.SetActive(open);
 
@@ -137,64 +134,84 @@ namespace Code.InteractionSystem
 
         private async Task OpenWebViewAsync(Canvas parentCanvas)
         {
-            // Защита от двойного вызова
-            if (_webView) return;
+            if (_opening) return;
+            _opening = true;
 
-            // Инстанцируем настроенный префаб как дочерний элемент нужного Canvas
-            _webView = Instantiate(webViewPrefab, parentCanvas.transform);
+            try
+            {
+                if (_webView != null) return; // уже создан
+                if (parentCanvas == null || webViewPrefab == null) return;
 
-            // Растягиваем на весь родительский RectTransform
-            var rt = (RectTransform)_webView.transform;
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            _webView.transform.SetAsFirstSibling();
+                // Инстанцируем
+                _webView = Instantiate(webViewPrefab, parentCanvas.transform);
+                var rt = _webView.transform as RectTransform;
+                if (rt != null)
+                {
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                    _webView.transform.SetAsFirstSibling();
+                }
 
-            // Ждём реальной инициализации вместо Invoke/таймеров
-            await _webView.WaitUntilInitialized();
+                // Ждём инициализации
+                await _webView.WaitUntilInitialized();
 
-            // Загружаем URL
-            string url = $"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}";
-            _webView.WebView.LoadUrl(url);
+                // Загружаем URL
+                string token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
+                string url = $"https://back.nexusmetaclub.com?jwt={token}";
+                if (_webView != null && _webView.WebView != null)
+                    _webView.WebView.LoadUrl(url);
 
-            // Твой стрим может освежить цель после появления webview
-            if (networkImageStream != null)
-                networkImageStream.SetTexture();
+                // стрим-текстура
+                if (networkImageStream != null)
+                    networkImageStream.SetTexture();
+            }
+            finally
+            {
+                _opening = false;
+            }
         }
 
         private async Task CloseAndCleanupAsync()
         {
-            // Выключаем стрим-картинку
-            if (networkImageStream != null)
-                networkImageStream.ClearTexture();
+            if (_closing) return;
+            _closing = true;
 
-            // Закрываем конкретно наш webview-инстанс
-            if (_webView)
+            try
             {
-                // Важно: уничтожаем именно префаб (внутри он корректно освобождает IWebView)
-                _webView.Destroy();
-                _webView = null;
-            }
+                // выключаем стрим
+                if (networkImageStream != null)
+                    networkImageStream.ClearTexture();
 
-            // Опционально чистим персистентные данные
-            if (clearAllDataOnClose)
-            {
+                // закрыть конкретный экземпляр webview
+                if (_webView != null)
+                {
+                    _webView.Destroy(); // корректно закрывает IWebView
+                    _webView = null;
+                }
+
+                if (clearAllDataOnClose)
+                {
 #if UNITY_STANDALONE || UNITY_EDITOR
-                if (deepCleanupStandalone)
-                {
-                    // Терминируем Chromium-процесс, затем чистим данные
-                    await StandaloneWebView.TerminateBrowserProcess();
-                    Web.ClearAllData();
-                }
-                else
-                {
-                    // Без терминации: некоторые операции недоступны — но ClearAllData в новых версиях работает корректно.
-                    Web.ClearAllData();
-                }
+                    if (deepCleanupStandalone)
+                    {
+                        // Последовательно: сперва глушим процесс, затем чистим данные.
+                        await StandaloneWebView.TerminateBrowserProcess();
+                        Web.ClearAllData();
+                    }
+                    else
+                    {
+                        Web.ClearAllData();
+                    }
 #else
-                Web.ClearAllData();
+                    Web.ClearAllData();
 #endif
+                }
+            }
+            finally
+            {
+                _closing = false;
             }
         }
     }

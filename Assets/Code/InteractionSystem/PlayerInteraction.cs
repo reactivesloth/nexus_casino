@@ -8,13 +8,13 @@ using Code.Network.HostMigration.Components;
 using Code.Network.Player;
 using Code.Utility;
 using FishNet.Connection;
-using Unity.VisualScripting;
 
 namespace Code.Player
 {
     public class PlayerInteraction : NetworkBehaviour, IMigratable<CharacterInteractableMigrateData>
     {
-        [Header("Detection")] [SerializeField] private LayerMask interactableMask;
+        [Header("Detection")]
+        [SerializeField] private LayerMask interactableMask;
         [SerializeField] private float detectionDistance = 3f;
 
         private Interactable _hovered;
@@ -26,30 +26,33 @@ namespace Code.Player
 
         private void Awake()
         {
-            if (FindObjectOfType<CinemachineVirtualCamera>())
-                virtualCamera ??= FindObjectOfType<CinemachineVirtualCamera>().GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+            var vcam = FindObjectOfType<CinemachineVirtualCamera>();
+            if (vcam != null)
+                virtualCamera = vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+
             input = PlayerInput.Instance;
-            
-            CursorManager.Instance.HideCursor();
+
+            var cm = CursorManager.Instance;
+            if (cm != null) cm.HideCursor();
         }
 
         private void Update()
         {
             if (!IsOwner) return;
-            
+
             if (_active == null)
             {
                 UpdateHover();
-                if (_hovered != null && input.InteractDown && !CursorManager.Instance.IsVisible() && !_hovered.IsBusy)
+                bool cursorVisible = CursorManager.Instance != null && CursorManager.Instance.IsVisible();
+                if (_hovered != null && input != null && input.InteractDown && !cursorVisible && !_hovered.IsBusy)
                 {
                     _hovered.RequestInteract();
-                    if (_hovered.ManualRelease)
-                        _active = _hovered;
+                    if (_hovered.ManualRelease) _active = _hovered;
                 }
             }
             else
             {
-                if (input.InteractDown && !_active.IsBusy)
+                if (input != null && input.InteractDown && !_active.IsBusy)
                 {
                     _active.RequestEndInteract();
                     _active = null;
@@ -63,34 +66,37 @@ namespace Code.Player
         private void UpdateHover()
         {
             var cam = Camera.main;
-            if (cam == null) return;
+            if (cam == null) { _hovered = null; return; }
 
+            float extra = (virtualCamera != null) ? virtualCamera.CameraDistance : 0f;
             Ray ray = new Ray(cam.transform.position, cam.transform.forward);
-            if (Physics.Raycast(ray, out RaycastHit hit, detectionDistance + virtualCamera.CameraDistance, interactableMask))
+            if (Physics.Raycast(ray, out RaycastHit hit, detectionDistance + extra, interactableMask))
             {
-                var interactable = hit.collider.GetComponent<Interactable>();
+                var interactable = hit.collider != null ? hit.collider.GetComponent<Interactable>() : null;
                 if (interactable != null && interactable.IsEnabled && !interactable.IsOccupied && !interactable.IsBusy)
                 {
                     _hovered = interactable;
                     return;
                 }
             }
-
             _hovered = null;
         }
 
         private void UpdateOutline()
         {
             var target = _active != null ? _active : _hovered;
-            
+
             if (target != null && !target.IsOccupied)
             {
-                outlineGameObjects = target != null ? target.outlineGameObjects : null;
+                outlineGameObjects = target.outlineGameObjects;
                 if (outlineGameObjects != null)
                 {
-                    foreach (var go in outlineGameObjects)
+                    for (int i = 0; i < outlineGameObjects.Length; i++)
                     {
-                        var o = go.GetOrAddComponent<OutlineMesh>();
+                        var go = outlineGameObjects[i];
+                        if (go == null) continue;
+                        var o = go.GetComponent<OutlineMesh>();
+                        if (o == null) o = go.AddComponent<OutlineMesh>();
                         o.OutlineColor = Color.yellow;
                         o.OutlineWidth = 10;
                         o.OutlineMode = OutlineMesh.Mode.OutlineVisible;
@@ -101,24 +107,24 @@ namespace Code.Player
             {
                 if (outlineGameObjects != null)
                 {
-                    foreach (var go in outlineGameObjects)
+                    for (int i = 0; i < outlineGameObjects.Length; i++)
                     {
-                        if (go.GetComponent<OutlineMesh>() != null)
-                            Destroy(go.GetComponent<OutlineMesh>());
+                        var go = outlineGameObjects[i];
+                        if (go == null) continue;
+                        var o = go.GetComponent<OutlineMesh>();
+                        if (o != null) Destroy(o);
                     }
                 }
-
             }
         }
 
         private void UpdateUI()
         {
-            if (_active != null)
-                InteractionUIHint.Instance.ShowPrompt(_active.InteractionPrompt);
-            else if (_hovered != null)
-                InteractionUIHint.Instance.ShowPrompt(_hovered.InteractionPrompt);
-            else
-                InteractionUIHint.Instance.HidePrompt();
+            if (InteractionUIHint.Instance == null) return;
+
+            if (_active != null) InteractionUIHint.Instance.ShowPrompt(_active.InteractionPrompt);
+            else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(_hovered.InteractionPrompt);
+            else InteractionUIHint.Instance.HidePrompt();
         }
 
         #region IMigratable
@@ -127,7 +133,6 @@ namespace Code.Player
         {
             if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
                 return;
-
             SetInteractableOnMigrate(Owner, data);
         }
 
@@ -135,10 +140,8 @@ namespace Code.Player
         public void SetInteractableOnMigrate(NetworkConnection conn, CharacterInteractableMigrateData data)
         {
             var sceneObject = SceneObject.GetObjectById(data.activeId);
-            if (!sceneObject)
-                return;
-            if (!sceneObject.TryGetComponent(out Interactable interactable))
-                return;
+            if (!sceneObject) return;
+            if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
             _active = interactable;
             _active.RequestInteract();
@@ -146,12 +149,9 @@ namespace Code.Player
 
         public CharacterInteractableMigrateData GetMigrateData()
         {
-            if (!_active || !_active.TryGetComponent<SceneObject>(out var sceneObject))
-                return default;
-            return new CharacterInteractableMigrateData
-            {
-                activeId = sceneObject.ObjectGuid.ToString()
-            };
+            if (_active == null) return default;
+            if (!_active.TryGetComponent<SceneObject>(out var sceneObject)) return default;
+            return new CharacterInteractableMigrateData { activeId = sceneObject.ObjectGuid.ToString() };
         }
 
         #endregion

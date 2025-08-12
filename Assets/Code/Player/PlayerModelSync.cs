@@ -12,55 +12,55 @@ namespace Code.Player
     {
         private CharacterCustomization _characterCustomization;
 
-        private readonly SyncVar<string> _characterJson = new(
-            new SyncTypeSettings
-            {
-                ReadPermission = ReadPermission.Observers,
-                WritePermission = WritePermission.ServerOnly
-            }
-        );
-        
+        private readonly SyncVar<string> _characterJson = new(new SyncTypeSettings
+        {
+            ReadPermission = ReadPermission.Observers,
+            WritePermission = WritePermission.ServerOnly
+        });
+
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
             _characterJson.OnChange += OnCharacterJsonChanged;
         }
 
+        private void OnDestroy()
+        {
+            _characterJson.OnChange -= OnCharacterJsonChanged;
+        }
+
         private void OnCharacterJsonChanged(string prev, string next, bool asServer)
         {
-            Debug.Log($"[Client] Получил JSON ({next.Length} симв.)");
+            Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
             _characterCustomization.Initialize();
-            _characterCustomization.LoadFromJSON(next);
+            if (!string.IsNullOrEmpty(next))
+                _characterCustomization.LoadFromJSON(next);
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            if(IsOwner)
-                StartCoroutine(WaitAndSendLocalCharacter());
+            if (IsOwner) StartCoroutine(WaitAndSendLocalCharacter());
         }
 
         [ServerRpc(RunLocally = true)]
         public void SendCharacterJsonServerRpc(string json)
-        { 
-            Debug.Log($"[Server] Получен JSON ({json.Length} симв.)");
-            _characterJson.Value = json;
+        {
+            Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
+            _characterJson.Value = json ?? string.Empty;
         }
-        
+
         private IEnumerator WaitAndSendLocalCharacter()
         {
             while (!IsClientInitialized || !IsClientStarted || !IsSpawned)
                 yield return null;
-
             yield return null;
-
             TransmitLocalCharacter();
         }
 
         public void TransmitLocalCharacter()
         {
-            if (!IsOwner) return; 
-            
+            if (!IsOwner) return;
             Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);

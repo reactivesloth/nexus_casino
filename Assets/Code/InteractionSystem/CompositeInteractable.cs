@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using UnityEngine;
 using FishNet.Connection;
 using FishNet.Object;
@@ -11,23 +10,23 @@ namespace Code.InteractionSystem
         [Header("Children to interact with")]
         [SerializeField, Tooltip("Все дочерние Interactable, которые нужно задействовать за одно нажатие.")]
         private Interactable[] children;
-        
-        // Вспомогательное поле для авто-сгенерированного коллайдера
-        private BoxCollider _compositeCollider;
+
         [SerializeField] private bool generateColliderFromChildren = true;
+
+        // Автогенерируемый box-триггер
+        private BoxCollider _compositeCollider;
+
         private void Awake()
         {
-            // Настраиваем свой BoxCollider-триггер
             _compositeCollider = GetComponent<BoxCollider>();
             if (_compositeCollider != null)
                 _compositeCollider.isTrigger = true;
-            
+
             if (generateColliderFromChildren && _compositeCollider != null)
                 UpdateCompositeColliderBounds();
         }
 
 #if UNITY_EDITOR
-        // Чтобы сразу видеть в сцене границы
         private void OnDrawGizmosSelected()
         {
             if (_compositeCollider == null) return;
@@ -38,32 +37,40 @@ namespace Code.InteractionSystem
         }
 #endif
 
-        /// <summary>
-        /// Собираем одну общую “обёртку” над всеми коллайдерами детей
-        /// </summary>
+        /// <summary>Строит объединённые границы по всем дочерним коллайдерам.</summary>
         private void UpdateCompositeColliderBounds()
         {
-            // Берём все коллайдеры внутри, кроме своего
-            var childCols = GetComponentsInChildren<Collider>()
-                .Where(c => c != _compositeCollider)
-                .ToArray();
-            if (childCols.Length == 0) return;
+            var all = GetComponentsInChildren<Collider>(true);
+            if (all == null || all.Length == 0) return;
 
-            // Считаем объединённые мировые границы
-            var bounds = childCols[0].bounds;
-            for (int i = 1; i < childCols.Length; i++)
-                bounds.Encapsulate(childCols[i].bounds);
+            Bounds? b = null;
+            for (int i = 0; i < all.Length; i++)
+            {
+                var c = all[i];
+                if (c == null || c == _compositeCollider) continue;
+                if (!b.HasValue) b = c.bounds;
+                else
+                {
+                    var bb = b.Value;
+                    bb.Encapsulate(c.bounds);
+                    b = bb;
+                }
+            }
 
-            // Центр в локальных координатах
-            Vector3 localCenter = transform.InverseTransformPoint(bounds.center);
-            _compositeCollider.center = localCenter;
+            if (!b.HasValue) return;
 
-            // Размер берём из world size, переводим в local, учитывая scale
+            var bounds = b.Value;
+
+            // центр в лок. координатах
+            _compositeCollider.center = transform.InverseTransformPoint(bounds.center);
+
+            // из world size в local с учётом scale
+            var ls = transform.lossyScale;
             Vector3 worldSize = bounds.size;
             Vector3 localSize = new Vector3(
-                worldSize.x / transform.lossyScale.x,
-                worldSize.y / transform.lossyScale.y,
-                worldSize.z / transform.lossyScale.z
+                ls.x != 0f ? worldSize.x / ls.x : 0f,
+                ls.y != 0f ? worldSize.y / ls.y : 0f,
+                ls.z != 0f ? worldSize.z / ls.z : 0f
             );
             _compositeCollider.size = localSize;
         }
@@ -74,41 +81,73 @@ namespace Code.InteractionSystem
             {
                 if (!IsEnabled) return "Disabled";
                 if (IsOccupied)  return ManualRelease ? "Press E to end" : "Occupied";
-                var prompts = children
-                    .Where(c => c.IsEnabled && !c.IsOccupied)
-                    .Select(c => c.InteractionPrompt)
-                    .ToArray();
-                return prompts.Length > 0
-                    ? string.Join(" + ", prompts)
-                    : base.InteractionPrompt;
+
+                if (children == null || children.Length == 0)
+                    return base.InteractionPrompt;
+
+                // Собираем промпты без LINQ
+                int count = 0;
+                // заранее оценим макс длину, чтобы избежать лишних конкатенаций
+                for (int i = 0; i < children.Length; i++)
+                {
+                    var c = children[i];
+                    if (c != null && c.IsEnabled && !c.IsOccupied) count++;
+                }
+                if (count == 0) return base.InteractionPrompt;
+
+                string result = string.Empty;
+                int appended = 0;
+                for (int i = 0; i < children.Length; i++)
+                {
+                    var c = children[i];
+                    if (c == null || !c.IsEnabled || c.IsOccupied) continue;
+                    if (appended > 0) result += " + ";
+                    result += c.InteractionPrompt;
+                    appended++;
+                }
+                return appended > 0 ? result : base.InteractionPrompt;
             }
         }
 
         protected internal override void OnInteract(NetworkConnection conn)
         {
-            foreach (var child in children)
-                child.OnInteract(conn);
+            if (children == null) return;
+            for (int i = 0; i < children.Length; i++)
+            {
+                var child = children[i];
+                if (child != null) child.OnInteract(conn);
+            }
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
-            foreach (var child in children)
-                child.OnEndInteract(conn);
+            if (children == null) return;
+            for (int i = 0; i < children.Length; i++)
+            {
+                var child = children[i];
+                if (child != null) child.OnEndInteract(conn);
+            }
         }
 
         private void Update()
         {
             IsBusy = false;
-            foreach (var child in children)
-                if (child.IsBusy)
-                    IsBusy = true;
+            if (children == null) return;
+            for (int i = 0; i < children.Length; i++)
+            {
+                var c = children[i];
+                if (c != null && c.IsBusy) { IsBusy = true; break; }
+            }
         }
 
         [Server]
         public void ReleaseAll()
         {
-            foreach (var child in children)
-                child.ReleaseInteractable();
+            if (children != null)
+            {
+                for (int i = 0; i < children.Length; i++)
+                    if (children[i] != null) children[i].ReleaseInteractable();
+            }
             ReleaseInteractable();
         }
     }

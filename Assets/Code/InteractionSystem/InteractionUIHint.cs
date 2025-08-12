@@ -12,11 +12,7 @@ namespace Code.InteractionSystem
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            if (Instance != null && Instance != this) { Destroy(gameObject); return; }
             Instance = this;
             DontDestroyOnLoad(gameObject);
             HidePrompt();
@@ -24,13 +20,13 @@ namespace Code.InteractionSystem
 
         public void ShowPrompt(string message)
         {
-            _promptUI.SetActive(true);
-            _promptText.text = message;
+            if (_promptUI != null) _promptUI.SetActive(true);
+            if (_promptText != null) _promptText.text = message ?? string.Empty;
         }
 
         public void HidePrompt()
         {
-            _promptUI.SetActive(false);
+            if (_promptUI != null) _promptUI.SetActive(false);
         }
     }
 }

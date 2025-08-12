@@ -1,6 +1,5 @@
-﻿using System;
+﻿using System.Collections;
 using UnityEngine;
-using System.Collections;
 using FishNet.Object;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
@@ -10,13 +9,12 @@ namespace Code.InteractionSystem
     public class DoorInteractable : Interactable
     {
         [Header("Scripted Door Settings")]
-        [SerializeField]
-        private Transform doorTransform; // трансформ двери (обычно сам объект)
+        [SerializeField] private Transform doorTransform;
 
         public Vector3 ClosedRot;
         public Vector3 OpenRot;
 
-        [SerializeField, Tooltip("Скорость анимации открытия/закрытия")]
+        [SerializeField, Tooltip("Скорость анимации открытия/закрытия (доля в секунду)")]
         private float animationSpeed = 2f;
 
         private bool _isOpen;
@@ -37,37 +35,48 @@ namespace Code.InteractionSystem
 
         private void OnEnable()
         {
-            _openDegree.OnChange += OpenDegreeOnOnChange;
+            _openDegree.OnChange += OpenDegree_OnChange;
         }
 
         private void OnDisable()
         {
-            _openDegree.OnChange -= OpenDegreeOnOnChange;
+            _openDegree.OnChange -= OpenDegree_OnChange;
+            if (_interpolationRoutine != null) { StopCoroutine(_interpolationRoutine); _interpolationRoutine = null; }
+            if (_doorRoutine != null) { StopCoroutine(_doorRoutine); _doorRoutine = null; }
         }
 
-        private void OpenDegreeOnOnChange(float prev, float next, bool asServer)
+        private void OpenDegree_OnChange(float prev, float next, bool asServer)
         {
             if (_interpolationRoutine != null)
                 StopCoroutine(_interpolationRoutine);
-
             _interpolationRoutine = StartCoroutine(InterpolateRotation(prev, next));
         }
 
         private IEnumerator InterpolateRotation(float from, float to)
         {
-            var t = 0f;
-            var duration = Mathf.Abs(to - from) / animationSpeed;
-            var startRot = Quaternion.Slerp(Quaternion.Euler(ClosedRot), Quaternion.Euler(OpenRot), from);
-            var endRot = Quaternion.Slerp(Quaternion.Euler(ClosedRot), Quaternion.Euler(OpenRot), to);
+            float delta = Mathf.Abs(to - from);
+            float duration = (animationSpeed > 0f) ? (delta / animationSpeed) : 0f;
 
+            Quaternion startRot = Quaternion.Slerp(Quaternion.Euler(ClosedRot), Quaternion.Euler(OpenRot), from);
+            Quaternion endRot   = Quaternion.Slerp(Quaternion.Euler(ClosedRot), Quaternion.Euler(OpenRot), to);
+
+            if (duration <= 0.0001f)
+            {
+                if (doorTransform != null) doorTransform.localRotation = endRot;
+                _interpolationRoutine = null;
+                yield break;
+            }
+
+            float t = 0f;
             while (t < 1f)
             {
                 t += Time.deltaTime / duration;
-                doorTransform.localRotation = Quaternion.Slerp(startRot, endRot, t);
+                if (doorTransform != null)
+                    doorTransform.localRotation = Quaternion.Slerp(startRot, endRot, Mathf.Clamp01(t));
                 yield return null;
             }
 
-            doorTransform.localRotation = endRot;
+            if (doorTransform != null) doorTransform.localRotation = endRot;
             _interpolationRoutine = null;
         }
 
@@ -79,39 +88,35 @@ namespace Code.InteractionSystem
 
         private void ToggleDoor()
         {
-            if (_doorRoutine != null)
-                StopCoroutine(_doorRoutine);
-
+            if (_doorRoutine != null) StopCoroutine(_doorRoutine);
             _doorRoutine = StartCoroutine(_isOpen ? CloseDoorFlow() : OpenDoorFlow());
         }
 
         private IEnumerator OpenDoorFlow()
         {
             _isOpen = true;
-            var t = _openDegree.Value;
+            float t = _openDegree.Value;
 
             while (t < 1f)
             {
-                t += Time.deltaTime * animationSpeed;
+                t += Time.deltaTime * Mathf.Max(0.0001f, animationSpeed);
                 _openDegree.Value = Mathf.Clamp01(t);
                 yield return null;
             }
-
             _doorRoutine = null;
         }
 
         private IEnumerator CloseDoorFlow()
         {
             _isOpen = false;
-            var t = _openDegree.Value;
+            float t = _openDegree.Value;
 
             while (t > 0f)
             {
-                t -= Time.deltaTime * animationSpeed;
+                t -= Time.deltaTime * Mathf.Max(0.0001f, animationSpeed);
                 _openDegree.Value = Mathf.Clamp01(t);
                 yield return null;
             }
-
             _doorRoutine = null;
         }
     }
