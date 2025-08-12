@@ -8,9 +8,8 @@ namespace Code.Chat
     public class CommandData
     {
         public string commandValue;
-        public bool requireMessageValue = false;
+        public bool requireMessageValue;
         public UnityEvent<string> unityEvent;
-
         [TextArea] public string description;
     }
 }

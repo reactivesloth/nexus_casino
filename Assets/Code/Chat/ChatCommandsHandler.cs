@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using Code.API;
 using Code.API.Models;
@@ -6,7 +5,6 @@ using Code.Player;
 using FishNet.Component.Animating;
 using FishNet.Connection;
 using FishNet.Object;
-using TankAndHealerStudioAssets;
 using UnityEngine;
 
 namespace Code.Chat
@@ -18,49 +16,58 @@ namespace Code.Chat
 
         private void OnValidate()
         {
-            chatController ??= GetComponent<ChatController>();
+            if (chatController == null)
+                chatController = GetComponent<ChatController>();
         }
 
         public void Help()
         {
-            var answerMessageBuilder = new StringBuilder();
+            if (chatController == null || chatController.CurrentChatBox == null) return;
 
-            answerMessageBuilder.AppendLine($"<color=yellow>{helpText}</color>");
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(helpText))
+                sb.AppendLine($"<color=yellow>{helpText}</color>");
 
-            foreach (var command in chatController.CommandsDictionary.Values)
+            // без LINQ/foreach alloc
+            var dict = chatController.CommandsDictionary;
+            if (dict != null)
             {
-                answerMessageBuilder.AppendLine(command.commandValue + " - " + command.description);
+                foreach (var kv in dict)
+                {
+                    var cmd = kv.Value;
+                    if (cmd != null)
+                        sb.AppendLine(cmd.commandValue + " - " + cmd.description);
+                }
             }
 
-            chatController.CurrentChatBox.RegisterChat(chatController.SystemName, answerMessageBuilder.ToString());
+            chatController.CurrentChatBox.RegisterChat(chatController.SystemName, sb.ToString());
         }
 
         public void ShareBalance()
         {
             var user = ClientDataStorage.UserData;
+            if (user == null) return;
             ShareBalance_ServerRpc(user.username, user.balance);
         }
 
-        #region Share Balance RPCs
-
         [ServerRpc(RequireOwnership = false, RunLocally = true)]
-        public void ShareBalance_ServerRpc(string nickname, int balance) =>
-            ShareBalance_ObserversRpc(nickname, balance);
-
-        [ObserversRpc(RunLocally = true)]
-        public void ShareBalance_ObserversRpc(string nickname, int balance)
+        private void ShareBalance_ServerRpc(string nickname, int balance)
         {
-            /*chatController.HandleLobbyMassage(new MessageData { Message = new MessageInfo{UserId = 0, Message = $"Мой баланс {balance}!"}},
-                UltimateChatBoxStyles.noticeMessage);*/
+            ShareBalance_ObserversRpc(nickname, balance);
         }
 
-        #endregion
+        [ObserversRpc(RunLocally = true)]
+        private void ShareBalance_ObserversRpc(string nickname, int balance)
+        {
+            // пример системного сообщения — оставлено закомментированным
+            // chatController?.SendSystemMessage($"{nickname}: мой баланс {balance}", UltimateChatBoxStyles.noticeMessage);
+        }
 
         public void Emotion(string emotion)
         {
-            var animatorController = PlayerMovementController.Own.GetComponent<NetworkAnimator>();
-            if(animatorController)
-                animatorController.SetTrigger(emotion);
+            if (string.IsNullOrEmpty(emotion) || PlayerMovementController.Own == null) return;
+            if (PlayerMovementController.Own.TryGetComponent(out NetworkAnimator na))
+                na.SetTrigger(emotion);
         }
     }
 }
