@@ -5,30 +5,31 @@ using FishNet.Broadcast;
 namespace Code.Network.HostMigration.Data
 {
     [Serializable]
-    public struct MigratePlayerData: IBroadcast
+    public struct MigratePlayerData : IBroadcast
     {
         public List<NetworkObjectData> objects;
     }
 
     [Serializable]
-    public struct NetworkObjectData: IBroadcast
+    public struct NetworkObjectData : IBroadcast
     {
         public string objectName;
-        
+
         public bool isSceneObject;
         public bool isNetworkObject;
-        
-        public int networkObjectId;
-        public int prefabId; // Для динамических объектов
-        public int ownerId; // Владелец (игрок)
-        
+
+        public int  networkObjectId;
+        public int  prefabId;   // для динамических
+        public int  ownerId;    // владелец
+
+        public string sceneObjectId; // <— GUID для сценовых объектов
+
         public SerializableTransform transformData;
-        
         public List<MigratableComponentData> componentsData;
     }
 
     [Serializable]
-    public struct MigratableComponentData: IBroadcast
+    public struct MigratableComponentData : IBroadcast
     {
         public string componentName;
         public string jsonData;

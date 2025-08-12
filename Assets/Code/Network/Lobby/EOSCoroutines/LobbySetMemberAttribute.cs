@@ -6,52 +6,77 @@ using UnityEngine;
 
 namespace Code.Network.Lobby.EOSCoroutines
 {
-    public class LobbySetMemberAttribute
+    public sealed class LobbySetMemberAttribute
     {
         public UpdateLobbyCallbackInfo? CallbackInfo { get; private set; }
 
-        public static Coroutine Run(out LobbySetMemberAttribute lobbySetMemberAttribute, string lobbyId,
-            ProductUserId localUserId, string attrKey, string attrValue,
-            LobbyAttributeVisibility visibility = LobbyAttributeVisibility.Public, float timeout = 30f)
+        public static Coroutine Run(out LobbySetMemberAttribute op, string lobbyId, ProductUserId localUserId,
+            string attrKey, string attrValue, LobbyAttributeVisibility visibility = LobbyAttributeVisibility.Public,
+            float timeout = 30f)
         {
-            lobbySetMemberAttribute = new LobbySetMemberAttribute();
-            return EOS.GetManager()
-                .StartCoroutine(lobbySetMemberAttribute.SetMemberAttributeCoroutine(lobbyId, localUserId, attrKey,
-                    attrValue, visibility, timeout));
+            op = new LobbySetMemberAttribute();
+            var mgr = EOS.GetManager();
+            if (mgr == null)
+            {
+                Debug.LogError("[LobbySetMemberAttribute] EOS manager is null.");
+                return null;
+            }
+            return mgr.StartCoroutine(op.SetMemberAttributeCoroutine(lobbyId, localUserId, attrKey, attrValue, visibility, timeout));
         }
 
-        private IEnumerator SetMemberAttributeCoroutine(string lobbyId, ProductUserId localUserId, string attrKey,
-            string attrValue, LobbyAttributeVisibility visibility, float timeout)
+        private IEnumerator SetMemberAttributeCoroutine(string lobbyId, ProductUserId localUserId,
+            string attrKey, string attrValue, LobbyAttributeVisibility visibility, float timeout)
         {
-            var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
-            var updateLobbyModificationOptions = new UpdateLobbyModificationOptions()
+            if (string.IsNullOrEmpty(lobbyId) || localUserId == null || string.IsNullOrEmpty(attrKey))
+            {
+                CallbackInfo = new UpdateLobbyCallbackInfo { ResultCode = Result.InvalidParameters };
+                yield break;
+            }
+
+            var platform = EOS.GetPlatformInterface();
+            if (platform == null)
+            {
+                CallbackInfo = new UpdateLobbyCallbackInfo { ResultCode = Result.UnexpectedError };
+                yield break;
+            }
+
+            var lobby = platform.GetLobbyInterface();
+
+            LobbyModification modification = null;
+            var modOpts = new UpdateLobbyModificationOptions
             {
                 LobbyId = lobbyId,
                 LocalUserId = localUserId,
             };
-            lobbyInterface.UpdateLobbyModification(ref updateLobbyModificationOptions, out var lobbyModification);
-            var addMemberAttributeOptions = new LobbyModificationAddMemberAttributeOptions
+            lobby.UpdateLobbyModification(ref modOpts, out modification);
+            if (modification == null)
+            {
+                CallbackInfo = new UpdateLobbyCallbackInfo { ResultCode = Result.UnexpectedError };
+                yield break;
+            }
+
+            var addMemberAttr = new LobbyModificationAddMemberAttributeOptions
             {
                 Attribute = new AttributeData
                 {
                     Key = attrKey,
-                    Value = new AttributeDataValue
-                    {
-                        AsUtf8 = attrValue,
-                    },
+                    Value = new AttributeDataValue { AsUtf8 = attrValue ?? string.Empty }
                 },
-                Visibility = visibility,
+                Visibility = visibility
             };
-            lobbyModification.AddMemberAttribute(ref addMemberAttributeOptions);
-            var updateLobbyOptions = new UpdateLobbyOptions
-            {
-                LobbyModificationHandle = lobbyModification,
-            };
-            lobbyInterface.UpdateLobby(ref updateLobbyOptions, null,
-                (ref UpdateLobbyCallbackInfo callbackInfo) => { CallbackInfo = callbackInfo; });
+            modification.AddMemberAttribute(ref addMemberAttr);
 
-            yield return new WaitUntilOrTimeout(() => CallbackInfo.HasValue, timeout,
-                () => CallbackInfo = new UpdateLobbyCallbackInfo { ResultCode = Result.TimedOut });
+            var updOpts = new UpdateLobbyOptions { LobbyModificationHandle = modification };
+            lobby.UpdateLobby(ref updOpts, null, (ref UpdateLobbyCallbackInfo cb) => { CallbackInfo = cb; });
+
+            yield return new WaitUntilOrTimeout(
+                () => CallbackInfo.HasValue,
+                timeout,
+                () => CallbackInfo = new UpdateLobbyCallbackInfo { ResultCode = Result.TimedOut }
+            );
+
+            // ВАЖНО: всегда релизим modification
+            modification.Release();
         }
     }
 }

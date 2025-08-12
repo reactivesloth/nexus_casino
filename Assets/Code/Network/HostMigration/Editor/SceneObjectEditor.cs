@@ -9,17 +9,17 @@ namespace Code.Network.HostMigration.Editor
         public override void OnInspectorGUI()
         {
             var sceneObject = (Components.SceneObject)target;
-            
+
             if (PrefabUtility.IsPartOfPrefabAsset(sceneObject.gameObject))
             {
                 EditorGUILayout.HelpBox(
-                    "SceneObject added on prefab. This component has need add to object on scene!",
+                    "SceneObject добавлен на prefab. Этот компонент должен быть на объекте сцены!",
                     MessageType.Warning
                 );
             }
-            
+
             DrawDefaultInspector();
         }
     }
-#endif
 }
+#endif

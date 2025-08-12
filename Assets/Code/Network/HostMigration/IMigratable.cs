@@ -1,4 +1,3 @@
-using FishNet.Object;
 using Newtonsoft.Json;
 
 namespace Code.Network.HostMigration
@@ -10,11 +9,11 @@ namespace Code.Network.HostMigration
 
         string GetJson(TMigrateDataType data) => JsonConvert.SerializeObject(data, Formatting.Indented);
 
-        //Base implementations
+        // Base implementations
         void IMigratableBase.OnMigrateDataReceived(string jsonData) =>
             OnMigrateDataReceived(JsonConvert.DeserializeObject<TMigrateDataType>(jsonData));
         object IMigratableBase.GetMigrateData() => GetMigrateData();
-        string IMigratableBase.GetJson(object data) => GetJson((TMigrateDataType) data);
+        string IMigratableBase.GetJson(object data) => GetJson((TMigrateDataType)data);
     }
 
     public interface IMigratableBase
