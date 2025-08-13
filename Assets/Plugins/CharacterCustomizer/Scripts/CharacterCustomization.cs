@@ -124,6 +124,16 @@ namespace CC
                     Destroy(toDelete[i].gameObject);
             }
 
+            foreach (var hairObject in HairObjects)
+                if(hairObject != null)
+                    Destroy(hairObject.gameObject);
+            HairObjects.Clear();
+            
+            foreach (var apparelObject in ApparelObjects)
+                if(apparelObject != null)
+                    Destroy(apparelObject.gameObject);
+            ApparelObjects.Clear();
+            
             var meshes = GetComponentsInChildren<SkinnedMeshRenderer>();
             for (int i = 0; i < meshes.Length; i++)
             {
@@ -152,7 +162,7 @@ namespace CC
                     }
                 }
             }
-
+            
             HairObjects = new List<GameObject>(new GameObject[HairTables.Count]);
             ApparelObjects = new List<GameObject>(new GameObject[ApparelTables.Count]);
 

@@ -17,11 +17,12 @@ namespace Code.Player
             ReadPermission = ReadPermission.Observers,
             WritePermission = WritePermission.ServerOnly
         });
-
+        
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
             _characterJson.OnChange += OnCharacterJsonChanged;
+            _characterCustomization.Initialize();
         }
 
         private void OnDestroy()
@@ -32,6 +33,8 @@ namespace Code.Player
         private void OnCharacterJsonChanged(string prev, string next, bool asServer)
         {
             Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
+
+            _characterCustomization.Autoload = false;
             _characterCustomization.Initialize();
             if (!string.IsNullOrEmpty(next))
                 _characterCustomization.LoadFromJSON(next);
