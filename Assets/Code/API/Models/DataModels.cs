@@ -53,4 +53,12 @@ namespace Code.API.Models
     }
 
     [Serializable] public class SendMessageRequest { public string lobby_id; public string message; public string type; }
+   
+    [Serializable]
+    public class HistoryEnvelopeData
+    {
+        public MessageData[] messages;
+        public int total_count;
+        public bool has_more;
+    }
 }

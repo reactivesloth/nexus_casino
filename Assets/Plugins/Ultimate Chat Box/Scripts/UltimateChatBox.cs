@@ -1,5 +1,8 @@
 ﻿/* UltimateChatBox.cs */
 /* Written by Kaz */
+
+using System.Linq;
+
 namespace TankAndHealerStudioAssets
 {
 	using TMPro;
@@ -44,6 +47,9 @@ namespace TankAndHealerStudioAssets
 			/// The exact string value provided to the chat box for the message.
 			/// </summary>
 			public string Message { get; set; }
+
+			public long? MessageId { get; set; } = null;
+			
 			/// <summary>
 			/// The modified string value with all the users options applied to it so that it looks correct.
 			/// </summary>
@@ -129,6 +135,17 @@ namespace TankAndHealerStudioAssets
 		public event System.Action ReachedTop;
 		private bool _wasTop = true;
 		public bool IsAtTop => chatContentBox != null && chatContentBox.anchoredPosition.y <= 2f;
+
+		public long? OldestMessageId
+		{
+			get
+			{
+				var chatInfo = ChatInformations.FirstOrDefault(c => c.MessageId.HasValue);
+				return chatInfo?.MessageId;
+			}	
+		}
+		
+		public bool NoMoreHistory { get; set; }
 
 		/// <summary>
 		/// The list of all the text objects that have been created to display the registered chat information.
@@ -676,6 +693,8 @@ namespace TankAndHealerStudioAssets
 					emojiButtonImage.color = value;
 			}
 		}
+
+		public bool WasInitLoad { set; get; } = false;
 
 		[Serializable]
 		public class ChatStyle
@@ -2873,7 +2892,7 @@ namespace TankAndHealerStudioAssets
 		}
 
 		public void PrependChats(
-			System.Collections.Generic.IEnumerable<(string username, string message, ChatStyle style)> batch)
+			System.Collections.Generic.IEnumerable<(string username, string message, ChatStyle style, long id)> batch)
 		{
 			if (batch == null || chatContentBox == null)
 				return;
@@ -2903,6 +2922,7 @@ namespace TankAndHealerStudioAssets
 				}
 
 				info.Message = item.message ?? string.Empty;
+				info.MessageId = item.id;
 				info.DisplayMessage =
 					(info.Username != string.Empty
 						? $"{(!style.noUsernameFollowupText ? usernameFollowup : " ")}"
