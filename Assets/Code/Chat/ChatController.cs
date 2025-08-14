@@ -91,7 +91,7 @@ namespace Code.Chat
             CurrentChatBox.DisableInputField();
 
             string jwt = ClientDataStorage.AccessToken ?? string.Empty;
-            string url = $"ws://back.nexusmetaclub.com/api/client/ws/lobby?jwt={jwt}&lobby_id=main";
+            string url = $"wss://back.nexusmetaclub.com/api/client/ws/lobby?jwt={jwt}&lobby_id=main";
 
             _ws = new WebSocket(url);
             _ws.OnOpen += OnWsOpen;
