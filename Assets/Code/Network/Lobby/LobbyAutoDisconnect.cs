@@ -5,37 +5,40 @@ using FishNet.Managing.Server;
 
 namespace Code.Network.Lobby
 {
-    /// <summary>
-    /// На выходе из приложения/уничтожении объекта корректно рвёт сетевые соединения и покидает лобби.
-    /// </summary>
-    public sealed class LobbyAutoDisconnect : MonoBehaviour
+    public class LobbyAutoDisconnect : MonoBehaviour
     {
-        private static ServerManager _server;
-        private static ClientManager _client;
-        private static LobbyController _lobby;
+        private static ServerManager _serverManager;
+        private static ClientManager _clientManager;
+        private static LobbyController _lobbyController;
 
         private void Awake()
         {
-            _server = InstanceFinder.ServerManager;
-            _client = InstanceFinder.ClientManager;
-            _lobby  = (_client != null) ? _client.GetComponent<LobbyController>() : null;
+            _serverManager = InstanceFinder.ServerManager;
+            _clientManager = InstanceFinder.ClientManager;
+            _lobbyController = _clientManager.GetComponent<LobbyController>();
+            
         }
 
-        private void OnDestroy() => Disconnect();
-        private void OnApplicationQuit() => Disconnect();
+        private void OnDestroy()
+        {
+            Disconnect();
+        }
+
+        private void OnApplicationQuit()
+        {
+            Disconnect();
+        }
 
         public static void Disconnect()
         {
-            if (_client != null)
-                _client.StopConnection();
-            if (_server != null)
-                _server.StopConnection(false);
-            if (_lobby != null)
-                _lobby.LeaveLobby();
-
-            var cursorMgr = CursorManager.Instance;
-            if (cursorMgr != null)
-                cursorMgr.ShowCursor();
+            if (_clientManager)
+                _clientManager.StopConnection();
+            if (_serverManager)
+                _serverManager.StopConnection(false);
+            if (_lobbyController)
+                _lobbyController.LeaveLobby();
+            
+            CursorManager.Instance.ShowCursor();
         }
     }
 }

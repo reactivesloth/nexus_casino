@@ -1,15 +1,15 @@
-﻿using Epic.OnlineServices.Lobby;
+﻿using Code.Network.Lobby.EOSCoroutines;
+using EOSLobby;
+using Epic.OnlineServices.Lobby;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-using Code.Network.Lobby.EOSCoroutines;
-using EOSLobby;
 
 namespace Code.Network.Lobby
 {
     [DefaultExecutionOrder(-20)]
-    public sealed class LobbyEvents : MonoBehaviour
+    public class LobbyEvents : MonoBehaviour
     {
         [Header("General")]
         public UnityEvent<ButtonData> ButtonClicked;
@@ -20,14 +20,16 @@ namespace Code.Network.Lobby
         public UnityEvent<LobbyUpdateReceivedCallbackInfo> LobbyUpdateReceived;
         public UnityEvent<LobbyMemberStatusReceivedCallbackInfo> LobbyMemberStatusReceived;
         public UnityEvent<LobbyMemberUpdateReceivedCallbackInfo> LobbyMemberUpdateReceived;
+        
+        public static LobbyEvents Instance;
 
-        public static LobbyEvents Instance { get; private set; }
-
-        private void Awake() => Instance = this;
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         private void OnEnable()
         {
-            // безопасно: AddNotify сами игнорят дубли
             LobbyNotify.AddNotifyLobbyUpdateReceived(LobbyUpdateReceived.Invoke);
             LobbyNotify.AddNotifyLobbyMemberStatusReceived(LobbyMemberStatusReceived.Invoke);
             LobbyNotify.AddNotifyLobbyMemberUpdateReceived(LobbyMemberUpdateReceived.Invoke);

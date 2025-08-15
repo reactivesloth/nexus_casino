@@ -10,45 +10,26 @@ namespace Code.Network.Lobby.EOSCoroutines
     {
         public JoinLobbyCallbackInfo? CallbackInfo { get; private set; }
 
-        public static Coroutine Run(
-            out LobbyJoinLobby lobbyJoinLobby,
-            ProductUserId localUserId,
-            LobbyDetails lobbyDetails,
+        public static Coroutine Run(out LobbyJoinLobby lobbyJoinLobby, ProductUserId localUserId, LobbyDetails lobbyDetails,
             float timeout = 30f)
         {
             lobbyJoinLobby = new LobbyJoinLobby();
-            var mgr = EOS.GetManager();
-            if (mgr == null)
-            {
-                Debug.LogError("[LobbyJoinLobby] EOS manager is null.");
-                return null;
-            }
-            return mgr.StartCoroutine(lobbyJoinLobby.JoinLobby(localUserId, lobbyDetails, timeout));
+            return EOS.GetManager().StartCoroutine(lobbyJoinLobby.JoinLobby(localUserId, lobbyDetails, timeout));
         }
 
         private IEnumerator JoinLobby(ProductUserId localUserId, LobbyDetails lobbyDetails, float timeout)
         {
-            var platform = EOS.GetPlatformInterface();
-            if (platform == null)
-            {
-                CallbackInfo = new JoinLobbyCallbackInfo { ResultCode = Result.UnexpectedError };
-                yield break;
-            }
-
-            var lobbyInterface = platform.GetLobbyInterface();
             var joinLobbyOptions = new JoinLobbyOptions
             {
                 LobbyDetailsHandle = lobbyDetails,
                 LocalUserId = localUserId,
             };
+            var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
+            lobbyInterface.JoinLobby(ref joinLobbyOptions, null,
+                (ref JoinLobbyCallbackInfo callbackInfo) => { CallbackInfo = callbackInfo; });
 
-            lobbyInterface.JoinLobby(ref joinLobbyOptions, null, (ref JoinLobbyCallbackInfo cb) => { CallbackInfo = cb; });
-
-            yield return new WaitUntilOrTimeout(
-                () => CallbackInfo.HasValue,
-                timeout,
-                () => CallbackInfo = new JoinLobbyCallbackInfo { ResultCode = Result.TimedOut }
-            );
+            yield return new WaitUntilOrTimeout(() => CallbackInfo.HasValue, timeout,
+                () => CallbackInfo = new JoinLobbyCallbackInfo { ResultCode = Result.TimedOut });
         }
     }
 }

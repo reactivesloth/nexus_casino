@@ -1,5 +1,6 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 
@@ -10,38 +11,16 @@ namespace Code.Network.Lobby.Data
     {
         public string lobbyId;
         public string lobbyName;
-        public uint   maxPlayers;
-
+        public uint maxPlayers;
         public List<LobbyMember> lobbyMembers = new();
-
         public string[] attributeKeys;
         public string[] attributeValues;
 
-        /// <summary>
-        /// Без LINQ: аккуратно собираем словарь только по валидным парам key/value.
-        /// </summary>
-        public Dictionary<string, string> Attributes
-        {
-            get
-            {
-                var dict = new Dictionary<string, string>(attributeKeys != null ? attributeKeys.Length : 0, StringComparer.Ordinal);
-                if (attributeKeys == null || attributeValues == null) return dict;
-
-                int count = Math.Min(attributeKeys.Length, attributeValues.Length);
-                for (int i = 0; i < count; i++)
-                {
-                    var k = attributeKeys[i];
-                    var v = attributeValues[i];
-                    if (!string.IsNullOrEmpty(k) && v != null)
-                    {
-                        // последний дубликат перезапишет предыдущий — ожидаемое поведение
-                        dict[k] = v;
-                    }
-                }
-
-                return dict;
-            }
-        }
+        public Dictionary<string, string> Attributes => 
+            attributeKeys
+                .Select((key, index) => new { key, value = attributeValues.ElementAtOrDefault(index) })
+                .Where(pair => pair.key != null && pair.value != null)
+                .ToDictionary(pair => pair.key, pair => pair.value);
 
         [Serializable]
         public class LobbyMember
@@ -49,29 +28,14 @@ namespace Code.Network.Lobby.Data
             public string productUserId;
             public string displayName;
             public LobbyMemberStatus status;
-
             public string[] attributeKeys;
             public string[] attributeValues;
-
-            public Dictionary<string, string> Attributes
-            {
-                get
-                {
-                    var dict = new Dictionary<string, string>(attributeKeys != null ? attributeKeys.Length : 0, StringComparer.Ordinal);
-                    if (attributeKeys == null || attributeValues == null) return dict;
-
-                    int count = Math.Min(attributeKeys.Length, attributeValues.Length);
-                    for (int i = 0; i < count; i++)
-                    {
-                        var k = attributeKeys[i];
-                        var v = attributeValues[i];
-                        if (!string.IsNullOrEmpty(k) && v != null)
-                            dict[k] = v;
-                    }
-
-                    return dict;
-                }
-            }
+            
+            public Dictionary<string, string> Attributes => 
+                attributeKeys
+                    .Select((key, index) => new { key, value = attributeValues.ElementAtOrDefault(index) })
+                    .Where(pair => pair.key != null && pair.value != null)
+                    .ToDictionary(pair => pair.key, pair => pair.value);
 
             private ProductUserId _productUserId;
 
@@ -81,7 +45,7 @@ namespace Code.Network.Lobby.Data
                 set
                 {
                     _productUserId = value;
-                    productUserId = value != null ? value.ToString() : string.Empty;
+                    productUserId = value.ToString();
                 }
             }
         }
