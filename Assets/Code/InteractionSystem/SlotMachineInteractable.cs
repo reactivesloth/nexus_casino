@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Threading.Tasks;
 using Code.API;
 using Code.Network;
 using Code.Network.HostMigration;
@@ -6,6 +7,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 using Vuplex.WebView;
 
 namespace Code.InteractionSystem
@@ -166,7 +168,7 @@ namespace Code.InteractionSystem
 
                 // стрим-текстура
                 if (networkImageStream != null)
-                    networkImageStream.SetTexture();
+                    networkImageStream.SetTexture(_webView.GetComponentInChildren<RawImage>());
             }
             finally
             {
@@ -214,6 +216,12 @@ namespace Code.InteractionSystem
             {
                 _closing = false;
             }
+        }
+
+        public static SlotMachineInteractable FindById(int id)
+        {
+            var all = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            return all.FirstOrDefault(s => s.IDNumber == id);
         }
     }
 }

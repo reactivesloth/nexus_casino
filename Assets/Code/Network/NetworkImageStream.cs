@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Code.Utility;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
@@ -63,6 +64,16 @@ namespace Code.Network
         private Color _defaultColor = Color.white;
 
         private float _currentReceiveInterval;
+        
+        private MainScreenController _mainScreenController;
+        
+        public event Action<Texture> OnSendTexture;
+        public event Action<Texture> OnApplyTexture;
+
+        private void Awake()
+        {
+            _mainScreenController ??= FindAnyObjectByType<MainScreenController>();
+        }
 
         public override void OnStartServer()
         {
@@ -249,6 +260,8 @@ namespace Code.Network
             if (lz4Compress)
                 encoded = LZ4Pickler.Pickle(encoded, lz4Level);
 
+            Debug.Log($"[ImageStream] Send texture {rawImage.texture}");
+            OnSendTexture?.Invoke(rawImage.texture);
             // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
             if (Owner != null && OwnerId != -1)
                 UploadFrame(encoded, w, h);
@@ -257,10 +270,11 @@ namespace Code.Network
         [ServerRpc(RequireOwnership = false, DataLength = 15_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
+            Debug.Log($"[Server] UploadFrame. {data.Length} bytes");
             RelayFrame(data, width, height);
         }
 
-        [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 10_000)]
+        [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 15_000)]
         private void RelayFrame(byte[] data, int width, int height)
         {
             if (IsOwner) // владелец не принимает свои же кадры
@@ -295,14 +309,18 @@ namespace Code.Network
             if (_recvTex == null || _recvTex.width != width || _recvTex.height != height)
             {
                 if (_recvTex != null) Destroy(_recvTex);
-                _recvTex = new Texture2D(width, height, TextureFormat.RGB24, false);
+                _recvTex = new Texture2D(width, height, TextureFormat.RGBA32, false);
+                _recvTex.filterMode = FilterMode.Bilinear; // или Trilinear
+                _recvTex.wrapMode = TextureWrapMode.Clamp;
             }
 
             if (!_recvTex.LoadImage(bytes, false))
                 return;
 
             targetImage.texture = _recvTex;
-            AdjustAspect(targetImage);
+            ImageUtility.AdjustAspect(targetImage);
+            
+            OnApplyTexture?.Invoke(_readTex);
             
             // На большинстве шейдеров Screen/Unlit можно флипать через матрицу/UV.
             // Если нужен явный флип: используйте шейдер с инверсией V, либо Mesh UV.
@@ -310,9 +328,9 @@ namespace Code.Network
         }
 
         /// <summary>Переинициализирует ссылку на RawImage-источник.</summary>
-        public void SetTexture()
+        public void SetTexture(RawImage image)
         {
-            rawImage = GetComponentInChildren<RawImage>(true);
+            rawImage = image;
         }
 
         /// <summary>Отключает стрим: не трогаем чужую Texture, просто убираем ссылку.</summary>
@@ -330,30 +348,6 @@ namespace Code.Network
             float targetFps = Mathf.Clamp(maxFrameRate, 0.1f, 240f);
             float finalFps = Mathf.Min(targetFps, allowedByPercent > 0.1f ? allowedByPercent : targetFps);
             return 1f / finalFps;
-        }
-        
-        private void AdjustAspect(RawImage target)
-        {
-            var texture = target.texture;
-            var rectTransform = target.rectTransform;
-            
-            float textureRatio = (float)texture.width / texture.height;
-            float parentWidth = rectTransform.parent.GetComponent<RectTransform>().rect.width;
-            float parentHeight = rectTransform.parent.GetComponent<RectTransform>().rect.height;
-            float parentRatio = parentWidth / parentHeight;
-
-            if (textureRatio > parentRatio)
-            {
-                // Ограничиваем по ширине
-                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, parentWidth);
-                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, parentWidth / textureRatio);
-            }
-            else
-            {
-                // Ограничиваем по высоте
-                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, parentHeight);
-                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, parentHeight * textureRatio);
-            }
         }
     }
 }

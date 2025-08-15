@@ -3,6 +3,7 @@ using System.Collections;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
+using Code.Network;
 using Code.Network.Lobby;
 using JetBrains.Annotations;
 using Proyecto26;
@@ -12,24 +13,41 @@ using UnityEngine.UI;
 
 namespace Code.UI
 {
-    public class ScreenshotButtonHandler : MonoBehaviour
+    public class SlotFunctionsUI : MonoBehaviour
     {
-        [SerializeField] private Button screenshotButton;
-        [SerializeField] private TMP_Text resultText;
-        [SerializeField, CanBeNull] private SlotMachineInteractable slotMachineInteractable;
+        [Header("Stories")] [SerializeField] private Button screenshotButton;
         [SerializeField, CanBeNull] private StoriesUI updateStoryUiOnLoad;
         [SerializeField] private float timeout = 10f;
+
+        [Header("Stream")] [SerializeField] private Image streamIndicator;
+        [SerializeField] private Button requestStreamButton;
+        [SerializeField] private Button requestCancelStreamButton;
+
+        [Space] [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        [SerializeField] private TMP_Text resultText;
         [SerializeField] private float resultShowTime = 5f;
 
         private Coroutine _resultShowCoroutine;
         private Coroutine _timeoutCoroutine;
 
+        private MainScreenController _mainScreenController;
+
+        private void Awake()
+        {
+            _mainScreenController = FindAnyObjectByType<MainScreenController>();
+        }
+
         private void OnEnable()
         {
             if (resultText != null) resultText.text = string.Empty;
-            if (screenshotButton != null) screenshotButton.onClick.AddListener(OnScreenshotClicked);
+            screenshotButton.onClick.AddListener(OnScreenshotClicked);
+            
+            requestStreamButton.onClick.AddListener(RequestStream);
+            requestCancelStreamButton.onClick.AddListener(CancelStream);
+            
+            _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
         }
-
+        
         private void OnDisable()
         {
             if (screenshotButton != null) screenshotButton.onClick.RemoveListener(OnScreenshotClicked);
@@ -39,6 +57,7 @@ namespace Code.UI
                 StopCoroutine(_timeoutCoroutine);
                 _timeoutCoroutine = null;
             }
+
             if (screenshotButton != null)
                 screenshotButton.interactable = true;
 
@@ -47,8 +66,15 @@ namespace Code.UI
                 StopCoroutine(_resultShowCoroutine);
                 _resultShowCoroutine = null;
             }
+
+            requestStreamButton.onClick.RemoveListener(RequestStream);
+            requestCancelStreamButton.onClick.RemoveListener(CancelStream);
+            
+            _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
         }
 
+        #region Stories
+        
         private async void OnScreenshotClicked()
         {
             if (screenshotButton != null) screenshotButton.interactable = false;
@@ -133,14 +159,17 @@ namespace Code.UI
             {
                 if (loadStoryResponse.StatusCode != 200)
                 {
-                    ShowResult($"Story load error. {loadStoryResponse.StatusCode}: {loadStoryResponse.Error}", Color.red);
+                    ShowResult($"Story load error. {loadStoryResponse.StatusCode}: {loadStoryResponse.Error}",
+                        Color.red);
                     return;
                 }
 
                 var parsed = JsonUtility.FromJson<SuccessResponse<GetStoryData>>(loadStoryResponse.Text);
                 if (parsed == null || !parsed.success)
                 {
-                    ShowResult($"Story load error. {(parsed != null ? parsed.code : "Error")}: {(parsed != null ? parsed.detail : "Invalid response")}", Color.red);
+                    ShowResult(
+                        $"Story load error. {(parsed != null ? parsed.code : "Error")}: {(parsed != null ? parsed.detail : "Invalid response")}",
+                        Color.red);
                     return;
                 }
 
@@ -169,5 +198,43 @@ namespace Code.UI
             if (resultText != null)
                 resultText.text = string.Empty;
         }
+
+        #endregion
+
+        #region Stream On main Screen
+
+        private void RequestStream()
+        {
+            _mainScreenController.RequestStream(slotMachineInteractable.IDNumber);
+        }
+
+        private void CancelStream()
+        {
+            _mainScreenController.RequestCancel();
+        }
+        
+        private void StreamSlotIdOnOnChange(int prevId, int newId, bool asServer)
+        {
+            var thisId = slotMachineInteractable.IDNumber;
+
+            if (newId == thisId)
+                OnStartStreaming();
+            else if(prevId == newId && newId != thisId)
+                OnEndStreaming();
+        }
+
+        private void OnStartStreaming()
+        {
+            requestStreamButton.gameObject.SetActive(false);
+            requestCancelStreamButton.gameObject.SetActive(true);
+        }
+
+        private void OnEndStreaming()
+        {
+            requestStreamButton.gameObject.SetActive(true);
+            requestCancelStreamButton.gameObject.SetActive(false);
+        }
+
+        #endregion
     }
 }

@@ -205,7 +205,7 @@ namespace Code.UI
                 }
 
                 var data = req.downloadHandler.data;
-                var sprite = ImageByteConverter.CreateSpriteFromBytes(data);
+                var sprite = ImageUtility.CreateSpriteFromBytes(data);
                 if (sprite != null)
                 {
                     image.sprite = sprite;
