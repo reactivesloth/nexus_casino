@@ -22,8 +22,10 @@ namespace Code.Network
         [SerializeField] private RawImage rawImage;
 
         [Header("Render target")]
-        [SerializeField] private MeshRenderer computerMeshRenderer;
-        [SerializeField] private int materialIndex = 0;
+        [SerializeField] private RawImage targetImage;
+        
+        //[SerializeField] private MeshRenderer computerMeshRenderer;
+        //[SerializeField] private int materialIndex = 0;
 
         [Header("Stream Quality")]
         [SerializeField, Min(0.1f)] private float sendMaxFps = 12f;
@@ -118,20 +120,11 @@ namespace Code.Network
         {
             _currentReceiveInterval = 0f;
 
-            if (computerMeshRenderer == null)
+            if (targetImage == null)
                 return;
 
             // Инициализация property block
             if (_mpb == null) _mpb = new MaterialPropertyBlock();
-
-            // Считываем «дефолтные» значения из sharedMaterial (без инстанциирования).
-            var mats = computerMeshRenderer.sharedMaterials;
-            if (mats != null && materialIndex >= 0 && materialIndex < mats.Length && mats[materialIndex] != null)
-            {
-                var shared = mats[materialIndex];
-                _defaultTexture = shared.GetTexture(BaseMap);
-                _defaultColor = shared.GetColor(BaseColor);
-            }
 
             if (IsOwner)
                 StartSendLoop();
@@ -187,16 +180,10 @@ namespace Code.Network
 
         private void ShowIdleTexture()
         {
-            if (computerMeshRenderer == null)
+            if (targetImage == null)
                 return;
-
-            if (_mpb == null) _mpb = new MaterialPropertyBlock();
-
-            computerMeshRenderer.GetPropertyBlock(_mpb, materialIndex);
-            _mpb.SetTexture(BaseMap, _defaultTexture);
-            _mpb.SetColor(BaseColor, _defaultColor);
-            // Сбрасываем флипы, на всякий:
-            computerMeshRenderer.SetPropertyBlock(_mpb, materialIndex);
+            
+            targetImage.gameObject.SetActive(false);
         }
 
         private IEnumerator SendLoop()
@@ -288,6 +275,8 @@ namespace Code.Network
                 ShowIdleTexture();
                 return;
             }
+            
+            targetImage.gameObject.SetActive(true);
 
             _currentReceiveInterval = 0f;
 
@@ -300,7 +289,7 @@ namespace Code.Network
 
         private void ApplyImage(byte[] bytes, int width, int height)
         {
-            if (computerMeshRenderer == null || bytes == null || bytes.Length == 0)
+            if (targetImage == null || bytes == null || bytes.Length == 0)
                 return;
 
             if (_recvTex == null || _recvTex.width != width || _recvTex.height != height)
@@ -312,14 +301,9 @@ namespace Code.Network
             if (!_recvTex.LoadImage(bytes, false))
                 return;
 
-            if (_mpb == null) _mpb = new MaterialPropertyBlock();
-
-            // Применяем текстуру и делаем вертикальный flip через UV (offset/scale)
-            computerMeshRenderer.GetPropertyBlock(_mpb, materialIndex);
-            _mpb.SetTexture(BaseMap, _recvTex);
-            _mpb.SetColor(BaseColor, Color.white);
-            computerMeshRenderer.SetPropertyBlock(_mpb, materialIndex);
-
+            targetImage.texture = _recvTex;
+            AdjustAspect(targetImage);
+            
             // На большинстве шейдеров Screen/Unlit можно флипать через матрицу/UV.
             // Если нужен явный флип: используйте шейдер с инверсией V, либо Mesh UV.
             // (В старом коде флип делался SetTextureScale/Offset — на PropertyBlock это не везде доступно.)
@@ -346,6 +330,30 @@ namespace Code.Network
             float targetFps = Mathf.Clamp(maxFrameRate, 0.1f, 240f);
             float finalFps = Mathf.Min(targetFps, allowedByPercent > 0.1f ? allowedByPercent : targetFps);
             return 1f / finalFps;
+        }
+        
+        private void AdjustAspect(RawImage target)
+        {
+            var texture = target.texture;
+            var rectTransform = target.rectTransform;
+            
+            float textureRatio = (float)texture.width / texture.height;
+            float parentWidth = rectTransform.parent.GetComponent<RectTransform>().rect.width;
+            float parentHeight = rectTransform.parent.GetComponent<RectTransform>().rect.height;
+            float parentRatio = parentWidth / parentHeight;
+
+            if (textureRatio > parentRatio)
+            {
+                // Ограничиваем по ширине
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, parentWidth);
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, parentWidth / textureRatio);
+            }
+            else
+            {
+                // Ограничиваем по высоте
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, parentHeight);
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, parentHeight * textureRatio);
+            }
         }
     }
 }
