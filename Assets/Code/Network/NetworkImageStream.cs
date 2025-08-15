@@ -254,7 +254,7 @@ namespace Code.Network
                 UploadFrame(encoded, w, h);
         }
 
-        [ServerRpc(RequireOwnership = false, DataLength = 10_000)]
+        [ServerRpc(RequireOwnership = false, DataLength = 15_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
             RelayFrame(data, width, height);
