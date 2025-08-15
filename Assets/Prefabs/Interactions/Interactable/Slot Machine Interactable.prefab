@@ -74,12 +74,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cd44c1031e13a943bb63640046fad76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_UiScaleMode: 0
+  m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 800, y: 600}
+  m_ReferenceResolution: {x: 1280, y: 720}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -1043,7 +1043,6 @@ GameObject:
   - component: {fileID: 6577479591757589518}
   - component: {fileID: 4508126933881994218}
   - component: {fileID: 6088033711210609466}
-  - component: {fileID: 3408654208537932185}
   - component: {fileID: 7068722929800042271}
   m_Layer: 5
   m_Name: StreamSlotMachineUI (Curved)
@@ -1118,24 +1117,6 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 1
---- !u!114 &3408654208537932185
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3818568580355395448}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba045fa4943b5428da9ef8508c8ada33, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 32
-  showDebug: 0
 --- !u!114 &7068722929800042271
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1151,7 +1132,7 @@ MonoBehaviour:
   shape: 3
   quality: 2
   interactable: 1
-  blocksRaycasts: 1
+  blocksRaycasts: 0
   useMeshCollider: 0
   angle: 25
   preserveAspect: 1
@@ -1192,9 +1173,9 @@ Transform:
   m_LocalScale: {x: 0.000102649996, y: 0.000102649996, z: 0.000102649996}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 6577479591757589518}
   - {fileID: 9141442648583643534}
   - {fileID: 5271869786423614529}
-  - {fileID: 6577479591757589518}
   - {fileID: 8031360426403040890}
   m_Father: {fileID: 2015657308730844265}
   m_LocalEulerAnglesHint: {x: 0, y: 98, z: 90}
@@ -1382,7 +1363,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -2582,7 +2563,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 123
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &9141442648583643534
 RectTransform:
   m_ObjectHideFlags: 0
