@@ -2,10 +2,12 @@
 using Code.API;
 using Code.Network;
 using Code.Network.HostMigration;
+using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Audio;
 using Vuplex.WebView;
 
 namespace Code.InteractionSystem
@@ -42,6 +44,7 @@ namespace Code.InteractionSystem
         private bool _opening;
         private bool _closing;
         private bool _wasStarted;
+        [SerializeField] private AudioMixer mixer;
 
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -167,6 +170,17 @@ namespace Code.InteractionSystem
                 // стрим-текстура
                 if (networkImageStream != null)
                     networkImageStream.SetTexture();
+                
+                
+                // звук
+                if (AudioManager.Instance != null)
+                {
+                    var volume = AudioManager.Instance?.GetVolume01("Slots").ToString("F2");
+                    if (_webView != null && _webView.WebView != null)
+                        await _webView.WebView.ExecuteJavaScript(
+                            $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {volume})"
+                        );
+                }
             }
             finally
             {
