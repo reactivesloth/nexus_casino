@@ -15,6 +15,7 @@ namespace Code.Chat
 {
     public class ChatController : MonoBehaviour
     {
+        [SerializeField] private float socketReconnectTimeout = 10f;
         [SerializeField] private string systemName = "[SYSTEM]";
         [SerializeField] private UltimateChatBox lobbyChatBox;
         [SerializeField] private UltimateChatBox globalChatBox;
@@ -38,10 +39,6 @@ namespace Code.Chat
         // ===== История =====
         [Header("History")] [SerializeField] private int pageSize = 50;
         private bool _historyLoading;
-        /*private bool _noMoreHistory;
-        private int _oldestMessageId = int.MaxValue;
-        private string _lastLiveLobbyId; // actual lobby_id из WS
-        private long _lastLiveMessageId; // последний id из WS*/
         [SerializeField] private bool devLog; // в инспекторе поставь галочку, чтобы включить логи
 
         private void Awake()
@@ -185,14 +182,18 @@ namespace Code.Chat
         {
             SendSystemMessage($"Chat connection close, code {(int)code} {code}", UltimateChatBoxStyles.noticeMessage);
             if (code != WebSocketCloseCode.Normal)
+                Invoke(nameof(TryReconnect), socketReconnectTimeout);
+        }
+
+        private void TryReconnect()
+        {
+            try
             {
-                try
-                {
-                    _ws?.Connect();
-                }
-                catch
-                {
-                }
+                SendSystemMessage("Try reconnect...", UltimateChatBoxStyles.noticeMessage);
+                _ws?.Connect();
+            }
+            catch
+            {
             }
         }
 
