@@ -258,8 +258,7 @@ namespace Code.Network
 
             if (lz4Compress)
                 encoded = LZ4Pickler.Pickle(encoded, lz4Level);
-
-            Debug.Log($"[ImageStream] Send texture {rawImage.texture}");
+            
             // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
             if (Owner != null && OwnerId != -1)
             {
@@ -271,7 +270,6 @@ namespace Code.Network
         [ServerRpc(RequireOwnership = false, DataLength = 15_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
-            Debug.Log($"[Server] UploadFrame. {data.Length} bytes");
             RelayFrame(data, width, height);
         }
 

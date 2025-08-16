@@ -13,6 +13,8 @@ namespace Code.Network
 {
     public class MainScreenController : NetworkBehaviour
     {
+        [SerializeField] private int currentSlotId = -1;
+        [Space]
         [SerializeField] private RawImage screenRawImage;
 
         private NetworkImageStream _currentStream;
@@ -55,11 +57,13 @@ namespace Code.Network
             SetConditionsEnable(true);
         }
 
+        [Client]
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
             if (prev == next)
                 return;
             
+            currentSlotId = next;
             ClientReset();
             _currentStream = GetCurrentStream;
             if(_currentStream == null)
