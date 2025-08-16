@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections;
+using System.Linq;
 using System.Threading.Tasks;
 using Code.API;
 using Code.Network;
@@ -136,13 +137,14 @@ namespace Code.InteractionSystem
             if (webView == null || canvas == null)
                 return;
 
-            // Переносим
+            // Переносим под нужный Canvas
             webView.transform.SetParent(canvas.transform, false);
             webView.transform.SetAsFirstSibling();
             webView.transform.localPosition = Vector3.zero;
             webView.transform.localRotation = Quaternion.identity;
-            webView.transform.localScale = Vector3.one;
-            
+            webView.transform.localScale    = Vector3.one;
+
+            // Гарантируем корректную камеру и рейкастер
             if (canvas.renderMode is RenderMode.WorldSpace or RenderMode.ScreenSpaceCamera)
             {
                 if (canvas.worldCamera == null)
@@ -152,13 +154,35 @@ namespace Code.InteractionSystem
             {
                 canvas.worldCamera = null; // Overlay
             }
-            
+            if (!canvas.TryGetComponent<GraphicRaycaster>(out _))
+                canvas.gameObject.AddComponent<GraphicRaycaster>();
 
-            // Обновляем hit-тесты
-            webView.WebView.Resize((int)(canvas.pixelRect.width * 0.9f), (int)(canvas.pixelRect.height * 0.9f));
+            Canvas.ForceUpdateCanvases();
+            var rt = (RectTransform)webView.transform;
+            LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
+            Canvas.ForceUpdateCanvases();
+
+            var oldDetector = webView.GetComponentInChildren<CanvasPointerInputDetector>(true);
+            if (oldDetector != null)
+                Destroy(oldDetector);
+
+            var newDetector = webView.gameObject.AddComponent<CanvasPointerInputDetector>();
+
+            StartCoroutine(ReinitDetectorNextFrame(webView, newDetector));
+
+            var defaultDetector = webView.GetComponentInChildren<DefaultPointerInputDetector>(true);
+            if (defaultDetector != null)
+                defaultDetector.enabled = false;
         }
 
+        private IEnumerator ReinitDetectorNextFrame(CanvasWebViewPrefab webView, CanvasPointerInputDetector detector) {
+            yield return new WaitForEndOfFrame();
 
+            webView.SetPointerInputDetector(detector);
+            detector.enabled = false;
+            detector.enabled = true;
+        }
+        
         [TargetRpc]
         private void TargetToggleComputerUI(NetworkConnection conn, bool open)
         {
@@ -232,6 +256,10 @@ namespace Code.InteractionSystem
                             $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {volume})"
                         );
                 }
+                
+                // курсор
+                if (PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1 && CursorManager.Instance != null)
+                    CursorManager.Instance.ShowCursor();
             }
             finally
             {

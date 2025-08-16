@@ -396,6 +396,17 @@ namespace Vuplex.WebView {
             }
             return taskSource.Task;
         }
+        
+        public void RefreshPointerInputDetector() {
+            if (WebView == null) return;
+            if (_pointerInputDetector == null) return;
+
+            // Отцепить и прицепить заново, чтобы он пересчитал RectTransform / Canvas
+            _attachOrDetachPointerInputDetector(_pointerInputDetector, false);
+            _initPointerInputDetector(WebView);
+
+            WebViewLogger.Log("PointerInputDetector reattached for new Canvas context.");
+        }
 
     #region Non-public members
         float _appliedResolution;
