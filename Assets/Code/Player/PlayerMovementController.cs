@@ -28,6 +28,7 @@ namespace Code.Player
         [SerializeField] private float groundedRadius = 0.28f;
         [SerializeField] private LayerMask groundLayers;
         [SerializeField] private float terminalVelocity = 53.0f;
+        [SerializeField] private bool spawnOnSawedPosition = true;
 
         [Header("Camera")]
         [SerializeField] private GameObject cinemachineCameraTarget;
@@ -157,7 +158,9 @@ namespace Code.Player
         private Vector3 _lookPos;
         private bool _cursorUsable; // можно ли сейчас принимать мышь/тач
         private bool _snapToFpVPending;
-        
+        private float _spawnPositionTimer;
+        [SerializeField] private float spawnPositionUpdateTime = 2;
+
         private void Awake()
         {
             _mainCamera = Camera.main;
@@ -188,6 +191,43 @@ namespace Code.Player
 
             Own = this;
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+
+            if (spawnOnSawedPosition)
+                LoadSpawnPosition();
+        }
+
+        private void LoadSpawnPosition()
+        {
+            if (!IsOwner) return;
+            if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
+            
+            transform.position = new Vector3(PlayerPrefs.GetFloat("SavedSpawnPositionX"), PlayerPrefs.GetFloat("SavedSpawnPositionY"), PlayerPrefs.GetFloat("SavedSpawnPositionZ"));
+            transform.rotation = Quaternion.Euler(PlayerPrefs.GetFloat("SavedSpawnRotationX"),  PlayerPrefs.GetFloat("SavedSpawnRotationY"), PlayerPrefs.GetFloat("SavedSpawnRotationZ"));
+             
+            PlayerPrefs.DeleteKey("SavedSpawnPosition");
+        }
+
+        private void UpdateSpawnPositionTimer()
+        {
+            if (_spawnPositionTimer > 0)
+                _spawnPositionTimer -= Time.deltaTime;
+            else
+            {
+                _spawnPositionTimer = spawnPositionUpdateTime;
+                SaveSpawnPosition();
+            }
+        }
+
+        private void SaveSpawnPosition()
+        {
+            PlayerPrefs.SetFloat("SavedSpawnPositionX", transform.position.x);
+            PlayerPrefs.SetFloat("SavedSpawnPositionY", transform.position.y);
+            PlayerPrefs.SetFloat("SavedSpawnPositionZ", transform.position.z);
+            PlayerPrefs.SetFloat("SavedSpawnRotationX", transform.rotation.x);
+            PlayerPrefs.SetFloat("SavedSpawnRotationY", transform.rotation.y);
+            PlayerPrefs.SetFloat("SavedSpawnRotationZ", transform.rotation.z);
+            
+            PlayerPrefs.SetInt("SavedSpawnPosition", 1);
         }
 
         private void Update()
@@ -212,6 +252,9 @@ namespace Code.Player
             GroundedCheck();
             JumpAndGravity();
             Move();
+            
+            if (spawnOnSawedPosition)
+                UpdateSpawnPositionTimer();
         }
 
         private void LateUpdate()
