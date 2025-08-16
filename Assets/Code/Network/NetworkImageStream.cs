@@ -321,7 +321,7 @@ namespace Code.Network
             targetImage.texture = _recvTex;
             ImageUtility.AdjustAspect(targetImage);
             
-            OnApplyTexture?.Invoke(_readTex);
+            OnApplyTexture?.Invoke(_recvTex);
             
             // На большинстве шейдеров Screen/Unlit можно флипать через матрицу/UV.
             // Если нужен явный флип: используйте шейдер с инверсией V, либо Mesh UV.

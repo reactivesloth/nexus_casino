@@ -57,7 +57,7 @@ namespace Code.Network
 
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
-            if (asServer || prev == next)
+            if (prev == next)
                 return;
             
             ClientReset();
