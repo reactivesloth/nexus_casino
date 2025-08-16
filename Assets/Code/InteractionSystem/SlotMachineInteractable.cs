@@ -49,6 +49,8 @@ namespace Code.InteractionSystem
         private bool _wasStarted;
         [SerializeField] private AudioMixer mixer;
 
+        public NetworkImageStream NetworkImageStream => networkImageStream;
+        
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
