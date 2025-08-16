@@ -15,7 +15,7 @@ public class PlayerInput : MonoBehaviour
         get
         {
             var sm = SettingsManager.Instance;
-            float sens = (sm != null) ? sm.CameraSensitivity : PlayerPrefs.GetFloat("CameraSensitivity", 40f);
+            float sens = sm != null ? sm.CameraSensitivity : PlayerPrefs.GetFloat("CameraSensitivity", 40f);
             return Mathf.Clamp(sens, 1f, 200f) / 100f;
         }
     }
@@ -47,9 +47,12 @@ public class PlayerInput : MonoBehaviour
 
     [SerializeField] private bool ForceMobile;
     private bool savedHideMobileFallback;
+    private bool prevBusy;
     public bool IsUsingMobileFallback { get; set; }
     public bool HideMobileFallback { get; set; }
 
+    public bool IsBusy { get; set; }
+    
     private void Awake()
     {
         Instance = this;
@@ -80,8 +83,37 @@ public class PlayerInput : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
+    public void SetBusy(bool value, bool forceUpdate = false)
+    {
+        if (forceUpdate)
+        {
+            IsBusy = value;
+            return;
+        }
+        
+        if (value)
+        {
+            prevBusy = value;
+            IsBusy = true;
+        }
+        else
+        {
+            IsBusy = prevBusy;
+        }
+    }
+    
     private void Update()
     {
+        switch (Application.isFocused)
+        {
+            case false when IsBusy:
+                SetBusy(true);
+                break;
+            case false when IsBusy:
+                SetBusy(false);
+                break;
+        }
+        
         IsUsingMobileFallback = ForceMobile || Application.isMobilePlatform;
 
         if (mobileCanvas != null && IsUsingMobileFallback != mobileCanvas.activeSelf)
@@ -124,7 +156,7 @@ public class PlayerInput : MonoBehaviour
         {
             if (IsUsingMobileFallback && LookArea != null)
                 return new Vector2(LookArea.GetHorizontalAxis(), -LookArea.GetVerticalAxis());
-            return _player.Look.ReadValue<Vector2>();
+            return IsBusy ? Vector2.down : _player.Look.ReadValue<Vector2>();
         }
     }
 
@@ -134,38 +166,24 @@ public class PlayerInput : MonoBehaviour
         {
             Vector2 v = LookRaw;
             if (invertY) v.y = -v.y;
-            return v * lookSensitivity;
+            return IsBusy ? Vector2.down : v * lookSensitivity;
         }
     }
 
-    public bool JumpDown  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : (_player.Jump != null && _player.Jump.triggered);
-    public bool JumpHeld  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButton()     : (_player.Jump != null && _player.Jump.ReadValue<float>() > 0.5f);
-    public bool VoiceHeld => IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : (_player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f);
-    public bool SprintHeld=> IsUsingMobileFallback && SprintButton != null ? SprintButton.GetButton() : (_player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f);
+    public bool JumpDown  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : !IsBusy && _player.Jump is { triggered: true };
+    public bool JumpHeld  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButton()     : !IsBusy && _player.Jump != null && _player.Jump.ReadValue<float>() > 0.5f;
+    public bool VoiceHeld => IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f;
+    public bool SprintHeld=> IsUsingMobileFallback && SprintButton != null ? SprintButton.GetButton() : !IsBusy && _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
+    public bool CameraSwitchDown => IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : !IsBusy && _player.CameraSwitch is { triggered: true };
+    public bool InteractDown => IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true };
+    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButtonDown() : _player.Pause is { triggered: true };
 
-    public bool CameraSwitchDown =>
-        IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown()
-        : (_player.CameraSwitch != null && _player.CameraSwitch.triggered);
+    public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
 
-    public bool InteractDown =>
-        IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown()
-        : (_player.Interact != null && _player.Interact.triggered);
-
-    public bool IsPausedDown =>
-        IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButtonDown()
-        : (_player.Pause != null && _player.Pause.triggered);
-
-    public bool IsOpenChatDown =>
-        IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown()
-        : (_player.ChatOpen != null && _player.ChatOpen.triggered);
-
-    public bool IsSwitchChatDown =>
-        IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown()
-        : (_player.SwitсhChat != null && _player.SwitсhChat.triggered);
-
-    public bool IsRMB      => _player.RMB != null && _player.RMB.triggered;
-    public bool IsRMBDown  => _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f;
-    public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
+    public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
+    public bool IsRMB      => !IsBusy && _player.RMB is { triggered: true };
+    public bool IsRMBDown  => !IsBusy && (_player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
+    public bool ForceCursorHeld => (_player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f);
 
     public void SetEnabled(bool enabled) { if (enabled) _player.Enable(); else _player.Disable(); }
 

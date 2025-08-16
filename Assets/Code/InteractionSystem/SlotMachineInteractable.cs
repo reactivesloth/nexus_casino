@@ -107,12 +107,12 @@ namespace Code.InteractionSystem
 
         public void SwitchFS()
         {
-            bool newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
+            var newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
             PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", newFS ? 1 : 0);
             PlayerPrefs.Save();
 
-            Canvas targetCanvas = newFS ? computerFullScreenCanvas : computer3dCanvas;
-            Canvas otherCanvas  = newFS ? computer3dCanvas : computerFullScreenCanvas;
+            var targetCanvas = newFS ? computerFullScreenCanvas : computer3dCanvas;
+            var otherCanvas  = newFS ? computer3dCanvas : computerFullScreenCanvas;
 
             if (targetCanvas && !targetCanvas.gameObject.activeSelf)
                 targetCanvas.gameObject.SetActive(true);
@@ -120,8 +120,12 @@ namespace Code.InteractionSystem
                 otherCanvas.gameObject.SetActive(false);
 
             if (newFS && CursorManager.Instance != null)
-                CursorManager.Instance.ShowCursor();
+            {
+                if (CursorManager.Instance != null) CursorManager.Instance.ShowCursor();
+            }
             
+            if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = newFS;
+
             if (_webView != null)
             {
                 var curvedUIComp = _webView.GetComponentInChildren<CurvedUIVertexEffect>();
@@ -203,6 +207,7 @@ namespace Code.InteractionSystem
             {
                 _ = CloseAndCleanupAsync();
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = false;
+                if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
             }
             else
             {
@@ -259,7 +264,10 @@ namespace Code.InteractionSystem
                 
                 // курсор
                 if (PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1 && CursorManager.Instance != null)
-                    CursorManager.Instance.ShowCursor();
+                {
+                    if (CursorManager.Instance != null) CursorManager.Instance.ShowCursor();
+                    if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = true;
+                }
             }
             finally
             {
