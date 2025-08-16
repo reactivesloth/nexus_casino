@@ -27,6 +27,8 @@ namespace Code.UI
         [SerializeField] private TMP_Text resultText;
         [SerializeField] private float resultShowTime = 5f;
 
+        [Header("Fullscreen")] [SerializeField] private Button fullscreenButton;
+        
         private Coroutine _resultShowCoroutine;
         private Coroutine _timeoutCoroutine;
 
@@ -46,8 +48,16 @@ namespace Code.UI
             requestCancelStreamButton.onClick.AddListener(CancelStream);
             
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
+            
+            fullscreenButton.onClick.AddListener(SwitchFullscreen);
         }
-        
+
+        private void SwitchFullscreen()
+        {
+            if (slotMachineInteractable != null)
+                slotMachineInteractable.SwitchFS();
+        }
+
         private void OnDisable()
         {
             if (screenshotButton != null) screenshotButton.onClick.RemoveListener(OnScreenshotClicked);
@@ -71,6 +81,8 @@ namespace Code.UI
             requestCancelStreamButton.onClick.RemoveListener(CancelStream);
             
             _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
+            
+            fullscreenButton.onClick.RemoveListener(SwitchFullscreen);
         }
 
         #region Stories

@@ -4,6 +4,7 @@ using Code.API;
 using Code.Network;
 using Code.Network.HostMigration;
 using Code.Utility;
+using CurvedUI;
 using FishNet.Connection;
 using FishNet.Object;
 using TMPro;
@@ -17,10 +18,10 @@ namespace Code.InteractionSystem
     public class SlotMachineInteractable : Interactable
     {
         [Header("UI Settings")]
-        [Tooltip("Canvas для десктопа (Screen Space / World Space)")]
-        [SerializeField] private Canvas computerCanvas;
-        [Tooltip("Полноэкранный Canvas для iOS/Android (Screen Space - Overlay)")]
-        [SerializeField] private Canvas computerFSCanvas;
+        [Tooltip("Canvas для 3д режима (Screen Space / World Space)")]
+        [SerializeField] private Canvas computer3dCanvas;
+        [Tooltip("Полноэкранный Canvas (Screen Space - Overlay)")]
+        [SerializeField] private Canvas computerFullScreenCanvas;
         [Tooltip("Canvas с остальным UI, если нужно включать/выключать вместе")]
         [SerializeField] private Canvas contentCanvas;
         [SerializeField] private TextMeshPro idNumberText;
@@ -65,16 +66,16 @@ namespace Code.InteractionSystem
         private void Start()
         {
             _wasStarted = true;
-            if (computerCanvas) computerCanvas.gameObject.SetActive(false);
-            if (computerFSCanvas) computerFSCanvas.gameObject.SetActive(false);
+            if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
+            if (computerFullScreenCanvas) computerFullScreenCanvas.gameObject.SetActive(false);
             if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
-        private void OnDisable()
-        {
-            // Если объект выключили посреди сессии — корректно закроем UI и WebView
-            //if (_isUsing) _ = CloseAndCleanupAsync();
-        }
+        // private void OnDisable()
+        // {
+        //     // Если объект выключили посреди сессии — корректно закроем UI и WebView
+        //     if (_isUsing) _ = CloseAndCleanupAsync();
+        // }
 
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
 
@@ -101,13 +102,68 @@ namespace Code.InteractionSystem
             TargetToggleComputerUI(conn, false);
         }
 
+        public void SwitchFS()
+        {
+            bool newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
+            PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", newFS ? 1 : 0);
+            PlayerPrefs.Save();
+
+            Canvas targetCanvas = newFS ? computerFullScreenCanvas : computer3dCanvas;
+            Canvas otherCanvas  = newFS ? computer3dCanvas : computerFullScreenCanvas;
+
+            if (targetCanvas && !targetCanvas.gameObject.activeSelf)
+                targetCanvas.gameObject.SetActive(true);
+            if (otherCanvas && otherCanvas.gameObject.activeSelf)
+                otherCanvas.gameObject.SetActive(false);
+
+            if (newFS && CursorManager.Instance != null)
+                CursorManager.Instance.ShowCursor();
+            
+            if (_webView != null)
+            {
+                var curvedUIComp = _webView.GetComponentInChildren<CurvedUIVertexEffect>();
+                curvedUIComp.enabled = !newFS;
+                
+                RebindWebViewInput(_webView, targetCanvas);
+            }
+        }
+
+
+        private void RebindWebViewInput(CanvasWebViewPrefab webView, Canvas canvas)
+        {
+            if (webView == null || canvas == null)
+                return;
+
+            // Переносим
+            webView.transform.SetParent(canvas.transform, false);
+            webView.transform.SetAsFirstSibling();
+            webView.transform.localPosition = Vector3.zero;
+            webView.transform.localRotation = Quaternion.identity;
+            webView.transform.localScale = Vector3.one;
+            
+            if (canvas.renderMode is RenderMode.WorldSpace or RenderMode.ScreenSpaceCamera)
+            {
+                if (canvas.worldCamera == null)
+                    canvas.worldCamera = Camera.main;
+            }
+            else
+            {
+                canvas.worldCamera = null; // Overlay
+            }
+            
+
+            // Обновляем hit-тесты
+            webView.WebView.Resize((int)(canvas.pixelRect.width * 0.9f), (int)(canvas.pixelRect.height * 0.9f));
+        }
+
+
         [TargetRpc]
         private void TargetToggleComputerUI(NetworkConnection conn, bool open)
         {
             // сцену ещё не проинициализировали?
             if (!_wasStarted) return;
 
-            var targetCanvas = GetTargetCanvas();
+            var targetCanvas = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1 ? computerFullScreenCanvas : computer3dCanvas;
             if (!targetCanvas)
             {
                 Debug.LogError("[SlotMachineInteractable] No target canvas found for platform.");
@@ -127,15 +183,6 @@ namespace Code.InteractionSystem
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
                 _ = OpenWebViewAsync(targetCanvas);
             }
-        }
-
-        private Canvas GetTargetCanvas()
-        {
-#if UNITY_IOS || UNITY_ANDROID
-            return computerFSCanvas ? computerFSCanvas : computerCanvas;
-#else
-            return computerCanvas;
-#endif
         }
 
         private async Task OpenWebViewAsync(Canvas parentCanvas)
@@ -172,7 +219,6 @@ namespace Code.InteractionSystem
                 // стрим-текстура
                 if (networkImageStream != null)
                     networkImageStream.SetTexture(_webView.GetComponentInChildren<RawImage>());
-                    networkImageStream.SetTexture();
                 
                 
                 // звук
