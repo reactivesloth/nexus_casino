@@ -46,6 +46,9 @@ namespace Code.Network
         [Header("Networking")]
         [SerializeField] private bool hostIsOwnerOnStart = true;
 
+        private float _currentDownscale;
+        private int _currentJpgQuality;
+        
         // GPU/CPU ресурсы
         private RenderTexture _rt;
         private Texture2D _readTex;      // CPU readback для отправки
@@ -54,24 +57,25 @@ namespace Code.Network
 
         private Coroutine _sendLoop;
 
-        // Материал блок
-        private MaterialPropertyBlock _mpb;
-        private static readonly int BaseMap = Shader.PropertyToID("_BaseMap");
-        private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
-
-        // «Дефолтные» значения из sharedMaterial
-        private Texture _defaultTexture;
-        private Color _defaultColor = Color.white;
-
         private float _currentReceiveInterval;
-        
-        private MainScreenController _mainScreenController;
         
         public event Action<Texture> OnApplyTexture;
 
         private void Awake()
         {
-            _mainScreenController ??= FindAnyObjectByType<MainScreenController>();
+            ResetQualitySettings();
+        }
+
+        public void SetQualitySettings(float down, int jpg)
+        {
+            _currentDownscale = down;
+            _currentJpgQuality = jpg;
+        }
+        
+        public void ResetQualitySettings()
+        {
+            _currentDownscale = downscale;
+            _currentJpgQuality = jpgQuality;
         }
 
         public override void OnStartServer()
@@ -132,9 +136,6 @@ namespace Code.Network
 
             if (targetImage == null)
                 return;
-
-            // Инициализация property block
-            if (_mpb == null) _mpb = new MaterialPropertyBlock();
 
             if (IsOwner)
                 StartSendLoop();
@@ -217,8 +218,8 @@ namespace Code.Network
             int srcH = rawImage.texture.height;
             if (srcW <= 0 || srcH <= 0) return;
 
-            int w = Mathf.Max(1, Mathf.RoundToInt(srcW * downscale));
-            int h = Mathf.Max(1, Mathf.RoundToInt(srcH * downscale));
+            int w = Mathf.Max(1, Mathf.RoundToInt(srcW * _currentDownscale));
+            int h = Mathf.Max(1, Mathf.RoundToInt(srcH * _currentDownscale));
 
             if (_rt == null || _rt.width != w || _rt.height != h)
             {
@@ -243,7 +244,7 @@ namespace Code.Network
             RenderTexture.active = prev;
 
             byte[] encoded = useJpg
-                ? _readTex.EncodeToJPG(jpgQuality)
+                ? _readTex.EncodeToJPG(_currentJpgQuality)
                 : _readTex.EncodeToPNG();
 
             if (encoded == null || encoded.Length == 0)

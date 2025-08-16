@@ -22,6 +22,8 @@ namespace Code.UI
         [Header("Stream")] [SerializeField] private Image streamIndicator;
         [SerializeField] private Button requestStreamButton;
         [SerializeField] private Button requestCancelStreamButton;
+        [SerializeField] private float streamDownscale = 0.75f;
+        [SerializeField] private int streamJpgQuality = 20;
 
         [Space] [SerializeField] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField] private TMP_Text resultText;
@@ -230,12 +232,14 @@ namespace Code.UI
         {
             requestStreamButton.gameObject.SetActive(false);
             requestCancelStreamButton.gameObject.SetActive(true);
+            slotMachineInteractable.NetworkImageStream.SetQualitySettings(streamDownscale, streamJpgQuality);
         }
 
         private void OnEndStreaming()
         {
             requestStreamButton.gameObject.SetActive(true);
             requestCancelStreamButton.gameObject.SetActive(false);
+            slotMachineInteractable.NetworkImageStream.ResetQualitySettings();
         }
 
         #endregion

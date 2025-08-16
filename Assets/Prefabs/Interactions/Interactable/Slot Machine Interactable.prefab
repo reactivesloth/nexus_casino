@@ -664,6 +664,7 @@ MonoBehaviour:
   clearAllDataOnClose: 1
   networkImageStream: {fileID: 2377678613824972991}
   IDNumber: 0
+  mixer: {fileID: 0}
 --- !u!114 &2377678613824972991
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -685,9 +686,9 @@ MonoBehaviour:
   sendMaxFramePercent: 0.1
   receiveMaxFps: 12
   receiveMaxFramePercent: 0.1
-  downscale: 0.32
+  downscale: 0.5
   useJpg: 1
-  jpgQuality: 32
+  jpgQuality: 20
   skipDuplicateFrames: 1
   lz4Compress: 0
   lz4Level: 0
