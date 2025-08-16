@@ -1,11 +1,8 @@
-using System;
-using System.Net;
 using Code.InteractionSystem;
 using Code.Utility;
 using FishNet.Component.Observing;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,16 +14,14 @@ namespace Code.Network
         [Space]
         [SerializeField] private RawImage screenRawImage;
 
-        private NetworkImageStream _currentStream;
+        private NetworkImageStream _currentStreamOnClient;
+        private NetworkImageStream _currentStreamOnServer;
 
         public readonly SyncVar<int> StreamSlotId = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
-
-        private NetworkImageStream GetCurrentStream =>
-            SlotMachineInteractable.FindById(StreamSlotId.Value)?.NetworkImageStream;
 
         private void OnEnable()
         {
@@ -53,58 +48,61 @@ namespace Code.Network
         {
             ServerReset();
             StreamSlotId.Value = slotId;
-            _currentStream = GetCurrentStream;
-            SetConditionsEnable(true);
+            _currentStreamOnServer = GetCurrentStream(slotId);
+            SetConditionsEnable(false);
         }
 
-        [Client]
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
             if (prev == next)
                 return;
             
             currentSlotId = next;
-            Debug.Log($"Reset for id {prev}, new id is {next}");
+            Debug.Log($"Reset for id {prev}, new id is {next}. Current stream is {_currentStreamOnClient}");
             ClientReset();
-            _currentStream = GetCurrentStream;
-            if(_currentStream == null)
+            _currentStreamOnClient = GetCurrentStream(next);
+            screenRawImage.gameObject.SetActive(_currentStreamOnClient != null);
+            if(_currentStreamOnClient == null)
                 return;
             
-            _currentStream.OnApplyTexture += ApplyTexture;
-            screenRawImage.gameObject.SetActive(true);
+            _currentStreamOnClient.OnApplyTexture += ApplyTexture;
         }
 
         [Client]
         private void ClientReset()
         {
-            if(_currentStream == null)
+            if(_currentStreamOnClient == null)
                 return;
             
-            _currentStream.OnApplyTexture -= ApplyTexture;
-            _currentStream = null;
+            _currentStreamOnClient.OnApplyTexture -= ApplyTexture;
+            _currentStreamOnClient = null;
             screenRawImage.gameObject.SetActive(false);
         }
 
         [Server]
         private void ServerReset()
         {
-            if(_currentStream == null)
+            if(_currentStreamOnServer == null)
                 return;
             
-            SetConditionsEnable(false);
+            SetConditionsEnable(true);
 
-            _currentStream = null;
+            _currentStreamOnServer = null;
         }
 
         [Server]
         private void SetConditionsEnable(bool enable)
         {
-            if (_currentStream == null)
+            if (_currentStreamOnServer == null)
                 return;
 
+            Debug.Log($"[Server] SetConditionsEnable {enable}");
             var observerCondition =
-                _currentStream.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
+                _currentStreamOnServer.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
             observerCondition.SetIsEnabled(enable);
         }
+        
+        private NetworkImageStream GetCurrentStream(int id) =>
+            SlotMachineInteractable.FindById(id)?.NetworkImageStream;
     }
 }
