@@ -1,10 +1,11 @@
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Experimental.Rendering;
+using UnityEngine.UI;
 
 namespace Code.Utility
 {
-    public static class ImageByteConverter
+    public static class ImageUtility
     {
         /// <summary>
         /// Кодирует NativeArray без ToArray-аллокации.
@@ -58,6 +59,30 @@ namespace Code.Utility
             var tex = Decode(imageBytes);
             if (tex == null) { Debug.LogWarning("Invalid image bytes."); return null; }
             return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
+        }
+        
+        public static void AdjustAspect(RawImage target)
+        {
+            var texture = target.texture;
+            var rectTransform = target.rectTransform;
+            
+            float textureRatio = (float)texture.width / texture.height;
+            float parentWidth = rectTransform.parent.GetComponent<RectTransform>().rect.width;
+            float parentHeight = rectTransform.parent.GetComponent<RectTransform>().rect.height;
+            float parentRatio = parentWidth / parentHeight;
+
+            if (textureRatio > parentRatio)
+            {
+                // Ограничиваем по ширине
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, parentWidth);
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, parentWidth / textureRatio);
+            }
+            else
+            {
+                // Ограничиваем по высоте
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, parentHeight);
+                rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, parentHeight * textureRatio);
+            }
         }
     }
 }
