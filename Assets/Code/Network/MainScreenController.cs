@@ -64,6 +64,7 @@ namespace Code.Network
                 return;
             
             currentSlotId = next;
+            Debug.Log($"Reset for id {prev}, new id is {next}");
             ClientReset();
             _currentStream = GetCurrentStream;
             if(_currentStream == null)
