@@ -215,11 +215,14 @@ namespace Code.UI
         
         private void StreamSlotIdOnOnChange(int prevId, int newId, bool asServer)
         {
+            if(prevId == newId || asServer)
+                return;
+            
             var thisId = slotMachineInteractable.IDNumber;
-
+            
             if (newId == thisId)
                 OnStartStreaming();
-            else if(prevId == newId && newId != thisId)
+            else if(newId != thisId && prevId == thisId)
                 OnEndStreaming();
         }
 

@@ -42,7 +42,6 @@ namespace Code.Network
 
         public void ApplyTexture(Texture texture)
         {
-            Debug.Log($"ApplyTexture {texture} {texture?.height}x{texture?.width}");
             screenRawImage.texture = texture;
             ImageUtility.AdjustAspect(screenRawImage);
         }
@@ -66,7 +65,8 @@ namespace Code.Network
             if(_currentStream == null)
                 return;
             
-            // TODO: Подписка на стримера
+            _currentStream.OnApplyTexture += ApplyTexture;
+            screenRawImage.gameObject.SetActive(true);
         }
 
         [Client]
@@ -75,9 +75,9 @@ namespace Code.Network
             if(_currentStream == null)
                 return;
             
-            // TODO: Отписка от стримера
-            
+            _currentStream.OnApplyTexture -= ApplyTexture;
             _currentStream = null;
+            screenRawImage.gameObject.SetActive(false);
         }
 
         [Server]
