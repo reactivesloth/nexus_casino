@@ -67,7 +67,6 @@ namespace Code.Network
         
         private MainScreenController _mainScreenController;
         
-        public event Action<Texture> OnSendTexture;
         public event Action<Texture> OnApplyTexture;
 
         private void Awake()
@@ -261,10 +260,12 @@ namespace Code.Network
                 encoded = LZ4Pickler.Pickle(encoded, lz4Level);
 
             Debug.Log($"[ImageStream] Send texture {rawImage.texture}");
-            OnSendTexture?.Invoke(rawImage.texture);
             // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
             if (Owner != null && OwnerId != -1)
+            {
                 UploadFrame(encoded, w, h);
+                OnApplyTexture?.Invoke(rawImage.texture);
+            }
         }
 
         [ServerRpc(RequireOwnership = false, DataLength = 15_000)]

@@ -1,3 +1,5 @@
+using System;
+using System.Net;
 using Code.InteractionSystem;
 using Code.Utility;
 using FishNet.Component.Observing;
@@ -14,95 +16,90 @@ namespace Code.Network
         [SerializeField] private RawImage screenRawImage;
 
         private NetworkImageStream _currentStream;
-        
-        public readonly SyncVar<int> StreamSlotId = new (new SyncTypeSettings
+
+        public readonly SyncVar<int> StreamSlotId = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
-        
-        //public int GetStreamSlotId => StreamSlotId.Value;
 
-        public void RequestStream(int slotId)
-        {
-            SetStream_ServerRpc(slotId);
-        }
+        private NetworkImageStream GetCurrentStream =>
+            SlotMachineInteractable.FindById(StreamSlotId.Value)?.NetworkImageStream;
 
-        public void RequestCancel()
+        private void OnEnable()
         {
-            ResetStream_ServerRpc();
-        }
-        
-        [ServerRpc(RequireOwnership = false)]
-        public void SetStream_ServerRpc(int slotId)
-        {
-            var stream = SlotMachineInteractable.FindById(slotId).GetComponentInChildren<NetworkImageStream>();
-            if(stream == null)
-                return;
-            
-            ResetStreamer();
-            
-            StreamSlotId.Value = slotId;
-            _currentStream = stream;
-            
-            var observerCondition = stream.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
-            observerCondition.SetIsEnabled(false);
-            SetStream_ObserversRpc(slotId);
+            StreamSlotId.OnChange += OnStreamSlotIdChange;
         }
 
-        [ObserversRpc(BufferLast = true)]
-        public void SetStream_ObserversRpc(int slotId)
+        private void OnDisable()
         {
-            ResetStreamer();
-            
-            screenRawImage.gameObject.SetActive(true);
-            
-            var stream = SlotMachineInteractable.FindById(slotId).GetComponentInChildren<NetworkImageStream>();
-            _currentStream = stream;
-            var observerCondition = _currentStream.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
-            observerCondition.SetIsEnabled(false);
-            
-            _currentStream.OnApplyTexture += ApplyTexture;
-            _currentStream.OnSendTexture += ApplyTexture;
-            Debug.Log($"SetStream_ObserversRpc({slotId})");
+            StreamSlotId.OnChange -= OnStreamSlotIdChange;
         }
-        
-        [ServerRpc(RequireOwnership = false)]
-        public void ResetStream_ServerRpc()
-        {
-            var observerCondition = _currentStream.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
-            observerCondition.SetIsEnabled(false);
-            StreamSlotId.Value = -1;
-            _currentStream = null;
 
-            ResetStream_ObserversRpc();
-        }
-        
-        [ObserversRpc(BufferLast = true)]
-        public void ResetStream_ObserversRpc()
-        {
-            screenRawImage.gameObject.SetActive(false);
-            ResetStreamer();
-        }
-        
-        public void ResetStreamer()
-        {
-            if(_currentStream == null)
-                return;
-            var observerCondition =
-                _currentStream.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
-            observerCondition.SetIsEnabled(true);
-            
-            _currentStream.OnApplyTexture -= ApplyTexture;
-            _currentStream.OnSendTexture -= ApplyTexture;
-            _currentStream = null;
-        }
-        
+        public void RequestStream(int slotId) => SetStream_ServerRpc(slotId);
+
+        public void RequestCancel() => SetStream_ServerRpc(-1);
+
         public void ApplyTexture(Texture texture)
         {
             Debug.Log($"ApplyTexture {texture} {texture?.height}x{texture?.width}");
             screenRawImage.texture = texture;
             ImageUtility.AdjustAspect(screenRawImage);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        public void SetStream_ServerRpc(int slotId)
+        {
+            ServerReset();
+            StreamSlotId.Value = slotId;
+            _currentStream = GetCurrentStream;
+            SetConditionsEnable(true);
+        }
+
+        private void OnStreamSlotIdChange(int prev, int next, bool asServer)
+        {
+            if (asServer || prev == next)
+                return;
+            
+            ClientReset();
+            _currentStream = GetCurrentStream;
+            if(_currentStream == null)
+                return;
+            
+            // TODO: Подписка на стримера
+        }
+
+        [Client]
+        private void ClientReset()
+        {
+            if(_currentStream == null)
+                return;
+            
+            // TODO: Отписка от стримера
+            
+            _currentStream = null;
+        }
+
+        [Server]
+        private void ServerReset()
+        {
+            if(_currentStream == null)
+                return;
+            
+            SetConditionsEnable(false);
+
+            _currentStream = null;
+        }
+
+        [Server]
+        private void SetConditionsEnable(bool enable)
+        {
+            if (_currentStream == null)
+                return;
+
+            var observerCondition =
+                _currentStream.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
+            observerCondition.SetIsEnabled(enable);
         }
     }
 }

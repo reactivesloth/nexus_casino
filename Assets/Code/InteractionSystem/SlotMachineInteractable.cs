@@ -48,6 +48,8 @@ namespace Code.InteractionSystem
         private bool _wasStarted;
         [SerializeField] private AudioMixer mixer;
 
+        public NetworkImageStream NetworkImageStream => networkImageStream;
+        
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
@@ -172,8 +174,6 @@ namespace Code.InteractionSystem
                 // стрим-текстура
                 if (networkImageStream != null)
                     networkImageStream.SetTexture(_webView.GetComponentInChildren<RawImage>());
-                    networkImageStream.SetTexture();
-                
                 
                 // звук
                 if (AudioManager.Instance != null)
