@@ -85,13 +85,16 @@ namespace Code.InteractionSystem
             Server_HandleEndInteract(ClientManager.Connection);
         }
 
+        [Server]
+        public void ServerForceInteract(NetworkConnection conn) => Server_HandleInteract(conn, true);
+        
         [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleInteract(NetworkConnection conn)
+        private void Server_HandleInteract(NetworkConnection conn, bool force = false)
         {
             if (!_interactableEnabled || _isOccupied.Value || conn == null) return;
             OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
-            OnInteract(conn);
+            OnInteract(conn, force);
 
             if (!ManualRelease)
                 _isOccupied.Value = false; // автосброс
@@ -113,7 +116,7 @@ namespace Code.InteractionSystem
 
         [Server] public void SetEnabled(bool enabled) => _interactableEnabled = enabled;
 
-        protected internal virtual void OnInteract(NetworkConnection conn) => GiveOwnership(conn);
+        protected internal virtual void OnInteract(NetworkConnection conn, bool force = false) => GiveOwnership(conn);
 
         protected internal virtual void OnEndInteract(NetworkConnection conn = null)
         {

@@ -87,10 +87,10 @@ namespace Code.InteractionSystem
             _sitRoutine = null;
         }
 
-        protected internal override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn, bool force = false)
         {
-            base.OnInteract(conn);
-            TargetToggleSit(conn, true);
+            base.OnInteract(conn, force);
+            TargetToggleSit(conn, true, force);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
@@ -100,7 +100,7 @@ namespace Code.InteractionSystem
         }
 
         [TargetRpc]
-        private void TargetToggleSit(NetworkConnection conn, bool isSitdown)
+        private void TargetToggleSit(NetworkConnection conn, bool isSitdown, bool isForce = false)
         {
             // Ищем локального PlayerMovementController без LINQ.First
             Player.PlayerMovementController movement = null;

@@ -89,10 +89,10 @@ namespace Code.InteractionSystem
             //_ = CloseAndCleanupAsync();
         }
 
-        protected internal override void OnInteract(NetworkConnection conn)
+        protected internal override void OnInteract(NetworkConnection conn, bool force = false)
         {
             if (_isUsing) return;
-            base.OnInteract(conn);
+            base.OnInteract(conn, force);
             _isUsing = true;
             TargetToggleComputerUI(conn, true);
         }
