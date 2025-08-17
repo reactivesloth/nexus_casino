@@ -76,6 +76,7 @@ namespace Code.InteractionSystem
         public void RequestInteract()
         {
             if (!_interactableEnabled || _isOccupied.Value) return;
+            IsBusy = true;
             Server_HandleInteract(ClientManager.Connection);
         }
 
@@ -93,13 +94,19 @@ namespace Code.InteractionSystem
 
         private void HandleInteract(NetworkConnection conn, bool force = false)
         {
-            if (!_interactableEnabled || _isOccupied.Value || conn == null) return;
+            if (!_interactableEnabled || _isOccupied.Value || conn == null)
+            {
+                InteractCallback(conn, false);
+                return;
+            }
             OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
             OnInteract(conn, force);
 
             if (!ManualRelease)
                 _isOccupied.Value = false; // автосброс
+            
+            InteractCallback(conn, true);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -117,6 +124,13 @@ namespace Code.InteractionSystem
         }
 
         [Server] public void SetEnabled(bool enabled) => _interactableEnabled = enabled;
+
+        [TargetRpc]
+        protected void InteractCallback(NetworkConnection conn, bool success)
+        {
+            if(!success) 
+                IsBusy = false;
+        }
 
         protected internal virtual void OnInteract(NetworkConnection conn, bool force)
         {
