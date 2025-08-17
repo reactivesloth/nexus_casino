@@ -151,8 +151,8 @@ namespace Code.InteractionSystem
             move.CanMove = false;
 
             // Вычисляем смещение для ног
-            float footOffset = ComputeFootOffset(anim, tf, sitPoint);
-            Vector3 targetPos = sitPoint.position + Vector3.up * (footOffset + sitAdjustHeight);
+            //float footOffset = ComputeFootOffset(anim, tf, sitPoint);
+            Vector3 targetPos = sitPoint.position + Vector3.up * (sitAdjustHeight);
             Quaternion targetRot = sitPoint.rotation;
 
             // Телепортируем персонажа
