@@ -90,7 +90,6 @@ namespace Code.InteractionSystem
         protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             base.OnInteract(conn, force);
-            Debug.Log($"[base.OnInteract] Force = {force}");
             TargetToggleSit(conn, true, force);
         }
 
@@ -124,8 +123,6 @@ namespace Code.InteractionSystem
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
             
-            
-            Debug.Log($"Force = {isForce}");
             if (isSitDown && isForce)
                 ForceSit(movement, anim, cc, tf); //TODO: Force sit down
             else
