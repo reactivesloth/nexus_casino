@@ -4,7 +4,16 @@ namespace Code.Network.HostMigration
 {
     public interface IMigratable<TMigrateDataType> : IMigratableBase
     {
+        /// <summary>
+        /// Migration receive handler. Server method.
+        /// </summary>
+        /// <param name="data"></param>
         void OnMigrateDataReceived(TMigrateDataType data);
+        
+        /// <summary>
+        /// Get migration data for client migration
+        /// </summary>
+        /// <returns></returns>
         new TMigrateDataType GetMigrateData();
 
         string GetJson(TMigrateDataType data) => JsonConvert.SerializeObject(data, Formatting.Indented);

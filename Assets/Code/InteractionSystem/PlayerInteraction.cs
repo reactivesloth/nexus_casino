@@ -144,6 +144,7 @@ namespace Code.Player
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
             _active = interactable;
+            _active.InteractionStateMigrate();
             _active.RequestInteract();
         }
 

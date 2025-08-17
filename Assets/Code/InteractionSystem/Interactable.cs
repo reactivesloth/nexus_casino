@@ -56,6 +56,11 @@ namespace Code.InteractionSystem
             ServerManager.OnRemoteConnectionState -= ServerManagerOnRemoteConnectionState;
         }
 
+        public virtual void InteractionStateMigrate()
+        {
+            
+        }
+        
         [Server]
         private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
         {

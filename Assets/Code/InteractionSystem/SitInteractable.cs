@@ -14,8 +14,8 @@ namespace Code.InteractionSystem
             public string animationID;
         }
 
-        [Header("Sit Settings")]
-        [SerializeField] private Transform sitPoint;
+        [Header("Sit Settings")] [SerializeField]
+        private Transform sitPoint;
 
         [SerializeField] private float sitAdjustHeight = 0.0f;
         [SerializeField] private bool allowRotateCamera = true;
@@ -25,13 +25,14 @@ namespace Code.InteractionSystem
                  "1 - Sit with turn in place (front to sit, stand in entry point)\n" +
                  "2 - Sit from back-left\n" +
                  "3 - Sit with back-right")]
-        [SerializeField] private EntryData[] entries;
+        [SerializeField]
+        private EntryData[] entries;
 
         [SerializeField] private bool forceFPV;
 
         const string SIT_TRIGGER = "TriggerSit";
-        const string SIT_STATE   = "Sitting";
-        const string SIT_STYLE   = "SitStyle";
+        const string SIT_STATE = "Sitting";
+        const string SIT_STYLE = "SitStyle";
         const string STAND_STATE = "Movement";
 
         private bool _isSitting;
@@ -39,6 +40,8 @@ namespace Code.InteractionSystem
         private Vector3 _savedPos;
         private Quaternion _savedRot;
         private EntryData _selectedEntry;
+
+        private bool _forceSit = false;
 
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -49,9 +52,15 @@ namespace Code.InteractionSystem
 #endif
 
         private void Awake() => SetupSitPoints();
+
         private void OnDisable()
         {
-            if (_sitRoutine != null) { StopCoroutine(_sitRoutine); _sitRoutine = null; }
+            if (_sitRoutine != null)
+            {
+                StopCoroutine(_sitRoutine);
+                _sitRoutine = null;
+            }
+
             _isSitting = false;
         }
 
@@ -80,20 +89,26 @@ namespace Code.InteractionSystem
             _sitRoutine = null;
         }
 
+        public override void InteractionStateMigrate()
+        {
+            base.InteractionStateMigrate();
+            _forceSit = true;
+        }
+
         protected internal override void OnInteract(NetworkConnection conn)
         {
             base.OnInteract(conn);
-            TargetToggleSit(conn);
+            TargetToggleSit(conn, true);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
             base.OnEndInteract(conn);
-            TargetToggleSit(conn);
+            TargetToggleSit(conn, false);
         }
 
         [TargetRpc]
-        private void TargetToggleSit(NetworkConnection conn)
+        private void TargetToggleSit(NetworkConnection conn, bool isSitdown)
         {
             // Ищем локального PlayerMovementController без LINQ.First
             Player.PlayerMovementController movement = null;
@@ -101,28 +116,34 @@ namespace Code.InteractionSystem
             for (int i = 0; i < all.Length; i++)
             {
                 var m = all[i];
-                if (m != null && m.Owner.IsLocalClient) { movement = m; break; }
+                if (m != null && m.Owner.IsLocalClient)
+                {
+                    movement = m;
+                    break;
+                }
             }
+
             if (movement == null) return;
 
-            var cc  = movement.GetComponent<CharacterController>();
-            var anim= movement.GetComponent<Animator>();
-            var tf  = movement.transform;
+            var cc = movement.GetComponent<CharacterController>();
+            var anim = movement.GetComponent<Animator>();
+            var tf = movement.transform;
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
             _sitRoutine = StartCoroutine(
-                _isSitting
-                    ? StandUpFlow(movement, anim, cc, tf)
-                    : SitDownFlow(movement, anim, cc, tf)
+                isSitdown
+                    ? SitDownFlow(movement, anim, cc, tf)
+                    : StandUpFlow(movement, anim, cc, tf)
             );
         }
 
-        private IEnumerator SitDownFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc, Transform tf)
+        private IEnumerator SitDownFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
         {
             IsBusy = true;
 
             move.SuppressLookAtIK = true;
-            
+
             _savedPos = tf.position;
             _savedRot = tf.rotation;
 
@@ -139,6 +160,17 @@ namespace Code.InteractionSystem
 
             var entryPoint = _selectedEntry.entryPoint;
 
+            float footOffset = ComputeFootOffset(anim, tf, sitPoint);
+            Vector3 targetPos = (sitPoint != null ? sitPoint.position : tf.position) + Vector3.up * footOffset +
+                                Vector3.up * sitAdjustHeight;
+            Quaternion targetRot = sitPoint != null ? sitPoint.rotation : tf.rotation;
+            
+            if (_forceSit)
+            {
+                ForceSit(move, anim, tf, targetPos, targetRot);
+                yield break;
+            }
+            
             yield return RotateTowardPointIfNeeded(tf, entryPoint.position);
             yield return MoveToPoint(tf, entryPoint.position, anim);
             yield return RotateToTarget(tf, entryPoint.rotation);
@@ -146,7 +178,8 @@ namespace Code.InteractionSystem
             if (anim != null)
             {
                 anim.applyRootMotion = true;
-                int style = 0; int.TryParse(_selectedEntry.animationID, out style);
+                int style = 0;
+                int.TryParse(_selectedEntry.animationID, out style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
             }
@@ -162,10 +195,6 @@ namespace Code.InteractionSystem
 
             Vector3 startPos = tf.position;
             Quaternion startRot = tf.rotation;
-
-            float footOffset = ComputeFootOffset(anim, tf, sitPoint);
-            Vector3 targetPos = (sitPoint != null ? sitPoint.position : tf.position) + Vector3.up * footOffset + Vector3.up * sitAdjustHeight;
-            Quaternion targetRot = sitPoint != null ? sitPoint.rotation : tf.rotation;
 
             while (elapsed < duration)
             {
@@ -195,16 +224,57 @@ namespace Code.InteractionSystem
                 }
             }
 
-            move.sitBaseYaw  = move.cinemachineTargetYaw;
-            move.sitBasePitch= move.cinemachineTargetPitch;
+            move.sitBaseYaw = move.cinemachineTargetYaw;
+            move.sitBasePitch = move.cinemachineTargetPitch;
 
             if (forceFPV)
                 move.ForceEnterFPV(true, snap: true);
-            
+
             IsBusy = false;
         }
 
-        private IEnumerator StandUpFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc, Transform tf)
+        private void ForceSit(Player.PlayerMovementController move, Animator anim, Transform tf, Vector3 targetPos, Quaternion targetRot)
+        {
+            // Мгновенная посадка без анимации
+            int style = 0;
+            int.TryParse(_selectedEntry.animationID, out style);
+
+            if (anim != null)
+            {
+                anim.SetFloat(SIT_STYLE, style);
+                anim.Play(SIT_STATE, 0, 1f); // сразу устанавливаем состояние "сидит"
+            }
+                
+            tf.position = targetPos;
+            tf.rotation = targetRot;
+
+            if (anim != null) anim.applyRootMotion = false;
+            _sitRoutine = null;
+            _isSitting = true;
+            move.SuppressLookAtIK = !move.FirstPersonView;
+
+            if (allowRotateCamera)
+            {
+                move.LookCameraLimitRotation = true;
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = true;
+                    move.LockCursor = false;
+                }
+            }
+
+            move.sitBaseYaw = move.cinemachineTargetYaw;
+            move.sitBasePitch = move.cinemachineTargetPitch;
+
+            if (forceFPV)
+                move.ForceEnterFPV(true, snap: true);
+
+            IsBusy = false;
+            _forceSit = false; // сбрасываем после использования
+        }
+
+        private IEnumerator StandUpFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
         {
             move.SuppressLookAtIK = true;
 
@@ -218,7 +288,7 @@ namespace Code.InteractionSystem
                 }
 
                 float preservedPitch = 0f;
-                float preservedYaw   = move.cinemachineTargetYaw;
+                float preservedYaw = move.cinemachineTargetYaw;
                 var camT = move.CinemachineCameraTarget.transform;
                 camT.rotation = Quaternion.Euler(
                     preservedPitch + move.cameraAngleOverride,
@@ -232,7 +302,8 @@ namespace Code.InteractionSystem
             if (anim != null)
             {
                 anim.applyRootMotion = true;
-                int style = 0; int.TryParse(_selectedEntry != null ? _selectedEntry.animationID : "0", out style);
+                int style = 0;
+                int.TryParse(_selectedEntry != null ? _selectedEntry.animationID : "0", out style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, false);
             }
@@ -243,8 +314,12 @@ namespace Code.InteractionSystem
             Vector3 startPos = tf.position;
             Quaternion startRot = tf.rotation;
 
-            Vector3 targetPos = _selectedEntry != null && _selectedEntry.entryPoint != null ? _selectedEntry.entryPoint.position : _savedPos;
-            Quaternion targetRot = _selectedEntry != null && _selectedEntry.entryPoint != null ? _selectedEntry.entryPoint.rotation : _savedRot;
+            Vector3 targetPos = _selectedEntry != null && _selectedEntry.entryPoint != null
+                ? _selectedEntry.entryPoint.position
+                : _savedPos;
+            Quaternion targetRot = _selectedEntry != null && _selectedEntry.entryPoint != null
+                ? _selectedEntry.entryPoint.rotation
+                : _savedRot;
 
             float footOffset = ComputeFootOffset(anim, tf, _selectedEntry != null ? _selectedEntry.entryPoint : tf);
             targetPos += Vector3.up * footOffset;
@@ -268,11 +343,11 @@ namespace Code.InteractionSystem
             _sitRoutine = null;
             IsBusy = false;
             move.SuppressLookAtIK = !move.FirstPersonView;
-            
+
             // после восстановления контроллера и движения
-            move.SnapAimToCurrentCamera();   // выравниваем таргеты под текущую камеру
-            move.BeginIkGrace(0.2f);         // 200 мс без IK, чтобы камера «встала» стабильно
-            
+            move.SnapAimToCurrentCamera(); // выравниваем таргеты под текущую камеру
+            move.BeginIkGrace(0.2f); // 200 мс без IK, чтобы камера «встала» стабильно
+
             // завершаем флаги RMB-режима
             if (allowRotateCamera)
             {
@@ -302,12 +377,18 @@ namespace Code.InteractionSystem
                 var e = entries[i];
                 if (e == null || e.entryPoint == null) continue;
                 float d = Vector3.Distance(from, e.entryPoint.position);
-                if (d < minDist) { minDist = d; closest = e; }
+                if (d < minDist)
+                {
+                    minDist = d;
+                    closest = e;
+                }
             }
+
             return closest;
         }
 
-        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.25f, float maxDuration = 2f)
+        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.25f,
+            float maxDuration = 2f)
         {
             float walkSpeed = 1.5f;
             float animBlendSpeed = 8f;
@@ -355,7 +436,8 @@ namespace Code.InteractionSystem
             }
         }
 
-        private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f, float maxDuration = 1f)
+        private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f,
+            float maxDuration = 1f)
         {
             float elapsed = 0f;
 
@@ -369,7 +451,8 @@ namespace Code.InteractionSystem
             tf.rotation = targetRot;
         }
 
-        private IEnumerator RotateTowardPointIfNeeded(Transform tf, Vector3 targetPosition, float angleThreshold = 15f, float rotationSpeed = 360f)
+        private IEnumerator RotateTowardPointIfNeeded(Transform tf, Vector3 targetPosition, float angleThreshold = 15f,
+            float rotationSpeed = 360f)
         {
             Vector3 toTarget = targetPosition - tf.position;
             toTarget.y = 0f;
@@ -384,6 +467,7 @@ namespace Code.InteractionSystem
                 tf.rotation = Quaternion.RotateTowards(tf.rotation, targetRotation, rotationSpeed * Time.deltaTime);
                 yield return null;
             }
+
             tf.rotation = targetRotation;
         }
 
@@ -396,7 +480,7 @@ namespace Code.InteractionSystem
 
             Vector3 footWorld = foot.position;
             float localFootY = playerTf.InverseTransformPoint(footWorld).y;
-            float localRefY  = playerTf.InverseTransformPoint(refPoint.position).y;
+            float localRefY = playerTf.InverseTransformPoint(refPoint.position).y;
             return localRefY - localFootY;
         }
     }
