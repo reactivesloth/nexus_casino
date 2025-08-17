@@ -41,7 +41,7 @@ namespace Code.InteractionSystem
         private Quaternion _savedRot;
         private EntryData _selectedEntry;
 
-        private bool _forceSit = false;
+        private bool _isForceSit = false;
 
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -92,13 +92,14 @@ namespace Code.InteractionSystem
         public override void InteractionStateMigrate()
         {
             base.InteractionStateMigrate();
-            _forceSit = true;
+            _isForceSit = true;
         }
 
         protected internal override void OnInteract(NetworkConnection conn)
         {
             base.OnInteract(conn);
-            TargetToggleSit(conn, true);
+            TargetToggleSit(conn, true, _isForceSit);
+            _isForceSit = false;
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
@@ -108,7 +109,7 @@ namespace Code.InteractionSystem
         }
 
         [TargetRpc]
-        private void TargetToggleSit(NetworkConnection conn, bool isSitdown)
+        private void TargetToggleSit(NetworkConnection conn, bool isSitdown, bool isForce = false)
         {
             // Ищем локального PlayerMovementController без LINQ.First
             Player.PlayerMovementController movement = null;
@@ -130,15 +131,16 @@ namespace Code.InteractionSystem
             var tf = movement.transform;
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
+            
             _sitRoutine = StartCoroutine(
                 isSitdown
-                    ? SitDownFlow(movement, anim, cc, tf)
+                    ? SitDownFlow(movement, anim, cc, tf, isForce)
                     : StandUpFlow(movement, anim, cc, tf)
             );
         }
 
         private IEnumerator SitDownFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,
-            Transform tf)
+            Transform tf, bool isForce = false)
         {
             IsBusy = true;
 
@@ -165,7 +167,7 @@ namespace Code.InteractionSystem
                                 Vector3.up * sitAdjustHeight;
             Quaternion targetRot = sitPoint != null ? sitPoint.rotation : tf.rotation;
             
-            if (_forceSit)
+            if (isForce)
             {
                 ForceSit(move, anim, tf, targetPos, targetRot);
                 yield break;
@@ -270,7 +272,7 @@ namespace Code.InteractionSystem
                 move.ForceEnterFPV(true, snap: true);
 
             IsBusy = false;
-            _forceSit = false; // сбрасываем после использования
+            _isForceSit = false; // сбрасываем после использования
         }
 
         private IEnumerator StandUpFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,

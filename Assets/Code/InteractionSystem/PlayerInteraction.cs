@@ -133,6 +133,12 @@ namespace Code.Player
         {
             if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
                 return;
+            
+            var sceneObject = SceneObject.GetObjectById(data.activeId);
+            if (!sceneObject) return;
+            if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
+            
+            interactable.InteractionStateMigrate();
             SetInteractableOnMigrate(Owner, data);
         }
 
@@ -144,7 +150,6 @@ namespace Code.Player
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
             _active = interactable;
-            _active.InteractionStateMigrate();
             _active.RequestInteract();
         }
 
