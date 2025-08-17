@@ -138,6 +138,9 @@ namespace Code.Player
             if (!sceneObject) return;
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
             
+            if(interactable.IsOccupied)
+                return;
+            
             interactable.ServerForceInteract(Owner);
             SetInteractableOnMigrate(Owner, data);
         }
