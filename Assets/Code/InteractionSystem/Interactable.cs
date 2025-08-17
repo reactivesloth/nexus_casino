@@ -86,10 +86,12 @@ namespace Code.InteractionSystem
         }
 
         [Server]
-        public void ServerForceInteract(NetworkConnection conn) => Server_HandleInteract(conn, true);
+        public void ServerForceInteract(NetworkConnection conn) => HandleInteract(conn, true);
         
         [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleInteract(NetworkConnection conn, bool force = false)
+        private void Server_HandleInteract(NetworkConnection conn) => HandleInteract(conn);
+
+        private void HandleInteract(NetworkConnection conn, bool force = false)
         {
             if (!_interactableEnabled || _isOccupied.Value || conn == null) return;
             OccupiedConnectionId = conn.ClientId;
