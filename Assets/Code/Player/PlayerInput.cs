@@ -124,15 +124,15 @@ public class PlayerInput : MonoBehaviour
             if (HideMobileFallback != savedHideMobileFallback)
             {
                 if (MoveJoystick != null)      MoveJoystick.gameObject.SetActive(!HideMobileFallback);
-                if (LookArea != null)          LookArea.gameObject.SetActive(!HideMobileFallback);
+                //if (LookArea != null)          LookArea.gameObject.SetActive(!HideMobileFallback);
                 if (JumpButton != null)        JumpButton.gameObject.SetActive(!HideMobileFallback);
                 if (SprintButton != null)      SprintButton.gameObject.SetActive(!HideMobileFallback);
-                if (InteractButton != null)    InteractButton.gameObject.SetActive(!HideMobileFallback);
-                if (CameraSwitchButton != null)CameraSwitchButton.gameObject.SetActive(!HideMobileFallback);
-                if (PauseButton != null)       PauseButton.gameObject.SetActive(!HideMobileFallback);
-                if (VoiceButton != null)       VoiceButton.gameObject.SetActive(!HideMobileFallback);
-                if (OpenChatButton != null)    OpenChatButton.gameObject.SetActive(!HideMobileFallback);
-                if (SwitchChatButton != null)  SwitchChatButton.gameObject.SetActive(!HideMobileFallback);
+                //if (InteractButton != null)    InteractButton.gameObject.SetActive(!HideMobileFallback);
+                //if (CameraSwitchButton != null)CameraSwitchButton.gameObject.SetActive(!HideMobileFallback);
+                //if (PauseButton != null)       PauseButton.gameObject.SetActive(!HideMobileFallback);
+                //if (VoiceButton != null)       VoiceButton.gameObject.SetActive(!HideMobileFallback);
+                //if (OpenChatButton != null)    OpenChatButton.gameObject.SetActive(!HideMobileFallback);
+                //if (SwitchChatButton != null)  SwitchChatButton.gameObject.SetActive(!HideMobileFallback);
 
                 savedHideMobileFallback = HideMobileFallback;
             }
