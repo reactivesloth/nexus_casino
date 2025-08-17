@@ -87,9 +87,10 @@ namespace Code.InteractionSystem
             _sitRoutine = null;
         }
 
-        protected internal override void OnInteract(NetworkConnection conn, bool force = false)
+        protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             base.OnInteract(conn, force);
+            Debug.Log($"[base.OnInteract] Force = {force}");
             TargetToggleSit(conn, true, force);
         }
 
@@ -100,7 +101,7 @@ namespace Code.InteractionSystem
         }
 
         [TargetRpc]
-        private void TargetToggleSit(NetworkConnection conn, bool isSitdown, bool isForce = false)
+        private void TargetToggleSit(NetworkConnection conn, bool isSitDown, bool isForce = false)
         {
             // Ищем локального PlayerMovementController без LINQ.First
             Player.PlayerMovementController movement = null;
@@ -123,11 +124,86 @@ namespace Code.InteractionSystem
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
             
-            _sitRoutine = StartCoroutine(
-                isSitdown
-                    ? SitDownFlow(movement, anim, cc, tf)
-                    : StandUpFlow(movement, anim, cc, tf)
-            );
+            
+            Debug.Log($"Force = {isForce}");
+            if (isSitDown && isForce)
+                ForceSit(movement, anim, cc, tf); //TODO: Force sit down
+            else
+                _sitRoutine = StartCoroutine(
+                    isSitDown
+                        ? SitDownFlow(movement, anim, cc, tf)
+                        : StandUpFlow(movement, anim, cc, tf)
+                );
+        }
+
+        private void ForceSit(Player.PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf)
+        {
+            // Находим точку входа (для сохранения в _selectedEntry)
+            _selectedEntry = FindClosestEntryPoint(tf.position);
+            if (_selectedEntry == null && entries.Length > 0)
+                _selectedEntry = entries[0]; // Используем первую точку если не нашли
+
+            // Сохраняем текущую позицию и поворот
+            _savedPos = tf.position;
+            _savedRot = tf.rotation;
+
+            if (cc != null)
+                cc.enabled = false;
+
+            move.CanMove = false;
+
+            // Вычисляем смещение для ног
+            float footOffset = ComputeFootOffset(anim, tf, sitPoint);
+            Vector3 targetPos = sitPoint.position + Vector3.up * (footOffset + sitAdjustHeight);
+            Quaternion targetRot = sitPoint.rotation;
+
+            // Телепортируем персонажа
+            tf.position = targetPos;
+            tf.rotation = targetRot;
+
+            // Устанавливаем состояние аниматора без перехода
+            if (anim != null)
+            {
+                // Параметры для состояния сидения
+                int style = 0;
+                if (_selectedEntry != null)
+                    int.TryParse(_selectedEntry.animationID, out style);
+
+                anim.SetFloat(SIT_STYLE, style);
+                anim.SetBool(SIT_TRIGGER, true);
+
+                // Принудительно устанавливаем состояние сидения
+                anim.Play(SIT_STATE, 0, 1f); // layer 0, время 100%
+
+                // Отключаем root motion
+                anim.applyRootMotion = false;
+            }
+
+            // Обновляем статусы
+            _isSitting = true;
+            move.SuppressLookAtIK = !move.FirstPersonView;
+
+            // Настройки камеры
+            if (allowRotateCamera)
+            {
+                move.LookCameraLimitRotation = true;
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = true;
+                    move.LockCursor = false;
+                }
+            }
+
+            // Сохраняем углы камеры
+            move.sitBaseYaw = move.cinemachineTargetYaw;
+            move.sitBasePitch = move.cinemachineTargetPitch;
+
+            // Принудительное FPV
+            if (forceFPV)
+                move.ForceEnterFPV(true, snap: true);
+
+            IsBusy = false;
         }
 
         private IEnumerator SitDownFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,
@@ -152,7 +228,7 @@ namespace Code.InteractionSystem
             }
 
             var entryPoint = _selectedEntry.entryPoint;
-            
+
             yield return RotateTowardPointIfNeeded(tf, entryPoint.position);
             yield return MoveToPoint(tf, entryPoint.position, anim);
             yield return RotateToTarget(tf, entryPoint.rotation);
@@ -182,7 +258,7 @@ namespace Code.InteractionSystem
             Vector3 targetPos = (sitPoint != null ? sitPoint.position : tf.position) + Vector3.up * footOffset +
                                 Vector3.up * sitAdjustHeight;
             Quaternion targetRot = sitPoint != null ? sitPoint.rotation : tf.rotation;
-            
+
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;

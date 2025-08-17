@@ -93,6 +93,7 @@ namespace Code.InteractionSystem
 
         private void HandleInteract(NetworkConnection conn, bool force = false)
         {
+            Debug.Log($"[HandleInteract] Force = {force}");
             if (!_interactableEnabled || _isOccupied.Value || conn == null) return;
             OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
@@ -118,7 +119,11 @@ namespace Code.InteractionSystem
 
         [Server] public void SetEnabled(bool enabled) => _interactableEnabled = enabled;
 
-        protected internal virtual void OnInteract(NetworkConnection conn, bool force = false) => GiveOwnership(conn);
+        protected internal virtual void OnInteract(NetworkConnection conn, bool force)
+        {
+            
+            GiveOwnership(conn);
+        }
 
         protected internal virtual void OnEndInteract(NetworkConnection conn = null)
         {

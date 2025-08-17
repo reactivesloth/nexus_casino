@@ -109,13 +109,13 @@ namespace Code.InteractionSystem
             }
         }
 
-        protected internal override void OnInteract(NetworkConnection conn, bool force = false)
+        protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             if (children == null) return;
             for (int i = 0; i < children.Length; i++)
             {
                 var child = children[i];
-                if (child != null) child.OnInteract(conn);
+                if (child != null) child.OnInteract(conn, force);
             }
         }
 
