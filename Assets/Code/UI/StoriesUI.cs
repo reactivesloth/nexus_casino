@@ -72,9 +72,6 @@ namespace Code.UI
 
         public void StartNewCycle()
         {
-            if (slotMachineInteractable != null && !slotMachineInteractable.IsUsing)
-                return;
-
             TryFetchStories(() =>
             {
                 if (_storyCoroutine != null) { StopCoroutine(_storyCoroutine); _storyCoroutine = null; }
