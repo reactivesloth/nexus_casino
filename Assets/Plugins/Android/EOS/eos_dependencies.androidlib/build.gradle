@@ -29,10 +29,6 @@ android {
     defaultConfig {
         targetSdkVersion 36
     }
-    
-    packagingOptions {
-         pickFirst 'lib/arm64-v8a/libc++_shared.so' 
-    }
 }
 dependencies {
         implementation 'androidx.appcompat:appcompat:1.5.1'
