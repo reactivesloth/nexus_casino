@@ -1,10 +1,14 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Code.Utility;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Transporting;
 using K4os.Compression.LZ4;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -263,12 +267,81 @@ namespace Code.Network
             // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
             if (Owner != null && OwnerId != -1)
             {
-                UploadFrame(encoded, w, h);
+                SendInChunks(encoded, w, h);
+                //UploadFrame(encoded, w, h);
                 OnApplyTexture?.Invoke(rawImage.texture);
             }
         }
+        
+        
+        private int _currentFrameId = 0;
+        private readonly Dictionary<int, List<byte[]>> _chunkBuffer = new();
+        
+        /// <summary>
+        /// Разбиение на чанки по 1000 байт и отправка.
+        /// </summary>
+        private void SendInChunks(byte[] data, int width, int height)
+        {
+            const int CHUNK_SIZE = 1000;
+            int totalChunks = Mathf.CeilToInt(data.Length / (float)CHUNK_SIZE);
 
-        [ServerRpc(RequireOwnership = false, DataLength = 15_000)]
+            for (int i = 0; i < totalChunks; i++)
+            {
+                int offset = i * CHUNK_SIZE;
+                int size = Mathf.Min(CHUNK_SIZE, data.Length - offset);
+                byte[] chunk = new byte[size];
+                Buffer.BlockCopy(data, offset, chunk, 0, size);
+
+                UploadFrameChunk(chunk, width, height, i, totalChunks);
+            }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void UploadFrameChunk(byte[] chunk, int width, int height, int index, int total, Channel channel = Channel.Unreliable)
+        {
+            RelayFrameChunk(chunk, width, height, index, total);
+        }
+
+        [ObserversRpc(ExcludeOwner = true, BufferLast = false)]
+        private void RelayFrameChunk(byte[] chunk, int width, int height, int index, int total, Channel channel = Channel.Unreliable)
+        {
+            if (IsOwner) return;
+
+            // накапливаем чанки
+            if (!_chunkBuffer.TryGetValue(_currentFrameId, out List<byte[]> list))
+            {
+                list = new List<byte[]>(total);
+                _chunkBuffer[_currentFrameId] = list;
+            }
+
+            // гарантируем порядок хранения
+            if (list.Count <= index)
+                list.AddRange(new byte[index - list.Count + 1]);
+
+            list[index] = chunk;
+
+            // когда все чанки получены — собрать
+            if (list.Count == total && list.All(c => c != null))
+            {
+                int totalBytes = list.Sum(c => c.Length);
+                byte[] full = new byte[totalBytes];
+                int pos = 0;
+                foreach (var c in list)
+                {
+                    Buffer.BlockCopy(c, 0, full, pos, c.Length);
+                    pos += c.Length;
+                }
+
+                _chunkBuffer.Remove(_currentFrameId);
+
+                byte[] raw = lz4Compress ? LZ4Pickler.Unpickle(full) : full;
+                ApplyImage(raw, width, height);
+
+                _currentFrameId++;
+            }
+        }
+        
+        /*[ServerRpc(RequireOwnership = false, DataLength = 15_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
             RelayFrame(data, width, height);
@@ -299,7 +372,7 @@ namespace Code.Network
                 raw = K4os.Compression.LZ4.LZ4Pickler.Unpickle(raw);
 
             ApplyImage(raw, width, height);
-        }
+        }*/
 
         private void ApplyImage(byte[] bytes, int width, int height)
         {
