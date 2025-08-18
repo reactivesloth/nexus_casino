@@ -316,7 +316,7 @@ namespace Code.Network
 
             // гарантируем порядок хранения
             if (list.Count <= index)
-                list.AddRange(new byte[index - list.Count + 1]);
+                list.Add(new byte[index - list.Count + 1]);
 
             list[index] = chunk;
 
