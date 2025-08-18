@@ -15,21 +15,19 @@ namespace Code.UI
 {
     public class SlotFunctionsUI : MonoBehaviour
     {
-        [Header("Stories")] [SerializeField] private Button screenshotButton;
+        [Header("Stories")]
         [SerializeField, CanBeNull] private StoriesUI updateStoryUiOnLoad;
         [SerializeField] private float timeout = 10f;
+        private bool _screenShotBusy;
 
         [Header("Stream")] [SerializeField] private Image streamIndicator;
-        [SerializeField] private Button requestStreamButton;
-        [SerializeField] private Button requestCancelStreamButton;
         [SerializeField] private float streamDownscale = 0.75f;
         [SerializeField] private int streamJpgQuality = 20;
+        private bool _streaming;
 
         [Space] [SerializeField] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField] private TMP_Text resultText;
         [SerializeField] private float resultShowTime = 5f;
-
-        [Header("Fullscreen")] [SerializeField] private Button fullscreenButton;
         
         private Coroutine _resultShowCoroutine;
         private Coroutine _timeoutCoroutine;
@@ -44,14 +42,17 @@ namespace Code.UI
         private void OnEnable()
         {
             if (resultText != null) resultText.text = string.Empty;
-            screenshotButton.onClick.AddListener(OnScreenshotClicked);
-            
-            requestStreamButton.onClick.AddListener(RequestStream);
-            requestCancelStreamButton.onClick.AddListener(CancelStream);
-            
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
+        }
+
+        private void Update()
+        {
+            if (!PlayerInput.Instance.ShowSlotsUI) PlayerInput.Instance.ShowSlotsUI = true;
             
-            fullscreenButton.onClick.AddListener(SwitchFullscreen);
+            if (PlayerInput.Instance.IsSlotsFullscreen) SwitchFullscreen();
+            if (PlayerInput.Instance.IsSlotsScreenshot && !_screenShotBusy) OnScreenshotClicked();
+            if (PlayerInput.Instance.IsSlotsStream && !_streaming) RequestStream();
+            if (PlayerInput.Instance.IsSlotsStream && _streaming) CancelStream();
         }
 
         private void SwitchFullscreen()
@@ -62,37 +63,27 @@ namespace Code.UI
 
         private void OnDisable()
         {
-            if (screenshotButton != null) screenshotButton.onClick.RemoveListener(OnScreenshotClicked);
-
             if (_timeoutCoroutine != null)
             {
                 StopCoroutine(_timeoutCoroutine);
                 _timeoutCoroutine = null;
             }
 
-            if (screenshotButton != null)
-                screenshotButton.interactable = true;
-
             if (_resultShowCoroutine != null)
             {
                 StopCoroutine(_resultShowCoroutine);
                 _resultShowCoroutine = null;
             }
-
-            requestStreamButton.onClick.RemoveListener(RequestStream);
-            requestCancelStreamButton.onClick.RemoveListener(CancelStream);
             
             _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
-            
-            fullscreenButton.onClick.RemoveListener(SwitchFullscreen);
+            PlayerInput.Instance.ShowSlotsUI = false;
         }
 
         #region Stories
         
         private async void OnScreenshotClicked()
         {
-            if (screenshotButton != null) screenshotButton.interactable = false;
-
+            _screenShotBusy = true;
             try
             {
                 if (slotMachineInteractable == null || slotMachineInteractable.WebView == null)
@@ -125,7 +116,7 @@ namespace Code.UI
         private IEnumerator TimeoutRoutine()
         {
             yield return new WaitForSeconds(timeout);
-            if (screenshotButton != null) screenshotButton.interactable = true;
+            _screenShotBusy = false;
             _timeoutCoroutine = null;
         }
 
@@ -242,15 +233,13 @@ namespace Code.UI
 
         private void OnStartStreaming()
         {
-            requestStreamButton.gameObject.SetActive(false);
-            requestCancelStreamButton.gameObject.SetActive(true);
+            _streaming = true;
             slotMachineInteractable.NetworkImageStream.SetQualitySettings(streamDownscale, streamJpgQuality);
         }
 
         private void OnEndStreaming()
         {
-            requestStreamButton.gameObject.SetActive(true);
-            requestCancelStreamButton.gameObject.SetActive(false);
+            _streaming = false;
             slotMachineInteractable.NetworkImageStream.ResetQualitySettings();
         }
 

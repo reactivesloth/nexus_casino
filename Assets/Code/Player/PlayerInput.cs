@@ -50,6 +50,14 @@ public class PlayerInput : MonoBehaviour
     private bool prevBusy;
     public bool IsUsingMobileFallback { get; set; }
     public bool HideMobileFallback { get; set; }
+    
+    
+    [Header(("Slots Specific UI"))] 
+    public GameObject slotsUI;
+    public UltimateButton slotsScreenshotButton;
+    public UltimateButton slotsFullscreenButton;
+    public UltimateButton slotsStreamButton;
+    public bool ShowSlotsUI { get; set; }
 
     public bool IsBusy { get; set; }
     
@@ -93,7 +101,7 @@ public class PlayerInput : MonoBehaviour
         
         if (value)
         {
-            prevBusy = value;
+            prevBusy = IsBusy;
             IsBusy = true;
         }
         else
@@ -137,6 +145,9 @@ public class PlayerInput : MonoBehaviour
                 savedHideMobileFallback = HideMobileFallback;
             }
         }
+        
+        if (slotsUI != null && ShowSlotsUI != slotsUI.activeSelf)
+            slotsUI.SetActive(ShowSlotsUI);
     }
 
     // --- Геттеры ввода ---
@@ -185,6 +196,10 @@ public class PlayerInput : MonoBehaviour
     public bool IsRMBDown  => !IsBusy && (_player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
     public bool ForceCursorHeld => (_player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f);
 
+    public bool IsSlotsFullscreen => slotsFullscreenButton.GetButtonDown();
+    public bool IsSlotsStream => slotsStreamButton.GetButtonDown();
+    public bool IsSlotsScreenshot => slotsScreenshotButton.GetButtonDown();
+    
     public void SetEnabled(bool enabled) { if (enabled) _player.Enable(); else _player.Disable(); }
 
     public void SetControlScheme(InputControlScheme scheme)
