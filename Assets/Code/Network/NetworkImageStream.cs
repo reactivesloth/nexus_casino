@@ -273,9 +273,11 @@ namespace Code.Network
             }
         }
         
-        
-        private int _currentFrameId = 0;
-        private readonly Dictionary<int, List<byte[]>> _chunkBuffer = new();
+        private Dictionary<int, byte[]> _latestFrameChunks;
+        private Guid _currentFrameGuid;
+        private int _latestTotalChunks;
+        private int _latestWidth;
+        private int _latestHeight;
         
         /// <summary>
         /// Разбиение на чанки по 1000 байт и отправка.
@@ -285,6 +287,9 @@ namespace Code.Network
             const int CHUNK_SIZE = 1000;
             int totalChunks = Mathf.CeilToInt(data.Length / (float)CHUNK_SIZE);
 
+            // вместо frameId генерируем GUID
+            Guid frameGuid = Guid.NewGuid();
+
             for (int i = 0; i < totalChunks; i++)
             {
                 int offset = i * CHUNK_SIZE;
@@ -292,18 +297,18 @@ namespace Code.Network
                 byte[] chunk = new byte[size];
                 Buffer.BlockCopy(data, offset, chunk, 0, size);
 
-                UploadFrameChunk(chunk, width, height, i, totalChunks);
+                UploadFrameChunk(chunk, width, height, i, totalChunks, frameGuid);
             }
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void UploadFrameChunk(byte[] chunk, int width, int height, int index, int total, Channel channel = Channel.Unreliable)
+        private void UploadFrameChunk(byte[] chunk, int width, int height, int index, int total, Guid frameGuid, Channel channel = Channel.Unreliable)
         {
-            RelayFrameChunk(chunk, width, height, index, total);
+            RelayFrameChunk(chunk, width, height, index, total, frameGuid);
         }
 
         [ObserversRpc(ExcludeOwner = true)]
-        private void RelayFrameChunk(byte[] chunk, int width, int height, int index, int total, Channel channel = Channel.Unreliable)
+        private void RelayFrameChunk(byte[] chunk, int width, int height, int index, int total, Guid frameGuid, Channel channel = Channel.Unreliable)
         {
             if (IsOwner) return;
 
@@ -315,43 +320,36 @@ namespace Code.Network
             
             targetImage.gameObject.SetActive(true);
             
-            float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
-            if (_currentReceiveInterval < wait)
-                return;
-
-            _currentReceiveInterval = 0f;
-            
-            // накапливаем чанки
-            if (!_chunkBuffer.TryGetValue(_currentFrameId, out List<byte[]> list))
+            // если пришёл новый GUID — сбросить старые данные
+            if (_latestFrameChunks == null || frameGuid != _currentFrameGuid)
             {
-                list = new List<byte[]>(total);
-                _chunkBuffer[_currentFrameId] = list;
+                _currentFrameGuid = frameGuid;
+                _latestFrameChunks = new Dictionary<int, byte[]>(total);
+                _latestTotalChunks = total;
+                _latestWidth = width;
+                _latestHeight = height;
             }
 
-            // гарантируем порядок хранения
-            if (list.Count <= index)
-                list.Add(new byte[index - list.Count + 1]);
+            _latestFrameChunks[index] = chunk;
 
-            list[index] = chunk;
-
-            // когда все чанки получены — собрать
-            if (list.Count == total && list.All(c => c != null))
+            if (_latestFrameChunks.Count == _latestTotalChunks)
             {
-                int totalBytes = list.Sum(c => c.Length);
+                int totalBytes = _latestFrameChunks.Values.Sum(c => c.Length);
                 byte[] full = new byte[totalBytes];
                 int pos = 0;
-                foreach (var c in list)
+                for (int i = 0; i < _latestTotalChunks; i++)
                 {
+                    if (!_latestFrameChunks.TryGetValue(i, out var c))
+                        return;
+
                     Buffer.BlockCopy(c, 0, full, pos, c.Length);
                     pos += c.Length;
                 }
 
-                _chunkBuffer.Remove(_currentFrameId);
-
                 byte[] raw = lz4Compress ? LZ4Pickler.Unpickle(full) : full;
-                ApplyImage(raw, width, height);
+                ApplyImage(raw, _latestWidth, _latestHeight);
 
-                _currentFrameId++;
+                _latestFrameChunks = null;
             }
         }
         
@@ -404,6 +402,11 @@ namespace Code.Network
             if (!_recvTex.LoadImage(bytes, false))
                 return;
             
+            float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
+            if (_currentReceiveInterval < wait)
+                return;
+
+            _currentReceiveInterval = 0f;
 
             targetImage.texture = _recvTex;
             ImageUtility.AdjustAspect(targetImage);
