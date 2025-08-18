@@ -270,10 +270,10 @@ namespace Code.Player
             }
             else
             {
-                if (CanMove || !FirstPersonView)
-                    CameraRotation();
-                else
+                if (!CanMove && FirstPersonView)
                     ResetFirstPersonViewRotation();
+                else
+                    CameraRotation();
             }
         }
 
@@ -365,8 +365,8 @@ namespace Code.Player
 
             // 2) гистерезис FPV
             bool wasFPV = FirstPersonView;
-            if (cameraDistance < 0.001f) smoothedFirstPerson = true;
-            else if (cameraDistance > 0.002f) smoothedFirstPerson = false;
+            if (cameraDistance < 0.01f) smoothedFirstPerson = true;
+            else if (cameraDistance > 0.02f) smoothedFirstPerson = false;
 
             bool enteringNow = (!wasFPV && smoothedFirstPerson);
             FirstPersonView = smoothedFirstPerson;
@@ -532,8 +532,7 @@ namespace Code.Player
             cinemachineTargetYaw   = ClampAngle(cinemachineTargetYaw, float.MinValue, float.MaxValue);
             cinemachineTargetPitch = ClampAngle(cinemachineTargetPitch, bottomClamp, topClamp);
 
-            cinemachineCameraTarget.transform.rotation =
-                Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride, cinemachineTargetYaw, 0f);
+            cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride, cinemachineTargetYaw, 0f);
         }
 
 
@@ -589,42 +588,24 @@ namespace Code.Player
         private void OnAnimatorIK(int layerIndex)
         {
             if (animator == null) return;
-
-            if (SuppressLookAtIK || Time.time < _ikSuppressUntil || !FirstPersonView)
-            {
-                currentIkWeight = 0f;
-                _syncWeight = 0f;
-
-                var head = animator.GetBoneTransform(HumanBodyBones.Head);
-                var fwd  = (head != null ? head.forward : transform.forward);
-                var look = (head != null ? head.position : transform.position) + fwd * 2f;
-
-                animator.SetLookAtWeight(0f, 0f, 0f, 0f, lookAtClampWeight);
-                animator.SetLookAtPosition(look);
-
-                // синхронизируем нулевой вес (RunLocally = true)
-                if (IsOwner) SyncIKServerRpc(transform.position + transform.forward * 2f, 0f);
-                return;
-            }
-            
             if (IsOwner)
             {
+                if (SuppressLookAtIK) return;
                 float targetWeight = FirstPersonView ? 1f : 0f;
-                currentIkWeight = Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
+                currentIkWeight =
+                    Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
 
-                if (currentIkWeight > 0.01f && cinemachineCameraTarget != null)
+                if (cinemachineCameraTarget != null)
                 {
-                    Transform headBone = animator.GetBoneTransform(HumanBodyBones.Head);
-                    if (headBone != null)
-                    {
-                        Vector3 headWorldPos = headBone.position + cinemachineCameraTarget.transform.forward * 10f;
-                        currentLookAtPos = Vector3.Lerp(currentLookAtPos, headWorldPos, Time.deltaTime * lookAtSmoothSpeed);
-                    }
+                    Vector3 headWorldPos = cinemachineCameraTarget.transform.position +
+                                           cinemachineCameraTarget.transform.forward * 2f;
+                    currentLookAtPos = Vector3.Lerp(currentLookAtPos, headWorldPos,
+                        Time.deltaTime * lookAtSmoothSpeed);
                 }
 
                 SyncIKServerRpc(currentLookAtPos, currentIkWeight);
-
-                animator.SetLookAtWeight(currentIkWeight, 0f, currentIkWeight, currentIkWeight, lookAtClampWeight);
+                animator.SetLookAtWeight(currentIkWeight, currentIkWeight, currentIkWeight, currentIkWeight,
+                    lookAtClampWeight);
                 animator.SetLookAtPosition(currentLookAtPos);
             }
             else

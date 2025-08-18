@@ -355,7 +355,7 @@ namespace Code.InteractionSystem
 
             if (anim != null)
                 yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).IsName(STAND_STATE));
-
+            
             if (anim != null) anim.applyRootMotion = false;
             if (cc != null) cc.enabled = true;
             move.CanMove = true;
@@ -366,8 +366,8 @@ namespace Code.InteractionSystem
 
             // после восстановления контроллера и движения
             move.SnapAimToCurrentCamera(); // выравниваем таргеты под текущую камеру
-            move.BeginIkGrace(0.2f); // 200 мс без IK, чтобы камера «встала» стабильно
-
+            move.BeginIkGrace(0.2f); // 200ms без IK, чтобы камера «встала» стабильно
+            
             // завершаем флаги RMB-режима
             if (allowRotateCamera)
             {
