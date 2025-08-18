@@ -1,6 +1,9 @@
 using Code.InteractionSystem;
+using Code.Network.HostMigration;
 using Code.Utility;
+using FishNet.Broadcast;
 using FishNet.Component.Observing;
+using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -22,6 +25,8 @@ namespace Code.Network
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
+        
+        private static int _lastSavedSlotId;//TODO
 
         private void OnEnable()
         {
@@ -31,6 +36,12 @@ namespace Code.Network
         private void OnDisable()
         {
             StreamSlotId.OnChange -= OnStreamSlotIdChange;
+        }
+
+        public override void OnOwnershipServer(NetworkConnection prevOwner)
+        {
+            base.OnOwnershipServer(prevOwner);
+            SetStream(_lastSavedSlotId);//TODO
         }
 
         public void RequestStream(int slotId) => SetStream_ServerRpc(slotId);
@@ -44,10 +55,14 @@ namespace Code.Network
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SetStream_ServerRpc(int slotId)
+        public void SetStream_ServerRpc(int slotId) => SetStream(slotId);
+        
+        public void SetStream(int slotId)
         {
             ServerReset();
             StreamSlotId.Value = slotId;
+            _lastSavedSlotId = slotId;
+            
             _currentStreamOnServer = GetCurrentStream(slotId);
             SetConditionsEnable(false);
         }
@@ -96,7 +111,6 @@ namespace Code.Network
             if (_currentStreamOnServer == null)
                 return;
 
-            Debug.Log($"[Server] SetConditionsEnable {enable}");
             var observerCondition =
                 _currentStreamOnServer.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
             observerCondition.SetIsEnabled(enable);
@@ -104,5 +118,10 @@ namespace Code.Network
         
         private NetworkImageStream GetCurrentStream(int id) =>
             SlotMachineInteractable.FindById(id)?.NetworkImageStream;
+    }
+
+    public struct MainScreenControllerData: IBroadcast
+    {
+        public int currentStreamSlotId;
     }
 }

@@ -227,7 +227,7 @@ namespace Code.UI
             
             if (newId == thisId)
                 OnStartStreaming();
-            else if(newId != thisId && prevId == thisId)
+            else if(newId != thisId /*&& prevId == thisId*/) //TODO
                 OnEndStreaming();
         }
 
