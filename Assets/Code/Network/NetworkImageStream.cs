@@ -302,11 +302,25 @@ namespace Code.Network
             RelayFrameChunk(chunk, width, height, index, total);
         }
 
-        [ObserversRpc(ExcludeOwner = true, BufferLast = false)]
+        [ObserversRpc(ExcludeOwner = true)]
         private void RelayFrameChunk(byte[] chunk, int width, int height, int index, int total, Channel channel = Channel.Unreliable)
         {
             if (IsOwner) return;
 
+            if (Owner == null || OwnerId == -1)
+            {
+                ShowIdleTexture();
+                return;
+            }
+            
+            targetImage.gameObject.SetActive(true);
+            
+            float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
+            if (_currentReceiveInterval < wait)
+                return;
+
+            _currentReceiveInterval = 0f;
+            
             // накапливаем чанки
             if (!_chunkBuffer.TryGetValue(_currentFrameId, out List<byte[]> list))
             {
@@ -389,6 +403,7 @@ namespace Code.Network
 
             if (!_recvTex.LoadImage(bytes, false))
                 return;
+            
 
             targetImage.texture = _recvTex;
             ImageUtility.AdjustAspect(targetImage);
