@@ -24,6 +24,8 @@ namespace Code.Player
         private Cinemachine3rdPersonFollow virtualCamera;
         private PlayerInput input;
 
+        protected bool IsBusy = false;
+
         private void Awake()
         {
             var vcam = FindObjectOfType<CinemachineVirtualCamera>();
@@ -46,16 +48,21 @@ namespace Code.Player
                 bool cursorVisible = CursorManager.Instance != null && CursorManager.Instance.IsVisible();
                 if (_hovered != null && input != null && input.InteractDown && !cursorVisible && !_hovered.IsBusy)
                 {
+                    IsBusy = true;
+                    _active.InteractCallback += OnStartInteractCallback;
+                    if (_hovered.ManualRelease)
+                        _active = _hovered;
+                    
                     _hovered.RequestInteract();
-                    if (_hovered.ManualRelease) _active = _hovered;
                 }
             }
             else
             {
                 if (input != null && input.InteractDown && !_active.IsBusy)
                 {
+                    IsBusy = true;
+                    _active.InteractCallback += OnEndInteractCallback;
                     _active.RequestEndInteract();
-                    _active = null;
                 }
             }
 
@@ -125,6 +132,25 @@ namespace Code.Player
             if (_active != null) InteractionUIHint.Instance.ShowPrompt(_active.InteractionPrompt);
             else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(_hovered.InteractionPrompt);
             else InteractionUIHint.Instance.HidePrompt();
+        }
+
+        private void OnStartInteractCallback(bool success)
+        {
+            IsBusy = false;
+            _active.InteractCallback += OnStartInteractCallback;
+            
+            if(success)
+                if (_hovered.ManualRelease)
+                    _active = _hovered;
+        }
+
+        private void OnEndInteractCallback(bool success)
+        {
+            IsBusy = false;
+            _active.InteractCallback -= OnEndInteractCallback;
+            
+            if(success)
+                _active = null;
         }
 
         #region IMigratable
