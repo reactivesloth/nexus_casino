@@ -35075,17 +35075,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc42d75ff30d4b67ba9bcd9478c04cb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 1508772786}
-  _networkObjectCache: {fileID: 1508772786}
-  _interactionDistance: 3
-  outlineGameObjects: []
-  _interactableEnabled: 1
-  _manualRelease: 0
-  doorTransform: {fileID: 2024261743}
-  ClosedRot: {x: 0, y: 0, z: 0}
-  OpenRot: {x: 0, y: 0, z: 90}
-  animationSpeed: 0.75
 --- !u!114 &1222496764
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -38844,17 +38833,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cc42d75ff30d4b67ba9bcd9478c04cb5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 1508772786}
-  _networkObjectCache: {fileID: 1508772786}
-  _interactionDistance: 3
-  outlineGameObjects: []
-  _interactableEnabled: 1
-  _manualRelease: 0
-  doorTransform: {fileID: 329022830}
-  ClosedRot: {x: 0, y: 0, z: 0}
-  OpenRot: {x: 0, y: 0, z: -90}
-  animationSpeed: 0.75
 --- !u!4 &1508772788
 Transform:
   m_ObjectHideFlags: 0
@@ -42007,6 +41985,7 @@ GameObject:
   - component: {fileID: 1737779941}
   - component: {fileID: 1737779940}
   - component: {fileID: 1737779944}
+  - component: {fileID: 1737779945}
   m_Layer: 0
   m_Name: EventSystem
   m_TagString: Untagged
@@ -42027,9 +42006,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_SendPointerHoverToParent: 1
-  controlMethod: 0
-  usedHand: 1
-  mainEventCamera: {fileID: 0}
+  controlMethod: 3
+  usedHand: 0
+  mainEventCamera: {fileID: 8944336656349189699}
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 32
@@ -42046,7 +42025,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1737779939}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 01614664b831546d2ae94a42149d80ac, type: 3}
   m_Name: 
@@ -42079,7 +42058,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1737779939}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 76c392e42b5098c458856cdf6ecaaaa1, type: 3}
+  m_Script: {fileID: 11500000, guid: 651aa76e8cc8486469816be09993892d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_FirstSelected: {fileID: 0}
@@ -42113,6 +42092,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enableComponent: {fileID: 1737779941}
+--- !u!114 &1737779945
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1737779939}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 796f82ddd1c04f679d15c40335009cf2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  yourRemoteTransform: {fileID: 0}
+  mainCamera: {fileID: 0}
 --- !u!1 &1740049701
 GameObject:
   m_ObjectHideFlags: 0

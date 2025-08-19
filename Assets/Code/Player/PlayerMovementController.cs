@@ -280,8 +280,8 @@ namespace Code.Player
         private void SitCameraRotation()
         {
             if (input == null || cinemachineCameraTarget == null) return;
-
-            var lookInput = (LookCameraLimitRotationRKM && !input.IsRMBDown) ? Vector2.zero : input.Look;
+            
+            var lookInput = LookCameraLimitRotationRKM && !input.IsRMBDown ? Vector2.zero : input.Look;
 
             if (lookInput.sqrMagnitude >= Threshold)
             {

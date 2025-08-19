@@ -1001,6 +1001,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Look Touchpad
       objectReference: {fileID: 0}
+    - target: {fileID: 147136, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 11449766, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
       propertyPath: m_Color.a
       value: 0
@@ -1019,10 +1023,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
       propertyPath: displayBase
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
       propertyPath: alphaEnabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
+      propertyPath: displayInput
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
@@ -1036,10 +1044,6 @@ PrefabInstance:
     - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
       propertyPath: ySensitivity
       value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
-      propertyPath: useTouchInput
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 11471834, guid: 03f3217eeba05de4ebb595b1823b293e, type: 3}
       propertyPath: touchSizeWidth
@@ -1582,7 +1586,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 114398322757601970, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}
       propertyPath: uniqueId
-      value: 4e7a7194
+      value: d6fb380e
       objectReference: {fileID: 0}
     - target: {fileID: 114398322757601970, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}
       propertyPath: joystickName

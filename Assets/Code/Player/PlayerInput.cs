@@ -122,7 +122,11 @@ public class PlayerInput : MonoBehaviour
                 break;
         }
         
-        IsUsingMobileFallback = ForceMobile || Application.isMobilePlatform;
+#if (UNITY_IOS || UNITY_ANDROID) && !UNITY_EDITOR
+        IsUsingMobileFallback = true;
+#else
+        IsUsingMobileFallback = ForceMobile;
+#endif
 
         if (mobileCanvas != null && IsUsingMobileFallback != mobileCanvas.activeSelf)
             mobileCanvas.SetActive(IsUsingMobileFallback);
@@ -187,14 +191,14 @@ public class PlayerInput : MonoBehaviour
     public bool SprintHeld=> IsUsingMobileFallback && SprintButton != null ? SprintButton.GetButton() : !IsBusy && _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
     public bool CameraSwitchDown => IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : !IsBusy && _player.CameraSwitch is { triggered: true };
     public bool InteractDown => IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true };
-    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButtonDown() : _player.Pause is { triggered: true };
+    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton() : _player.Pause is { triggered: true };
 
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
 
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
-    public bool IsRMB      => !IsBusy && _player.RMB is { triggered: true };
-    public bool IsRMBDown  => !IsBusy && (_player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
-    public bool ForceCursorHeld => (_player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f);
+    public bool IsRMB      => !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 :  _player.RMB is { triggered: true });
+    public bool IsRMBDown  => !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
+    public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
 
     public bool IsSlotsFullscreen => slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => slotsStreamButton.GetButtonDown();
