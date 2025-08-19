@@ -139,8 +139,6 @@ namespace Code.Player
 
         private void OnStartInteractCallback(bool success)
         {
-            Debug.Log($"Starting interaction {success}");
-
             IsBusy = false;
             _hovered.InteractCallback -= OnStartInteractCallback;
 
@@ -151,8 +149,6 @@ namespace Code.Player
 
         private void OnEndInteractCallback(bool success)
         {
-            Debug.Log($"End interaction {success}");
-            
             IsBusy = false;
             _active.InteractCallback -= OnEndInteractCallback;
 
