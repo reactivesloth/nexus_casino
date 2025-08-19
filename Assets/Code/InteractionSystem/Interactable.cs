@@ -94,7 +94,11 @@ namespace Code.InteractionSystem
 
         public void RequestEndInteract()
         {
-            if (!_interactableEnabled || !_isOccupied.Value || !_manualRelease) return;
+            if (!_interactableEnabled || !_isOccupied.Value || !_manualRelease)
+            {
+                InteractCallback?.Invoke(false);
+                return;
+            }
             Server_HandleEndInteract(ClientManager.Connection);
         }
 
@@ -124,9 +128,14 @@ namespace Code.InteractionSystem
         [ServerRpc(RequireOwnership = false)]
         private void Server_HandleEndInteract(NetworkConnection conn)
         {
-            if (!_manualRelease || !_isOccupied.Value) return;
+            if (!_manualRelease || !_isOccupied.Value)
+            {
+                OnEndInteractionCallbackFromServer(conn, false);
+                return;
+            }
             OnEndInteract(conn);
             _isOccupied.Value = false;
+            OnEndInteractionCallbackFromServer(conn, true);
         }
 
         [Server]
@@ -155,6 +164,15 @@ namespace Code.InteractionSystem
             OnInteractionCallbackFromServer(success);
 
         protected virtual void OnInteractionCallbackFromServer(bool success)
+        {
+            InteractCallback?.Invoke(success);
+        }
+        
+        [TargetRpc]
+        private void OnEndInteractionCallbackFromServer(NetworkConnection target, bool success) =>
+            OnEndInteractionCallbackFromServer(success);
+
+        protected virtual void OnEndInteractionCallbackFromServer(bool success)
         {
             InteractCallback?.Invoke(success);
         }

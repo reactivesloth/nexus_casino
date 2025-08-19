@@ -13,8 +13,7 @@ namespace Code.Player
 {
     public class PlayerInteraction : NetworkBehaviour, IMigratable<CharacterInteractableMigrateData>
     {
-        [Header("Detection")]
-        [SerializeField] private LayerMask interactableMask;
+        [Header("Detection")] [SerializeField] private LayerMask interactableMask;
         [SerializeField] private float detectionDistance = 3f;
 
         private Interactable _hovered;
@@ -41,31 +40,30 @@ namespace Code.Player
         private void Update()
         {
             if (!IsOwner) return;
-
+            
             if (_active == null)
             {
                 UpdateHover();
                 bool cursorVisible = CursorManager.Instance != null && CursorManager.Instance.IsVisible();
-                if (_hovered != null && input != null && input.InteractDown && !cursorVisible && !_hovered.IsBusy)
+                if (_hovered != null && input != null && input.InteractDown && !cursorVisible && !_hovered.IsBusy && !IsBusy)
                 {
                     IsBusy = true;
-                    _active.InteractCallback += OnStartInteractCallback;
-                    if (_hovered.ManualRelease)
-                        _active = _hovered;
-                    
+
+                    _hovered.InteractCallback += OnStartInteractCallback;
                     _hovered.RequestInteract();
                 }
             }
             else
             {
-                if (input != null && input.InteractDown && !_active.IsBusy)
+                if (input != null && input.InteractDown && !_active.IsBusy && !IsBusy)
                 {
                     IsBusy = true;
+
                     _active.InteractCallback += OnEndInteractCallback;
                     _active.RequestEndInteract();
                 }
             }
-
+            
             UpdateOutline();
             UpdateUI();
         }
@@ -73,7 +71,11 @@ namespace Code.Player
         private void UpdateHover()
         {
             var cam = Camera.main;
-            if (cam == null) { _hovered = null; return; }
+            if (cam == null)
+            {
+                _hovered = null;
+                return;
+            }
 
             float extra = (virtualCamera != null) ? virtualCamera.CameraDistance : 0f;
             Ray ray = new Ray(cam.transform.position, cam.transform.forward);
@@ -86,6 +88,7 @@ namespace Code.Player
                     return;
                 }
             }
+
             _hovered = null;
         }
 
@@ -136,20 +139,24 @@ namespace Code.Player
 
         private void OnStartInteractCallback(bool success)
         {
+            Debug.Log($"Starting interaction {success}");
+
             IsBusy = false;
-            _active.InteractCallback += OnStartInteractCallback;
-            
-            if(success)
+            _hovered.InteractCallback -= OnStartInteractCallback;
+
+            if (success)
                 if (_hovered.ManualRelease)
                     _active = _hovered;
         }
 
         private void OnEndInteractCallback(bool success)
         {
+            Debug.Log($"End interaction {success}");
+            
             IsBusy = false;
             _active.InteractCallback -= OnEndInteractCallback;
-            
-            if(success)
+
+            if (success)
                 _active = null;
         }
 
@@ -159,14 +166,14 @@ namespace Code.Player
         {
             if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
                 return;
-            
+
             var sceneObject = SceneObject.GetObjectById(data.activeId);
             if (!sceneObject) return;
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
-            
-            if(interactable.IsOccupied)
+
+            if (interactable.IsOccupied)
                 return;
-            
+
             interactable.ServerForceInteract(Owner);
             SetInteractableOnMigrate(Owner, data);
         }
