@@ -1603,6 +1603,7 @@ namespace TankAndHealerStudioAssets
 
 					// Apply the full alpha.
 					chatBoxCanvasGroup.alpha = 1.0f;
+					chatBoxCanvasGroup.blocksRaycasts = true;
 				}
 			}
 			// Else if the chat box needs to be faded out...
@@ -1623,6 +1624,7 @@ namespace TankAndHealerStudioAssets
 
 					// Apply the zero alpha.
 					chatBoxCanvasGroup.alpha = toggledAlpha;
+					chatBoxCanvasGroup.blocksRaycasts = false;
 				}
 			}
 		}
@@ -3062,6 +3064,7 @@ namespace TankAndHealerStudioAssets
 			{
 				// Set the alpha of the canvas group to 1.
 				chatBoxCanvasGroup.alpha = 1.0f;
+				chatBoxCanvasGroup.blocksRaycasts = true;
 
 				// Max the lerp value and set toggle out to false since the chat has just been enabled.
 				fadeLerpValue = 1.0f;
@@ -3135,6 +3138,7 @@ namespace TankAndHealerStudioAssets
 				{
 					// Set the alpha to the users toggled alpha setting.
 					chatBoxCanvasGroup.alpha = toggledAlpha;
+					chatBoxCanvasGroup.blocksRaycasts = false;
 
 					// Reset the lerp value and set toggle in to false since the chat has just been disabled.
 					fadeLerpValue = 0.0f;
