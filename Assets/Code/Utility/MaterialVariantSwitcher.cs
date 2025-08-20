@@ -7,11 +7,13 @@ using Code.Utility;
 public sealed class MobileMaterialSwitcher : MonoBehaviour
 {
     [Tooltip("Resources/GeneratedMaterials/DesktopMaterials")]
-    public string highQualityPath   = "GeneratedMaterials/DesktopMaterials";
+    public string highQualityPath    = "GeneratedMaterials/DesktopMaterials";
     [Tooltip("Resources/GeneratedMaterials/BakedMaterials")]
-    public string mediumQualityPath = "GeneratedMaterials/BakedMaterials";
+    public string mediumQualityPath  = "GeneratedMaterials/BakedMaterials";
     [Tooltip("Resources/GeneratedMaterials/MobileMaterials")]
-    public string lowQualityPath    = "GeneratedMaterials/MobileMaterials";
+    public string lowQualityPath     = "GeneratedMaterials/MobileMaterials";
+    [Tooltip("Resources/GeneratedMaterials/UltraLowMaterials")]          // ← NEW
+    public string ultraLowQualityPath= "GeneratedMaterials/UltraLowMaterials"; // ← NEW
 
     [Tooltip("Принудительный низкий режим (для тестов)")]
     public bool forceLowQuality;
@@ -30,11 +32,10 @@ public sealed class MobileMaterialSwitcher : MonoBehaviour
         CacheOriginals();
         SceneManager.sceneLoaded += OnSceneLoaded;
 
-        TrySubscribeToSettingsManager();         // подпишемся, если уже есть Instance
+        TrySubscribeToSettingsManager();
         if (!_subscribedToSettings && !_waitingForSettings)
-            StartCoroutine(WaitAndSubscribe());  // иначе — дождёмся появления
+            StartCoroutine(WaitAndSubscribe());
 
-        // Применяем сразу (на случай старта в середине сцены)
         ApplyByLevel(CurrentQualityLevel());
     }
 
@@ -57,14 +58,12 @@ public sealed class MobileMaterialSwitcher : MonoBehaviour
     private System.Collections.IEnumerator WaitAndSubscribe()
     {
         _waitingForSettings = true;
-        // ждём, пока SettingsManager поднимется (или сменится сцена)
         while (SettingsManager.Instance == null)
             yield return null;
 
         TrySubscribeToSettingsManager();
         _waitingForSettings = false;
 
-        // сразу применим после подписки (полезно при переходах)
         ApplyByLevel(CurrentQualityLevel());
     }
 
@@ -107,11 +106,12 @@ public sealed class MobileMaterialSwitcher : MonoBehaviour
 
         if (forceLowQuality) { ApplyVariant(mediumQualityPath, "_BakedLit"); return; }
 
-        // Подстрой под свою шкалу качества:
-        //   0 → baked, 1 → mobile, 2+ → desktop
-        if (level <= 0)      ApplyVariant(mediumQualityPath, "_BakedLit");
-        else if (level == 1) ApplyVariant(lowQualityPath,    "_Mobile");
-        else                 ApplyVariant(highQualityPath,   "");
+        // Новый маппинг:
+        // 0 → UltraLow (Unlit), 1 → Baked (BakedLit), 2 → Mobile (SimpleLit), 3+ → Desktop (Lit)
+        if (level <= 0)       ApplyVariant(ultraLowQualityPath, "_Unlit");
+        else if (level == 1)  ApplyVariant(mediumQualityPath,   "_BakedLit");
+        else if (level == 2)  ApplyVariant(lowQualityPath,      "_Mobile");
+        else                  ApplyVariant(highQualityPath,     "");
     }
 
     private void ApplyVariant(string basePath, string suffix)
@@ -155,7 +155,6 @@ public sealed class MobileMaterialSwitcher : MonoBehaviour
     {
         _originals.Clear();
 
-        // Соберём все Renderer из загруженных сцен
         var renderers = new List<Renderer>(256);
         int sc = SceneManager.sceneCount;
         for (int i = 0; i < sc; i++)
@@ -179,6 +178,5 @@ public sealed class MobileMaterialSwitcher : MonoBehaviour
         if (verboseLogs) Debug.Log($"[MobileMaterialSwitcher] Cached {_originals.Count} renderers");
     }
 
-    /// <summary>Можно вызвать вручную для форс-применения.</summary>
     public void RefreshNow() => ApplyByLevel(CurrentQualityLevel());
 }

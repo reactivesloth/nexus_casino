@@ -8,12 +8,14 @@ public static class MaterialVariantGenerator
 {
     private const string k_GeneratedFolder = "Assets/Resources/GeneratedMaterials";
     private const string k_DesktopFolder   = k_GeneratedFolder + "/DesktopMaterials";
-    private const string k_MobileFolder    = k_GeneratedFolder + "/MobileMaterials";   // Simple Lit
-    private const string k_BakedFolder     = k_GeneratedFolder + "/BakedMaterials";    // Baked Lit
+    private const string k_MobileFolder    = k_GeneratedFolder + "/MobileMaterials";    // Simple Lit
+    private const string k_BakedFolder     = k_GeneratedFolder + "/BakedMaterials";     // Baked Lit
+    private const string k_UltraLowFolder  = k_GeneratedFolder + "/UltraLowMaterials";  // Unlit  ← NEW
 
     private const string k_LitShader     = "Universal Render Pipeline/Lit";
     private const string k_SimpleLit     = "Universal Render Pipeline/Simple Lit";
     private const string k_BakedShader   = "Universal Render Pipeline/Baked Lit";
+    private const string k_UnlitShader   = "Universal Render Pipeline/Unlit";           // ← NEW
 
     [MenuItem("Tools/Materials/Generate Variants (All Quality Levels)")]
     private static void GenerateMenu()
@@ -37,7 +39,7 @@ public static class MaterialVariantGenerator
         }
 
         if (!EditorUtility.DisplayDialog("Удалить сгенерированные материалы?",
-                $"Будет удалено содержимое:\n{k_DesktopFolder}\n{k_MobileFolder}\n{k_BakedFolder}", "Удалить", "Отмена"))
+                $"Будет удалено содержимое:\n{k_DesktopFolder}\n{k_MobileFolder}\n{k_BakedFolder}\n{k_UltraLowFolder}", "Удалить", "Отмена"))
             return;
 
         void SafeDeleteFolder(string path)
@@ -49,6 +51,7 @@ public static class MaterialVariantGenerator
         SafeDeleteFolder(k_DesktopFolder);
         SafeDeleteFolder(k_MobileFolder);
         SafeDeleteFolder(k_BakedFolder);
+        SafeDeleteFolder(k_UltraLowFolder); // ← NEW
         AssetDatabase.Refresh();
         EditorUtility.DisplayDialog("Готово", "Генерированные варианты удалены.", "OK");
     }
@@ -59,6 +62,7 @@ public static class MaterialVariantGenerator
         EnsureFolderExists(k_DesktopFolder);
         EnsureFolderExists(k_MobileFolder);
         EnsureFolderExists(k_BakedFolder);
+        EnsureFolderExists(k_UltraLowFolder); // ← NEW
 
         var guids = AssetDatabase.FindAssets("t:Material");
         int total = guids.Length;
@@ -66,20 +70,22 @@ public static class MaterialVariantGenerator
         int createdHigh = 0, updatedHigh = 0, skippedHigh = 0;
         int createdMed  = 0, updatedMed  = 0, skippedMed  = 0;
         int createdLow  = 0, updatedLow  = 0, skippedLow  = 0;
+        int createdUltra= 0, updatedUltra= 0, skippedUltra= 0; // ← NEW
 
-        var litShader     = Shader.Find(k_LitShader);
-        var simpleLit     = Shader.Find(k_SimpleLit);
-        var bakedLit      = Shader.Find(k_BakedShader);
+        var litShader   = Shader.Find(k_LitShader);
+        var simpleLit   = Shader.Find(k_SimpleLit);
+        var bakedLit    = Shader.Find(k_BakedShader);
+        var unlit       = Shader.Find(k_UnlitShader); // ← NEW
 
-        if (litShader == null || simpleLit == null || bakedLit == null)
+        if (litShader == null || simpleLit == null || bakedLit == null || unlit == null)
         {
             EditorUtility.DisplayDialog("Ошибка",
-                "Не найдены один или несколько шейдеров URP:\n- " + k_LitShader + "\n- " + k_SimpleLit + "\n- " + k_BakedShader,
+                "Не найдены один или несколько шейдеров URP:\n- " +
+                k_LitShader + "\n- " + k_SimpleLit + "\n- " + k_BakedShader + "\n- " + k_UnlitShader,
                 "OK");
             return;
         }
 
-        // Защита: не обрабатывать материалы, которые уже лежат в GeneratedMaterials
         bool IsInGenerated(string path) => path.StartsWith(k_GeneratedFolder);
 
         try
@@ -180,6 +186,33 @@ public static class MaterialVariantGenerator
                         createdLow++;
                     }
                 }
+
+                // === UltraLow (Unlit) ===  ← NEW
+                {
+                    string file = $"{origMat.name}_Unlit.mat";
+                    string outPath = $"{k_UltraLowFolder}/{file}";
+                    var dst = AssetDatabase.LoadAssetAtPath<Material>(outPath);
+
+                    if (dst != null)
+                    {
+                        if (addNewOnly) skippedUltra++;
+                        else
+                        {
+                            ApplyBaseCopy(dst, unlit, origMat);
+                            SanitizeForShader(dst, k_UnlitShader);
+                            EditorUtility.SetDirty(dst);
+                            updatedUltra++;
+                        }
+                    }
+                    else
+                    {
+                        var newMat = new Material(unlit);
+                        ApplyBaseCopy(newMat, unlit, origMat);
+                        SanitizeForShader(newMat, k_UnlitShader);
+                        AssetDatabase.CreateAsset(newMat, outPath);
+                        createdUltra++;
+                    }
+                }
             }
         }
         finally
@@ -190,9 +223,10 @@ public static class MaterialVariantGenerator
         AssetDatabase.SaveAssets();
 
         string summary =
-            $"High   (Lit)       → создано: {createdHigh}, обновлено: {updatedHigh}, пропущено: {skippedHigh}\n" +
-            $"Medium (SimpleLit) → создано: {createdMed},  обновлено: {updatedMed},  пропущено: {skippedMed}\n" +
-            $"Low    (BakedLit)  → создано: {createdLow},  обновлено: {updatedLow},  пропущено: {skippedLow}";
+            $"High     (Lit)        → создано: {createdHigh}, обновлено: {updatedHigh}, пропущено: {skippedHigh}\n" +
+            $"Medium   (SimpleLit)  → создано: {createdMed},  обновлено: {updatedMed},  пропущено: {skippedMed}\n" +
+            $"Low      (BakedLit)   → создано: {createdLow},  обновлено: {updatedLow},  пропущено: {skippedLow}\n" +
+            $"UltraLow (Unlit)      → создано: {createdUltra},обновлено: {updatedUltra},пропущено: {skippedUltra}";
         Debug.Log($"[MobileMaterialGenerator]\n{summary}");
         EditorUtility.DisplayDialog("Генерация завершена", summary, "OK");
     }
@@ -210,27 +244,20 @@ public static class MaterialVariantGenerator
         AssetDatabase.CreateFolder(parent, name);
     }
 
-    /// <summary>
-    /// Базовая копия общих свойств: очереди, рендер-настройки, ключевые слова и shared-текстуры.
-    /// </summary>
     private static void ApplyBaseCopy(Material dst, Shader targetShader, Material srcLit)
     {
         if (dst == null || srcLit == null) return;
 
         dst.shader = targetShader;
 
-        // Очередь рендера и enableInstancing
         dst.renderQueue = srcLit.renderQueue;
         dst.enableInstancing = srcLit.enableInstancing;
         dst.doubleSidedGI = srcLit.doubleSidedGI;
 
-        // Копия совпадающих свойств (Unity сам игнорирует несовпадающие имена)
         dst.CopyPropertiesFromMaterial(srcLit);
 
-        // Ключевые слова лучше скопировать, но лишние не критичны — шейдер их проигнорирует
         dst.shaderKeywords = srcLit.shaderKeywords;
 
-        // Попытка подтянуть текстуры по стандартным именам
         CopyTextureIfExists(srcLit, dst, "_BaseMap");
         CopyTextureIfExists(srcLit, dst, "_MainTex");
         CopyTextureIfExists(srcLit, dst, "_BumpMap");
@@ -241,49 +268,32 @@ public static class MaterialVariantGenerator
         CopyTextureIfExists(srcLit, dst, "_OcclusionMap");
         CopyTextureIfExists(srcLit, dst, "_DetailAlbedoMap");
 
-        // Базовый цвет пробуем подтянуть
         CopyColorIfExists(srcLit, dst, "_BaseColor");
         CopyColorIfExists(srcLit, dst, "_Color");
         CopyColorIfExists(srcLit, dst, "_EmissionColor");
     }
 
-    /// <summary>
-    /// Аккуратно приводим материал к целевому шейдеру: выставляем свойства только если они существуют.
-    /// Никаких ShaderUtils.UpdateMaterial (во избежание ошибок типа '_SmoothnessSource' etc).
-    /// </summary>
     private static void SanitizeForShader(Material m, string shaderName)
     {
         if (m == null) return;
 
-        // Общие безопасные значения
-        TrySetFloat(m, "_Surface", m.HasProperty("_Surface") ? m.GetFloat("_Surface") : 0f); // Opaque
+        TrySetFloat(m, "_Surface", m.HasProperty("_Surface") ? m.GetFloat("_Surface") : 0f);
         TrySetFloat(m, "_Cutoff",  m.HasProperty("_Cutoff")  ? m.GetFloat("_Cutoff")  : 0.5f);
 
-        // Smoothness (в SimpleLit/BakedLit может не быть источника smoothness)
-        if (m.HasProperty("_Smoothness")) { /* оставляем как есть после CopyProperties*/ }
-        // Metallic
-        if (m.HasProperty("_Metallic")) { /* оставляем */ }
-
-        // Normal map toggle
         if (m.HasProperty("_BumpMap"))
         {
             var nm = m.GetTexture("_BumpMap");
             TrySetFloat(m, "_BumpScale", nm != null ? m.GetFloat("_BumpScale") : 0f);
         }
 
-        // Emission safety
         if (m.HasProperty("_EmissionColor"))
         {
             Color ec = m.GetColor("_EmissionColor");
-            // если эмиссия чёрная — выключим ключ
             if (ec.maxColorComponent <= 0.0001f)
                 m.DisableKeyword("_EMISSION");
             else
                 m.EnableKeyword("_EMISSION");
         }
-
-        // У URP иногда остаются странные ключи после CopyProperties — это не критично, но можно подстраховаться.
-        // Здесь специально не вызываем ShaderUtils.UpdateMaterial во избежание Editor-исключений.
     }
 
     private static void CopyTextureIfExists(Material src, Material dst, string name)
