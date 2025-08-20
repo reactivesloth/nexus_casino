@@ -1226,6 +1226,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1
   terminalVelocity: 53
+  spawnOnSawedPosition: 1
   cinemachineCameraTarget: {fileID: 7731021001863789818}
   hideForFirstPersonViewLocal:
   - {fileID: 8021267353867592598}
@@ -1263,6 +1264,7 @@ MonoBehaviour:
   cinemachineTargetPitch: 11.499929
   sitBaseYaw: -30
   sitBasePitch: 30
+  spawnPositionUpdateTime: 2
 --- !u!114 &3901444026938387538
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1337,12 +1339,12 @@ MonoBehaviour:
   _componentIndexCache: 1
   _addedNetworkObject: {fileID: 3901444026938387538}
   _networkObjectCache: {fileID: 3901444026938387538}
-  _componentConfiguration: 1
+  _componentConfiguration: 0
   _synchronizeParent: 0
   _packing:
     Position: 1
     Rotation: 1
-    Scale: 0
+    Scale: 1
   _interpolation: 2
   _extrapolation: 2
   _enableTeleport: 0
