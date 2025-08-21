@@ -15,8 +15,9 @@ namespace Code.Player
     {
         [Header("Detection")] [SerializeField] private LayerMask interactableMask;
         [SerializeField] private float detectionDistance = 3f;
-
+        
         private Interactable _hovered;
+        private Interactable _selected;
         private Interactable _active;
         private GameObject[] outlineGameObjects;
 
@@ -49,8 +50,9 @@ namespace Code.Player
                 {
                     IsBusy = true;
 
-                    _hovered.InteractCallback += OnStartInteractCallback;
-                    _hovered.RequestInteract();
+                    _selected = _hovered;
+                    _selected.InteractCallback += OnStartInteractCallback;
+                    _selected.RequestInteract();
                 }
             }
             else
@@ -59,8 +61,9 @@ namespace Code.Player
                 {
                     IsBusy = true;
 
-                    _active.InteractCallback += OnEndInteractCallback;
-                    _active.RequestEndInteract();
+                    _selected = _active;
+                    _selected.InteractCallback += OnEndInteractCallback;
+                    _selected.RequestEndInteract();
                 }
             }
             
@@ -140,20 +143,24 @@ namespace Code.Player
         private void OnStartInteractCallback(bool success)
         {
             IsBusy = false;
-            _hovered.InteractCallback -= OnStartInteractCallback;
+            _selected.InteractCallback -= OnStartInteractCallback;
 
             if (success)
-                if (_hovered.ManualRelease)
-                    _active = _hovered;
+                if (_selected.ManualRelease)
+                    _active = _selected;
+
+            _selected = null;
         }
 
         private void OnEndInteractCallback(bool success)
         {
             IsBusy = false;
-            _active.InteractCallback -= OnEndInteractCallback;
+            _selected.InteractCallback -= OnEndInteractCallback;
 
             if (success)
                 _active = null;
+            
+            _selected = null;
         }
 
         #region IMigratable
