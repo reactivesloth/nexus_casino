@@ -56,6 +56,7 @@ namespace Code.Network.Lobby
         private IEnumerator PollLobbiesRoutine()
         {
             yield return LocalUser.Get(out var localUser);
+
             while (enabled)
             {
                 LobbyVariables.Instance.lobbyPopupUI.Show("Searching lobby...", "");
@@ -66,23 +67,27 @@ namespace Code.Network.Lobby
 
                 var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
 
-                for (var i = 0; i < lobbyList.Count; i++)
-                {
-                    var lobby = lobbyList[i];
-                    var lobbyVersionRequest =
-                        global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "PRODUCT_VERSION",
-                            out var versionAttribute);
-                    if (lobbyVersionRequest != Result.Success || !versionAttribute.HasValue ||
-                        versionAttribute?.Data?.Value.AsUtf8 != Application.version)
-                        lobbyList.Remove(lobby);
-                }
+                // 🔹 фильтруем по версии
+                lobbyList = lobbyList
+                    .Where(lobby =>
+                    {
+                        var res = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "PRODUCT_VERSION",
+                            out var versionAttr);
+                        return res == Result.Success &&
+                               versionAttr.HasValue &&
+                               versionAttr?.Data?.Value.AsUtf8 == Application.version;
+                    })
+                    .ToList();
 
                 if (lobbyList == null || lobbyList.Count == 0)
+                {
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
+                }
                 else
                 {
                     bool isConnected = false;
                     var lobies = new List<LobbyDetails>(lobbyList);
+
                     while (lobies.Count > 0)
                     {
                         var randomLobby = lobies[Random.Range(0, lobies.Count)];
@@ -90,6 +95,7 @@ namespace Code.Network.Lobby
                         global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(randomLobby, out var info);
                         var maxMembers = info.Value.MaxMembers;
                         var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(randomLobby).Count;
+
                         if (memberCount >= maxMembers || memberCount < 1)
                         {
                             lobies.Remove(randomLobby);
@@ -106,7 +112,6 @@ namespace Code.Network.Lobby
                 }
 
                 StopPollingLobbies();
-
                 yield return new WaitForSeconds(LobbyVariables.Instance.pollLobbiesInterval);
             }
         }
@@ -166,6 +171,10 @@ namespace Code.Network.Lobby
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...");
             yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID",
                 localUserId.ToString());
+            
+            yield return LobbyUpdateLobby.Run(out var setVersion,lobbyId, "PRODUCT_VERSION", 
+                Application.version);
+            
             if (setId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
 
