@@ -39,8 +39,9 @@ namespace Code.InteractionSystem
         public bool IsBusy { get; set; }
 
         public delegate void OnInteractCallback(bool success);
+        public event OnInteractCallback InteractCallback; // Callback for clients
 
-        public event OnInteractCallback InteractCallback;
+        public event Action OnInteractEndOnServer;
 
         public virtual string InteractionPrompt
         {
@@ -155,6 +156,7 @@ namespace Code.InteractionSystem
 
         protected internal virtual void OnEndInteract(NetworkConnection conn = null)
         {
+            OnInteractEndOnServer?.Invoke();
             OccupiedConnectionId = -1;
             RemoveOwnership();
         }

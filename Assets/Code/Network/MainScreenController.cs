@@ -1,11 +1,12 @@
+using System;
 using Code.InteractionSystem;
-using Code.Network.HostMigration;
 using Code.Utility;
-using FishNet.Broadcast;
 using FishNet.Component.Observing;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,19 +15,30 @@ namespace Code.Network
     public class MainScreenController : NetworkBehaviour
     {
         [SerializeField] private int currentSlotId = -1;
-        [Space]
-        [SerializeField] private RawImage screenRawImage;
+        [Space] [SerializeField] private RawImage screenRawImage;
+        [SerializeField] private TMP_Text slotIdText;
+        [SerializeField] private TMP_Text streamerNameText;
 
-        private NetworkImageStream _currentStreamOnClient;
-        private NetworkImageStream _currentStreamOnServer;
+        private SlotMachineInteractable _currentStreamOnClient;
+        private SlotMachineInteractable _currentStreamOnServer;
 
         public readonly SyncVar<int> StreamSlotId = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
-        
-        private static int _lastSavedSlotId;//TODO
+
+        public readonly SyncVar<int> StreamConnectionId = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+
+        public readonly SyncVar<string> StreamerUsername = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
 
         private void OnEnable()
         {
@@ -41,12 +53,12 @@ namespace Code.Network
         public override void OnOwnershipServer(NetworkConnection prevOwner)
         {
             base.OnOwnershipServer(prevOwner);
-            SetStream(_lastSavedSlotId);//TODO
         }
 
-        public void RequestStream(int slotId) => SetStream_ServerRpc(slotId);
+        public void RequestStream(int slotId, int connectionId, string username) =>
+            SetStream_ServerRpc(slotId, connectionId, username);
 
-        public void RequestCancel() => SetStream_ServerRpc(-1);
+        public void RequestCancel() => SetStream_ServerRpc(-1, -1, String.Empty);
 
         public void ApplyTexture(Texture texture)
         {
@@ -55,41 +67,50 @@ namespace Code.Network
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SetStream_ServerRpc(int slotId) => SetStream(slotId);
-        
-        public void SetStream(int slotId)
+        public void SetStream_ServerRpc(int slotId, int connectionId, string username) =>
+            SetStream(slotId, connectionId, username);
+
+        [Server]
+        public void SetStream(int slotId, int connectionId, string username)
         {
+            if (_currentStreamOnServer != null)
+                _currentStreamOnServer.OnInteractEndOnServer -= OnEndTargetInteraction;
+            
             ServerReset();
             StreamSlotId.Value = slotId;
-            _lastSavedSlotId = slotId;
-            
+            StreamConnectionId.Value = connectionId;
+            StreamerUsername.Value = username;
+
             _currentStreamOnServer = GetCurrentStream(slotId);
+            if (_currentStreamOnServer != null)
+                _currentStreamOnServer.OnInteractEndOnServer += OnEndTargetInteraction;
             SetConditionsEnable(false);
         }
 
+        // For client handle
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
             if (prev == next)
                 return;
-            
+
             currentSlotId = next;
             Debug.Log($"Reset for id {prev}, new id is {next}. Current stream is {_currentStreamOnClient}");
             ClientReset();
             _currentStreamOnClient = GetCurrentStream(next);
             screenRawImage.gameObject.SetActive(_currentStreamOnClient != null);
-            if(_currentStreamOnClient == null)
+            if (_currentStreamOnClient == null)
                 return;
-            
-            _currentStreamOnClient.OnApplyTexture += ApplyTexture;
+
+            _currentStreamOnClient.NetworkImageStream.OnApplyTexture += ApplyTexture;
         }
 
         [Client]
         private void ClientReset()
         {
-            if(_currentStreamOnClient == null)
+            if (_currentStreamOnClient == null)
                 return;
-            
-            _currentStreamOnClient.OnApplyTexture -= ApplyTexture;
+
+            _currentStreamOnClient.NetworkImageStream.OnApplyTexture -= ApplyTexture;
             _currentStreamOnClient = null;
             screenRawImage.gameObject.SetActive(false);
         }
@@ -97,9 +118,9 @@ namespace Code.Network
         [Server]
         private void ServerReset()
         {
-            if(_currentStreamOnServer == null)
+            if (_currentStreamOnServer == null)
                 return;
-            
+
             SetConditionsEnable(true);
 
             _currentStreamOnServer = null;
@@ -116,12 +137,13 @@ namespace Code.Network
             observerCondition.SetIsEnabled(enable);
         }
         
-        private NetworkImageStream GetCurrentStream(int id) =>
-            SlotMachineInteractable.FindById(id)?.NetworkImageStream;
-    }
-
-    public struct MainScreenControllerData: IBroadcast
-    {
-        public int currentStreamSlotId;
+        [Server]
+        private void OnEndTargetInteraction()
+        {
+            SetStream(-1, -1, String.Empty);
+        }
+        
+        private SlotMachineInteractable GetCurrentStream(int id) =>
+            SlotMachineInteractable.FindById(id);
     }
 }

@@ -5,6 +5,8 @@ using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network;
 using Code.Network.Lobby;
+using FishNet;
+using FishNet.Managing;
 using JetBrains.Annotations;
 using Proyecto26;
 using TMPro;
@@ -43,6 +45,7 @@ namespace Code.UI
         {
             if (resultText != null) resultText.text = string.Empty;
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
+            StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
         }
 
         private void Update()
@@ -210,7 +213,9 @@ namespace Code.UI
 
         private void RequestStream()
         {
-            _mainScreenController.RequestStream(slotMachineInteractable.IDNumber);
+            var connectionId = InstanceFinder.ClientManager.Connection.ClientId;
+            var nickname = ClientDataStorage.UserData != null ? ClientDataStorage.UserData.username : "unknown";
+            _mainScreenController.RequestStream(slotMachineInteractable.IDNumber, connectionId, nickname);
         }
 
         private void CancelStream()
@@ -227,7 +232,7 @@ namespace Code.UI
             
             if (newId == thisId)
                 OnStartStreaming();
-            else if(newId != thisId /*&& prevId == thisId*/) //TODO
+            else if(newId != thisId)
                 OnEndStreaming();
         }
 
