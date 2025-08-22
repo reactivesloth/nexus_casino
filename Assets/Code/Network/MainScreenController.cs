@@ -15,7 +15,9 @@ namespace Code.Network
     public class MainScreenController : NetworkBehaviour
     {
         [SerializeField] private int currentSlotId = -1;
-        [Space] [SerializeField] private RawImage screenRawImage;
+
+        [Space] [SerializeField] private GameObject elementsParent;
+        [SerializeField] private RawImage screenRawImage;
         [SerializeField] private TMP_Text slotIdText;
         [SerializeField] private TMP_Text streamerNameText;
 
@@ -40,19 +42,21 @@ namespace Code.Network
             ReadPermission = ReadPermission.Observers
         });
 
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            elementsParent ??= screenRawImage.transform.parent.gameObject;
+        }
+
         private void OnEnable()
         {
             StreamSlotId.OnChange += OnStreamSlotIdChange;
+            StreamerUsername.OnChange += StreamerUsernameOnOnChange;
         }
 
         private void OnDisable()
         {
             StreamSlotId.OnChange -= OnStreamSlotIdChange;
-        }
-
-        public override void OnOwnershipServer(NetworkConnection prevOwner)
-        {
-            base.OnOwnershipServer(prevOwner);
         }
 
         public void RequestStream(int slotId, int connectionId, string username) =>
@@ -97,11 +101,17 @@ namespace Code.Network
             Debug.Log($"Reset for id {prev}, new id is {next}. Current stream is {_currentStreamOnClient}");
             ClientReset();
             _currentStreamOnClient = GetCurrentStream(next);
-            screenRawImage.gameObject.SetActive(_currentStreamOnClient != null);
+            elementsParent.gameObject.SetActive(_currentStreamOnClient != null);
             if (_currentStreamOnClient == null)
                 return;
 
             _currentStreamOnClient.NetworkImageStream.OnApplyTexture += ApplyTexture;
+            slotIdText.text = $"Slot №{next}";
+        }
+        
+        private void StreamerUsernameOnOnChange(string prev, string next, bool asServer)
+        {
+            streamerNameText.text = $"{next}";
         }
 
         [Client]
@@ -112,7 +122,7 @@ namespace Code.Network
 
             _currentStreamOnClient.NetworkImageStream.OnApplyTexture -= ApplyTexture;
             _currentStreamOnClient = null;
-            screenRawImage.gameObject.SetActive(false);
+            elementsParent.gameObject.SetActive(false);
         }
 
         [Server]
