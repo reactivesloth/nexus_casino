@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Code.API;
 using Code.Network;
 using Code.Network.HostMigration;
-using Code.Utility;
 using CurvedUI;
 using FishNet.Connection;
 using FishNet.Object;
@@ -71,7 +70,7 @@ namespace Code.InteractionSystem
             _wasStarted = true;
             if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
             if (computerFullScreenCanvas) computerFullScreenCanvas.gameObject.SetActive(false);
-            if (contentCanvas) contentCanvas.gameObject.SetActive(false);
+            //if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
         // private void OnDisable()
@@ -79,13 +78,19 @@ namespace Code.InteractionSystem
         //     // Если объект выключили посреди сессии — корректно закроем UI и WebView
         //     if (_isUsing) _ = CloseAndCleanupAsync();
         // }
-
+      
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
 
         public override void OnStartClient()
         {
             base.OnStartClient();
-            ActivateStoriesUI(IsOccupied);
+            //ActivateStoriesUI(true);
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            //ActivateStoriesUI(false);
         }
 
         public override void OnStopNetwork()
@@ -224,8 +229,13 @@ namespace Code.InteractionSystem
             }
         }
 
+        
         [ObserversRpc(BufferLast = true)]
-        private void ObserverActivation(bool open) => ActivateStoriesUI(open);
+        private void ObserverActivation(bool open) 
+        {
+            Debug.Log($"ObserverActivation {open}");
+            ActivateStoriesUI(open);
+        }
         
         private void ActivateStoriesUI(bool open) => contentCanvas.gameObject.SetActive(open);
 

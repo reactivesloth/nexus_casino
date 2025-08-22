@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using CC;
+using FishNet.Component.Animating;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using UnityEngine;
 
 namespace Code.Player
@@ -11,6 +14,7 @@ namespace Code.Player
     public class PlayerModelSync : NetworkBehaviour
     {
         private CharacterCustomization _characterCustomization;
+        private NetworkAnimator _networkAnimator;
 
         private readonly SyncVar<string> _characterJson = new(new SyncTypeSettings
         {
@@ -21,15 +25,29 @@ namespace Code.Player
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
+            _networkAnimator = GetComponent<NetworkAnimator>();
             _characterJson.OnChange += OnCharacterJsonChanged;
             _characterCustomization.Initialize();
+        }
+
+        private void Start()
+        {
+            ServerManager.OnRemoteConnectionState += OnConnectionState;
         }
 
         private void OnDestroy()
         {
             _characterJson.OnChange -= OnCharacterJsonChanged;
+            
+            
         }
 
+        private void OnConnectionState(NetworkConnection arg1, RemoteConnectionStateArgs arg2)
+        {
+            if(arg2.ConnectionState == RemoteConnectionState.Started)
+                _networkAnimator.SendAll();
+        }
+        
         private void OnCharacterJsonChanged(string prev, string next, bool asServer)
         {
             Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
