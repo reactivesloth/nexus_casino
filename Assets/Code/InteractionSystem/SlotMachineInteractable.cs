@@ -82,6 +82,12 @@ namespace Code.InteractionSystem
 
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            ActivateStoriesUI(IsOccupied);
+        }
+
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
@@ -219,10 +225,9 @@ namespace Code.InteractionSystem
         }
 
         [ObserversRpc(BufferLast = true)]
-        private void ObserverActivation(bool open)
-        {
-            contentCanvas.gameObject.SetActive(open);
-        }
+        private void ObserverActivation(bool open) => ActivateStoriesUI(open);
+        
+        private void ActivateStoriesUI(bool open) => contentCanvas.gameObject.SetActive(open);
 
         private async Task OpenWebViewAsync(Canvas parentCanvas)
         {
@@ -260,7 +265,7 @@ namespace Code.InteractionSystem
                     networkImageStream.SetTexture(_webView.GetComponentInChildren<RawImage>());
                 
                 
-                // звук
+                /*// звук
                 if (AudioManager.Instance != null)
                 {
                     var volume = AudioManager.Instance?.GetVolume01("Slots").ToString("F2");
@@ -268,7 +273,7 @@ namespace Code.InteractionSystem
                         await _webView.WebView.ExecuteJavaScript(
                             $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {volume})"
                         );
-                }
+                }*/
                 
                 // курсор
                 if (PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1 && CursorManager.Instance != null)

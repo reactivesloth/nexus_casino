@@ -681,14 +681,14 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 791084595948481418}
   rawImage: {fileID: 0}
   targetImage: {fileID: 4849952405852889531}
-  sendMaxFps: 12
-  sendMaxFramePercent: 0.1
-  receiveMaxFps: 12
+  sendMaxFps: 6
+  sendMaxFramePercent: 0.05
+  receiveMaxFps: 6
   receiveMaxFramePercent: 0.1
-  downscale: 0.45
+  downscale: 0.4
   useJpg: 1
-  jpgQuality: 20
-  skipDuplicateFrames: 1
+  jpgQuality: 25
+  skipDuplicateFrames: 0
   lz4Compress: 0
   lz4Level: 0
   hostIsOwnerOnStart: 0
@@ -1440,8 +1440,8 @@ MonoBehaviour:
   updateStoryUiOnLoad: {fileID: 872624224596379124}
   timeout: 15
   streamIndicator: {fileID: 0}
-  streamDownscale: 0.6
-  streamJpgQuality: 25
+  streamDownscale: 0.5
+  streamJpgQuality: 33
   slotMachineInteractable: {fileID: 8690079509221083420}
   resultText: {fileID: 0}
   resultShowTime: 5
