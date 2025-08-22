@@ -89,12 +89,13 @@ namespace Code.InteractionSystem
             //_ = CloseAndCleanupAsync();
         }
 
-        protected internal override void OnInteract(NetworkConnection conn, bool force = false)
+        protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             if (_isUsing) return;
             base.OnInteract(conn, force);
             _isUsing = true;
             TargetToggleComputerUI(conn, true);
+            ObserverActivation(true);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
@@ -103,6 +104,7 @@ namespace Code.InteractionSystem
             base.OnEndInteract(conn);
             _isUsing = false;
             TargetToggleComputerUI(conn, false);
+            ObserverActivation(false);
         }
 
         public void SwitchFS()
@@ -214,6 +216,12 @@ namespace Code.InteractionSystem
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
                 _ = OpenWebViewAsync(targetCanvas);
             }
+        }
+
+        [ObserversRpc(BufferLast = true)]
+        private void ObserverActivation(bool open)
+        {
+            contentCanvas.gameObject.SetActive(open);
         }
 
         private async Task OpenWebViewAsync(Canvas parentCanvas)
