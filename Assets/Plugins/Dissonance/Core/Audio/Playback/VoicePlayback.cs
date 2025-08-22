@@ -68,6 +68,13 @@ namespace Dissonance.Audio.Playback
                 AudioSource.spatialize = false;
             }
 
+            if (AudioSource != null && AudioSource.clip != null)
+            {
+                var c = AudioSource.clip;
+                AudioSource.clip = null;
+                Destroy(c);
+            }
+            
             // Play back a flatline of 1.0 through the source and then multiply the voice signal by that to achieve spatial blending of voice.
             AudioSource.clip = AudioClip.Create("Flatline", 4096, 1, AudioSettings.outputSampleRate, false, buf =>
             {

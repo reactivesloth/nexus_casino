@@ -8,24 +8,48 @@ namespace Code.Utility
 {
     public sealed class LowMemoryOptimizer : MonoBehaviour
     {
-        private void OnEnable()  => Application.lowMemory += ApplicationOnLowMemory;
-        private void OnDisable() => Application.lowMemory -= ApplicationOnLowMemory;
+        [SerializeField] private float unloadResourcesInterval = 60f;
 
-        [SerializeField] private float unloadResourcesInterval = 60;
-        
         private void Awake()
         {
             if (unloadResourcesInterval > 0)
-                Invoke(nameof(ApplicationOnLowMemory), unloadResourcesInterval);
+                InvokeRepeating(nameof(TryCleanup), unloadResourcesInterval, unloadResourcesInterval);
+        }
+
+        private void OnEnable()
+        {
+            Application.lowMemory += ApplicationOnLowMemory;
+        }
+
+        private void OnDisable()
+        {
+            Application.lowMemory -= ApplicationOnLowMemory;
+            CancelInvoke(nameof(TryCleanup));
         }
 
         private void ApplicationOnLowMemory()
         {
-            Debug.Log("[MEMORY] Low Memory Optimizer collect GC and unload ol unused resources.");
+            Debug.LogWarning("[MEMORY] Low memory reported. Forcing cleanup...");
+            ForceCleanup();
+        }
+
+        private void TryCleanup()
+        {
+            // Пропускаем чистку, если локальный игрок говорит
+            if (PlayerInput.Instance != null && !PlayerInput.Instance.VoiceHeld)
+            {
+                Debug.Log("[MEMORY] Cleanup skipped (local player is speaking).");
+                return;
+            }
+
+            // Чистка разрешена, даже если другие игроки говорят
+            ForceCleanup();
+        }
+
+        private void ForceCleanup()
+        {
+            Debug.Log("[MEMORY] Collecting GC + unloading unused assets.");
             GC.Collect();
-#if UNITY_EDITOR
-            EditorUtility.UnloadUnusedAssetsImmediate();
-#endif
             Resources.UnloadUnusedAssets();
             GC.Collect();
         }

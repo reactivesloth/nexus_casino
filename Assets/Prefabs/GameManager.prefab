@@ -202,6 +202,8 @@ GameObject:
   - component: {fileID: 1827305015915756164}
   - component: {fileID: 6017956435654492929}
   - component: {fileID: 699536754327987151}
+  - component: {fileID: 9038698130129681033}
+  - component: {fileID: 1956145932003818539}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -404,6 +406,7 @@ MonoBehaviour:
   highQualityPath: GeneratedMaterials/DesktopMaterials
   mediumQualityPath: GeneratedMaterials/BakedMaterials
   lowQualityPath: GeneratedMaterials/MobileMaterials
+  ultraLowQualityPath: GeneratedMaterials/UltraLowMaterials
   forceLowQuality: 0
   verboseLogs: 0
 --- !u!114 &699536754327987151
@@ -430,6 +433,31 @@ MonoBehaviour:
   enableTapToCycle: 0
   enableLongPressToggleLock: 0
   forceShowCursor: 0
+--- !u!114 &9038698130129681033
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9133097808982035976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 470bbea4b197eea4298f538441a5808b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1956145932003818539
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9133097808982035976}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f3ce977655f84c7a9b873675c426f1fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  unloadResourcesInterval: 60
 --- !u!1001 &475943727957760484
 PrefabInstance:
   m_ObjectHideFlags: 0
