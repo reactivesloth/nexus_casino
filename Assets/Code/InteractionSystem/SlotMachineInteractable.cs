@@ -38,14 +38,15 @@ namespace Code.InteractionSystem
 
         public int IDNumber;
         public bool IsUsing => _isUsing;
-        public IWebView WebView => _sharedWebView != null ? _sharedWebView.WebView : null;
+        public IWebView WebView => _webView != null ? _webView.WebView : null;
 
         private bool _isUsing;
-        private static CanvasWebViewPrefab _sharedWebView; // общий для всех
-        private static bool _webViewInitialized = false;
-        private static bool _opening;
-        private static bool _closing;
-        private static bool _wasStarted;
+        private CanvasWebViewPrefab _webView; // живой инстанс
+
+        // флаги против гонок открытия/закрытия
+        private bool _opening;
+        private bool _closing;
+        private bool _wasStarted;
         [SerializeField] private AudioMixer mixer;
 
         public NetworkImageStream NetworkImageStream => networkImageStream;
@@ -79,6 +80,18 @@ namespace Code.InteractionSystem
         // }
       
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            //ActivateStoriesUI(true);
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+            //ActivateStoriesUI(false);
+        }
 
         public override void OnStopNetwork()
         {
@@ -126,31 +139,29 @@ namespace Code.InteractionSystem
             
             if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = newFS;
 
-            if (_sharedWebView != null)
+            if (_webView != null)
             {
-                var curvedUIComp = _sharedWebView.GetComponentInChildren<CurvedUIVertexEffect>();
+                var curvedUIComp = _webView.GetComponentInChildren<CurvedUIVertexEffect>();
                 curvedUIComp.enabled = !newFS;
                 
-                RebindWebViewInput(_sharedWebView, targetCanvas, newFS);
+                RebindWebViewInput(_webView, targetCanvas);
             }
         }
 
 
-        private void RebindWebViewInput(CanvasWebViewPrefab webView, Canvas canvas, bool newFS)
+        private void RebindWebViewInput(CanvasWebViewPrefab webView, Canvas canvas)
         {
             if (webView == null || canvas == null)
                 return;
 
+            // Переносим под нужный Canvas
             webView.transform.SetParent(canvas.transform, false);
-            if (newFS)
-                webView.transform.SetAsLastSibling();
-            else
-                webView.transform.SetAsFirstSibling();
-            
+            webView.transform.SetAsFirstSibling();
             webView.transform.localPosition = Vector3.zero;
             webView.transform.localRotation = Quaternion.identity;
             webView.transform.localScale    = Vector3.one;
 
+            // Гарантируем корректную камеру и рейкастер
             if (canvas.renderMode is RenderMode.WorldSpace or RenderMode.ScreenSpaceCamera)
             {
                 if (canvas.worldCamera == null)
@@ -158,7 +169,7 @@ namespace Code.InteractionSystem
             }
             else
             {
-                canvas.worldCamera = null;
+                canvas.worldCamera = null; // Overlay
             }
             if (!canvas.TryGetComponent<GraphicRaycaster>(out _))
                 canvas.gameObject.AddComponent<GraphicRaycaster>();
@@ -192,6 +203,7 @@ namespace Code.InteractionSystem
         [TargetRpc]
         private void TargetToggleComputerUI(NetworkConnection conn, bool open)
         {
+            // сцену ещё не проинициализировали?
             if (!_wasStarted) return;
 
             var targetCanvas = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1 ? computerFullScreenCanvas : computer3dCanvas;
@@ -207,11 +219,8 @@ namespace Code.InteractionSystem
             if (!open)
             {
                 _ = CloseAndCleanupAsync();
-                if (PlayerInput.Instance != null)
-                {
-                    PlayerInput.Instance.HideMobileFallback = false;
-                    PlayerInput.Instance.IsBusy = false;
-                }
+                if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = false;
+                if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
             }
             else
             {
@@ -234,27 +243,53 @@ namespace Code.InteractionSystem
         {
             if (_opening) return;
             _opening = true;
-            var newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
 
             try
             {
-                if (!_webViewInitialized)
-                {
-                    _sharedWebView = Instantiate(webViewPrefab, parentCanvas.transform);
-                    await _sharedWebView.WaitUntilInitialized();
-                    _sharedWebView.WebView.LoadUrl($"https://back.nexusmetaclub.com?jwt={ClientDataStorage.AccessToken}");
-                    _webViewInitialized = true;
+                if (_webView != null) return; // уже создан
+                if (parentCanvas == null || webViewPrefab == null) return;
 
-                    if (networkImageStream != null)
-                        networkImageStream.SetTexture(_sharedWebView.GetComponentInChildren<RawImage>());
+                // Инстанцируем
+                _webView = Instantiate(webViewPrefab, parentCanvas.transform);
+                var rt = _webView.transform as RectTransform;
+                if (rt != null)
+                {
+                    rt.anchorMin = Vector2.zero;
+                    rt.anchorMax = Vector2.one;
+                    rt.offsetMin = Vector2.zero;
+                    rt.offsetMax = Vector2.zero;
+                    _webView.transform.SetAsFirstSibling();
                 }
-                else
-                {
-                    RebindWebViewInput(_sharedWebView, parentCanvas, newFS);
-                    _sharedWebView.gameObject.SetActive(true);
 
-                    if (networkImageStream != null)
-                        networkImageStream.SetTexture(_sharedWebView.GetComponentInChildren<RawImage>());
+                // Ждём инициализации
+                await _webView.WaitUntilInitialized();
+
+                // Загружаем URL
+                string token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
+                string url = $"https://back.nexusmetaclub.com?jwt={token}";
+                if (_webView != null && _webView.WebView != null)
+                    _webView.WebView.LoadUrl(url);
+
+                // стрим-текстура
+                if (networkImageStream != null)
+                    networkImageStream.SetTexture(_webView.GetComponentInChildren<RawImage>());
+                
+                
+                /*// звук
+                if (AudioManager.Instance != null)
+                {
+                    var volume = AudioManager.Instance?.GetVolume01("Slots").ToString("F2");
+                    if (_webView != null && _webView.WebView != null)
+                        await _webView.WebView.ExecuteJavaScript(
+                            $"document.querySelectorAll('video, audio').forEach(mediaElement => mediaElement.volume = {volume})"
+                        );
+                }*/
+                
+                // курсор
+                if (PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1 && CursorManager.Instance != null)
+                {
+                    if (CursorManager.Instance != null) CursorManager.Instance.ShowCursor();
+                    if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = true;
                 }
             }
             finally
@@ -263,28 +298,48 @@ namespace Code.InteractionSystem
             }
         }
 
-
         private async Task CloseAndCleanupAsync()
         {
-            if (_closing) return;
+            if (_closing || HostMigrator.Instance.IsHostMigrating) return;
             _closing = true;
 
             try
             {
+                // выключаем стрим
                 if (networkImageStream != null)
                     networkImageStream.ClearTexture();
 
-                if (_sharedWebView != null)
-                    _sharedWebView.gameObject.SetActive(false);
+                // закрыть конкретный экземпляр webview
+                if (_webView != null)
+                {
+                    _webView.Destroy(); // корректно закрывает IWebView
+                    _webView = null;
+                }
 
-                if (clearAllDataOnClose) Web.ClearAllData();
+                if (clearAllDataOnClose)
+                {
+#if UNITY_STANDALONE || UNITY_EDITOR
+                    if (deepCleanupStandalone)
+                    {
+                        // Последовательно: сперва глушим процесс, затем чистим данные.
+                        await StandaloneWebView.TerminateBrowserProcess();
+                        Web.ClearAllData();
+                    }
+                    else
+                    {
+                        Web.ClearAllData();
+                    }
+#else
+                    Web.ClearAllData();
+#endif
+                }
             }
             finally
             {
                 _closing = false;
             }
         }
-        
+
         public static SlotMachineInteractable FindById(int id)
         {
             var all = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
