@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using CC;
 using FishNet.Component.Animating;
@@ -13,8 +12,11 @@ namespace Code.Player
     [RequireComponent(typeof(CharacterCustomization))]
     public class PlayerModelSync : NetworkBehaviour
     {
+        [SerializeField] private float updateAvatarInterval = 10f;
+        
         private CharacterCustomization _characterCustomization;
         private NetworkAnimator _networkAnimator;
+        private Coroutine _updateAvatarCoroutine;
 
         private readonly SyncVar<string> _characterJson = new(new SyncTypeSettings
         {
@@ -37,15 +39,16 @@ namespace Code.Player
 
         private void OnDestroy()
         {
+            ServerManager.OnRemoteConnectionState -= OnConnectionState;
             _characterJson.OnChange -= OnCharacterJsonChanged;
-            
-            
         }
 
         private void OnConnectionState(NetworkConnection arg1, RemoteConnectionStateArgs arg2)
         {
             if(arg2.ConnectionState == RemoteConnectionState.Started)
+            {
                 _networkAnimator.SendAll();
+            }
         }
         
         private void OnCharacterJsonChanged(string prev, string next, bool asServer)
@@ -85,6 +88,21 @@ namespace Code.Player
             Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);
+
+            if(_updateAvatarCoroutine != null)
+                StopCoroutine(_updateAvatarCoroutine);
+            _updateAvatarCoroutine = StartCoroutine(UpdateLoop());
+        }
+
+        private IEnumerator UpdateLoop()
+        {
+            var wait = new WaitForSeconds(updateAvatarInterval);
+            while (true)
+            {
+                yield return wait;
+                string json = _characterCustomization.GetJSON();
+                SendCharacterJsonServerRpc(json);
+            }
         }
     }
 }
