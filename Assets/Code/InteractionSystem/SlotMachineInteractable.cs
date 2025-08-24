@@ -81,18 +81,6 @@ namespace Code.InteractionSystem
       
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
 
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-            //ActivateStoriesUI(true);
-        }
-
-        public override void OnStopClient()
-        {
-            base.OnStopClient();
-            //ActivateStoriesUI(false);
-        }
-
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
@@ -144,19 +132,22 @@ namespace Code.InteractionSystem
                 var curvedUIComp = _webView.GetComponentInChildren<CurvedUIVertexEffect>();
                 curvedUIComp.enabled = !newFS;
                 
-                RebindWebViewInput(_webView, targetCanvas);
+                RebindWebViewInput(_webView, targetCanvas, newFS);
             }
         }
 
 
-        private void RebindWebViewInput(CanvasWebViewPrefab webView, Canvas canvas)
+        private void RebindWebViewInput(CanvasWebViewPrefab webView, Canvas canvas, bool fs)
         {
             if (webView == null || canvas == null)
                 return;
 
             // Переносим под нужный Canvas
             webView.transform.SetParent(canvas.transform, false);
-            webView.transform.SetAsFirstSibling();
+            if(fs)
+                webView.transform.SetAsLastSibling();
+            else
+                webView.transform.SetAsFirstSibling();
             webView.transform.localPosition = Vector3.zero;
             webView.transform.localRotation = Quaternion.identity;
             webView.transform.localScale    = Vector3.one;
