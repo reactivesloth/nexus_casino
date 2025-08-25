@@ -44,14 +44,11 @@ public class WebViewManager : MonoBehaviour
         if (dontDestroyOnLoad) DontDestroyOnLoad(gameObject);
     }
 
-    private IEnumerator Start()
+    private async void Start()
     {
-        if (WebView == null) yield return null;
-        yield return EnsureCreatedAsync();
-        
+        await EnsureCreatedAsync();
         var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
-        string url = $"https://back.nexusmetaclub.com?jwt={token}"; 
-        WebView.LoadUrl(url);
+        await LoadWithTokenAsync(token);
     }
 
     public async Task EnsureCreatedAsync()
@@ -94,6 +91,14 @@ public class WebViewManager : MonoBehaviour
             cg.interactable = false;
             cg.alpha = 0;
         }
+    }
+
+    public async Task LoadWithTokenAsync(string jwt)
+    {
+        await EnsureCreatedAsync();
+        if (WebView == null) return;
+        string url = $"https://back.nexusmetaclub.com?jwt={jwt}";
+        WebView.LoadUrl(url);
     }
 
     public void OpenFullscreen()
