@@ -103,7 +103,6 @@ namespace Code.Player
         public void BeginIkGrace(float seconds) => _ikSuppressUntil = Time.time + Mathf.Max(0f, seconds);
         
         private float currentIkWeight;
-        private Vector3 currentLookAtPos;
 
         private bool grounded;
         private float cameraDistance = 0.5f;
@@ -182,12 +181,7 @@ namespace Code.Player
             if (cinemachineCameraTarget != null)
                 cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
-            if (animator != null)
-            {
-                var head = animator.GetBoneTransform(HumanBodyBones.Head);
-                if (head != null && cinemachineCameraTarget != null)
-                    currentLookAtPos = head.position + cinemachineCameraTarget.transform.forward * 10f;
-            }
+            UpdateHeadTargetPos();
 
             Own = this;
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
@@ -275,8 +269,18 @@ namespace Code.Player
                 else
                     CameraRotation();
             }
+
+            UpdateHeadTargetPos();
         }
 
+        private void UpdateHeadTargetPos()
+        {
+            if (animator != null)
+            {
+                headTarget.position = cinemachineCameraTarget.transform.position + cinemachineCameraTarget.transform.forward * 10f;
+            }
+        }
+        
         private void SitCameraRotation()
         {
             if (input == null || cinemachineCameraTarget == null) return;
@@ -591,22 +595,11 @@ namespace Code.Player
             if (IsOwner)
             {
                 if (SuppressLookAtIK) return;
-                float targetWeight = FirstPersonView ? 1f : 0f;
-                currentIkWeight =
-                    Mathf.MoveTowards(currentIkWeight, targetWeight, Time.deltaTime * ikTransitionSpeed);
-
-                if (cinemachineCameraTarget != null)
-                {
-                    Vector3 headWorldPos = cinemachineCameraTarget.transform.position +
-                                           cinemachineCameraTarget.transform.forward * 2f;
-                    currentLookAtPos = Vector3.Lerp(currentLookAtPos, headWorldPos,
-                        Time.deltaTime * lookAtSmoothSpeed);
-                }
-
-                SyncIKServerRpc(currentLookAtPos, currentIkWeight);
-                animator.SetLookAtWeight(currentIkWeight, currentIkWeight, currentIkWeight, currentIkWeight,
-                    lookAtClampWeight);
-                animator.SetLookAtPosition(currentLookAtPos);
+                
+                currentIkWeight = FirstPersonView ? 1f : 0f;
+                SyncIKServerRpc(headTarget.position, currentIkWeight);
+                animator.SetLookAtWeight(currentIkWeight, 0f, currentIkWeight, currentIkWeight, lookAtClampWeight);
+                animator.SetLookAtPosition(headTarget.position);
             }
             else
             {
