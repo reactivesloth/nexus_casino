@@ -44,11 +44,14 @@ public class WebViewManager : MonoBehaviour
         if (dontDestroyOnLoad) DontDestroyOnLoad(gameObject);
     }
 
-    private async void Start()
+    private IEnumerator Start()
     {
-        await EnsureCreatedAsync();
+        if (WebView == null) yield return null;
+        yield return EnsureCreatedAsync();
+        
         var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
-        await LoadWithTokenAsync(token);
+        string url = $"https://back.nexusmetaclub.com?jwt={token}"; 
+        WebView.LoadUrl(url);
     }
 
     public async Task EnsureCreatedAsync()
@@ -91,14 +94,6 @@ public class WebViewManager : MonoBehaviour
             cg.interactable = false;
             cg.alpha = 0;
         }
-    }
-
-    public async Task LoadWithTokenAsync(string jwt)
-    {
-        await EnsureCreatedAsync();
-        if (WebView == null) return;
-        string url = $"https://back.nexusmetaclub.com?jwt={jwt}";
-        WebView.LoadUrl(url);
     }
 
     public void OpenFullscreen()
@@ -209,14 +204,16 @@ public class WebViewManager : MonoBehaviour
 
     public void HideWorldView(int slotId)
     {
+        if (refreshUrlOnHide)
+        {
+            var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
+            string url = $"https://back.nexusmetaclub.com?jwt={token}"; 
+            WebView.LoadUrl(url);
+        }
+        
         if (_worldViews.TryGetValue(slotId, out var view) && view != null)
         {
             view.gameObject.SetActive(false);
-            if (refreshUrlOnHide)
-            {
-                var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
-                Task.Run(async () => await LoadWithTokenAsync(token));
-            }
         }
     }
 
