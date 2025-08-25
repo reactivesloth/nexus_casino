@@ -2,18 +2,16 @@
 
 public sealed class AutoQualitySelector : MonoBehaviour
 {
-    [SerializeField] private bool applyExpensiveChanges = true;
-
     private void Awake()
     {
         if (PlayerPrefs.HasKey("GraphicsQuality"))
         {
-            QualitySettings.SetQualityLevel(PlayerPrefs.GetInt("GraphicsQuality"), applyExpensiveChanges);
+            QualitySettings.SetQualityLevel(PlayerPrefs.GetInt("GraphicsQuality"));
             return;
         }
 
         int level = ChooseQualityIndex();
-        QualitySettings.SetQualityLevel(level, applyExpensiveChanges);
+        QualitySettings.SetQualityLevel(level);
         PlayerPrefs.SetInt("GraphicsQuality", level);
     }
 
@@ -45,6 +43,9 @@ public sealed class AutoQualitySelector : MonoBehaviour
         if (megapixels > 5.0f) score -= 3;
         else if (megapixels > 3.0f) score -= 2;
         else if (megapixels > 2.0f) score -= 1;
+
+        if (Application.isMobilePlatform)
+            score -= 5;
 
         int levels = QualitySettings.names.Length;
         int index;

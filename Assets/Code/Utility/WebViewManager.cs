@@ -46,6 +46,7 @@ public class WebViewManager : MonoBehaviour
 
     private async void Start()
     {
+        await Task.Delay(2000);
         await EnsureCreatedAsync();
         var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
         await LoadWithTokenAsync(token);

@@ -128,7 +128,7 @@ namespace Code.Utility
             }
 
             // Graphics
-            QualitySettings.SetQualityLevel(QualityLevel, true);
+            QualitySettings.SetQualityLevel(QualityLevel);
             Application.targetFrameRate = FPSLimit;
             QualitySettings.antiAliasing = Mathf.Max(0, AntiAliasingLevel);
 
