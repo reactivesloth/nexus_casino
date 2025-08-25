@@ -6,7 +6,6 @@ using Code.InteractionSystem;
 using Code.Network;
 using Code.Network.Lobby;
 using FishNet;
-using JetBrains.Annotations;
 using Proyecto26;
 using TMPro;
 using UnityEngine;
@@ -16,8 +15,8 @@ namespace Code.UI
 {
     public class SlotFunctionsUI : MonoBehaviour
     {
-        [Header("Stories")]
-        [SerializeField, CanBeNull] private StoriesUI updateStoryUiOnLoad;
+
+        [Header("Stories")] [SerializeField] private StoriesUI updateStoryUiOnLoad;
         [SerializeField] private float timeout = 10f;
         private bool _screenShotBusy;
 
@@ -29,10 +28,9 @@ namespace Code.UI
         [Space] [SerializeField] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField] private TMP_Text resultText;
         [SerializeField] private float resultShowTime = 5f;
-        
+
         private Coroutine _resultShowCoroutine;
         private Coroutine _timeoutCoroutine;
-
         private MainScreenController _mainScreenController;
 
         private void Awake()
@@ -43,8 +41,8 @@ namespace Code.UI
         private void OnEnable()
         {
             if (!slotMachineInteractable.IsOwner) return;
-            
             if (resultText != null) resultText.text = string.Empty;
+
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
             StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
         }
@@ -52,9 +50,8 @@ namespace Code.UI
         private void Update()
         {
             if (!slotMachineInteractable.IsOwner) return;
-            
             if (!PlayerInput.Instance.ShowSlotsUI) PlayerInput.Instance.ShowSlotsUI = true;
-            
+
             if (PlayerInput.Instance.IsSlotsFullscreen) SwitchFullscreen();
             if (PlayerInput.Instance.IsSlotsScreenshot && !_screenShotBusy) OnScreenshotClicked();
             if (PlayerInput.Instance.IsSlotsStream && !_streaming) RequestStream();
@@ -80,25 +77,23 @@ namespace Code.UI
                 StopCoroutine(_resultShowCoroutine);
                 _resultShowCoroutine = null;
             }
-            
+
             _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
             PlayerInput.Instance.ShowSlotsUI = false;
         }
 
-        #region Stories
-        
         private async void OnScreenshotClicked()
         {
             _screenShotBusy = true;
             try
             {
-                if (slotMachineInteractable == null || slotMachineInteractable.WebView == null)
+                if (WebViewManager.Instance == null || WebViewManager.Instance.WebView == null)
                 {
                     ShowResult("No WebView available.", Color.red);
                     return;
                 }
 
-                var bytes = await slotMachineInteractable.WebView.CaptureScreenshot();
+                var bytes = await WebViewManager.Instance.WebView.CaptureScreenshot(); // глобальный вебвью [1]
                 if (bytes == null || bytes.Length == 0)
                 {
                     ShowResult("Empty screenshot.", Color.red);
@@ -205,14 +200,8 @@ namespace Code.UI
             }
 
             yield return new WaitForSeconds(resultShowTime);
-
-            if (resultText != null)
-                resultText.text = string.Empty;
+            if (resultText != null) resultText.text = string.Empty;
         }
-
-        #endregion
-
-        #region Stream On main Screen
 
         private void RequestStream()
         {
@@ -225,24 +214,20 @@ namespace Code.UI
         {
             _mainScreenController.RequestCancel();
         }
-        
+
         private void StreamSlotIdOnOnChange(int prevId, int newId, bool asServer)
         {
-            if(prevId == newId)
-                return;
-            
+            if (prevId == newId) return;
             var thisId = slotMachineInteractable.IDNumber;
-            
-            if (newId == thisId)
-                OnStartStreaming();
-            else if(newId != thisId)
-                OnEndStreaming();
+            if (newId == thisId) OnStartStreaming();
+            else if (newId != thisId) OnEndStreaming();
         }
 
         private void OnStartStreaming()
         {
             _streaming = true;
             slotMachineInteractable.NetworkImageStream.SetQualitySettings(streamDownscale, streamJpgQuality);
+            // Источник текстуры уже назначается при открытии/переключении через SlotMachineInteractable
         }
 
         private void OnEndStreaming()
@@ -250,7 +235,5 @@ namespace Code.UI
             _streaming = false;
             slotMachineInteractable.NetworkImageStream.ResetQualitySettings();
         }
-
-        #endregion
     }
 }

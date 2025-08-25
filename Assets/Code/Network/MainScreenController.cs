@@ -2,10 +2,8 @@ using System;
 using Code.InteractionSystem;
 using Code.Utility;
 using FishNet.Component.Observing;
-using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,7 +13,6 @@ namespace Code.Network
     public class MainScreenController : NetworkBehaviour
     {
         [SerializeField] private int currentSlotId = -1;
-
         [Space] [SerializeField] private GameObject elementsParent;
         [SerializeField] private RawImage screenRawImage;
         [SerializeField] private TMP_Text slotIdText;
@@ -62,7 +59,7 @@ namespace Code.Network
         public void RequestStream(int slotId, int connectionId, string username) =>
             SetStream_ServerRpc(slotId, connectionId, username);
 
-        public void RequestCancel() => SetStream_ServerRpc(-1, -1, String.Empty);
+        public void RequestCancel() => SetStream_ServerRpc(-1, -1, string.Empty);
 
         public void ApplyTexture(Texture texture)
         {
@@ -81,6 +78,7 @@ namespace Code.Network
                 _currentStreamOnServer.OnInteractEndOnServer -= OnEndTargetInteraction;
             
             ServerReset();
+
             StreamSlotId.Value = slotId;
             StreamConnectionId.Value = connectionId;
             StreamerUsername.Value = username;
@@ -88,27 +86,23 @@ namespace Code.Network
             _currentStreamOnServer = GetCurrentStream(slotId);
             if (_currentStreamOnServer != null)
                 _currentStreamOnServer.OnInteractEndOnServer += OnEndTargetInteraction;
+
             SetConditionsEnable(false);
         }
 
-        // For client handle
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
-            if (prev == next)
-                return;
+            if (prev == next) return;
 
             currentSlotId = next;
-            Debug.Log($"Reset for id {prev}, new id is {next}. Current stream is {_currentStreamOnClient}");
             ClientReset();
             _currentStreamOnClient = GetCurrentStream(next);
             elementsParent.gameObject.SetActive(_currentStreamOnClient != null);
-            if (_currentStreamOnClient == null)
-                return;
-
+            if (_currentStreamOnClient == null) return;
             _currentStreamOnClient.NetworkImageStream.OnApplyTexture += ApplyTexture;
             slotIdText.text = $"Slot №{next}";
         }
-        
+
         private void StreamerUsernameOnOnChange(string prev, string next, bool asServer)
         {
             streamerNameText.text = $"{next}";
@@ -117,9 +111,7 @@ namespace Code.Network
         [Client]
         private void ClientReset()
         {
-            if (_currentStreamOnClient == null)
-                return;
-
+            if (_currentStreamOnClient == null) return;
             _currentStreamOnClient.NetworkImageStream.OnApplyTexture -= ApplyTexture;
             _currentStreamOnClient = null;
             elementsParent.gameObject.SetActive(false);
@@ -128,11 +120,8 @@ namespace Code.Network
         [Server]
         private void ServerReset()
         {
-            if (_currentStreamOnServer == null)
-                return;
-
+            if (_currentStreamOnServer == null) return;
             SetConditionsEnable(true);
-
             _currentStreamOnServer = null;
         }
 
@@ -146,14 +135,13 @@ namespace Code.Network
                 _currentStreamOnServer.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
             observerCondition.SetIsEnabled(enable);
         }
-        
+
         [Server]
         private void OnEndTargetInteraction()
         {
-            SetStream(-1, -1, String.Empty);
+            SetStream(-1, -1, string.Empty);
         }
-        
-        private SlotMachineInteractable GetCurrentStream(int id) =>
-            SlotMachineInteractable.FindById(id);
+
+        private SlotMachineInteractable GetCurrentStream(int id) => SlotMachineInteractable.FindById(id);
     }
 }
