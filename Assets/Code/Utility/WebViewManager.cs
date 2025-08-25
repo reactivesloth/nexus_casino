@@ -30,6 +30,7 @@ public class WebViewManager : MonoBehaviour
 
     private readonly Dictionary<int, CanvasWebViewPrefab> _worldViews = new Dictionary<int, CanvasWebViewPrefab>();
     private readonly Dictionary<int, RawImage> _worldViewRawImages = new Dictionary<int, RawImage>();
+    [SerializeField] private bool refreshUrlOnHide;
 
     private void Awake()
     {
@@ -211,6 +212,11 @@ public class WebViewManager : MonoBehaviour
         if (_worldViews.TryGetValue(slotId, out var view) && view != null)
         {
             view.gameObject.SetActive(false);
+            if (refreshUrlOnHide)
+            {
+                var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
+                Task.Run(async () => await LoadWithTokenAsync(token));
+            }
         }
     }
 
