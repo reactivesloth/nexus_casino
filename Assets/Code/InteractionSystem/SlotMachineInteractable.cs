@@ -36,13 +36,13 @@ namespace Code.InteractionSystem
         private void Awake()
         {
             if (idNumberText != null) idNumberText.text = IDNumber.ToString();
+            if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
+            if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
         private void Start()
         {
             _wasStarted = true;
-            if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
-            if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
         public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
