@@ -6,7 +6,6 @@ using Code.InteractionSystem;
 using Code.Network;
 using Code.Network.Lobby;
 using FishNet;
-using FishNet.Managing;
 using JetBrains.Annotations;
 using Proyecto26;
 using TMPro;
@@ -43,6 +42,8 @@ namespace Code.UI
 
         private void OnEnable()
         {
+            if (!slotMachineInteractable.IsOwner) return;
+            
             if (resultText != null) resultText.text = string.Empty;
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
             StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
@@ -50,6 +51,8 @@ namespace Code.UI
 
         private void Update()
         {
+            if (!slotMachineInteractable.IsOwner) return;
+            
             if (!PlayerInput.Instance.ShowSlotsUI) PlayerInput.Instance.ShowSlotsUI = true;
             
             if (PlayerInput.Instance.IsSlotsFullscreen) SwitchFullscreen();
