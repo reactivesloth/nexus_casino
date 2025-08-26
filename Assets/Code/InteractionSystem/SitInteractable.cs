@@ -1,7 +1,9 @@
 ﻿using System.Collections;
+using Code.Player;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
+using FishNet.Object.Synchronizing;
 
 namespace Code.InteractionSystem
 {
@@ -20,50 +22,44 @@ namespace Code.InteractionSystem
         [SerializeField] private float sitAdjustHeight = 0.0f;
         [SerializeField] private bool allowRotateCamera = true;
         [SerializeField] private bool useRightMouseButtonToRotate = false;
+        [SerializeField] private bool forceFPV;
 
         [Tooltip("0 - Sit in place (back to sit, stand in entry point)\n" +
                  "1 - Sit with turn in place (front to sit, stand in entry point)\n" +
                  "2 - Sit from back-left\n" +
                  "3 - Sit with back-right")]
         [SerializeField]
-        private EntryData[] entries;
+        private EntryData[] entries = System.Array.Empty<EntryData>();
 
-        [SerializeField] private bool forceFPV;
+        private const string SIT_TRIGGER = "TriggerSit";
+        private const string SIT_STATE = "Sitting";
+        private const string SIT_STYLE = "SitStyle";
+        private const string STAND_STATE = "Movement";
 
-        const string SIT_TRIGGER = "TriggerSit";
-        const string SIT_STATE = "Sitting";
-        const string SIT_STYLE = "SitStyle";
-        const string STAND_STATE = "Movement";
+        private readonly SyncVar<bool> _isSittingNet = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
 
-        private bool _isSitting;
+        private readonly SyncVar<int> _entryIndexNet = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+
+        private bool _isSittingLocal;
         private Coroutine _sitRoutine;
         private Vector3 _savedPos;
         private Quaternion _savedRot;
-        private EntryData _selectedEntry;
 
-#if UNITY_EDITOR
-        protected override void OnValidate()
+        private bool _initSit;
+        private bool _didInitialApply;
+
+        private void EnsureInit()
         {
-            base.OnValidate();
-            SetupSitPoints();
-        }
-#endif
-
-        private void Awake() => SetupSitPoints();
-
-        private void OnDisable()
-        {
-            if (_sitRoutine != null)
-            {
-                StopCoroutine(_sitRoutine);
-                _sitRoutine = null;
-            }
-
-            _isSitting = false;
-        }
-
-        private void SetupSitPoints()
-        {
+            if (_initSit) return;
+            _initSit = true;
             if (sitPoint == null)
             {
                 var t = transform.Find("SitPoint");
@@ -71,117 +67,201 @@ namespace Code.InteractionSystem
             }
         }
 
-        private void Update()
+#if UNITY_EDITOR
+        protected override void OnValidate()
         {
-            if (_isSitting && allowRotateCamera && useRightMouseButtonToRotate)
+            base.OnValidate();
+            if (entries == null) entries = System.Array.Empty<EntryData>();
+            if (sitPoint == null)
             {
-                var cm = CursorManager.Instance;
-                if (cm != null) cm.ShowCursor();
+                var t = transform.Find("SitPoint");
+                if (t != null) sitPoint = t;
+            }
+        }
+#endif
+
+        private void Awake() => EnsureInit();
+
+        private void OnEnable()
+        {
+            EnsureInit();
+            _isSittingNet.OnChange += OnIsSittingChanged;
+            _entryIndexNet.OnChange += OnEntryIndexChanged;
+        }
+
+        private void OnDisable()
+        {
+            _isSittingNet.OnChange -= OnIsSittingChanged;
+            _entryIndexNet.OnChange -= OnEntryIndexChanged;
+
+            if (_sitRoutine != null)
+            {
+                StopCoroutine(_sitRoutine);
+                _sitRoutine = null;
+            }
+
+            _isSittingLocal = false;
+            _didInitialApply = false;
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            EnsureInit();
+            if (!_didInitialApply)
+            {
+                ApplySitStateImmediate(_isSittingNet.Value, _entryIndexNet.Value);
+                _didInitialApply = true;
             }
         }
 
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
-            _isSitting = false;
+            _isSittingLocal = false;
             _sitRoutine = null;
+            _didInitialApply = false;
+        }
+
+        private void Update()
+        {
+            if (_isSittingLocal && allowRotateCamera && useRightMouseButtonToRotate)
+            {
+                var cm = CursorManager.Instance;
+                if (cm != null) cm.ShowCursor();
+            }
         }
 
         protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             base.OnInteract(conn, force);
-            TargetToggleSit(conn, true, force);
+            if (!IsServer) return;
+
+            // Выбор входа и установка истины
+            int idx = PickEntryIndexFor(conn);
+            _entryIndexNet.Value = idx;
+
+            if (!_isSittingNet.Value)
+                _isSittingNet.Value = true;
+
+            // Плавный визуал на владельце
+            TargetToggleSit(conn, true, false);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
+            // Порядок: истина/визуал -> базовый End
+            if (!IsServer)
+            {
+                base.OnEndInteract(conn);
+                return;
+            }
+
+            if (_isSittingNet.Value)
+            {
+                _isSittingNet.Value = false;
+                TargetToggleSit(conn, false);
+            }
+
             base.OnEndInteract(conn);
-            TargetToggleSit(conn, false);
+        }
+
+        private void OnIsSittingChanged(bool prev, bool next, bool asServer)
+        {
+            EnsureInit();
+            // runtime — не форсим мгновенно, чтобы не рвать переходы
+            if (!_didInitialApply) return;
+            if (_sitRoutine != null) return;
+        }
+
+        private void OnEntryIndexChanged(int prev, int next, bool asServer)
+        {
+            EnsureInit();
+            if (!_didInitialApply) return;
+            if (_sitRoutine != null) return;
+        }
+
+        private void ApplySitStateImmediate(bool sit, int entryIndex)
+        {
+            var move = FindLocalOwnerMovement();
+            if (move == null) return;
+
+            var cc = move.GetComponent<CharacterController>();
+            var anim = move.GetComponent<Animator>();
+            var tf = move.transform;
+
+            var entry = GetEntry(entryIndex) ?? FindClosestEntryPoint(tf.position) ?? GetEntry(0);
+
+            if (sit)
+            {
+                _savedPos = tf.position;
+                _savedRot = tf.rotation;
+                ForceSit(move, anim, cc, tf, entry);
+                _isSittingLocal = true;
+            }
+            else
+            {
+                ForceStand(move, anim, cc, tf, entry);
+                _isSittingLocal = false;
+            }
         }
 
         [TargetRpc]
         private void TargetToggleSit(NetworkConnection conn, bool isSitDown, bool isForce = false)
         {
-            // Ищем локального PlayerMovementController без LINQ.First
-            Player.PlayerMovementController movement = null;
-            var all = FindObjectsOfType<Player.PlayerMovementController>();
-            for (int i = 0; i < all.Length; i++)
-            {
-                var m = all[i];
-                if (m != null && m.Owner.IsLocalClient)
-                {
-                    movement = m;
-                    break;
-                }
-            }
+            var move = FindLocalOwnerMovement();
+            if (move == null) return;
 
-            if (movement == null) return;
-
-            var cc = movement.GetComponent<CharacterController>();
-            var anim = movement.GetComponent<Animator>();
-            var tf = movement.transform;
+            var cc = move.GetComponent<CharacterController>();
+            var anim = move.GetComponent<Animator>();
+            var tf = move.transform;
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
-            
+
+            var entry = GetEntry(_entryIndexNet.Value) ?? FindClosestEntryPoint(tf.position) ?? GetEntry(0);
+
             if (isSitDown && isForce)
-                ForceSit(movement, anim, cc, tf); //TODO: Force sit down
+            {
+                _savedPos = tf.position;
+                _savedRot = tf.rotation;
+                ForceSit(move, anim, cc, tf, entry);
+            }
             else
+            {
                 _sitRoutine = StartCoroutine(
                     isSitDown
-                        ? SitDownFlow(movement, anim, cc, tf)
-                        : StandUpFlow(movement, anim, cc, tf)
+                        ? SitDownFlow(move, anim, cc, tf, entry)
+                        : StandUpFlow(move, anim, cc, tf, entry)
                 );
+            }
         }
 
-        private void ForceSit(Player.PlayerMovementController move, Animator anim, CharacterController cc,
-            Transform tf)
+        private void ForceSit(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf,
+            EntryData entry)
         {
-            // Находим точку входа (для сохранения в _selectedEntry)
-            _selectedEntry = FindClosestEntryPoint(tf.position);
-            if (_selectedEntry == null && entries.Length > 0)
-                _selectedEntry = entries[0]; // Используем первую точку если не нашли
+            if (entry == null) return;
 
-            // Сохраняем текущую позицию и поворот
-            _savedPos = tf.position;
-            _savedRot = tf.rotation;
-
-            if (cc != null)
-                cc.enabled = false;
-
+            if (cc != null) cc.enabled = false;
             move.CanMove = false;
 
-            // Вычисляем смещение для ног
-            //float footOffset = ComputeFootOffset(anim, tf, sitPoint);
-            Vector3 targetPos = sitPoint.position + Vector3.up * (sitAdjustHeight);
-            Quaternion targetRot = sitPoint.rotation;
-
-            // Телепортируем персонажа
+            var targetPos = (sitPoint ? sitPoint.position : tf.position) + Vector3.up * sitAdjustHeight;
+            var targetRot = sitPoint ? sitPoint.rotation : tf.rotation;
             tf.position = targetPos;
             tf.rotation = targetRot;
 
-            // Устанавливаем состояние аниматора без перехода
             if (anim != null)
             {
-                // Параметры для состояния сидения
                 int style = 0;
-                if (_selectedEntry != null)
-                    int.TryParse(_selectedEntry.animationID, out style);
-
+                int.TryParse(entry.animationID, out style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
-
-                // Принудительно устанавливаем состояние сидения
-                anim.Play(SIT_STATE, 0, 1f); // layer 0, время 100%
-
-                // Отключаем root motion
+                anim.Play(SIT_STATE, 0, 0f);
+                anim.Update(0f);
                 anim.applyRootMotion = false;
             }
 
-            // Обновляем статусы
-            _isSitting = true;
             move.SuppressLookAtIK = !move.FirstPersonView;
 
-            // Настройки камеры
             if (allowRotateCamera)
             {
                 move.LookCameraLimitRotation = true;
@@ -192,22 +272,72 @@ namespace Code.InteractionSystem
                 }
             }
 
-            // Сохраняем углы камеры
             move.sitBaseYaw = move.cinemachineTargetYaw;
             move.sitBasePitch = move.cinemachineTargetPitch;
 
-            // Принудительное FPV
             if (forceFPV)
                 move.ForceEnterFPV(true, snap: true);
 
             IsBusy = false;
         }
 
-        private IEnumerator SitDownFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,
-            Transform tf)
+        private void ForceStand(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf,
+            EntryData entry)
+        {
+            if (allowRotateCamera)
+            {
+                move.LookCameraLimitRotation = false;
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = false;
+                    move.LockCursor = true;
+                }
+
+                float preservedPitch = 0f;
+                float preservedYaw = move.cinemachineTargetYaw;
+                var camT = move.CinemachineCameraTarget.transform;
+                camT.rotation = Quaternion.Euler(
+                    preservedPitch + move.cameraAngleOverride,
+                    preservedYaw,
+                    0f);
+            }
+
+            if (anim != null)
+            {
+                int style = 0;
+                int.TryParse(entry != null ? entry.animationID : "0", out style);
+                anim.SetFloat(SIT_STYLE, style);
+                anim.SetBool(SIT_TRIGGER, false);
+                anim.Play(STAND_STATE, 0, 0f);
+                anim.Update(0f);
+                anim.applyRootMotion = false;
+            }
+
+            if (cc != null) cc.enabled = true;
+            move.CanMove = true;
+
+            move.SnapAimToCurrentCamera();
+            move.BeginIkGrace(0.2f);
+
+            if (allowRotateCamera)
+            {
+                move.LookCameraLimitRotation = false;
+                if (useRightMouseButtonToRotate)
+                {
+                    move.LookCameraLimitRotationRKM = false;
+                    move.LockCursor = true;
+                    if (CursorManager.Instance != null)
+                        CursorManager.Instance.HideCursor();
+                }
+            }
+
+            move.SuppressLookAtIK = !move.FirstPersonView;
+        }
+
+        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf, EntryData entry)
         {
             IsBusy = true;
-
             move.SuppressLookAtIK = true;
 
             _savedPos = tf.position;
@@ -216,15 +346,14 @@ namespace Code.InteractionSystem
             if (cc != null) cc.enabled = false;
             move.CanMove = false;
 
-            _selectedEntry = FindClosestEntryPoint(tf.position);
-            if (_selectedEntry == null)
+            if (entry == null)
             {
-                Debug.LogWarning("No entry point found");
+                Debug.LogWarning("SitInteractable: No entry point found");
                 IsBusy = false;
                 yield break;
             }
 
-            var entryPoint = _selectedEntry.entryPoint;
+            var entryPoint = entry.entryPoint;
 
             yield return RotateTowardPointIfNeeded(tf, entryPoint.position);
             yield return MoveToPoint(tf, entryPoint.position, anim);
@@ -234,7 +363,7 @@ namespace Code.InteractionSystem
             {
                 anim.applyRootMotion = true;
                 int style = 0;
-                int.TryParse(_selectedEntry.animationID, out style);
+                int.TryParse(entry.animationID, out style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
             }
@@ -251,15 +380,15 @@ namespace Code.InteractionSystem
             Vector3 startPos = tf.position;
             Quaternion startRot = tf.rotation;
 
-            float footOffset = ComputeFootOffset(anim, tf, sitPoint);
-            Vector3 targetPos = (sitPoint != null ? sitPoint.position : tf.position) + Vector3.up * footOffset +
+            float footOffset = ComputeFootOffset(anim, tf, sitPoint ? sitPoint : tf);
+            Vector3 targetPos = (sitPoint ? sitPoint.position : tf.position) + Vector3.up * footOffset +
                                 Vector3.up * sitAdjustHeight;
-            Quaternion targetRot = sitPoint != null ? sitPoint.rotation : tf.rotation;
+            Quaternion targetRot = sitPoint ? sitPoint.rotation : tf.rotation;
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float t = (duration > 0.0001f) ? Mathf.Clamp01(elapsed / duration) : 1f;
+                float t = duration > 0.0001f ? Mathf.Clamp01(elapsed / duration) : 1f;
                 tf.position = Vector3.Lerp(startPos, targetPos, t);
                 tf.rotation = Quaternion.Slerp(startRot, targetRot, t);
                 yield return null;
@@ -270,17 +399,16 @@ namespace Code.InteractionSystem
 
             if (anim != null) anim.applyRootMotion = false;
             _sitRoutine = null;
-            _isSitting = true;
-            move.SuppressLookAtIK = !move.FirstPersonView;
+            _isSittingLocal = true;
+            move.SuppressLookAtIK = false;
 
-            // ВКЛЮЧАЕМ ОГРАНИЧЕНИЯ ТОЛЬКО ТЕПЕРЬ (после посадки!)
             if (allowRotateCamera)
             {
                 move.LookCameraLimitRotation = true;
                 if (useRightMouseButtonToRotate)
                 {
                     move.LookCameraLimitRotationRKM = true;
-                    move.LockCursor = false; // курсор видим, поворот — только при зажатой ПКМ
+                    move.LockCursor = false;
                 }
             }
 
@@ -293,8 +421,8 @@ namespace Code.InteractionSystem
             IsBusy = false;
         }
 
-        private IEnumerator StandUpFlow(Player.PlayerMovementController move, Animator anim, CharacterController cc,
-            Transform tf)
+        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+            Transform tf, EntryData entry)
         {
             move.SuppressLookAtIK = true;
 
@@ -317,13 +445,13 @@ namespace Code.InteractionSystem
             }
 
             IsBusy = true;
-            _isSitting = false;
+            _isSittingLocal = false;
 
             if (anim != null)
             {
                 anim.applyRootMotion = true;
                 int style = 0;
-                int.TryParse(_selectedEntry != null ? _selectedEntry.animationID : "0", out style);
+                int.TryParse(entry != null ? entry.animationID : "0", out style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, false);
             }
@@ -334,20 +462,16 @@ namespace Code.InteractionSystem
             Vector3 startPos = tf.position;
             Quaternion startRot = tf.rotation;
 
-            Vector3 targetPos = _selectedEntry != null && _selectedEntry.entryPoint != null
-                ? _selectedEntry.entryPoint.position
-                : _savedPos;
-            Quaternion targetRot = _selectedEntry != null && _selectedEntry.entryPoint != null
-                ? _selectedEntry.entryPoint.rotation
-                : _savedRot;
+            Vector3 targetPos = entry != null && entry.entryPoint != null ? entry.entryPoint.position : _savedPos;
+            Quaternion targetRot = entry != null && entry.entryPoint != null ? entry.entryPoint.rotation : _savedRot;
 
-            float footOffset = ComputeFootOffset(anim, tf, _selectedEntry != null ? _selectedEntry.entryPoint : tf);
+            float footOffset = ComputeFootOffset(anim, tf, entry != null ? entry.entryPoint : tf);
             targetPos += Vector3.up * footOffset;
 
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float t = (duration > 0.0001f) ? Mathf.Clamp01(elapsed / duration) : 1f;
+                float t = duration > 0.0001f ? Mathf.Clamp01(elapsed / duration) : 1f;
                 tf.position = Vector3.Lerp(startPos, targetPos, t);
                 tf.rotation = Quaternion.Slerp(startRot, targetRot, t);
                 yield return null;
@@ -355,20 +479,18 @@ namespace Code.InteractionSystem
 
             if (anim != null)
                 yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).IsName(STAND_STATE));
-            
+
             if (anim != null) anim.applyRootMotion = false;
             if (cc != null) cc.enabled = true;
             move.CanMove = true;
 
             _sitRoutine = null;
             IsBusy = false;
-            move.SuppressLookAtIK = !move.FirstPersonView;
+            move.SuppressLookAtIK = false;
 
-            // после восстановления контроллера и движения
-            move.SnapAimToCurrentCamera(); // выравниваем таргеты под текущую камеру
-            move.BeginIkGrace(0.2f); // 200ms без IK, чтобы камера «встала» стабильно
-            
-            // завершаем флаги RMB-режима
+            move.SnapAimToCurrentCamera();
+            move.BeginIkGrace(0.2f);
+
             if (allowRotateCamera)
             {
                 move.LookCameraLimitRotation = false;
@@ -380,26 +502,47 @@ namespace Code.InteractionSystem
                         CursorManager.Instance.HideCursor();
                 }
             }
+        }
 
-            // финальный статус подавления IK: в FPV разрешаем, в 3Л — выключено
-            move.SuppressLookAtIK = !move.FirstPersonView;
+        private int PickEntryIndexFor(NetworkConnection conn)
+        {
+            var all = FindObjectsOfType<PlayerMovementController>();
+            for (int i = 0; i < all.Length; i++)
+                if (all[i] != null && all[i].Owner == conn)
+                {
+                    var tf = all[i].transform;
+                    var closest = FindClosestEntryPoint(tf.position);
+                    if (closest == null) return 0;
+                    for (int e = 0; e < entries.Length; e++)
+                        if (entries[e] == closest)
+                            return e;
+                    return 0;
+                }
+
+            return 0;
+        }
+
+        private EntryData GetEntry(int index)
+        {
+            if (entries == null || entries.Length == 0) return null;
+            if (index < 0 || index >= entries.Length) return null;
+            return entries[index];
         }
 
         private EntryData FindClosestEntryPoint(Vector3 from)
         {
             if (entries == null || entries.Length == 0) return null;
 
-            float minDist = float.MaxValue;
+            float min = float.MaxValue;
             EntryData closest = null;
-
             for (int i = 0; i < entries.Length; i++)
             {
                 var e = entries[i];
                 if (e == null || e.entryPoint == null) continue;
                 float d = Vector3.Distance(from, e.entryPoint.position);
-                if (d < minDist)
+                if (d < min)
                 {
-                    minDist = d;
+                    min = d;
                     closest = e;
                 }
             }
@@ -414,7 +557,7 @@ namespace Code.InteractionSystem
             float animBlendSpeed = 8f;
             float elapsed = 0f;
 
-            float vertical = 0f, horizontal = 0f;
+            float v = 0f, h = 0f;
 
             while (Vector3.Distance(tf.position, targetPos) > stopDistance && elapsed < maxDuration)
             {
@@ -422,26 +565,26 @@ namespace Code.InteractionSystem
 
                 Vector3 dir = targetPos - tf.position;
                 dir.y = 0f;
-                float distance = dir.magnitude;
+                float dist = dir.magnitude;
 
-                if (distance > 0.001f)
+                if (dist > 0.001f)
                 {
                     dir.Normalize();
                     tf.position += dir * walkSpeed * Time.deltaTime;
 
-                    vertical = Mathf.MoveTowards(vertical, 1f, animBlendSpeed * Time.deltaTime);
-                    horizontal = Mathf.MoveTowards(horizontal, 0f, animBlendSpeed * Time.deltaTime);
+                    v = Mathf.MoveTowards(v, 1f, animBlendSpeed * Time.deltaTime);
+                    h = Mathf.MoveTowards(h, 0f, animBlendSpeed * Time.deltaTime);
                 }
                 else
                 {
-                    vertical = Mathf.MoveTowards(vertical, 0f, animBlendSpeed * Time.deltaTime);
-                    horizontal = Mathf.MoveTowards(horizontal, 0f, animBlendSpeed * Time.deltaTime);
+                    v = Mathf.MoveTowards(v, 0f, animBlendSpeed * Time.deltaTime);
+                    h = Mathf.MoveTowards(h, 0f, animBlendSpeed * Time.deltaTime);
                 }
 
                 if (anim != null)
                 {
-                    anim.SetFloat("Vertical", vertical);
-                    anim.SetFloat("Horizontal", horizontal);
+                    anim.SetFloat("Vertical", v);
+                    anim.SetFloat("Horizontal", h);
                 }
 
                 yield return null;
@@ -502,6 +645,32 @@ namespace Code.InteractionSystem
             float localFootY = playerTf.InverseTransformPoint(footWorld).y;
             float localRefY = playerTf.InverseTransformPoint(refPoint.position).y;
             return localRefY - localFootY;
+        }
+
+        private PlayerMovementController FindLocalOwnerMovement()
+        {
+            var all = FindObjectsOfType<PlayerMovementController>();
+            for (int i = 0; i < all.Length; i++)
+            {
+                var m = all[i];
+                if (m != null && m.Owner.IsLocalClient)
+                    return m;
+            }
+
+            return null;
+        }
+
+        private PlayerMovementController FindServerSideMovement(NetworkConnection conn)
+        {
+            var all = FindObjectsOfType<PlayerMovementController>();
+            for (int i = 0; i < all.Length; i++)
+            {
+                var m = all[i];
+                if (m != null && m.Owner == conn)
+                    return m;
+            }
+
+            return null;
         }
     }
 }

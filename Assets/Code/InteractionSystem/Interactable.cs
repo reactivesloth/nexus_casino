@@ -12,9 +12,7 @@ namespace Code.InteractionSystem
         [Header("Interaction Settings")] [SerializeField, Tooltip("Max distance for interaction.")]
         private float _interactionDistance = 3f;
 
-        public float InteractionDistance => _interactionDistance;
-
-        public GameObject[] outlineGameObjects;
+        [Header("Outline Targets")] public GameObject[] outlineGameObjects;
 
         [Header("Enable/Disable")] [SerializeField, Tooltip("Enable or disable this interactable.")]
         private bool _interactableEnabled = true;
@@ -27,7 +25,7 @@ namespace Code.InteractionSystem
 
         public bool ManualRelease => _manualRelease;
 
-        protected int OccupiedConnectionId;
+        protected int OccupiedConnectionId = -1;
 
         protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {
@@ -36,12 +34,21 @@ namespace Code.InteractionSystem
         });
 
         public bool IsOccupied => _isOccupied.Value;
+
         public bool IsBusy { get; set; }
 
         public delegate void OnInteractCallback(bool success);
-        public event OnInteractCallback InteractCallback; // Callback for clients
 
+        public event OnInteractCallback InteractCallback;
         public event Action OnInteractEndOnServer;
+
+        private bool _initedInteractable;
+
+        protected virtual void EnsureInit()
+        {
+            if (_initedInteractable) return;
+            _initedInteractable = true;
+        }
 
         public virtual string InteractionPrompt
         {
@@ -74,6 +81,13 @@ namespace Code.InteractionSystem
                 ReleaseInteractable();
         }
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            EnsureInit();
+            ApplyOccupiedClient(_isOccupied.Value);
+        }
+        
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
@@ -82,6 +96,8 @@ namespace Code.InteractionSystem
             if (col != null) col.isTrigger = true;
         }
 #endif
+        
+        protected virtual void ApplyOccupiedClient(bool occupied) { }
 
         public void RequestInteract()
         {
@@ -90,6 +106,7 @@ namespace Code.InteractionSystem
                 InteractCallback?.Invoke(false);
                 return;
             }
+
             Server_HandleInteract(ClientManager.Connection);
         }
 
@@ -100,6 +117,7 @@ namespace Code.InteractionSystem
                 InteractCallback?.Invoke(false);
                 return;
             }
+
             Server_HandleEndInteract(ClientManager.Connection);
         }
 
@@ -116,13 +134,14 @@ namespace Code.InteractionSystem
                 OnInteractionCallbackFromServer(conn, false);
                 return;
             }
+
             OccupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
             OnInteract(conn, force);
 
             if (!ManualRelease)
-                _isOccupied.Value = false; // автосброс
-            
+                _isOccupied.Value = false;
+
             OnInteractionCallbackFromServer(conn, true);
         }
 
@@ -134,6 +153,7 @@ namespace Code.InteractionSystem
                 OnEndInteractionCallbackFromServer(conn, false);
                 return;
             }
+
             OnEndInteract(conn);
             _isOccupied.Value = false;
             OnEndInteractionCallbackFromServer(conn, true);
@@ -169,7 +189,7 @@ namespace Code.InteractionSystem
         {
             InteractCallback?.Invoke(success);
         }
-        
+
         [TargetRpc]
         private void OnEndInteractionCallbackFromServer(NetworkConnection target, bool success) =>
             OnEndInteractionCallbackFromServer(success);

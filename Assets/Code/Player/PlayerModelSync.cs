@@ -12,97 +12,147 @@ namespace Code.Player
     [RequireComponent(typeof(CharacterCustomization))]
     public class PlayerModelSync : NetworkBehaviour
     {
-        [SerializeField] private float updateAvatarInterval = 10f;
-        
+        [Header("Change detection")] [SerializeField, Tooltip("Включить контроль хеша JSON, чтобы не слать дубликаты.")]
+        private bool useHashGuard = true;
+
         private CharacterCustomization _characterCustomization;
         private NetworkAnimator _networkAnimator;
-        private Coroutine _updateAvatarCoroutine;
 
         private readonly SyncVar<string> _characterJson = new(new SyncTypeSettings
         {
             ReadPermission = ReadPermission.Observers,
             WritePermission = WritePermission.ServerOnly
         });
-        
-        private void Awake()
+
+        private string _lastSentJson;
+        private int _lastSentHash;
+
+        private bool _initedPlayerModelSync;
+
+        private void EnsureInit()
         {
-            _characterCustomization = GetComponent<CharacterCustomization>();
-            _networkAnimator = GetComponent<NetworkAnimator>();
-            _characterJson.OnChange += OnCharacterJsonChanged;
-            _characterCustomization.Initialize();
+            if (_initedPlayerModelSync) return;
+            _initedPlayerModelSync = true;
+
+            if (_characterCustomization == null)
+                _characterCustomization = GetComponent<CharacterCustomization>();
+
+            if (_networkAnimator == null)
+                _networkAnimator = GetComponent<NetworkAnimator>();
+
+            if (_characterCustomization != null)
+            {
+                _characterCustomization.Autoload = false;
+                _characterCustomization.Initialize();
+            }
         }
 
-        private void Start()
+        private void Awake()
         {
+            EnsureInit();
+            _characterJson.OnChange += OnCharacterJsonChanged;
+        }
+
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
             ServerManager.OnRemoteConnectionState += OnConnectionState;
+        }
+
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            ServerManager.OnRemoteConnectionState -= OnConnectionState;
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            EnsureInit();
+
+            ApplyCharacterJsonImmediate(_characterJson.Value);
+
+            if (IsOwner)
+                StartCoroutine(WaitAndCommitLocalCharacter());
         }
 
         private void OnDestroy()
         {
-            ServerManager.OnRemoteConnectionState -= OnConnectionState;
             _characterJson.OnChange -= OnCharacterJsonChanged;
         }
 
-        private void OnConnectionState(NetworkConnection arg1, RemoteConnectionStateArgs arg2)
+        private void OnConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
         {
-            if(arg2.ConnectionState == RemoteConnectionState.Started)
+            if (args.ConnectionState == RemoteConnectionState.Started)
             {
-                _networkAnimator.SendAll();
+                if (_networkAnimator != null)
+                    _networkAnimator.SendAll();
             }
         }
-        
+
         private void OnCharacterJsonChanged(string prev, string next, bool asServer)
         {
-            Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
-
-            _characterCustomization.Autoload = false;
-            _characterCustomization.Initialize();
-            if (!string.IsNullOrEmpty(next))
-                _characterCustomization.LoadFromJSON(next);
+            Debug.Log($"[Client] Получен JSON ({(next != null ? next.Length : 0)} симв.)");
+            EnsureInit();
+            ApplyCharacterJsonImmediate(next);
         }
 
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            if (IsOwner) StartCoroutine(WaitAndSendLocalCharacter());
+            if (IsOwner)
+                StartCoroutine(WaitAndCommitLocalCharacter());
+        }
+
+        private IEnumerator WaitAndCommitLocalCharacter()
+        {
+            while (!IsClientInitialized || !IsClientStarted || !IsSpawned)
+                yield return null;
+            yield return null;
+
+            CommitLocalCharacter();
+        }
+        
+        public void CommitLocalCharacter()
+        {
+            if (!IsOwner) return;
+
+            EnsureInit();
+            string json = _characterCustomization != null ? _characterCustomization.GetJSON() : string.Empty;
+
+            if (useHashGuard)
+            {
+                int hash = json != null ? json.GetHashCode() : 0;
+                if (_lastSentJson == json && _lastSentHash == hash)
+                {
+                    return;
+                }
+
+                _lastSentJson = json;
+                _lastSentHash = hash;
+            }
+
+            SendCharacterJsonServerRpc(json);
         }
 
         [ServerRpc(RunLocally = true)]
-        public void SendCharacterJsonServerRpc(string json)
+        private void SendCharacterJsonServerRpc(string json)
         {
             Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
             _characterJson.Value = json ?? string.Empty;
         }
 
-        private IEnumerator WaitAndSendLocalCharacter()
+        private void ApplyCharacterJsonImmediate(string json)
         {
-            while (!IsClientInitialized || !IsClientStarted || !IsSpawned)
-                yield return null;
-            yield return null;
-            TransmitLocalCharacter();
-        }
+            if (_characterCustomization == null)
+                _characterCustomization = GetComponent<CharacterCustomization>();
+            if (_characterCustomization == null) return;
 
-        public void TransmitLocalCharacter()
-        {
-            if (!IsOwner) return;
-            Debug.Log("[Client] TransmitLocalCharacter");
-            string json = _characterCustomization.GetJSON();
-            SendCharacterJsonServerRpc(json);
+            _characterCustomization.Autoload = false;
+            _characterCustomization.Initialize();
 
-            if(_updateAvatarCoroutine != null)
-                StopCoroutine(_updateAvatarCoroutine);
-            _updateAvatarCoroutine = StartCoroutine(UpdateLoop());
-        }
-
-        private IEnumerator UpdateLoop()
-        {
-            var wait = new WaitForSeconds(updateAvatarInterval);
-            while (true)
-            {
-                yield return wait;
-                string json = _characterCustomization.GetJSON();
-                SendCharacterJsonServerRpc(json);
-            }
+            if (!string.IsNullOrEmpty(json))
+                _characterCustomization.LoadFromJSON(json);
         }
     }
 }

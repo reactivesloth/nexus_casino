@@ -8,20 +8,28 @@ namespace Code.InteractionSystem
     public class CompositeInteractable : Interactable
     {
         [Header("Children to interact with")]
-        [SerializeField, Tooltip("Все дочерние Interactable, которые нужно задействовать за одно нажатие.")]
+        [SerializeField, Tooltip("Все дочерние Interactable, которые запускаются одним нажатием.")]
         private Interactable[] children;
 
         [SerializeField] private bool generateColliderFromChildren = true;
 
-        // Автогенерируемый box-триггер
         private BoxCollider _compositeCollider;
+
+        protected override void EnsureInit()
+        {
+            base.EnsureInit();
+            if (_compositeCollider == null)
+            {
+                _compositeCollider = GetComponent<BoxCollider>();
+                if (_compositeCollider != null)
+                    _compositeCollider.isTrigger = true;
+            }
+            if (children == null) children = Array.Empty<Interactable>();
+        }
 
         private void Awake()
         {
-            _compositeCollider = GetComponent<BoxCollider>();
-            if (_compositeCollider != null)
-                _compositeCollider.isTrigger = true;
-
+            EnsureInit();
             if (generateColliderFromChildren && _compositeCollider != null)
                 UpdateCompositeColliderBounds();
         }
@@ -37,11 +45,10 @@ namespace Code.InteractionSystem
         }
 #endif
 
-        /// <summary>Строит объединённые границы по всем дочерним коллайдерам.</summary>
         private void UpdateCompositeColliderBounds()
         {
             var all = GetComponentsInChildren<Collider>(true);
-            if (all == null || all.Length == 0) return;
+            if (all == null || all.Length == 0 || _compositeCollider == null) return;
 
             Bounds? b = null;
             for (int i = 0; i < all.Length; i++)
@@ -58,13 +65,10 @@ namespace Code.InteractionSystem
             }
 
             if (!b.HasValue) return;
-
             var bounds = b.Value;
 
-            // центр в лок. координатах
             _compositeCollider.center = transform.InverseTransformPoint(bounds.center);
 
-            // из world size в local с учётом scale
             var ls = transform.lossyScale;
             Vector3 worldSize = bounds.size;
             Vector3 localSize = new Vector3(
@@ -80,20 +84,18 @@ namespace Code.InteractionSystem
             get
             {
                 if (!IsEnabled) return "Disabled";
-                if (IsOccupied)  return ManualRelease ? "Press E to end" : "Occupied";
+                if (IsOccupied) return ManualRelease ? "Press E to end" : "Occupied";
 
                 if (children == null || children.Length == 0)
                     return base.InteractionPrompt;
 
-                // Собираем промпты без LINQ
-                int count = 0;
-                // заранее оценим макс длину, чтобы избежать лишних конкатенаций
+                int available = 0;
                 for (int i = 0; i < children.Length; i++)
                 {
                     var c = children[i];
-                    if (c != null && c.IsEnabled && !c.IsOccupied) count++;
+                    if (c != null && c.IsEnabled && !c.IsOccupied) available++;
                 }
-                if (count == 0) return base.InteractionPrompt;
+                if (available == 0) return base.InteractionPrompt;
 
                 string result = string.Empty;
                 int appended = 0;
@@ -111,22 +113,47 @@ namespace Code.InteractionSystem
 
         protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
+            base.OnInteract(conn, force);
+
             if (children == null) return;
+
             for (int i = 0; i < children.Length; i++)
             {
                 var child = children[i];
-                if (child != null) child.OnInteract(conn, force);
+                if (child == null) continue;
+                child.ServerForceInteract(conn);
             }
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
-            if (children == null) return;
-            for (int i = 0; i < children.Length; i++)
+            if (children != null)
             {
-                var child = children[i];
-                if (child != null) child.OnEndInteract(conn);
+                for (int i = 0; i < children.Length; i++)
+                {
+                    var child = children[i];
+                    if (child == null) continue;
+
+                    if (child.ManualRelease)
+                    {
+                        child.OnEndInteract(conn);
+                    }
+                }
             }
+
+            base.OnEndInteract(conn);
+
+            bool anyChildOccupied = false;
+            if (children != null)
+            {
+                for (int i = 0; i < children.Length; i++)
+                {
+                    var child = children[i];
+                    if (child != null && child.IsOccupied) { anyChildOccupied = true; break; }
+                }
+            }
+            if (IsOccupied || anyChildOccupied)
+                ReleaseAll();
         }
 
         private void Update()
@@ -146,7 +173,11 @@ namespace Code.InteractionSystem
             if (children != null)
             {
                 for (int i = 0; i < children.Length; i++)
-                    if (children[i] != null) children[i].ReleaseInteractable();
+                {
+                    var child = children[i];
+                    if (child != null)
+                        child.ReleaseInteractable();
+                }
             }
             ReleaseInteractable();
         }

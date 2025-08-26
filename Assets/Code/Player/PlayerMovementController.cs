@@ -1,8 +1,6 @@
-﻿using CC;
-using Cinemachine;
+﻿using Cinemachine;
 using Code.Network.HostMigration;
 using Code.Network.Player;
-using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -46,7 +44,7 @@ namespace Code.Player
         [SerializeField] private AudioClip landingAudioClip;
         [SerializeField] private AudioClip[] footstepAudioClips;
         [Range(0, 1)] [SerializeField] private float footstepAudioVolume = 0.5f;
-        
+
         public bool CanMove = true;
         public bool LockCameraPosition = true;
 
@@ -58,7 +56,6 @@ namespace Code.Player
             {
                 if (_firstPersonView == value) return;
                 _firstPersonView = value;
-
                 if (value && LookCameraLimitRotation)
                 {
                     float modelYaw = transform.eulerAngles.y;
@@ -67,6 +64,7 @@ namespace Code.Player
                 }
             }
         }
+
         public float CameraDistance => cameraDistance;
 
         private bool lookCameraLimitRotation;
@@ -83,8 +81,8 @@ namespace Code.Player
                 lookCameraLimitRotation = value;
             }
         }
-        public bool LookCameraLimitRotationRKM { get; set; } = false;
 
+        public bool LookCameraLimitRotationRKM { get; set; } = false;
         public bool LockCursor { get; set; } = true;
 
         [Header("Sit Camera Limits")]
@@ -97,11 +95,12 @@ namespace Code.Player
         [Header("IK Settings")]
         [SerializeField] private float ikTransitionSpeed = 5f;
         [SerializeField] private float lookAtSmoothSpeed = 5f;
-        [SerializeField, Range(0f,1f)] private float lookAtClampWeight = 0.5f;
+        [SerializeField, Range(0f, 1f)] private float lookAtClampWeight = 0.5f;
+
         public bool SuppressLookAtIK { get; set; } = false;
         private float _ikSuppressUntil = 0f;
         public void BeginIkGrace(float seconds) => _ikSuppressUntil = Time.time + Mathf.Max(0f, seconds);
-        
+
         private float currentIkWeight;
 
         private bool grounded;
@@ -110,17 +109,14 @@ namespace Code.Player
         private float verticalVelocity;
         private float jumpTimeoutDelta;
         private float fallTimeoutDelta;
-
         private float speed;
         private float animationBlend;
         private float targetRotation;
         private float rotationVelocity;
         public float cinemachineTargetYaw;
         public float cinemachineTargetPitch;
-
         public float sitBaseYaw;
         public float sitBasePitch;
-
         private float vertical;
         private float horizontal;
 
@@ -135,6 +131,7 @@ namespace Code.Player
             WritePermission = WritePermission.ClientUnsynchronized,
             ReadPermission = ReadPermission.Observers
         });
+
         private readonly SyncVar<float> networkIkWeight = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ClientUnsynchronized,
@@ -152,59 +149,89 @@ namespace Code.Player
         private int animIDFPV;
 
         private const float Threshold = 0.01f;
+
         private bool smoothedFirstPerson;
         private float _syncWeight;
         private Vector3 _lookPos;
-        private bool _cursorUsable; // можно ли сейчас принимать мышь/тач
+        private bool _cursorUsable;
         private bool _snapToFpVPending;
+
         private float _spawnPositionTimer;
-        [SerializeField] private float spawnPositionUpdateTime = 2;
+        [SerializeField] private float spawnPositionUpdateTime = 2f;
 
-        private void Awake()
-        {
-            _mainCamera = Camera.main;
-            input = PlayerInput.Instance;
-        }
+        private bool _initedPlayer;
 
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        private void EnsureInit()
         {
-            base.OnOwnershipClient(prevOwner);
-            if (!IsOwner) return;
+            if (_initedPlayer) return;
+            _initedPlayer = true;
 
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
             AssignAnimationIDs();
 
-            jumpTimeoutDelta = jumpTimeout;
-            fallTimeoutDelta = fallTimeout;
+            _mainCamera = Camera.main;
+            input = PlayerInput.Instance;
 
             if (cinemachineCameraTarget != null)
                 cinemachineTargetYaw = cinemachineCameraTarget.transform.rotation.eulerAngles.y;
 
             UpdateHeadTargetPos();
 
-            Own = this;
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+        }
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            if (IsOwner)
+            {
+                EnsureInit();
+                Own = this;
+                if (spawnOnSawedPosition)
+                    LoadSpawnPosition();
+                jumpTimeoutDelta = jumpTimeout;
+                fallTimeoutDelta = fallTimeout;
+            }
+        }
+
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        {
+            base.OnOwnershipClient(prevOwner);
+            if (!IsOwner) return;
+            EnsureInit();
+            Own = this;
             if (spawnOnSawedPosition)
                 LoadSpawnPosition();
+            jumpTimeoutDelta = jumpTimeout;
+            fallTimeoutDelta = fallTimeout;
         }
 
         private void LoadSpawnPosition()
         {
             if (!IsOwner) return;
             if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
-            
-            transform.position = new Vector3(PlayerPrefs.GetFloat("SavedSpawnPositionX"), PlayerPrefs.GetFloat("SavedSpawnPositionY"), PlayerPrefs.GetFloat("SavedSpawnPositionZ"));
-            transform.rotation = Quaternion.Euler(PlayerPrefs.GetFloat("SavedSpawnRotationX"),  PlayerPrefs.GetFloat("SavedSpawnRotationY"), PlayerPrefs.GetFloat("SavedSpawnRotationZ"));
-             
+
+            transform.position = new Vector3(
+                PlayerPrefs.GetFloat("SavedSpawnPositionX"),
+                PlayerPrefs.GetFloat("SavedSpawnPositionY"),
+                PlayerPrefs.GetFloat("SavedSpawnPositionZ")
+            );
+            transform.rotation = Quaternion.Euler(
+                PlayerPrefs.GetFloat("SavedSpawnRotationX"),
+                PlayerPrefs.GetFloat("SavedSpawnRotationY"),
+                PlayerPrefs.GetFloat("SavedSpawnRotationZ")
+            );
             PlayerPrefs.DeleteKey("SavedSpawnPosition");
         }
 
         private void UpdateSpawnPositionTimer()
         {
-            if (_spawnPositionTimer > 0)
+            if (!IsOwner) return;
+            if (_spawnPositionTimer > 0f)
+            {
                 _spawnPositionTimer -= Time.deltaTime;
+            }
             else
             {
                 _spawnPositionTimer = spawnPositionUpdateTime;
@@ -214,39 +241,47 @@ namespace Code.Player
 
         private void SaveSpawnPosition()
         {
-            PlayerPrefs.SetFloat("SavedSpawnPositionX", transform.position.x);
-            PlayerPrefs.SetFloat("SavedSpawnPositionY", transform.position.y);
-            PlayerPrefs.SetFloat("SavedSpawnPositionZ", transform.position.z);
-            PlayerPrefs.SetFloat("SavedSpawnRotationX", transform.rotation.x);
-            PlayerPrefs.SetFloat("SavedSpawnRotationY", transform.rotation.y);
-            PlayerPrefs.SetFloat("SavedSpawnRotationZ", transform.rotation.z);
-            
+            if (!IsOwner) return;
+            var p = transform.position;
+            var r = transform.rotation.eulerAngles;
+
+            PlayerPrefs.SetFloat("SavedSpawnPositionX", p.x);
+            PlayerPrefs.SetFloat("SavedSpawnPositionY", p.y);
+            PlayerPrefs.SetFloat("SavedSpawnPositionZ", p.z);
+            PlayerPrefs.SetFloat("SavedSpawnRotationX", r.x);
+            PlayerPrefs.SetFloat("SavedSpawnRotationY", r.y);
+            PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
             PlayerPrefs.SetInt("SavedSpawnPosition", 1);
+            PlayerPrefs.Save();
         }
 
         private void Update()
         {
             if (!IsOwner) return;
+            if (!_initedPlayer) EnsureInit();
 
-            // кэш камера/инпут на случай динамического создания
             if (_mainCamera == null) _mainCamera = Camera.main;
             if (virtualCamera == null) virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
             if (input == null) input = PlayerInput.Instance;
 
-            // используем ли ввод (мобильный оверлей или спрятанный курсор)
             bool usingMobile = (PlayerInput.Instance != null && PlayerInput.Instance.IsUsingMobileFallback);
             bool cursorHidden = (CursorManager.Instance != null && !CursorManager.Instance.IsVisible());
             _cursorUsable = usingMobile || cursorHidden;
 
             if (CanMove || LookCameraLimitRotation)
                 UpdateCameraDistance();
-            
-            if (!CanMove) return;
+
+            if (!CanMove)
+            {
+                if (spawnOnSawedPosition)
+                    UpdateSpawnPositionTimer();
+                return;
+            }
 
             GroundedCheck();
             JumpAndGravity();
             Move();
-            
+
             if (spawnOnSawedPosition)
                 UpdateSpawnPositionTimer();
         }
@@ -254,13 +289,14 @@ namespace Code.Player
         private void LateUpdate()
         {
             if (!IsOwner) return;
+            if (!_initedPlayer) EnsureInit();
 
             if (LookCameraLimitRotation)
             {
                 if (FirstPersonView)
-                    SitCameraRotation();   // FPV: с ограничениями, и при RKM — только когда RMB зажата
+                    SitCameraRotation();
                 else
-                    CameraRotation();      // 3rd person: свободно, даже при видимом курсоре
+                    CameraRotation();
             }
             else
             {
@@ -275,27 +311,24 @@ namespace Code.Player
 
         private void UpdateHeadTargetPos()
         {
-            if (animator != null)
+            if (animator != null && headTarget != null && cinemachineCameraTarget != null)
             {
-                headTarget.position = cinemachineCameraTarget.transform.position + cinemachineCameraTarget.transform.forward * 10f;
+                headTarget.position = cinemachineCameraTarget.transform.position +
+                                      cinemachineCameraTarget.transform.forward * 10f;
             }
         }
-        
+
         private void SitCameraRotation()
         {
             if (input == null || cinemachineCameraTarget == null) return;
-            
+
             var lookInput = LookCameraLimitRotationRKM && !input.IsRMBDown ? Vector2.zero : input.Look;
 
             if (lookInput.sqrMagnitude >= Threshold)
             {
-                // если нет данных движения мыши — применяем дельту по времени
-                float mul = Time.deltaTime;
-#if ENABLE_INPUT_SYSTEM
-                // hint: можно проверять Mouse.current.delta, но оставим тайм
-#endif
-                cinemachineTargetYaw   += lookInput.x * 60f * Time.deltaTime;
-                cinemachineTargetPitch += lookInput.y * 60f * Time.deltaTime;
+                float multiplier = Time.deltaTime * 60f;
+                cinemachineTargetYaw += lookInput.x * multiplier;
+                cinemachineTargetPitch += lookInput.y * multiplier;
             }
 
             cinemachineTargetYaw = Mathf.Clamp(
@@ -303,6 +336,7 @@ namespace Code.Player
                 sitBaseYaw - sitYawRange,
                 sitBaseYaw + sitYawRange
             );
+
             cinemachineTargetPitch = Mathf.Clamp(
                 cinemachineTargetPitch,
                 sitBasePitch + sitMinPitch,
@@ -315,15 +349,15 @@ namespace Code.Player
 
         private void AssignAnimationIDs()
         {
-            animIDSpeed       = Animator.StringToHash("Speed");
-            animIDGrounded    = Animator.StringToHash("Grounded");
-            animIDJump        = Animator.StringToHash("Jump");
-            animIDFreeFall    = Animator.StringToHash("FreeFall");
+            animIDSpeed = Animator.StringToHash("Speed");
+            animIDGrounded = Animator.StringToHash("Grounded");
+            animIDJump = Animator.StringToHash("Jump");
+            animIDFreeFall = Animator.StringToHash("FreeFall");
             animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
-            animIDVertical    = Animator.StringToHash("Vertical");
-            animIDHorizontal  = Animator.StringToHash("Horizontal");
-            animIDTurn        = Animator.StringToHash("TurnAngle");
-            animIDFPV         = Animator.StringToHash("FirstPerson");
+            animIDVertical = Animator.StringToHash("Vertical");
+            animIDHorizontal = Animator.StringToHash("Horizontal");
+            animIDTurn = Animator.StringToHash("TurnAngle");
+            animIDFPV = Animator.StringToHash("FirstPerson");
         }
 
         public void ForceEnterFPV(bool enable, bool snap = true)
@@ -338,21 +372,18 @@ namespace Code.Player
             else
             {
                 FirstPersonView = false;
-                // выходим из FPV без изменения текущей cameraDistance — игрок сам отдалит колесом
             }
         }
-        
+
         public void ForceSetCameraDistance(float distance) => cameraDistance = distance;
 
         private void UpdateCameraDistance()
         {
             if (input == null || virtualCamera == null) return;
+            var follow = virtualCamera.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
+            if (follow == null) return;
 
-            // Разрешаем ввод по зуму/переключению когда:
-            //  - обычный игровой ввод доступен (_cursorUsable), ИЛИ
-            //  - мы в сидячем режиме (LookCameraLimitRotation), даже если курсор виден (RMB-режим)
             bool allowZoomInput = _cursorUsable || LookCameraLimitRotation;
-
             if (allowZoomInput)
             {
                 if (input.CameraSwitchDown)
@@ -361,13 +392,11 @@ namespace Code.Player
                     else { savedDistance = cameraDistance; cameraDistance = 0f; }
                 }
 
-                // колесо мыши
                 cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100f;
             }
 
             cameraDistance = Mathf.Clamp01(cameraDistance);
 
-            // 2) гистерезис FPV
             bool wasFPV = FirstPersonView;
             if (cameraDistance < 0.01f) smoothedFirstPerson = true;
             else if (cameraDistance > 0.02f) smoothedFirstPerson = false;
@@ -375,35 +404,24 @@ namespace Code.Player
             bool enteringNow = (!wasFPV && smoothedFirstPerson);
             FirstPersonView = smoothedFirstPerson;
 
-            // 3) применяем настройки к Cinemachine
-            var follow = virtualCamera.GetCinemachineComponent<Cinemachine.Cinemachine3rdPersonFollow>();
-            if (follow != null)
+            if (FirstPersonView && (enteringNow || _snapToFpVPending))
             {
-                if (FirstPersonView && (enteringNow || _snapToFpVPending))
-                {
-                    // МГНОВЕННЫЙ переход: без Lerp, без «подлёта»
-                    follow.ShoulderOffset = new Vector3(0f, 0f, 0f);
-                    follow.CameraDistance = 0f;
-
-                    // Сброс интерполяций Cinemachine, чтобы точно был «cut»
-                    virtualCamera.PreviousStateIsValid = false;
-                    _snapToFpVPending = false;
-                }
-                else
-                {
-                    // плавно только когда мы не в моменте входа в FPV
-                    follow.ShoulderOffset = new Vector3(0f, FirstPersonView ? 0f : -0.2f, 0f);
-
-                    float target = FirstPersonView
-                        ? 0f
-                        : Mathf.Lerp(minCameraDistance, maxCameraDistance, cameraDistance);
-                    follow.CameraDistance = FirstPersonView
-                        ? 0f
-                        : Mathf.Lerp(follow.CameraDistance, target, Time.deltaTime * 3f);
-                }
+                follow.ShoulderOffset = new Vector3(0f, 0f, 0f);
+                follow.CameraDistance = 0f;
+                virtualCamera.PreviousStateIsValid = false;
+                _snapToFpVPending = false;
+            }
+            else
+            {
+                follow.ShoulderOffset = new Vector3(0f, FirstPersonView ? 0f : -0.2f, 0f);
+                float target = FirstPersonView
+                    ? 0f
+                    : Mathf.Lerp(minCameraDistance, maxCameraDistance, cameraDistance);
+                follow.CameraDistance = FirstPersonView
+                    ? 0f
+                    : Mathf.Lerp(follow.CameraDistance, target, Time.deltaTime * 3f);
             }
 
-            // 4) привязки камеры/обновление FOV — как раньше
             virtualCamera.Follow = cinemachineCameraTarget != null ? cinemachineCameraTarget.transform : null;
 
             float speedFactor = (controller != null) ? controller.velocity.normalized.magnitude : 0f;
@@ -414,10 +432,9 @@ namespace Code.Player
         private void ResetFirstPersonViewRotation()
         {
             if (!FirstPersonView || cinemachineCameraTarget == null) return;
-
             var eul = cinemachineCameraTarget.transform.rotation.eulerAngles;
             cinemachineTargetPitch = eul.x - cameraAngleOverride;
-            cinemachineTargetYaw   = eul.y;
+            cinemachineTargetYaw = eul.y;
             cinemachineCameraTarget.transform.localRotation = Quaternion.identity;
         }
 
@@ -457,6 +474,7 @@ namespace Code.Player
             if (mv != Vector2.zero)
             {
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
+
                 if (!FirstPersonView && _cursorUsable)
                     transform.rotation = Quaternion.Euler(0f, rotation, 0f);
             }
@@ -465,6 +483,7 @@ namespace Code.Player
                 transform.rotation = Quaternion.Euler(0f, camYaw, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, targetRotation, 0f) * Vector3.forward;
+
             if (_cursorUsable)
                 controller.Move(moveDir.normalized * (speed * Time.deltaTime) + Vector3.up * verticalVelocity * Time.deltaTime);
 
@@ -473,7 +492,6 @@ namespace Code.Player
                 Vector3 vel = _cursorUsable ? transform.InverseTransformDirection(controller.velocity) : Vector3.zero;
                 vertical = Mathf.Lerp(vertical, vel.normalized.z * (speed > moveSpeed ? 2f : 1f), Time.deltaTime * 5f);
                 horizontal = Mathf.Lerp(horizontal, vel.normalized.x, Time.deltaTime * 5f);
-
                 animator.SetFloat(animIDSpeed, animationBlend);
                 animator.SetFloat(animIDMotionSpeed, inputMagnitude);
                 animator.SetFloat(animIDVertical, vertical);
@@ -520,25 +538,20 @@ namespace Code.Player
         {
             if (input == null || cinemachineCameraTarget == null) return;
 
-            // свободное вращение, если:
-            // - обычный ввод доступен (_cursorUsable), ИЛИ
-            // - мы сидим (LookCameraLimitRotation) и находимся в 3rd person
             bool allowLook = _cursorUsable || (LookCameraLimitRotation && !FirstPersonView);
-
             Vector2 look = allowLook ? input.Look : Vector2.zero;
+
             if (look.sqrMagnitude >= Threshold && !LockCameraPosition)
             {
                 float multiplier = Time.deltaTime * 60f;
-                cinemachineTargetYaw   += look.x * multiplier;
+                cinemachineTargetYaw += look.x * multiplier;
                 cinemachineTargetPitch += look.y * multiplier;
             }
 
-            cinemachineTargetYaw   = ClampAngle(cinemachineTargetYaw, float.MinValue, float.MaxValue);
+            cinemachineTargetYaw = ClampAngle(cinemachineTargetYaw, float.MinValue, float.MaxValue);
             cinemachineTargetPitch = ClampAngle(cinemachineTargetPitch, bottomClamp, topClamp);
-
             cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride, cinemachineTargetYaw, 0f);
         }
-
 
         private static float ClampAngle(float angle, float min, float max)
         {
@@ -572,40 +585,57 @@ namespace Code.Player
                 AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center), footstepAudioVolume);
         }
 
-        // === IK sync ===
+        private float _lastIkSendTime;
+        [SerializeField] private float ikSendRate = 1f / 30f;
+        private Vector3 _lastSentLookPos;
+        private float _lastSentWeight;
+
         [ServerRpc(RunLocally = true)]
         private void SyncIKServerRpc(Vector3 lookPos, float weight)
         {
             networkLookAtPos.Value = lookPos;
-            networkIkWeight.Value  = weight;
+            networkIkWeight.Value = weight;
         }
 
-        // Быстро подогнать таргеты под текущий поворот камеры (без плавности)
         public void SnapAimToCurrentCamera()
         {
             if (cinemachineCameraTarget == null) return;
             var e = cinemachineCameraTarget.transform.rotation.eulerAngles;
             cinemachineTargetPitch = e.x - cameraAngleOverride;
-            cinemachineTargetYaw   = e.y;
+            cinemachineTargetYaw = e.y;
         }
 
         private void OnAnimatorIK(int layerIndex)
         {
             if (animator == null) return;
+
             if (IsOwner)
             {
-                if (SuppressLookAtIK) return;
-                
+                if (SuppressLookAtIK || Time.time < _ikSuppressUntil) return;
+
                 currentIkWeight = FirstPersonView ? 1f : 0f;
-                SyncIKServerRpc(headTarget.position, currentIkWeight);
+
+                if (Time.unscaledTime - _lastIkSendTime >= ikSendRate)
+                {
+                    var nowPos = headTarget != null ? headTarget.position : transform.position + transform.forward * 10f;
+                    if ((Vector3.SqrMagnitude(_lastSentLookPos - nowPos) > 0.0001f) ||
+                        (Mathf.Abs(_lastSentWeight - currentIkWeight) > 0.001f))
+                    {
+                        _lastSentLookPos = nowPos;
+                        _lastSentWeight = currentIkWeight;
+                        _lastIkSendTime = Time.unscaledTime;
+                        SyncIKServerRpc(_lastSentLookPos, _lastSentWeight);
+                    }
+                }
+
                 animator.SetLookAtWeight(currentIkWeight, 0f, currentIkWeight, currentIkWeight, lookAtClampWeight);
-                animator.SetLookAtPosition(headTarget.position);
+                if (headTarget != null)
+                    animator.SetLookAtPosition(headTarget.position);
             }
             else
             {
                 _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.Value, Time.deltaTime * 5f);
-                _lookPos    = Vector3.Lerp(_lookPos,    networkLookAtPos.Value, Time.deltaTime * 5f);
-
+                _lookPos = Vector3.Lerp(_lookPos, networkLookAtPos.Value, Time.deltaTime * 5f);
                 animator.SetLookAtWeight(_syncWeight, 0f, _syncWeight, _syncWeight, lookAtClampWeight);
                 animator.SetLookAtPosition(_lookPos);
             }
@@ -614,16 +644,17 @@ namespace Code.Player
         #region IMigratable
         public void OnMigrateDataReceived(CharacterMigrateData data)
         {
-            if (NetworkManager.IsServerStarted) SetPlayerState(Owner, data);
+            if (NetworkManager.IsServerStarted)
+                SetPlayerState(Owner, data);
         }
 
         [TargetRpc]
         private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
         {
             cinemachineTargetPitch = data.cinemachineTargetPitch;
-            cinemachineTargetYaw   = data.cinemachineTargetYaw;
-            cameraDistance         = data.cameraDistance;
-            FirstPersonView        = data.isFirstPersonView;
+            cinemachineTargetYaw = data.cinemachineTargetYaw;
+            cameraDistance = data.cameraDistance;
+            FirstPersonView = data.isFirstPersonView;
         }
 
         public CharacterMigrateData GetMigrateData()
@@ -631,9 +662,9 @@ namespace Code.Player
             return new CharacterMigrateData
             {
                 cinemachineTargetPitch = cinemachineTargetPitch,
-                cinemachineTargetYaw   = cinemachineTargetYaw,
-                cameraDistance         = cameraDistance,
-                isFirstPersonView      = FirstPersonView
+                cinemachineTargetYaw = cinemachineTargetYaw,
+                cameraDistance = cameraDistance,
+                isFirstPersonView = FirstPersonView
             };
         }
         #endregion

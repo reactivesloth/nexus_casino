@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Code.InteractionSystem;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
@@ -13,19 +14,28 @@ namespace Code.Doors
         AutoAndManual
     }
 
+    [Serializable]
+    public class DoorElement
+    {
+        public Transform transform;
+        public Vector3 closedRot;
+        public Vector3 openRot;
+    }
+
     /// <summary>
-    /// Универсальная дверь:
-    /// - Manual: открытие/закрытие по интеракции (E) через Interactable.
-    /// - Auto: сервер считает степень открытия от дистанции до ближайшего игрока.
-    /// - Визуал на клиентах через кривые + duration.
+    /// Универсальная дверь с корректной синхронизацией состояния для late join:
+    /// - Server хранит “истину” (целевую степень открытия) в SyncVar _targetOpen [0..1].
+    /// - Клиентская визуализация тянется к Evaluate(curve, target) с duration.
+    /// - Авто-логика (по дистанции игроков) только на сервере.
+    /// - Manual-тоггл изменяет цель на сервере плавной корутиной.
     /// </summary>
-    public sealed class DoorInteractable : Code.InteractionSystem.Interactable
+    public sealed class DoorInteractable : Interactable
     {
         [Header("Mode")]
         [SerializeField] private DoorMode mode = DoorMode.ManualOnly;
 
         [Header("Door Elements (multiple panels supported)")]
-        [SerializeField] private DoorElement[] elements;
+        [SerializeField] private DoorElement[] elements = Array.Empty<DoorElement>();
 
         [Header("Manual settings")]
         [Tooltip("Скорость изменения степени открытия при Manual (доля в сек).")]
@@ -45,33 +55,43 @@ namespace Code.Doors
         [SerializeField, Tooltip("Время анимации на клиенте, сек")]
         private float animationDuration = 0.5f;
 
-        // === Сетевое состояние ===
-        // Целевая степень открытия [0..1] — серверная истина для всех режимов.
         private readonly SyncVar<float> _targetOpen = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission  = ReadPermission.Observers
         });
 
-        // Локальная визуальная степень (кривые) на каждом клиенте
         private float _visualDegree;
         private AnimationCurve _currentCurve;
-        private float _prevTarget;     // только на сервере — для направления и порога чувствительности
-        private int   _prevDir;        // -1/0/1
-        private float _accDelta;       // накопитель для sensitivity
 
-        // Редкий скан игроков (сервер)
+        private float _prevTarget;
+        private int   _prevDir;
+        private float _accDelta;
+
         private Transform[] _players = Array.Empty<Transform>();
         private float _scanTimer;
 
-        // Manual coroutine (сервер)
         private Coroutine _manualRoutine;
         private bool _isOpen;
 
-        #region Unity / lifecycle
+        private bool _initedDoor;
+
+        private void EnsureInit()
+        {
+            if (_initedDoor) return;
+            _initedDoor = true;
+
+            if (elements == null) elements = Array.Empty<DoorElement>();
+            if (sensitivity < 0.001f) sensitivity = 0.001f;
+            if (manualSpeed < 0f) manualSpeed = 0f;
+
+            var col = GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+        }
 
         private void OnEnable()
         {
+            EnsureInit();
             _targetOpen.OnChange += OnTargetChanged;
         }
 
@@ -79,43 +99,42 @@ namespace Code.Doors
         {
             _targetOpen.OnChange -= OnTargetChanged;
 
-            if (_manualRoutine != null) { StopCoroutine(_manualRoutine); _manualRoutine = null; }
+            if (_manualRoutine != null)
+            {
+                StopCoroutine(_manualRoutine);
+                _manualRoutine = null;
+            }
         }
 
         public override void OnStartClient()
         {
             base.OnStartClient();
+            EnsureInit();
 
-            // моментально выставляем визуал под текущее значение сервера
             _visualDegree = EvaluateByCurve(_targetOpen.Value);
             ApplyToElements(_visualDegree);
+
             _prevTarget = _targetOpen.Value;
         }
 
         private void Update()
         {
-            // === Сервер считает целевую степень ===
             if (IsServer && (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual))
                 Server_AutoTick();
 
-            // === Клиентская визуализация: плавное движение к Evaluate(curve, target) ===
             float targetCurve = EvaluateByCurve(_targetOpen.Value);
             float step = (animationDuration > 0f) ? Time.deltaTime / animationDuration : 1f;
             _visualDegree = Mathf.MoveTowards(_visualDegree, targetCurve, step);
             ApplyToElements(_visualDegree);
         }
 
-        #endregion
-
         #region Interactable (Manual)
-
         protected internal override void OnInteract(NetworkConnection conn, bool force = false)
         {
-            base.OnInteract(conn, force); // серверный вызов
+            base.OnInteract(conn, force);
             if (!IsServer) return;
-            if (mode == DoorMode.AutoOnly) return; // в чисто-авто не реагируем
+            if (mode == DoorMode.AutoOnly) return;
 
-            // Тогглим целевое состояние. Анимируем плавно к 0/1 сервером.
             bool wantOpen = !_isOpen;
             if (_manualRoutine != null) StopCoroutine(_manualRoutine);
             _manualRoutine = StartCoroutine(Server_ManualSet(wantOpen));
@@ -126,7 +145,6 @@ namespace Code.Doors
             _isOpen = open;
             float target = open ? 1f : 0f;
 
-            // Двигаем _targetOpen к цели с manualSpeed (доля в сек)
             float t = _targetOpen.Value;
             float speed = Mathf.Max(0.0001f, manualSpeed);
 
@@ -142,14 +160,11 @@ namespace Code.Doors
 
             _manualRoutine = null;
         }
-
         #endregion
 
         #region Server: auto-logic
-
         private void Server_AutoTick()
         {
-            // Обновляем список игроков редко (раз в 0.25с)
             _scanTimer -= Time.deltaTime;
             if (_scanTimer <= 0f)
             {
@@ -165,7 +180,6 @@ namespace Code.Doors
                 }
             }
 
-            // Находим ближайшего
             float nearest = float.MaxValue;
             for (int i = 0; i < _players.Length; i++)
             {
@@ -178,16 +192,16 @@ namespace Code.Doors
             if (_players.Length == 0 || nearest == float.MaxValue)
                 nearest = closeDistance + 1f;
 
-            float newTarget = 1f - Mathf.Clamp01((nearest - fullOpenDistance) / Mathf.Max(0.0001f, (closeDistance - fullOpenDistance)));
+            float denom = Mathf.Max(0.0001f, (closeDistance - fullOpenDistance));
+            float newTarget = 1f - Mathf.Clamp01((nearest - fullOpenDistance) / denom);
 
-            // Инерция смены направления
             int dir = Math.Sign(newTarget - _prevTarget);
             if (_prevDir != 0 && dir != 0 && dir != _prevDir)
             {
                 _accDelta += newTarget - _prevTarget;
                 if (Mathf.Abs(_accDelta) < sensitivity)
                 {
-                    newTarget = _prevTarget; // игнор мелкой смены
+                    newTarget = _prevTarget;
                     dir = _prevDir;
                 }
                 else
@@ -207,17 +221,14 @@ namespace Code.Doors
             if (!Mathf.Approximately(_targetOpen.Value, newTarget))
                 _targetOpen.Value = newTarget;
         }
-
         #endregion
 
         #region Client visuals helpers
-
         private void OnTargetChanged(float prev, float next, bool asServer)
         {
-            // выбираем актуальную кривую по направлению (вперёд/назад)
+            EnsureInit();
             if (next > prev)      _currentCurve = openCurve;
             else if (next < prev) _currentCurve = closeCurve;
-            // если равны — оставляем прежнюю
         }
 
         private float EvaluateByCurve(float degree01)
@@ -241,7 +252,6 @@ namespace Code.Doors
                 e.transform.localRotation = Quaternion.Euler(rot);
             }
         }
-
         #endregion
 
 #if UNITY_EDITOR
@@ -249,23 +259,13 @@ namespace Code.Doors
         {
             base.OnValidate();
 
-            // Защита от NaN/Inf и пустых массивов
             if (elements == null) elements = Array.Empty<DoorElement>();
             if (sensitivity < 0.001f) sensitivity = 0.001f;
             if (manualSpeed < 0f) manualSpeed = 0f;
 
-            // Коллайдер как триггер — на всякий
             var col = GetComponent<Collider>();
             if (col != null) col.isTrigger = true;
         }
 #endif
-    }
-
-    [Serializable]
-    public class DoorElement
-    {
-        public Transform transform;
-        public Vector3 closedRot;
-        public Vector3 openRot;
     }
 }

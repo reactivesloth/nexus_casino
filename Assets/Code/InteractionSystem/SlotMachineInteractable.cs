@@ -2,6 +2,7 @@
 using Code.Network;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using TMPro;
 using UnityEngine;
 
@@ -9,20 +10,39 @@ namespace Code.InteractionSystem
 {
     public class SlotMachineInteractable : Interactable
     {
-        [Header("UI Settings")] [SerializeField] private Canvas computer3dCanvas;
-
+        [Header("UI Settings")]
+        [SerializeField] private Canvas computer3dCanvas;
         [SerializeField] private Canvas contentCanvas;
         [SerializeField] private TextMeshPro idNumberText;
 
-        [Header("Streaming")] [SerializeField] private NetworkImageStream networkImageStream;
+        [Header("Streaming")]
+        [SerializeField] private NetworkImageStream networkImageStream;
+        public NetworkImageStream NetworkImageStream => networkImageStream;
 
         public int IDNumber;
-        public bool IsUsing => _isUsing;
 
-        private bool _isUsing;
+        private readonly SyncVar<bool> _isUsingNet = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission  = ReadPermission.Observers
+        });
+
+        private bool _isUsingLocal;
+        private bool _initSlot;
         private bool _wasStarted;
 
-        public NetworkImageStream NetworkImageStream => networkImageStream;
+        private void EnsureInit()
+        {
+            if (_initSlot) return;
+            _initSlot = true;
+
+            if (idNumberText != null) idNumberText.text = IDNumber.ToString();
+            if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
+            if (contentCanvas) contentCanvas.gameObject.SetActive(false);
+
+            if (networkImageStream == null)
+                networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
+        }
 
 #if UNITY_EDITOR
         protected override void OnValidate()
@@ -33,83 +53,85 @@ namespace Code.InteractionSystem
         }
 #endif
 
-        private void Awake()
+        private void Awake() => EnsureInit();
+
+        private void OnEnable()
         {
-            if (idNumberText != null) idNumberText.text = IDNumber.ToString();
-            if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
-            if (contentCanvas) contentCanvas.gameObject.SetActive(false);
+            EnsureInit();
+            _isUsingNet.OnChange += OnIsUsingChanged;
         }
 
-        private void Start()
+        private void OnDisable()
         {
-            _wasStarted = true;
+            _isUsingNet.OnChange -= OnIsUsingChanged;
         }
 
-        public override string InteractionPrompt => !_isUsing ? "Use Computer" : "Exit Computer";
+        private void Start() => _wasStarted = true;
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            EnsureInit();
+            ApplyComputerStateImmediate(_isUsingNet.Value);
+        }
 
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
-            _isUsing = false;
+            _isUsingLocal = false;
         }
+
+        public override string InteractionPrompt => !_isUsingLocal ? "Use Computer" : "Exit Computer";
 
         protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
-            if (_isUsing) return;
             base.OnInteract(conn, force);
-            _isUsing = true;
+            if (!IsServer) return;
+
+            if (_isUsingNet.Value)
+                return;
+
+            _isUsingNet.Value = true;
             TargetToggleComputerUI(conn, true);
             ObserverActivation(true);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
-            if (!_isUsing) return;
+            if (!IsServer)
+            {
+                base.OnEndInteract(conn);
+                return;
+            }
+
+            if (_isUsingNet.Value)
+            {
+                _isUsingNet.Value = false;
+                TargetToggleComputerUI(conn, false);
+                ObserverActivation(false);
+            }
+
             base.OnEndInteract(conn);
-            _isUsing = false;
-            TargetToggleComputerUI(conn, false);
-            ObserverActivation(false);
         }
 
-        public void SwitchFS()
+        private void OnIsUsingChanged(bool prev, bool next, bool asServer)
         {
-            var newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
-            PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", newFS ? 1 : 0);
-            PlayerPrefs.Save();
-
-            if (newFS)
-            {
-                WebViewManager.Instance.OpenFullscreen();
-                if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = true;
-
-                if (networkImageStream != null && WebViewManager.Instance.WebViewRawImage != null)
-                    networkImageStream.SetTexture(WebViewManager.Instance.WebViewRawImage);
-            }
-            else
-            {
-                if (computer3dCanvas && !computer3dCanvas.gameObject.activeSelf)
-                    computer3dCanvas.gameObject.SetActive(true);
-
-                var raw = WebViewManager.Instance.ShowWorldView(IDNumber, computer3dCanvas);
-                if (networkImageStream != null)
-                    networkImageStream.SetTexture(raw);
-
-                if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
-            }
+            EnsureInit();
+            ApplyComputerStateImmediate(next);
         }
 
-        [TargetRpc]
-        private void TargetToggleComputerUI(NetworkConnection conn, bool open)
+        private void ApplyComputerStateImmediate(bool open)
         {
+            _isUsingLocal = open;
             if (!_wasStarted) return;
 
             bool useFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
 
-            if (contentCanvas) contentCanvas.gameObject.SetActive(open);
-
             if (!open)
             {
+                if (contentCanvas) contentCanvas.gameObject.SetActive(false);
                 if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
+
                 if (networkImageStream != null) networkImageStream.ClearTexture();
 
                 WebViewManager.Instance.HideWorldView(IDNumber);
@@ -120,27 +142,50 @@ namespace Code.InteractionSystem
                     PlayerInput.Instance.HideMobileFallback = false;
                     PlayerInput.Instance.IsBusy = false;
                 }
-
                 return;
             }
 
             if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
 
-            if (useFS)
-            {
-                WebViewManager.Instance.OpenFullscreen();
+            if (contentCanvas) contentCanvas.gameObject.SetActive(true);
 
-                if (networkImageStream != null && WebViewManager.Instance.WebViewRawImage != null)
-                    networkImageStream.SetTexture(WebViewManager.Instance.WebViewRawImage);
-            }
-            else
+            if (IsOwner)
             {
-                if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(true);
+                if (useFS)
+                {
+                    WebViewManager.Instance.OpenFullscreen();
+                    if (networkImageStream != null && WebViewManager.Instance.WebViewRawImage != null)
+                        networkImageStream.SetTexture(WebViewManager.Instance.WebViewRawImage);
+                    if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = true;
+                }
+                else
+                {
+                    if (computer3dCanvas && !computer3dCanvas.gameObject.activeSelf)
+                        computer3dCanvas.gameObject.SetActive(true);
 
-                var raw = WebViewManager.Instance.ShowWorldView(IDNumber, computer3dCanvas);
-                if (networkImageStream != null)
-                    networkImageStream.SetTexture(raw);
+                    var raw = WebViewManager.Instance.ShowWorldView(IDNumber, computer3dCanvas);
+                    if (networkImageStream != null)
+                        networkImageStream.SetTexture(raw);
+
+                    if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
+                }
             }
+        }
+
+        public void SwitchFS()
+        {
+            var newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
+            PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", newFS ? 1 : 0);
+            PlayerPrefs.Save();
+
+            ApplyComputerStateImmediate(_isUsingNet.Value);
+        }
+
+        [TargetRpc]
+        private void TargetToggleComputerUI(NetworkConnection conn, bool open)
+        {
+            if (!_wasStarted) return;
+            ApplyComputerStateImmediate(open);
         }
 
         [ObserversRpc(BufferLast = true)]
