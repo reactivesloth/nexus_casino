@@ -79,7 +79,7 @@ namespace Code.UI
             }
 
             _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
-            PlayerInput.Instance.ShowSlotsUI = false;
+            if (PlayerInput.Instance != null) PlayerInput.Instance.ShowSlotsUI = false;
         }
 
         private async void OnScreenshotClicked()

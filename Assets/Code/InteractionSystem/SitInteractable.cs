@@ -146,7 +146,7 @@ namespace Code.InteractionSystem
                     _isSittingNet.Value = true;
             }
 
-            TargetToggleSit(conn, true, false);
+            TargetToggleSit(conn, true, force);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
