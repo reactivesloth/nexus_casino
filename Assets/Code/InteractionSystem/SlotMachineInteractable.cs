@@ -137,20 +137,21 @@ namespace Code.InteractionSystem
                 WebViewManager.Instance.HideWorldView(IDNumber);
                 WebViewManager.Instance.Hide();
 
-                if (PlayerInput.Instance != null)
+                if (IsOwner && PlayerInput.Instance != null)
                 {
                     PlayerInput.Instance.HideMobileFallback = false;
                     PlayerInput.Instance.IsBusy = false;
                 }
+
                 return;
             }
-
-            if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
 
             if (contentCanvas) contentCanvas.gameObject.SetActive(true);
 
             if (IsOwner)
             {
+                if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
+
                 if (useFS)
                 {
                     WebViewManager.Instance.OpenFullscreen();
