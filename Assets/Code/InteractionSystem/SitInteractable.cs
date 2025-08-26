@@ -135,36 +135,34 @@ namespace Code.InteractionSystem
         protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             base.OnInteract(conn, force);
-            if (!IsServer) return;
 
-            // Выбор входа и установка истины
-            int idx = PickEntryIndexFor(conn);
-            _entryIndexNet.Value = idx;
+            if (IsOwner)
+            {
+                // Выбор входа и установка истины
+                int idx = PickEntryIndexFor(conn);
+                _entryIndexNet.Value = idx;
 
-            if (!_isSittingNet.Value)
-                _isSittingNet.Value = true;
+                if (!_isSittingNet.Value)
+                    _isSittingNet.Value = true;
+            }
 
-            // Плавный визуал на владельце
-            if (IsOwner) force = false;
-            
-            TargetToggleSit(conn, true, force);
+            TargetToggleSit(conn, true, false);
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
             // Порядок: истина/визуал -> базовый End
-            if (!IsServer)
+            base.OnEndInteract(conn);
+
+            if (IsOwner)
             {
-                base.OnEndInteract(conn);
-                return;
+                if (_isSittingNet.Value)
+                {
+                    _isSittingNet.Value = false;
+                }
             }
 
-            if (_isSittingNet.Value)
-            {
-                _isSittingNet.Value = false;
-                TargetToggleSit(conn, false);
-            }
-
+            TargetToggleSit(conn, false);
             base.OnEndInteract(conn);
         }
 
@@ -185,7 +183,7 @@ namespace Code.InteractionSystem
 
         private void ApplySitStateImmediate(bool sit, int entryIndex)
         {
-            if (!IsOwner) return;
+            if (!IsServer) return;
             var move = FindLocalOwnerMovement();
             if (move == null) return;
 
