@@ -145,6 +145,8 @@ namespace Code.InteractionSystem
                 _isSittingNet.Value = true;
 
             // Плавный визуал на владельце
+            if (IsOwner) force = false;
+            
             TargetToggleSit(conn, true, force);
         }
 
@@ -183,6 +185,7 @@ namespace Code.InteractionSystem
 
         private void ApplySitStateImmediate(bool sit, int entryIndex)
         {
+            if (!IsOwner) return;
             var move = FindLocalOwnerMovement();
             if (move == null) return;
 
@@ -209,7 +212,7 @@ namespace Code.InteractionSystem
         [TargetRpc]
         private void TargetToggleSit(NetworkConnection conn, bool isSitDown, bool isForce = false)
         {
-            var move = FindLocalOwnerMovement();
+            var move = FindServerSideMovement(conn);
             if (move == null) return;
 
             var cc = move.GetComponent<CharacterController>();
