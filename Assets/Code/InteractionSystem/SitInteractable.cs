@@ -212,7 +212,7 @@ namespace Code.InteractionSystem
         [TargetRpc]
         private void TargetToggleSit(NetworkConnection conn, bool isSitDown, bool isForce = false)
         {
-            var move = FindServerSideMovement(conn);
+            var move = FindLocalOwnerMovement();
             if (move == null) return;
 
             var cc = move.GetComponent<CharacterController>();
