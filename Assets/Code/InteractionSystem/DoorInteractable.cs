@@ -249,7 +249,7 @@ namespace Code.Doors
                 if (e == null || e.transform == null) continue;
 
                 Vector3 rot = Vector3.Lerp(e.closedRot, e.openRot, curveValue);
-                e.transform.localRotation = Quaternion.Euler(rot);
+                e.transform.localRotation = Quaternion.Lerp(e.transform.localRotation, Quaternion.Euler(rot), Time.deltaTime * 3);
             }
         }
         #endregion
