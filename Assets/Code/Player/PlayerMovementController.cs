@@ -126,6 +126,12 @@ namespace Code.Player
         private CharacterController controller;
         private CinemachineVirtualCamera virtualCamera;
 
+        private float _lastYaw;
+        [SerializeField] private float speedLerp = 5f;
+        [SerializeField] private float angLerp = 7f;
+        private float _animSpeed;
+        private float _animTurn;
+        
         private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ClientUnsynchronized,
@@ -449,16 +455,16 @@ namespace Code.Player
         {
             if (controller == null) return;
 
-            Vector2 mv = (input != null) ? input.Move : Vector2.zero;
-            Vector2 mvUsed = _cursorUsable ? mv : Vector2.zero;
+            var mv = input != null ? input.Move : Vector2.zero;
+            var mvUsed = _cursorUsable ? mv : Vector2.zero;
 
-            bool canSprint = !FirstPersonView || (Mathf.Abs(mvUsed.x) < 0.1f && mvUsed.y > 0.1f);
-            float targetSpeed = (input != null && input.SprintHeld && canSprint) ? sprintSpeed : moveSpeed;
+            var canSprint = !FirstPersonView || (Mathf.Abs(mvUsed.x) < 0.1f && mvUsed.y > 0.1f);
+            var targetSpeed = input != null && input.SprintHeld && canSprint ? sprintSpeed : moveSpeed;
             if (mv == Vector2.zero) targetSpeed = 0f;
 
-            float currentSpeed = new Vector3(controller.velocity.x, 0f, controller.velocity.z).magnitude;
-            float inputMagnitude = mvUsed.magnitude;
-
+            var currentSpeed = new Vector3(controller.velocity.x, 0f, controller.velocity.z).magnitude;
+            var inputMagnitude = mvUsed.magnitude;
+            
             if (Mathf.Abs(currentSpeed - targetSpeed) > 0.1f)
                 speed = Mathf.Round(Mathf.Lerp(currentSpeed, targetSpeed * inputMagnitude, Time.deltaTime * speedChangeRate) * 1000f) / 1000f;
             else
@@ -467,13 +473,13 @@ namespace Code.Player
             animationBlend = Mathf.Lerp(animationBlend, targetSpeed, Time.deltaTime * speedChangeRate);
             if (animationBlend < 0.01f) animationBlend = 0f;
 
-            Vector3 inputDir = new Vector3(mvUsed.x, 0f, mvUsed.y).normalized;
-            float camYaw = _mainCamera != null ? _mainCamera.transform.eulerAngles.y : transform.eulerAngles.y;
+            var inputDir = new Vector3(mvUsed.x, 0f, mvUsed.y).normalized;
+            var camYaw = _mainCamera != null ? _mainCamera.transform.eulerAngles.y : transform.eulerAngles.y;
             targetRotation = Mathf.Atan2(inputDir.x, inputDir.z) * Mathf.Rad2Deg + camYaw;
 
             if (mv != Vector2.zero)
             {
-                float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
+                var rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
 
                 if (!FirstPersonView && _cursorUsable)
                     transform.rotation = Quaternion.Euler(0f, rotation, 0f);
@@ -482,22 +488,12 @@ namespace Code.Player
             if (FirstPersonView && _cursorUsable)
                 transform.rotation = Quaternion.Euler(0f, camYaw, 0f);
 
-            Vector3 moveDir = Quaternion.Euler(0f, targetRotation, 0f) * Vector3.forward;
+            var moveDir = Quaternion.Euler(0f, targetRotation, 0f) * Vector3.forward;
 
             if (_cursorUsable)
                 controller.Move(moveDir.normalized * (speed * Time.deltaTime) + Vector3.up * verticalVelocity * Time.deltaTime);
 
-            if (animator != null)
-            {
-                Vector3 vel = _cursorUsable ? transform.InverseTransformDirection(controller.velocity) : Vector3.zero;
-                vertical = Mathf.Lerp(vertical, vel.normalized.z * (speed > moveSpeed ? 2f : 1f), Time.deltaTime * 5f);
-                horizontal = Mathf.Lerp(horizontal, vel.normalized.x, Time.deltaTime * 5f);
-                animator.SetFloat(animIDSpeed, animationBlend);
-                animator.SetFloat(animIDMotionSpeed, inputMagnitude);
-                animator.SetFloat(animIDVertical, vertical);
-                animator.SetFloat(animIDHorizontal, horizontal);
-                animator.SetFloat(animIDFPV, FirstPersonView ? 1f : 0f);
-            }
+            UpdateAnimByKinematics();
         }
 
         private void JumpAndGravity()
@@ -603,6 +599,41 @@ namespace Code.Player
             var e = cinemachineCameraTarget.transform.rotation.eulerAngles;
             cinemachineTargetPitch = e.x - cameraAngleOverride;
             cinemachineTargetYaw = e.y;
+        }
+
+        private void UpdateAnimByKinematics()
+        {
+            if (animator == null) return;
+
+            var velocity = controller != null ? controller.velocity : Vector3.zero;
+            var horizontalSpeed = new Vector3(velocity.x, 0f, velocity.z).magnitude;
+
+            var thisYaw = transform.eulerAngles.y;
+            var deltaYaw = thisYaw - _lastYaw;
+            deltaYaw = deltaYaw > 180f ? deltaYaw - 360f : deltaYaw <= -180f ? deltaYaw + 360f : deltaYaw;
+            var angularSpeedDeg = Time.deltaTime > 0f ? deltaYaw / Time.deltaTime : 0f;
+            _lastYaw = thisYaw;
+
+            _animSpeed = Mathf.Lerp(_animSpeed, horizontalSpeed, Time.deltaTime * speedLerp);
+            _animTurn = Mathf.Lerp(_animTurn, angularSpeedDeg, Time.deltaTime * angLerp);
+
+            animator.SetFloat(animIDSpeed, _animSpeed);
+            var normalized = Mathf.Clamp01(_animSpeed / sprintSpeed);
+            animator.SetFloat(animIDMotionSpeed, normalized);
+            var localVel = transform.InverseTransformDirection(velocity);
+            var localForward = localVel.z;
+            var localRight = localVel.x;
+
+            vertical = Mathf.Lerp(vertical, localForward, Time.deltaTime * 5f);
+            animator.SetFloat(animIDVertical, vertical);
+
+            horizontal = Mathf.Lerp(horizontal, localRight, Time.deltaTime * 5f);
+            animator.SetFloat(animIDHorizontal, horizontal);
+            
+            var turnClamped = Mathf.Clamp(_animTurn, -360f, 360f);
+            animator.SetFloat(animIDTurn, turnClamped);
+
+            animator.SetFloat(animIDFPV, FirstPersonView ? 1f : 0f);
         }
 
         private void OnAnimatorIK(int layerIndex)
