@@ -1,15 +1,10 @@
 ﻿using Cinemachine;
 using UnityEngine;
-using FishNet.Object;
 using Code.InteractionSystem;
-using Code.Network.HostMigration;
-using Code.Network.HostMigration.Components;
-using Code.Network.Player;
-using FishNet.Connection;
 
 namespace Code.Player
 {
-    public class PlayerInteraction : NetworkBehaviour, IMigratable<CharacterInteractableMigrateData>
+    public class PlayerInteraction : MonoBehaviour
     {
         [Header("Detection")]
         [SerializeField] private LayerMask interactableMask;
@@ -18,43 +13,39 @@ namespace Code.Player
         private Interactable _hovered;
         private Interactable _selected;
         private Interactable _active;
-        private GameObject[] outlineGameObjects;
+        private GameObject[] _outlineGameObjects;
 
         private Cinemachine3rdPersonFollow virtualCamera;
         private PlayerInput input;
+        private PlayerMovementController playerController;
 
         protected bool IsBusy = false;
 
         private bool _initedPlayerInteraction;
+        private Interactable _prevHovered;
 
         private float _postEndCooldown;
         [SerializeField] private float postEndCooldownTime = 0.05f;
 
-        private void EnsureInit()
+        private void Awake()
         {
             if (_initedPlayerInteraction) return;
             _initedPlayerInteraction = true;
 
-            var vcam = FindObjectOfType<CinemachineVirtualCamera>();
+            var vcam = FindAnyObjectByType<CinemachineVirtualCamera>();
             if (vcam != null)
                 virtualCamera = vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
 
             input = PlayerInput.Instance;
-
+            playerController =  gameObject.GetComponent<PlayerMovementController>();
+            
             var cm = CursorManager.Instance;
             if (cm != null) cm.HideCursor();
         }
-
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-            EnsureInit();
-        }
-
+        
         private void Update()
         {
-            if (!IsOwner) return;
-            EnsureInit();
+            if (!playerController.IsOwner) return;
 
             if (_postEndCooldown > 0f)
                 _postEndCooldown -= Time.deltaTime;
@@ -127,16 +118,13 @@ namespace Code.Player
 
         private void UpdateOutline()
         {
-            var target = _active != null ? _active : _hovered;
-
-            if (target != null && !target.IsOccupied)
+            if (_hovered != null && _prevHovered == null)
             {
-                outlineGameObjects = target.outlineGameObjects;
-                if (outlineGameObjects != null)
+                _outlineGameObjects = _hovered.outlineGameObjects;
+                if (_outlineGameObjects != null)
                 {
-                    for (int i = 0; i < outlineGameObjects.Length; i++)
+                    foreach (var go in _outlineGameObjects)
                     {
-                        var go = outlineGameObjects[i];
                         if (go == null) continue;
                         var o = go.GetComponent<OutlineMesh>();
                         if (o == null) o = go.AddComponent<OutlineMesh>();
@@ -144,20 +132,23 @@ namespace Code.Player
                         o.OutlineWidth = 10;
                         o.OutlineMode = OutlineMesh.Mode.OutlineVisible;
                     }
+
+                    _prevHovered = _hovered;
                 }
             }
-            else
+            else if (_prevHovered != _hovered && _prevHovered != null)
             {
-                if (outlineGameObjects != null)
+                if (_outlineGameObjects != null)
                 {
-                    for (int i = 0; i < outlineGameObjects.Length; i++)
+                    foreach (var go in _outlineGameObjects)
                     {
-                        var go = outlineGameObjects[i];
                         if (go == null) continue;
                         var o = go.GetComponent<OutlineMesh>();
                         if (o != null) Destroy(o);
                     }
                 }
+
+                _prevHovered = null;
             }
         }
 
@@ -199,40 +190,5 @@ namespace Code.Player
 
             _selected = null;
         }
-
-        #region IMigratable
-        public void OnMigrateDataReceived(CharacterInteractableMigrateData data)
-        {
-            if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
-                return;
-
-            var sceneObject = SceneObject.GetObjectById(data.activeId);
-            if (!sceneObject) return;
-            if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
-
-            if (interactable.IsOccupied)
-                return;
-
-            interactable.ServerForceInteract(Owner);
-            SetInteractableOnMigrate(Owner, data);
-        }
-
-        [TargetRpc]
-        public void SetInteractableOnMigrate(NetworkConnection conn, CharacterInteractableMigrateData data)
-        {
-            var sceneObject = SceneObject.GetObjectById(data.activeId);
-            if (!sceneObject) return;
-            if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
-
-            _active = interactable;
-        }
-
-        public CharacterInteractableMigrateData GetMigrateData()
-        {
-            if (_active == null) return default;
-            if (!_active.TryGetComponent<SceneObject>(out var sceneObject)) return default;
-            return new CharacterInteractableMigrateData { activeId = sceneObject.ObjectGuid.ToString() };
-        }
-        #endregion
     }
 }
