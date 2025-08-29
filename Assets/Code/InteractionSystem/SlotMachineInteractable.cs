@@ -134,13 +134,19 @@ namespace Code.InteractionSystem
 
                 if (networkImageStream != null) networkImageStream.ClearTexture();
 
-                WebViewManager.Instance.HideWorldView(IDNumber);
-                WebViewManager.Instance.Hide();
-
-                if (IsOwner && PlayerInput.Instance != null)
+                if (IsOwner)
                 {
-                    PlayerInput.Instance.HideMobileFallback = false;
-                    PlayerInput.Instance.IsBusy = false;
+                    if (WebViewManager.Instance != null)
+                    {
+                        WebViewManager.Instance.HideWorldView(IDNumber);
+                        WebViewManager.Instance.Hide();
+                    }
+
+                    if (PlayerInput.Instance != null)
+                    {
+                        PlayerInput.Instance.HideMobileFallback = false;
+                        PlayerInput.Instance.IsBusy = false;
+                    }
                 }
 
                 return;
