@@ -1,53 +1,43 @@
 ﻿using UnityEngine;
 using CurvedUI.Core;
-using TouchPhase = UnityEngine.TouchPhase;
 
 public class CurvedUITouchModule : MonoBehaviour
 {
-    [Header("Remote / Pointer Transform (optional)")]
-    public Transform yourRemoteTransform;
+    private bool _isPointerPressed;
+    private Ray _pointerRay;
+    private Camera _camera;
 
-    private bool isPointerPressed;
-    private Ray pointerRay;
+    private void Start()
+    {
+        _camera = Camera.main;
+    }
 
-    void Update()
+    private void Update()
     {
         UpdatePointerInput();
         ApplyToCurvedUI();
     }
 
-    void UpdatePointerInput()
+    private void UpdatePointerInput()
     {
-        isPointerPressed = false;
+        if (_camera == null) return;
+        
+        _isPointerPressed = false;
 
-        // --- Touch input ---
-        if (Input.touchCount > 0)
+        foreach (var touch in Input.touches)
         {
-            Touch touch = Input.GetTouch(0);
-            isPointerPressed = touch.phase is TouchPhase.Began or TouchPhase.Stationary or TouchPhase.Moved;
-            pointerRay = Camera.main.ScreenPointToRay(touch.position);
+            _isPointerPressed = touch.phase is TouchPhase.Began or TouchPhase.Stationary or TouchPhase.Moved;
+            _pointerRay = _camera.ScreenPointToRay(touch.position);
             return;
         }
 
-        // --- Mouse input ---
-        if (Input.GetMouseButton(0))
-        {
-            isPointerPressed = true;
-        }
-
-        pointerRay = Camera.main.ScreenPointToRay(Input.mousePosition);
-
-        // --- Remote / VR controller fallback ---
-        if (yourRemoteTransform != null && !isPointerPressed)
-        {
-            pointerRay = new Ray(yourRemoteTransform.position, yourRemoteTransform.forward);
-            isPointerPressed = Input.GetMouseButton(0); // или ваша кнопка
-        }
+        _isPointerPressed = Input.GetMouseButton(0);
+        _pointerRay = _camera.ScreenPointToRay(Input.mousePosition);
     }
 
-    void ApplyToCurvedUI()
+    private void ApplyToCurvedUI()
     {
-        CurvedUIInputModule.CustomRay = pointerRay;
-        CurvedUIInputModule.CustomRayButtonState = isPointerPressed;
+        CurvedUIInputModule.CustomRay = _pointerRay;
+        CurvedUIInputModule.CustomRayButtonState = _isPointerPressed;
     }
 }

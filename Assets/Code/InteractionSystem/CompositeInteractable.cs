@@ -15,9 +15,8 @@ namespace Code.InteractionSystem
 
         private BoxCollider _compositeCollider;
 
-        protected override void EnsureInit()
+        private void Awake()
         {
-            base.EnsureInit();
             if (_compositeCollider == null)
             {
                 _compositeCollider = GetComponent<BoxCollider>();
@@ -25,11 +24,7 @@ namespace Code.InteractionSystem
                     _compositeCollider.isTrigger = true;
             }
             if (children == null) children = Array.Empty<Interactable>();
-        }
-
-        private void Awake()
-        {
-            EnsureInit();
+            
             if (generateColliderFromChildren && _compositeCollider != null)
                 UpdateCompositeColliderBounds();
         }

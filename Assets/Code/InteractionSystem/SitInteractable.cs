@@ -151,9 +151,6 @@ namespace Code.InteractionSystem
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
-            // Порядок: истина/визуал -> базовый End
-            base.OnEndInteract(conn);
-
             if (IsOwner)
             {
                 if (_isSittingNet.Value)
@@ -183,7 +180,7 @@ namespace Code.InteractionSystem
 
         private void ApplySitStateImmediate(bool sit, int entryIndex)
         {
-            if (!IsServer) return;
+            if (!IsOwner) return;
             var move = FindLocalOwnerMovement();
             if (move == null) return;
 
@@ -237,8 +234,7 @@ namespace Code.InteractionSystem
             }
         }
 
-        private void ForceSit(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf,
-            EntryData entry)
+        private void ForceSit(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf, EntryData entry)
         {
             if (entry == null) return;
 
@@ -252,8 +248,7 @@ namespace Code.InteractionSystem
 
             if (anim != null)
             {
-                int style = 0;
-                int.TryParse(entry.animationID, out style);
+                int.TryParse(entry.animationID, out var style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
                 anim.Play(SIT_STATE, 0, 0f);
@@ -282,8 +277,7 @@ namespace Code.InteractionSystem
             IsBusy = false;
         }
 
-        private void ForceStand(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf,
-            EntryData entry)
+        private void ForceStand(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf, EntryData entry)
         {
             if (allowRotateCamera)
             {
@@ -305,8 +299,7 @@ namespace Code.InteractionSystem
 
             if (anim != null)
             {
-                int style = 0;
-                int.TryParse(entry != null ? entry.animationID : "0", out style);
+                int.TryParse(entry != null ? entry.animationID : "0", out var style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, false);
                 anim.Play(STAND_STATE, 0, 0f);

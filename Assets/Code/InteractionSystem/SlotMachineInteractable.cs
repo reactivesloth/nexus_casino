@@ -86,25 +86,21 @@ namespace Code.InteractionSystem
         protected internal override void OnInteract(NetworkConnection conn, bool force)
         {
             base.OnInteract(conn, force);
-            if (!IsServer) return;
 
-            if (_isUsingNet.Value)
-                return;
+            if (IsOwner)
+            {
+                if (_isUsingNet.Value)
+                    return;
 
-            _isUsingNet.Value = true;
-            TargetToggleComputerUI(conn, true);
-            ObserverActivation(true);
+                _isUsingNet.Value = true;
+                TargetToggleComputerUI(conn, true);
+                ObserverActivation(true);
+            }
         }
 
         protected internal override void OnEndInteract(NetworkConnection conn)
         {
-            if (!IsServer)
-            {
-                base.OnEndInteract(conn);
-                return;
-            }
-
-            if (_isUsingNet.Value)
+            if (_isUsingNet.Value && IsOwner)
             {
                 _isUsingNet.Value = false;
                 TargetToggleComputerUI(conn, false);
