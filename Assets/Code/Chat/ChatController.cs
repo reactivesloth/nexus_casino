@@ -4,7 +4,6 @@ using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.Network.Lobby;
-using Code.Player;
 using NativeWebSocket;
 using Proyecto26;
 using System.Threading.Tasks;
@@ -243,7 +242,6 @@ namespace Code.Chat
             }
         }
 
-        // === UI / ChatBox ===
         private void OpenChat()
         {
             if (CurrentChatBox == null) return;
@@ -323,7 +321,6 @@ namespace Code.Chat
                 _ = LoadHistoryPageAsync(true, _isGlobalChatActive);
         }
 
-        // РУЧНОЙ ТРИГГЕР из инспектора — нажми кнопку «Dev Load History Now»
         [ContextMenu("Dev Load History Now")]
         public void Dev_LoadHistoryNow()
         {
@@ -456,7 +453,6 @@ namespace Code.Chat
 
             try
             {
-                // 2) Вспомогательная локальная функция запроса
                 async Task<(MessageData[] items, bool hasMore, long minId)> FetchAsync(
                     long? beforeId)
                 {
@@ -475,11 +471,10 @@ namespace Code.Chat
                     {
                         Uri = url,
                         Method = "GET",
-                        Headers = ClientDataStorage.GetJwtHeader(), // { Jwt: token }
+                        Headers = ClientDataStorage.GetJwtHeader(),
                         Params = reqParams
                     };
-                    
-                    // лог — только в консоль, не в чат
+
                     var b_id_text = beforeId.HasValue ? beforeId.Value.ToString() : "null";
                     Debug.Log($"[CHAT] GET {req.Uri}, before_id={b_id_text}");
 
@@ -522,7 +517,6 @@ namespace Code.Chat
                     return (arr, more, min);
                 }
 
-                // 3) Attempt A — обычный запрос
                 Debug.Log($"[CHAT] Oldest message id is {updatedChat.OldestMessageId}");
                 var beforeA =
                     (reset || !updatedChat.OldestMessageId.HasValue) ? null : updatedChat.OldestMessageId;
@@ -534,30 +528,14 @@ namespace Code.Chat
                 var hasMore = hasMoreA;
                 var minId = minIdA;
 
-                /*// Если пришло пусто, но у нас есть «живой» messageId — пробуем «якорить» по нему
-                if ((pageItems == null || pageItems.Length == 0) && _lastLiveMessageId > 0)
-                {
-                    // Attempt B — принудительный якорь по последнему живому сообщению
-                    var (itemsB, hasMoreB, minIdB) = await FetchAsync(_lastLiveMessageId);
-                    if (itemsB != null && itemsB.Length > 0)
-                    {
-                        pageItems = itemsB;
-                        hasMore = hasMoreB;
-                        minId = minIdB;
-                    }
-                }*/
-
                 if (pageItems == null || pageItems.Length == 0)
                 {
-                    // Ничего не нашли — либо канал пуст, либо история не хранится
                     if (!hasMore) updatedChat.NoMoreHistory = true;
                     return;
                 }
 
-                // Сервер обычно отдаёт новые→старые; для prepend нужен порядок старые→новые
                 Array.Reverse(pageItems);
 
-                // Собираем батч и обновляем «якорь»
                 var batch = new List<(string username, string message, UltimateChatBox.ChatStyle, long id)>(pageItems.Length);
                 for (var i = 0; i < pageItems.Length; i++)
                 {
@@ -581,8 +559,7 @@ namespace Code.Chat
 
                 if(!updatedChat.IsEnabled)
                     return;
-                
-                // Вставляем сверху без скачка
+
                 try
                 {
                     updatedChat.PrependChats(batch);
@@ -592,7 +569,6 @@ namespace Code.Chat
                     Debug.LogError($"[CHAT] PrependChats error: {ex.Message}");
                 }
 
-                // Если сервер сказал «страниц больше нет» — останавливаем автодогрузку
                 if (!hasMore) updatedChat.NoMoreHistory = true;
                 updatedChat.WasInitLoad = true;
             }

@@ -1,9 +1,7 @@
 using System.Text;
 using Code.API;
-using Code.API.Models;
 using Code.Player;
 using FishNet.Component.Animating;
-using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
 
@@ -59,7 +57,7 @@ namespace Code.Chat
         [ObserversRpc(RunLocally = true)]
         private void ShareBalance_ObserversRpc(string nickname, int balance)
         {
-            // пример системного сообщения — оставлено закомментированным
+            // пример системного сообщения
             // chatController?.SendSystemMessage($"{nickname}: мой баланс {balance}", UltimateChatBoxStyles.noticeMessage);
         }
 
