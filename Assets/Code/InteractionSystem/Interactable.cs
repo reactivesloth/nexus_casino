@@ -1,26 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using UnityEngine;
 using FishNet.Object;
 using FishNet.Connection;
 using FishNet.Object.Synchronizing;
 using FishNet.Transporting;
+using Code.Network.HostMigration;
 
 namespace Code.InteractionSystem
 {
-  public interface IHostMigratable
+  public abstract class Interactable : NetworkBehaviour, IMigratableBase
   {
-    byte[] CaptureHostState();
-    void RestoreHostState(byte[] data);
-  }
-
-  public abstract class Interactable : NetworkBehaviour, IHostMigratable
-  {
-    [Header("Base settings")] [SerializeField]
-    private float _interactionDistance = 3f;
-
+    [Header("Base settings")]
+    [SerializeField] private float _interactionDistance = 3f;
     [SerializeField] private bool _interactableEnabled = true;
     [SerializeField] private bool _manualRelease = false;
 
@@ -29,12 +21,14 @@ namespace Code.InteractionSystem
     private readonly SyncVar<bool> _occupied = new(new SyncTypeSettings
     {
       WritePermission = WritePermission.ServerOnly,
-      ReadPermission = ReadPermission.Observers
+      ReadPermission  = ReadPermission.Observers
     });
 
-    private readonly Dictionary<string, object> _boolSlots = new();
-    private readonly Dictionary<string, object> _intSlots = new();
-    private readonly Dictionary<string, object> _floatSlots = new();
+    private const string K_OCCUPIED = "occupied";
+
+    private readonly Dictionary<string, object> _boolSlots   = new();
+    private readonly Dictionary<string, object> _intSlots    = new();
+    private readonly Dictionary<string, object> _floatSlots  = new();
     private readonly Dictionary<string, object> _stringSlots = new();
 
     public event Action<string, object, object, bool> OnSyncedChanged;
@@ -56,14 +50,15 @@ namespace Code.InteractionSystem
     }
 
     private int _occupiedConnectionId = -1;
-    private const int MIGRATION_VERSION = 1;
 
     public override void OnStartServer()
     {
       base.OnStartServer();
       ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
+
       _occupied.OnChange += (prev, next, asServer) =>
-        OnSyncedChanged?.Invoke("occupied", prev, next, asServer);
+        OnSyncedChanged?.Invoke(K_OCCUPIED, prev, next, asServer);
+
       EnsureCoreSlotsRegistered();
     }
 
@@ -85,8 +80,7 @@ namespace Code.InteractionSystem
     }
 
     [Server]
-    private void ServerManagerOnRemoteConnectionState(NetworkConnection connection,
-      RemoteConnectionStateArgs stateArgs)
+    private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
     {
       if (stateArgs.ConnectionState == RemoteConnectionState.Stopped &&
           stateArgs.ConnectionId == _occupiedConnectionId)
@@ -109,7 +103,6 @@ namespace Code.InteractionSystem
         InteractCallback?.Invoke(false);
         return;
       }
-
       Server_HandleInteract(ClientManager.Connection);
     }
 
@@ -120,7 +113,6 @@ namespace Code.InteractionSystem
         InteractCallback?.Invoke(false);
         return;
       }
-
       Server_HandleEndInteract(ClientManager.Connection);
     }
 
@@ -185,7 +177,7 @@ namespace Code.InteractionSystem
       var sv = new SyncVar<bool>(new SyncTypeSettings
       {
         WritePermission = WritePermission.ServerOnly,
-        ReadPermission = ReadPermission.Observers
+        ReadPermission  = ReadPermission.Observers
       });
       sv.Value = initial;
       sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
@@ -198,7 +190,7 @@ namespace Code.InteractionSystem
       var sv = new SyncVar<int>(new SyncTypeSettings
       {
         WritePermission = WritePermission.ServerOnly,
-        ReadPermission = ReadPermission.Observers
+        ReadPermission  = ReadPermission.Observers
       });
       sv.Value = initial;
       sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
@@ -211,7 +203,7 @@ namespace Code.InteractionSystem
       var sv = new SyncVar<float>(new SyncTypeSettings
       {
         WritePermission = WritePermission.ServerOnly,
-        ReadPermission = ReadPermission.Observers
+        ReadPermission  = ReadPermission.Observers
       });
       sv.Value = initial;
       sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
@@ -224,48 +216,22 @@ namespace Code.InteractionSystem
       var sv = new SyncVar<string>(new SyncTypeSettings
       {
         WritePermission = WritePermission.ServerOnly,
-        ReadPermission = ReadPermission.Observers
+        ReadPermission  = ReadPermission.Observers
       });
       sv.Value = initial;
       sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
       _stringSlots.Add(key, sv);
     }
 
-    public bool GetBool(string key) =>
-      _boolSlots.TryGetValue(key, out var o) ? ((SyncVar<bool>)o).Value : default;
+    public bool   GetBool(string key)   => _boolSlots.TryGetValue(key, out var o)   ? ((SyncVar<bool>)o).Value   : default;
+    public int    GetInt(string key)    => _intSlots.TryGetValue(key, out var o)    ? ((SyncVar<int>)o).Value    : default;
+    public float  GetFloat(string key)  => _floatSlots.TryGetValue(key, out var o)  ? ((SyncVar<float>)o).Value  : default;
+    public string GetString(string key) => _stringSlots.TryGetValue(key, out var o) ? ((SyncVar<string>)o).Value : default;
 
-    public int GetInt(string key) =>
-      _intSlots.TryGetValue(key, out var o) ? ((SyncVar<int>)o).Value : default;
-
-    public float GetFloat(string key) =>
-      _floatSlots.TryGetValue(key, out var o) ? ((SyncVar<float>)o).Value : default;
-
-    public string GetString(string key) =>
-      _stringSlots.TryGetValue(key, out var o) ? ((SyncVar<string>)o).Value : default;
-
-    [Server]
-    protected void SetBool(string key, bool v)
-    {
-      ((SyncVar<bool>)_boolSlots[key]).Value = v;
-    }
-
-    [Server]
-    protected void SetInt(string key, int v)
-    {
-      ((SyncVar<int>)_intSlots[key]).Value = v;
-    }
-
-    [Server]
-    protected void SetFloat(string key, float v)
-    {
-      ((SyncVar<float>)_floatSlots[key]).Value = v;
-    }
-
-    [Server]
-    protected void SetString(string key, string v)
-    {
-      ((SyncVar<string>)_stringSlots[key]).Value = v;
-    }
+    [Server] protected void SetBool(string key, bool v)     { ((SyncVar<bool>)_boolSlots[key]).Value     = v; }
+    [Server] protected void SetInt(string key, int v)       { ((SyncVar<int>)_intSlots[key]).Value       = v; }
+    [Server] protected void SetFloat(string key, float v)   { ((SyncVar<float>)_floatSlots[key]).Value   = v; }
+    [Server] protected void SetString(string key, string v) { ((SyncVar<string>)_stringSlots[key]).Value = v; }
 
     [ServerRpc(RequireOwnership = false)]
     protected void RequestSetBool(string key, bool v, NetworkConnection caller = null)
@@ -302,25 +268,24 @@ namespace Code.InteractionSystem
     public void ForceApplyAll()
     {
       OnForceApply?.Invoke();
-      OnSyncedChanged?.Invoke("occupied", _occupied.Value, _occupied.Value, false);
+
+      OnSyncedChanged?.Invoke(K_OCCUPIED, _occupied.Value, _occupied.Value, false);
+
       foreach (var kv in _boolSlots)
       {
         var sv = (SyncVar<bool>)kv.Value;
         OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
       }
-
       foreach (var kv in _intSlots)
       {
         var sv = (SyncVar<int>)kv.Value;
         OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
       }
-
       foreach (var kv in _floatSlots)
       {
         var sv = (SyncVar<float>)kv.Value;
         OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
       }
-
       foreach (var kv in _stringSlots)
       {
         var sv = (SyncVar<string>)kv.Value;
@@ -328,105 +293,111 @@ namespace Code.InteractionSystem
       }
     }
 
-    public byte[] CaptureHostState()
+    [Serializable]
+    private class InteractableMigrationData
     {
-      if (!IsServer) return Array.Empty<byte>();
-      using var ms = new MemoryStream();
-      using var bw = new BinaryWriter(ms, Encoding.UTF8, leaveOpen: false);
-
-      bw.Write(MIGRATION_VERSION);
-      bw.Write(IsOccupied);
-
-      bw.Write(_boolSlots.Count);
-      foreach (var kv in _boolSlots)
-      {
-        var sv = (SyncVar<bool>)kv.Value;
-        bw.Write(kv.Key);
-        bw.Write(sv.Value);
-      }
-
-      bw.Write(_intSlots.Count);
-      foreach (var kv in _intSlots)
-      {
-        var sv = (SyncVar<int>)kv.Value;
-        bw.Write(kv.Key);
-        bw.Write(sv.Value);
-      }
-
-      bw.Write(_floatSlots.Count);
-      foreach (var kv in _floatSlots)
-      {
-        var sv = (SyncVar<float>)kv.Value;
-        bw.Write(kv.Key);
-        bw.Write(sv.Value);
-      }
-
-      bw.Write(_stringSlots.Count);
-      foreach (var kv in _stringSlots)
-      {
-        var sv = (SyncVar<string>)kv.Value;
-        bw.Write(kv.Key);
-        bw.Write(sv.Value ?? string.Empty);
-      }
-
-      bw.Flush();
-      return ms.ToArray();
+      public bool occupied;
+      public List<KVBool>   bools   = new();
+      public List<KVInt>    ints    = new();
+      public List<KVFloat>  floats  = new();
+      public List<KVString> strings = new();
     }
 
-    [Server]
-    public void RestoreHostState(byte[] data)
+    [Serializable] private struct KVBool   { public string k; public bool   v; }
+    [Serializable] private struct KVInt    { public string k; public int    v; }
+    [Serializable] private struct KVFloat  { public string k; public float  v; }
+    [Serializable] private struct KVString { public string k; public string v; }
+
+    object IMigratableBase.GetMigrateData()
     {
-      if (data == null || data.Length == 0) return;
-
-      using var ms = new MemoryStream(data);
-      using var br = new BinaryReader(ms, Encoding.UTF8, leaveOpen: false);
-
-      int ver = br.ReadInt32();
-      if (ver != MIGRATION_VERSION) return;
-
-      bool occupied = br.ReadBoolean();
-
-      int bCount = br.ReadInt32();
-      for (int i = 0; i < bCount; i++)
+      var data = new InteractableMigrationData
       {
-        string key = br.ReadString();
-        bool val = br.ReadBoolean();
-        if (!_boolSlots.ContainsKey(key)) RegisterBoolSlot(key, val);
-        SetBool(key, val);
+        occupied = IsOccupied
+      };
+
+      foreach (var kv in _boolSlots)
+        data.bools.Add(new KVBool { k = kv.Key, v = ((SyncVar<bool>)kv.Value).Value });
+
+      foreach (var kv in _intSlots)
+        data.ints.Add(new KVInt { k = kv.Key, v = ((SyncVar<int>)kv.Value).Value });
+
+      foreach (var kv in _floatSlots)
+        data.floats.Add(new KVFloat { k = kv.Key, v = ((SyncVar<float>)kv.Value).Value });
+
+      foreach (var kv in _stringSlots)
+        data.strings.Add(new KVString { k = kv.Key, v = ((SyncVar<string>)kv.Value).Value ?? string.Empty });
+
+      return data;
+    }
+
+    string IMigratableBase.GetJson(object data)
+    {
+      return JsonUtility.ToJson((InteractableMigrationData)data, prettyPrint: false);
+    }
+
+    void IMigratableBase.OnMigrateDataReceived(string jsonData)
+    {
+      if (!IsServer) return;
+
+      if (string.IsNullOrEmpty(jsonData))
+        return;
+
+      InteractableMigrationData data = null;
+      try
+      {
+        data = JsonUtility.FromJson<InteractableMigrationData>(jsonData);
+      }
+      catch (Exception e)
+      {
+        Debug.LogWarning($"[Interactable] Failed to parse migration data: {e.Message}", this);
+        return;
+      }
+      if (data == null) return;
+
+      if (data.bools != null)
+      {
+        for (int i = 0; i < data.bools.Count; i++)
+        {
+          var kv = data.bools[i];
+          if (!_boolSlots.ContainsKey(kv.k)) RegisterBoolSlot(kv.k, kv.v);
+          SetBool(kv.k, kv.v);
+        }
       }
 
-      int iCount = br.ReadInt32();
-      for (int i = 0; i < iCount; i++)
+      if (data.ints != null)
       {
-        string key = br.ReadString();
-        int val = br.ReadInt32();
-        if (!_intSlots.ContainsKey(key)) RegisterIntSlot(key, val);
-        SetInt(key, val);
+        for (int i = 0; i < data.ints.Count; i++)
+        {
+          var kv = data.ints[i];
+          if (!_intSlots.ContainsKey(kv.k)) RegisterIntSlot(kv.k, kv.v);
+          SetInt(kv.k, kv.v);
+        }
       }
 
-      int fCount = br.ReadInt32();
-      for (int i = 0; i < fCount; i++)
+      if (data.floats != null)
       {
-        string key = br.ReadString();
-        float val = br.ReadSingle();
-        if (!_floatSlots.ContainsKey(key)) RegisterFloatSlot(key, val);
-        SetFloat(key, val);
+        for (int i = 0; i < data.floats.Count; i++)
+        {
+          var kv = data.floats[i];
+          if (!_floatSlots.ContainsKey(kv.k)) RegisterFloatSlot(kv.k, kv.v);
+          SetFloat(kv.k, kv.v);
+        }
       }
 
-      int sCount = br.ReadInt32();
-      for (int i = 0; i < sCount; i++)
+      if (data.strings != null)
       {
-        string key = br.ReadString();
-        string val = br.ReadString();
-        if (!_stringSlots.ContainsKey(key)) RegisterStringSlot(key, val);
-        SetString(key, val);
+        for (int i = 0; i < data.strings.Count; i++)
+        {
+          var kv = data.strings[i];
+          if (!_stringSlots.ContainsKey(kv.k)) RegisterStringSlot(kv.k, kv.v);
+          SetString(kv.k, kv.v);
+        }
       }
 
       ForceApplyAll();
     }
 
     public delegate void OnInteractCallback(bool success);
-
     public event OnInteractCallback InteractCallback;
     public event Action OnInteractEndOnServer;
 
