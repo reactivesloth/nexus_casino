@@ -3,13 +3,10 @@ using System.Linq;
 using CurvedUI.Core;
 using CurvedUI.Core.ControlMethods.Editor;
 using CurvedUI.Core.Integrations;
-using CurvedUI.Core.Utilities;
 using CurvedUI.Core.Utilities.Editor;
-using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine.EventSystems;
 #if CURVEDUI_TMP || TMP_PRESENT
-using TMPro;
 #endif
 
 namespace CurvedUI
