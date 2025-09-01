@@ -104,10 +104,6 @@ namespace Code.InteractionSystem
 
     protected internal override void OnInteract(NetworkConnection conn, bool force)
     {
-      base.OnInteract(conn, force);
-
-      if (!IsOwner) return;
-
       int idx = PickEntryIndexFor(conn);
       RequestSetInt(K_ENTRY_IDX, idx, conn);
 
@@ -119,20 +115,14 @@ namespace Code.InteractionSystem
 
     protected internal override void OnEndInteract(NetworkConnection conn)
     {
-      if (IsOwner)
-      {
-        if (GetBool(K_IS_SITTING))
-          RequestSetBool(K_IS_SITTING, false, conn);
+      if (GetBool(K_IS_SITTING))
+        RequestSetBool(K_IS_SITTING, false, conn);
 
-        TargetToggleSitLocal(isSitDown: false);
-      }
-      base.OnEndInteract(conn);
+      TargetToggleSitLocal(isSitDown: false);
     }
 
     private void HandleSyncedChanged(string key, object prev, object next, bool asServer)
     {
-      if (!IsOwner) return;
-
       if (key == K_IS_SITTING || key == K_ENTRY_IDX)
       {
         if (!_didInitialApply) return;
@@ -146,7 +136,6 @@ namespace Code.InteractionSystem
     private void HandleForceApply()
     {
       EnsureInit();
-      if (!IsOwner) return;
 
       ApplySitStateImmediate(
         sit: GetBool(K_IS_SITTING),

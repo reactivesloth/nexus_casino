@@ -81,50 +81,34 @@ namespace Code.InteractionSystem
 
     protected internal override void OnInteract(NetworkConnection conn, bool force)
     {
-      base.OnInteract(conn, force);
-
-      if (!IsOwner) return;
-
       if (GetBool(K_IS_USING)) return;
-
       RequestSetBool(K_IS_USING, true, conn);
-
       ApplyComputerStateImmediate(true);
       if (contentCanvas != null) contentCanvas.gameObject.SetActive(true);
     }
 
     protected internal override void OnEndInteract(NetworkConnection conn)
     {
-      if (IsOwner && GetBool(K_IS_USING))
+      if (GetBool(K_IS_USING))
       {
         RequestSetBool(K_IS_USING, false, conn);
         ApplyComputerStateImmediate(false);
         if (contentCanvas != null) contentCanvas.gameObject.SetActive(false);
       }
-      base.OnEndInteract(conn);
     }
 
     private void HandleSyncedChanged(string key, object prev, object next, bool asServer)
     {
       if (key != K_IS_USING) return;
 
-      if (IsOwner)
-      {
-        bool open = (bool)next;
-        ApplyComputerStateImmediate(open);
-      }
-      else
-      {
-        if (contentCanvas != null) contentCanvas.gameObject.SetActive((bool)next);
-      }
+      bool open = (bool)next;
+      ApplyComputerStateImmediate(open);
     }
 
     private void HandleForceApply()
     {
       bool open = GetBool(K_IS_USING);
       ApplyComputerStateImmediate(open);
-
-      if (contentCanvas != null) contentCanvas.gameObject.SetActive(open);
     }
 
     private void ApplyComputerStateImmediate(bool open)
@@ -156,10 +140,6 @@ namespace Code.InteractionSystem
             PlayerInput.Instance.IsBusy = false;
           }
         }
-        else
-        {
-        }
-
         return;
       }
 

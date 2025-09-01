@@ -123,13 +123,16 @@ namespace Code.Doors
 
     protected internal override void OnInteract(NetworkConnection conn, bool force = false)
     {
-      base.OnInteract(conn, force);
-      if (!IsServer) return;
       if (mode == DoorMode.AutoOnly) return;
 
       bool wantOpen = !_isOpen;
       if (_manualRoutine != null) StopCoroutine(_manualRoutine);
       _manualRoutine = StartCoroutine(Server_ManualSet(wantOpen));
+    }
+
+    protected internal override void OnEndInteract(NetworkConnection conn = null)
+    {
+      
     }
 
     private IEnumerator Server_ManualSet(bool open)
