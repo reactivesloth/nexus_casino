@@ -125,18 +125,13 @@ namespace Code.InteractionSystem
 
     protected internal override void OnInteract(NetworkConnection conn, bool force)
     {
-      base.OnInteract(conn, force);
       if (children == null) return;
 
-      for (int i = 0; i < children.Length; i++)
+      foreach (var child in children)
       {
-        var child = children[i];
         if (child == null) continue;
 
-        if (force)
-          child.ServerForceInteract(conn, force);
-        else
-          child.OnInteract(conn, false);
+        child.ServerForceInteract(conn, force);
       }
     }
 
@@ -152,21 +147,6 @@ namespace Code.InteractionSystem
             child.OnEndInteract(conn);
         }
       }
-
-      base.OnEndInteract(conn);
-
-      bool anyChildOccupied = false;
-      if (children != null)
-      {
-        for (int i = 0; i < children.Length; i++)
-        {
-          var child = children[i];
-          if (child != null && child.IsOccupied) { anyChildOccupied = true; break; }
-        }
-      }
-
-      if (IsOccupied || anyChildOccupied)
-        ReleaseAll();
     }
 
     private void Update()

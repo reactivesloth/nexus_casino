@@ -116,13 +116,8 @@ namespace Code.InteractionSystem
       Server_HandleEndInteract(ClientManager.Connection);
     }
 
-    [Server]
-    public void ServerForceInteract(NetworkConnection conn, bool force) => HandleInteract(conn, force);
-
     [ServerRpc(RequireOwnership = false)]
-    private void Server_HandleInteract(NetworkConnection conn) => HandleInteract(conn);
-
-    private void HandleInteract(NetworkConnection conn, bool force = false)
+    private void Server_HandleInteract(NetworkConnection conn, bool force = false)
     {
       if (!_interactableEnabled || _occupied.Value || conn == null)
       {
@@ -130,11 +125,17 @@ namespace Code.InteractionSystem
         return;
       }
 
+      GiveOwnership(conn);
+
       _occupiedConnectionId = conn.ClientId;
       _occupied.Value = true;
-      OnInteract(conn, force);
+
+      if (IsOwner)
+        OnInteract(conn, false);
+
       if (!ManualRelease)
         _occupied.Value = false;
+
       OnInteractionCallbackFromServer(conn, true);
     }
 
@@ -147,29 +148,56 @@ namespace Code.InteractionSystem
         return;
       }
 
-      OnEndInteract(conn);
+      if (IsOwner)
+        OnEndInteract(conn);
+      
+      OnInteractEndOnServer?.Invoke();
+      _occupiedConnectionId = -1;
       _occupied.Value = false;
+      RemoveOwnership();
+      
       OnEndInteractionCallbackFromServer(conn, true);
     }
 
+    [Server]
+    public void ServerForceInteract(NetworkConnection conn, bool force) => HandleInteract(conn, force);
+
+    private void HandleInteract(NetworkConnection conn, bool force = false)
+    {
+      if (!_interactableEnabled || _occupied.Value || conn == null)
+      {
+        OnInteractionCallbackFromServer(conn, false);
+        return;
+      }
+
+      GiveOwnership(conn);
+
+      _occupiedConnectionId = conn.ClientId;
+      _occupied.Value = true;
+      
+      if (IsOwner)
+        OnInteract(conn, force);
+
+      if (!ManualRelease)
+        _occupied.Value = false;
+
+      OnInteractionCallbackFromServer(conn, true);
+    }
+    
     [Server]
     public void ReleaseInteractable()
     {
       _occupied.Value = false;
       OnEndInteract();
-    }
-
-    protected internal virtual void OnInteract(NetworkConnection conn, bool force)
-    {
-      GiveOwnership(conn);
-    }
-
-    protected internal virtual void OnEndInteract(NetworkConnection conn = null)
-    {
       OnInteractEndOnServer?.Invoke();
       _occupiedConnectionId = -1;
+      _occupied.Value = false;
       RemoveOwnership();
     }
+
+    protected internal abstract void OnInteract(NetworkConnection conn, bool force);
+
+    protected internal abstract void OnEndInteract(NetworkConnection conn = null);
 
     protected void RegisterBoolSlot(string key, bool initial = default)
     {
