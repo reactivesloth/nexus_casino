@@ -63,9 +63,8 @@ namespace Code.InteractionSystem
       if (all == null || all.Length == 0 || _compositeCollider == null) return;
 
       Bounds? b = null;
-      for (int i = 0; i < all.Length; i++)
+      foreach (var c in all)
       {
-        var c = all[i];
         if (c == null || c == _compositeCollider) continue;
         if (!b.HasValue) b = c.bounds;
         else
@@ -111,9 +110,8 @@ namespace Code.InteractionSystem
 
         string result = string.Empty;
         int appended = 0;
-        for (int i = 0; i < children.Length; i++)
+        foreach (var c in children)
         {
-          var c = children[i];
           if (c == null || !c.IsEnabled || c.IsOccupied) continue;
           if (appended > 0) result += " + ";
           result += c.InteractionPrompt;
@@ -129,23 +127,18 @@ namespace Code.InteractionSystem
 
       foreach (var child in children)
       {
-        if (child == null) continue;
-
-        child.ServerForceInteract(conn, force);
+        if (child != null) child.ServerForceInteract(conn, force);
       }
     }
 
     protected internal override void OnEndInteract(NetworkConnection conn)
     {
-      if (children != null)
+      if (children == null) return;
+      foreach (var child in children)
       {
-        for (int i = 0; i < children.Length; i++)
-        {
-          var child = children[i];
-          if (child == null) continue;
-          if (child.ManualRelease)
-            child.OnEndInteract(conn);
-        }
+        if (child == null) continue;
+        if (child.ManualRelease)
+          child.OnEndInteract(conn);
       }
     }
 
@@ -154,10 +147,13 @@ namespace Code.InteractionSystem
       IsBusy = false;
       if (children == null) return;
 
-      for (int i = 0; i < children.Length; i++)
+      foreach (var c in children)
       {
-        var c = children[i];
-        if (c != null && c.IsBusy) { IsBusy = true; break; }
+        if (c != null && c.IsBusy)
+        {
+          IsBusy = true;
+          break;
+        }
       }
     }
 
@@ -166,9 +162,8 @@ namespace Code.InteractionSystem
     {
       if (children != null)
       {
-        for (int i = 0; i < children.Length; i++)
+        foreach (var child in children)
         {
-          var child = children[i];
           if (child != null)
             child.ReleaseInteractable();
         }
