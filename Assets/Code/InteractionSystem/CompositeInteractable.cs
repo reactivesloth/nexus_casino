@@ -134,7 +134,7 @@ namespace Code.InteractionSystem
         if (child == null) continue;
 
         if (force)
-          child.ServerForceInteract(conn);
+          child.ServerForceInteract(conn, force);
         else
           child.OnInteract(conn, false);
       }

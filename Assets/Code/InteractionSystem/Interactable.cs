@@ -117,7 +117,7 @@ namespace Code.InteractionSystem
     }
 
     [Server]
-    public void ServerForceInteract(NetworkConnection conn) => HandleInteract(conn, true);
+    public void ServerForceInteract(NetworkConnection conn, bool force) => HandleInteract(conn, force);
 
     [ServerRpc(RequireOwnership = false)]
     private void Server_HandleInteract(NetworkConnection conn) => HandleInteract(conn);
