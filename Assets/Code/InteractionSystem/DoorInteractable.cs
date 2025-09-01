@@ -129,9 +129,9 @@ namespace Code.Doors
         }
 
         #region Interactable (Manual)
-        protected internal override void OnInteract(NetworkConnection conn, bool force = false)
+        protected internal override void OnInteract_Server(NetworkConnection conn, bool force = false)
         {
-            base.OnInteract(conn, force);
+            base.OnInteract_Server(conn, force);
             if (!IsServer) return;
             if (mode == DoorMode.AutoOnly) return;
 

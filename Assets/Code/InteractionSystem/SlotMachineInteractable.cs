@@ -83,9 +83,9 @@ namespace Code.InteractionSystem
 
         public override string InteractionPrompt => !_isUsingLocal ? "Use Computer" : "Exit Computer";
 
-        protected internal override void OnInteract(NetworkConnection conn, bool force)
+        protected internal override void OnInteract_Server(NetworkConnection conn, bool force)
         {
-            base.OnInteract(conn, force);
+            base.OnInteract_Server(conn, force);
 
             if (IsOwner)
             {
@@ -98,7 +98,7 @@ namespace Code.InteractionSystem
             }
         }
 
-        protected internal override void OnEndInteract(NetworkConnection conn)
+        protected internal override void OnEndInteract_Server(NetworkConnection conn)
         {
             if (_isUsingNet.Value && IsOwner)
             {
@@ -107,7 +107,7 @@ namespace Code.InteractionSystem
                 ObserverActivation(false);
             }
 
-            base.OnEndInteract(conn);
+            base.OnEndInteract_Server(conn);
         }
 
         private void OnIsUsingChanged(bool prev, bool next, bool asServer)

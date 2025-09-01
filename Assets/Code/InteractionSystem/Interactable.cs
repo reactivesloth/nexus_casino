@@ -104,7 +104,7 @@ namespace Code.InteractionSystem
 
             _occupiedConnectionId = conn.ClientId;
             _isOccupied.Value = true;
-            OnInteract(conn, force);
+            OnInteract_Server(conn, force);
 
             if (!ManualRelease)
                 _isOccupied.Value = false;
@@ -121,7 +121,7 @@ namespace Code.InteractionSystem
                 return;
             }
 
-            OnEndInteract(conn);
+            OnEndInteract_Server(conn);
             _isOccupied.Value = false;
             OnEndInteractionCallbackFromServer(conn, true);
         }
@@ -130,20 +130,38 @@ namespace Code.InteractionSystem
         public void ReleaseInteractable()
         {
             _isOccupied.Value = false;
-            OnEndInteract();
+            OnEndInteract_Server();
         }
 
-        protected internal virtual void OnInteract(NetworkConnection conn, bool force)
+        protected internal virtual void OnInteract_Server(NetworkConnection conn, bool force)
         {
             GiveOwnership(conn);
+            OnInteractAction_TargetRPC(conn, force);
         }
 
-        protected internal virtual void OnEndInteract(NetworkConnection conn = null)
+        protected internal virtual void OnEndInteract_Server(NetworkConnection conn = null)
         {
             OnInteractEndOnServer?.Invoke();
             _occupiedConnectionId = -1;
             RemoveOwnership();
+            OnEndInteractAction_TargetRPC(conn);
         }
+
+        protected virtual void OnInteract_Client(bool force)
+        {
+            
+        }
+
+        protected virtual void OnEndInteract_Client()
+        {
+            
+        }
+
+        [TargetRpc]
+        private void OnInteractAction_TargetRPC(NetworkConnection conn, bool force) => OnInteract_Client(force);
+        
+        [TargetRpc]
+        private void OnEndInteractAction_TargetRPC(NetworkConnection conn) => OnEndInteract_Client();
 
         [TargetRpc]
         private void OnInteractionCallbackFromServer(NetworkConnection target, bool success) => InteractCallback?.Invoke(success);

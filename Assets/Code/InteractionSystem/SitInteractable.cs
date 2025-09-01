@@ -36,23 +36,13 @@ namespace Code.InteractionSystem
         private const string SIT_STYLE = "SitStyle";
         private const string STAND_STATE = "Movement";
 
-        private readonly SyncVar<bool> _isSittingNet = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
-
-        private readonly SyncVar<int> _entryIndexNet = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
-
         private bool _isSittingLocal;
         private Coroutine _sitRoutine;
         private Vector3 _savedPos;
         private Quaternion _savedRot;
 
+        
+        private EntryData _sitEntry;
         private bool _initSit;
         private bool _didInitialApply;
 
@@ -85,15 +75,10 @@ namespace Code.InteractionSystem
         private void OnEnable()
         {
             EnsureInit();
-            _isSittingNet.OnChange += OnIsSittingChanged;
-            _entryIndexNet.OnChange += OnEntryIndexChanged;
         }
 
         private void OnDisable()
         {
-            _isSittingNet.OnChange -= OnIsSittingChanged;
-            _entryIndexNet.OnChange -= OnEntryIndexChanged;
-
             if (_sitRoutine != null)
             {
                 StopCoroutine(_sitRoutine);
@@ -110,7 +95,7 @@ namespace Code.InteractionSystem
             EnsureInit();
             if (!_didInitialApply)
             {
-                ApplySitStateImmediate(_isSittingNet.Value, _entryIndexNet.Value);
+                ApplySitStateImmediate(IsOccupied);
                 _didInitialApply = true;
             }
         }
@@ -132,53 +117,7 @@ namespace Code.InteractionSystem
             }
         }
 
-        protected internal override void OnInteract(NetworkConnection conn, bool force)
-        {
-            base.OnInteract(conn, force);
-
-            if (IsOwner)
-            {
-                // Выбор входа и установка истины
-                int idx = PickEntryIndexFor(conn);
-                _entryIndexNet.Value = idx;
-
-                if (!_isSittingNet.Value)
-                    _isSittingNet.Value = true;
-            }
-
-            TargetToggleSit(conn, true, force);
-        }
-
-        protected internal override void OnEndInteract(NetworkConnection conn)
-        {
-            if (IsOwner)
-            {
-                if (_isSittingNet.Value)
-                {
-                    _isSittingNet.Value = false;
-                }
-            }
-
-            TargetToggleSit(conn, false);
-            base.OnEndInteract(conn);
-        }
-
-        private void OnIsSittingChanged(bool prev, bool next, bool asServer)
-        {
-            EnsureInit();
-            // runtime — не форсим мгновенно, чтобы не рвать переходы
-            if (!_didInitialApply) return;
-            if (_sitRoutine != null) return;
-        }
-
-        private void OnEntryIndexChanged(int prev, int next, bool asServer)
-        {
-            EnsureInit();
-            if (!_didInitialApply) return;
-            if (_sitRoutine != null) return;
-        }
-
-        private void ApplySitStateImmediate(bool sit, int entryIndex)
+        private void ApplySitStateImmediate(bool sit)
         {
             if (!IsOwner) return;
             var move = FindLocalOwnerMovement();
@@ -188,7 +127,7 @@ namespace Code.InteractionSystem
             var anim = move.GetComponent<Animator>();
             var tf = move.transform;
 
-            var entry = GetEntry(entryIndex) ?? FindClosestEntryPoint(tf.position) ?? GetEntry(0);
+            var entry = _sitEntry ?? FindClosestEntryPoint(tf.position) ?? GetEntry(0);
 
             if (sit)
             {
@@ -204,8 +143,19 @@ namespace Code.InteractionSystem
             }
         }
 
-        [TargetRpc]
-        private void TargetToggleSit(NetworkConnection conn, bool isSitDown, bool isForce = false)
+        protected override void OnInteract_Client(bool force)
+        {
+            base.OnInteract_Client(force);
+            TargetToggleSit(true, force);
+        }
+
+        protected override void OnEndInteract_Client()
+        {
+            base.OnEndInteract_Client();
+            TargetToggleSit(false);
+        }
+
+        private void TargetToggleSit(bool isSitDown, bool isForce = false)
         {
             var move = FindLocalOwnerMovement();
             if (move == null) return;
@@ -216,20 +166,20 @@ namespace Code.InteractionSystem
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
 
-            var entry = GetEntry(_entryIndexNet.Value) ?? FindClosestEntryPoint(tf.position) ?? GetEntry(0);
+            _sitEntry = FindClosestEntryPoint(tf.position) ?? GetEntry(0);
 
             if (isSitDown && isForce)
             {
                 _savedPos = tf.position;
                 _savedRot = tf.rotation;
-                ForceSit(move, anim, cc, tf, entry);
+                ForceSit(move, anim, cc, tf, _sitEntry);
             }
             else
             {
                 _sitRoutine = StartCoroutine(
                     isSitDown
-                        ? SitDownFlow(move, anim, cc, tf, entry)
-                        : StandUpFlow(move, anim, cc, tf, entry)
+                        ? SitDownFlow(move, anim, cc, tf, _sitEntry)
+                        : StandUpFlow(move, anim, cc, tf, _sitEntry)
                 );
             }
         }

@@ -106,7 +106,7 @@ namespace Code.InteractionSystem
             }
         }
 
-        protected internal override void OnInteract(NetworkConnection conn, bool force)
+        protected internal override void OnInteract_Server(NetworkConnection conn, bool force)
         {
             if (children == null) return;
 
@@ -117,11 +117,11 @@ namespace Code.InteractionSystem
                 if (force)
                     child.ServerForceInteract(conn);
                 else
-                    child.OnInteract(conn, false);
+                    child.OnInteract_Server(conn, false);
             }
         }
 
-        protected internal override void OnEndInteract(NetworkConnection conn)
+        protected internal override void OnEndInteract_Server(NetworkConnection conn)
         {
             if (children != null)
             {
@@ -132,12 +132,12 @@ namespace Code.InteractionSystem
 
                     if (child.ManualRelease)
                     {
-                        child.OnEndInteract(conn);
+                        child.OnEndInteract_Server(conn);
                     }
                 }
             }
 
-            base.OnEndInteract(conn);
+            base.OnEndInteract_Server(conn);
 
             bool anyChildOccupied = false;
             if (children != null)
