@@ -1,19 +1,33 @@
-﻿using System;
-using UnityEngine;
-using FishNet.Object;
+using System;
 using FishNet.Connection;
+using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
+using UnityEngine;
 
 namespace Code.InteractionSystem
 {
-    public abstract class Interactable : NetworkBehaviour
+    public class Interactable : NetworkBehaviour
     {
         [SerializeField] private float _interactionDistance = 3f;
         [SerializeField] private bool _interactableEnabled = true;
         [SerializeField] private bool _manualRelease = false;
 
         public GameObject[] outlineGameObjects;
+        
+        private int _occupiedConnectionId = -1;
+
+        protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+
+        public bool IsBusy;
+
+        public bool IsEnabled => _interactableEnabled;
+        public bool ManualRelease => _manualRelease;
+        public bool IsOccupied => _isOccupied.Value;
+
         public virtual string InteractionPrompt
         {
             get
@@ -23,154 +37,126 @@ namespace Code.InteractionSystem
                 return _manualRelease ? "Press E to end" : "Occupied";
             }
         }
-        public bool IsEnabled => _interactableEnabled;
-        public bool ManualRelease => _manualRelease;
-        public bool IsOccupied => _isOccupied.Value;
-        public bool IsBusy { get; set; }
-        public delegate void OnInteractCallback(bool success);
-        public event OnInteractCallback InteractCallback;
-        public event Action OnInteractEndOnServer;
         
-        private int _occupiedConnectionId = -1;
-        protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
+        public event Action<bool> InteractCallback_Client;
 
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
-        }
+        public void RequestInteract(bool force = false) => RequestInteract_ServerRpc(ClientManager.Connection, force);
 
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            ServerManager.OnRemoteConnectionState -= ServerManagerOnRemoteConnectionState;
-        }
+        public void RequestEndInteract() => RequestEndInteract_ServerRpc(ClientManager.Connection);
+        
 
         [Server]
-        private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
-        {
-            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped && stateArgs.ConnectionId == _occupiedConnectionId)
-                ReleaseInteractable();
-        }
-        
-#if UNITY_EDITOR
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-            var col = GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
-        }
-#endif
-
-        #region PUBLIC METHODS
-        
-        public void RequestInteract()
-        {
-            if (!_interactableEnabled || _isOccupied.Value)
-            {
-                InteractCallback?.Invoke(false);
-                return;
-            }
-
-            Server_HandleInteract(ClientManager.Connection);
-        }
-
-        public void RequestEndInteract()
-        {
-            if (!_interactableEnabled || !_isOccupied.Value || !_manualRelease)
-            {
-                InteractCallback?.Invoke(false);
-                return;
-            }
-
-            Server_HandleEndInteract(ClientManager.Connection);
-        }
-
-        [Server]
-        public void ServerForceInteract(NetworkConnection conn) => HandleInteract(conn, true);
-        
-        [Server]
-        public void ReleaseInteractable()
+        public void ReleaseInteractable(NetworkConnection requester = null)
         {
             _isOccupied.Value = false;
-            OnEndInteract_Server();
+            _occupiedConnectionId = -1;
+            
+            SendRequestEndInteractCallbacks(requester, true);
         }
-        
+
+        #region RPC
+
+        [ServerRpc(RequireOwnership = false)]
+        private void RequestInteract_ServerRpc(NetworkConnection requester, bool force = false)
+        {
+            if (!_interactableEnabled || _isOccupied.Value || requester == null)
+            {
+                SendRequestInteractCallbacks(requester, false, force);
+                return;
+            }
+
+            _occupiedConnectionId = requester.ClientId;
+            _isOccupied.Value = true;
+
+            SendRequestInteractCallbacks(requester, true, force);
+        }
+
+        [Server]
+        private void SendRequestInteractCallbacks(NetworkConnection requester, bool success, bool force = false)
+        {
+            OnInteractCallback_Server(requester, success, force);
+            RequestInteractCallback_TargetRpc(requester, success, force);
+            RequestInteractCallback_ObserversRpc(success, force);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void RequestEndInteract_ServerRpc(NetworkConnection requester)
+        {
+            if (requester.ClientId != _occupiedConnectionId)
+            {
+                SendRequestEndInteractCallbacks(requester, false);
+                return;
+            }
+            
+            ReleaseInteractable(requester);
+        }
+
+        [Server]
+        private void SendRequestEndInteractCallbacks(NetworkConnection requester, bool success)
+        {
+            OnInteractEndCallback_Server(requester, success);
+            RequestEndInteractCallback_TargetRpc(requester, success);
+            RequestEndInteractCallback_ObserversRpc(success);
+        }
+
+        [TargetRpc]
+        private void RequestInteractCallback_TargetRpc(NetworkConnection target, bool success, bool force = false) =>
+            OnInteractCallback_Client(success, force);
+
+        [TargetRpc]
+        private void RequestEndInteractCallback_TargetRpc(NetworkConnection target, bool success) =>
+            OnInteractEndCallback_Client(success);
+
+        [ObserversRpc(BufferLast = true)]
+        private void RequestInteractCallback_ObserversRpc(bool success, bool force = false) =>
+            OnInteractCallback_Observers(success, force);
+
+        [ObserversRpc(BufferLast = true)]
+        private void RequestEndInteractCallback_ObserversRpc(bool success) => 
+            OnInteractEndCallback_Observers(success);
+
         #endregion
 
-        [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleInteract(NetworkConnection conn) => HandleInteract(conn);
+        #region Server Callbacks
 
-        private void HandleInteract(NetworkConnection conn, bool force = false)
+        [Server]
+        protected virtual void OnInteractCallback_Server(NetworkConnection requester, bool success, bool force = false)
         {
-            if (!_interactableEnabled || _isOccupied.Value || conn == null)
-            {
-                OnInteractionCallbackFromServer(conn, false);
+            if(!success)
                 return;
-            }
-
-            _occupiedConnectionId = conn.ClientId;
-            _isOccupied.Value = true;
-            OnInteract_Server(conn, force);
-
-            if (!ManualRelease)
-                _isOccupied.Value = false;
-
-            OnInteractionCallbackFromServer(conn, true);
+            GiveOwnership(requester);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleEndInteract(NetworkConnection conn)
+        [Server]
+        protected virtual void OnInteractEndCallback_Server(NetworkConnection requester, bool success)
         {
-            if (!_manualRelease || !_isOccupied.Value)
-            {
-                OnEndInteractionCallbackFromServer(conn, false);
+            if(!success)
                 return;
-            }
-
-            OnEndInteract_Server(conn);
-            _isOccupied.Value = false;
-            OnEndInteractionCallbackFromServer(conn, true);
-        }
-
-        protected internal virtual void OnInteract_Server(NetworkConnection conn, bool force)
-        {
-            GiveOwnership(conn);
-            OnInteractAction_TargetRPC(conn, force);
-        }
-
-        protected internal virtual void OnEndInteract_Server(NetworkConnection conn = null)
-        {
-            OnInteractEndOnServer?.Invoke();
-            _occupiedConnectionId = -1;
             RemoveOwnership();
-            OnEndInteractAction_TargetRPC(conn);
         }
 
-        protected virtual void OnInteract_Client(bool force)
+        #endregion
+
+        #region Clients Callbacks
+
+        protected virtual void OnInteractCallback_Client(bool success, bool force = false)
         {
-            
+            InteractCallback_Client?.Invoke(success);
         }
 
-        protected virtual void OnEndInteract_Client()
+        protected virtual void OnInteractEndCallback_Client(bool success)
         {
-            
+            InteractCallback_Client?.Invoke(success);
         }
 
-        [TargetRpc]
-        private void OnInteractAction_TargetRPC(NetworkConnection conn, bool force) => OnInteract_Client(force);
-        
-        [TargetRpc]
-        private void OnEndInteractAction_TargetRPC(NetworkConnection conn) => OnEndInteract_Client();
+        protected virtual void OnInteractCallback_Observers(bool success, bool force = false)
+        {
+        }
 
-        [TargetRpc]
-        private void OnInteractionCallbackFromServer(NetworkConnection target, bool success) => InteractCallback?.Invoke(success);
+        protected virtual void OnInteractEndCallback_Observers(bool success)
+        {
+        }
 
-        [TargetRpc]
-        private void OnEndInteractionCallbackFromServer(NetworkConnection target, bool success) => InteractCallback?.Invoke(success);
+        #endregion
     }
 }

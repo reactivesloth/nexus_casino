@@ -117,6 +117,32 @@ namespace Code.InteractionSystem
             }
         }
 
+        protected override void OnInteractCallback_Client(bool success, bool force = false)
+        {
+            base.OnInteractCallback_Client(success, force);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
+            TargetToggleSit(true, force);
+        }
+
+        protected override void OnInteractEndCallback_Client(bool success)
+        {
+            base.OnInteractEndCallback_Client(success);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
+            TargetToggleSit(false);
+        }
+
         private void ApplySitStateImmediate(bool sit)
         {
             if (!IsOwner) return;
@@ -142,13 +168,7 @@ namespace Code.InteractionSystem
                 _isSittingLocal = false;
             }
         }
-
-        protected override void OnInteract_Client(bool force) => TargetToggleSit(true, force);
         
-
-        protected override void OnEndInteract_Client() => TargetToggleSit(false);
-        
-
         private void TargetToggleSit(bool isSitDown, bool isForce = false)
         {
             var move = FindLocalOwnerMovement();

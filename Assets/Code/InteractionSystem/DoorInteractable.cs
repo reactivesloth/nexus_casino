@@ -29,7 +29,7 @@ namespace Code.Doors
     /// - Авто-логика (по дистанции игроков) только на сервере.
     /// - Manual-тоггл изменяет цель на сервере плавной корутиной.
     /// </summary>
-    public sealed class DoorInteractable : Interactable
+    public sealed class DoorInteractable : InteractableObsolete
     {
         [Header("Mode")]
         [SerializeField] private DoorMode mode = DoorMode.ManualOnly;

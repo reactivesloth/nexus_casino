@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Code.InteractionSystem
 {
-    public class SlotMachineInteractable : Interactable
+    public class SlotMachineInteractable : InteractableObsolete
     {
         [Header("UI Settings")]
         [SerializeField] private Canvas computer3dCanvas;

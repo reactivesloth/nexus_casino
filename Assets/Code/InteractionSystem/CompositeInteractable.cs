@@ -5,11 +5,11 @@ using FishNet.Object;
 
 namespace Code.InteractionSystem
 {
-    public class CompositeInteractable : Interactable
+    public class CompositeInteractable : InteractableObsolete
     {
         [Header("Children to interact with")]
         [SerializeField, Tooltip("Все дочерние Interactable, которые запускаются одним нажатием.")]
-        private Interactable[] children;
+        private InteractableObsolete[] children;
 
         [SerializeField] private bool generateColliderFromChildren = true;
 
@@ -23,7 +23,7 @@ namespace Code.InteractionSystem
                 if (_compositeCollider != null)
                     _compositeCollider.isTrigger = true;
             }
-            if (children == null) children = Array.Empty<Interactable>();
+            if (children == null) children = Array.Empty<InteractableObsolete>();
             
             if (generateColliderFromChildren && _compositeCollider != null)
                 UpdateCompositeColliderBounds();
