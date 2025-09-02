@@ -21,7 +21,6 @@ namespace Code.InteractionSystem
 
         public int IDNumber;
 
-        private bool _isUsingLocal;
         private bool _initSlot;
         private bool _wasStarted;
 
@@ -62,13 +61,7 @@ namespace Code.InteractionSystem
             EnsureInit();
         }
 
-        public override void OnStopNetwork()
-        {
-            base.OnStopNetwork();
-            _isUsingLocal = false;
-        }
-
-        public override string InteractionPrompt => !_isUsingLocal ? "Use Computer" : "Exit Computer";
+        public override string InteractionPrompt => !IsOccupied ? "Use Computer" : "Exit Computer";
 
         protected internal override void OnInteract_Server(NetworkConnection conn, bool force)
         {
@@ -97,7 +90,6 @@ namespace Code.InteractionSystem
 
         private void ApplyComputerStateImmediate(bool open)
         {
-            _isUsingLocal = open;
             if (!_wasStarted) return;
 
             bool useFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
@@ -111,19 +103,16 @@ namespace Code.InteractionSystem
 
                 if (networkImageStream != null) networkImageStream.ClearTexture();
 
-                if (IsOwner)
+                if (WebViewManager.Instance != null)
                 {
-                    if (WebViewManager.Instance != null)
-                    {
-                        WebViewManager.Instance.HideWorldView(IDNumber);
-                        WebViewManager.Instance.Hide();
-                    }
+                    WebViewManager.Instance.HideWorldView(IDNumber);
+                    WebViewManager.Instance.Hide();
+                }
 
-                    if (PlayerInput.Instance != null)
-                    {
-                        PlayerInput.Instance.HideMobileFallback = false;
-                        PlayerInput.Instance.IsBusy = false;
-                    }
+                if (PlayerInput.Instance != null)
+                {
+                    PlayerInput.Instance.HideMobileFallback = false;
+                    PlayerInput.Instance.IsBusy = false;
                 }
 
                 return;
