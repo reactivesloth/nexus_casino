@@ -156,11 +156,10 @@ namespace Code.InteractionSystem
 
         public void SwitchFS()
         {
-            var newFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0;
-            PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", newFS ? 1 : 0);
+            PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0 ? 1 : 0);
             PlayerPrefs.Save();
 
-            ApplyComputerStateImmediate(IsOccupied);
+            ApplyComputerStateImmediate(true);
         }
 
         private void ToggleComputerUI(bool open)
