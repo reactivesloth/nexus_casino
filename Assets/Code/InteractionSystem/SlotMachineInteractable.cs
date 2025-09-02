@@ -21,12 +21,6 @@ namespace Code.InteractionSystem
 
         public int IDNumber;
 
-        private readonly SyncVar<bool> _isUsingNet = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission  = ReadPermission.Observers
-        });
-
         private bool _isUsingLocal;
         private bool _initSlot;
         private bool _wasStarted;
@@ -58,12 +52,6 @@ namespace Code.InteractionSystem
         private void OnEnable()
         {
             EnsureInit();
-            _isUsingNet.OnChange += OnIsUsingChanged;
-        }
-
-        private void OnDisable()
-        {
-            _isUsingNet.OnChange -= OnIsUsingChanged;
         }
 
         private void Start() => _wasStarted = true;
@@ -72,7 +60,6 @@ namespace Code.InteractionSystem
         {
             base.OnStartClient();
             EnsureInit();
-            ApplyComputerStateImmediate(_isUsingNet.Value);
         }
 
         public override void OnStopNetwork()
@@ -86,34 +73,26 @@ namespace Code.InteractionSystem
         protected internal override void OnInteract_Server(NetworkConnection conn, bool force)
         {
             base.OnInteract_Server(conn, force);
-
-            if (IsOwner)
-            {
-                if (_isUsingNet.Value)
-                    return;
-
-                _isUsingNet.Value = true;
-                TargetToggleComputerUI(conn, true);
-                ObserverActivation(true);
-            }
+            ObserverActivation(true);
         }
 
         protected internal override void OnEndInteract_Server(NetworkConnection conn)
         {
-            if (_isUsingNet.Value && IsOwner)
-            {
-                _isUsingNet.Value = false;
-                TargetToggleComputerUI(conn, false);
-                ObserverActivation(false);
-            }
-
             base.OnEndInteract_Server(conn);
+            ObserverActivation(false);
         }
 
-        private void OnIsUsingChanged(bool prev, bool next, bool asServer)
+        protected override void OnInteract_Client(bool force)
         {
-            EnsureInit();
-            ApplyComputerStateImmediate(next);
+            base.OnInteract_Client(force);
+            Debug.Log("INTERACT CLIENT SlotMachineInteractable");
+            ToggleComputerUI(true);
+        }
+
+        protected override void OnEndInteract_Client()
+        {
+            base.OnEndInteract_Client();
+            ToggleComputerUI(false);
         }
 
         private void ApplyComputerStateImmediate(bool open)
@@ -122,6 +101,8 @@ namespace Code.InteractionSystem
             if (!_wasStarted) return;
 
             bool useFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
+            
+            Debug.Log($"Open {open}");
 
             if (!open)
             {
@@ -150,8 +131,7 @@ namespace Code.InteractionSystem
 
             if (contentCanvas) contentCanvas.gameObject.SetActive(true);
 
-            if (IsOwner)
-            {
+            
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
 
                 if (useFS)
@@ -172,7 +152,6 @@ namespace Code.InteractionSystem
 
                     if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
                 }
-            }
         }
 
         public void SwitchFS()
@@ -181,16 +160,15 @@ namespace Code.InteractionSystem
             PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", newFS ? 1 : 0);
             PlayerPrefs.Save();
 
-            ApplyComputerStateImmediate(_isUsingNet.Value);
+            ApplyComputerStateImmediate(IsOccupied);
         }
 
-        [TargetRpc]
-        private void TargetToggleComputerUI(NetworkConnection conn, bool open)
+        private void ToggleComputerUI(bool open)
         {
             if (!_wasStarted) return;
             ApplyComputerStateImmediate(open);
         }
-
+    
         [ObserversRpc(BufferLast = true)]
         private void ObserverActivation(bool open)
         {

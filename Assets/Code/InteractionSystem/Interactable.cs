@@ -32,7 +32,7 @@ namespace Code.InteractionSystem
         public event Action OnInteractEndOnServer;
         
         private int _occupiedConnectionId = -1;
-        private readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
+        protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
@@ -65,6 +65,8 @@ namespace Code.InteractionSystem
             if (col != null) col.isTrigger = true;
         }
 #endif
+
+        #region PUBLIC METHODS
         
         public void RequestInteract()
         {
@@ -90,6 +92,15 @@ namespace Code.InteractionSystem
 
         [Server]
         public void ServerForceInteract(NetworkConnection conn) => HandleInteract(conn, true);
+        
+        [Server]
+        public void ReleaseInteractable()
+        {
+            _isOccupied.Value = false;
+            OnEndInteract_Server();
+        }
+        
+        #endregion
 
         [ServerRpc(RequireOwnership = false)]
         private void Server_HandleInteract(NetworkConnection conn) => HandleInteract(conn);
@@ -124,13 +135,6 @@ namespace Code.InteractionSystem
             OnEndInteract_Server(conn);
             _isOccupied.Value = false;
             OnEndInteractionCallbackFromServer(conn, true);
-        }
-
-        [Server]
-        public void ReleaseInteractable()
-        {
-            _isOccupied.Value = false;
-            OnEndInteract_Server();
         }
 
         protected internal virtual void OnInteract_Server(NetworkConnection conn, bool force)

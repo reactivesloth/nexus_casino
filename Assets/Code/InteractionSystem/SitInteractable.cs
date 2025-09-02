@@ -143,17 +143,11 @@ namespace Code.InteractionSystem
             }
         }
 
-        protected override void OnInteract_Client(bool force)
-        {
-            base.OnInteract_Client(force);
-            TargetToggleSit(true, force);
-        }
+        protected override void OnInteract_Client(bool force) => TargetToggleSit(true, force);
+        
 
-        protected override void OnEndInteract_Client()
-        {
-            base.OnEndInteract_Client();
-            TargetToggleSit(false);
-        }
+        protected override void OnEndInteract_Client() => TargetToggleSit(false);
+        
 
         private void TargetToggleSit(bool isSitDown, bool isForce = false)
         {
