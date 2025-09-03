@@ -1,6 +1,7 @@
 ﻿using Cinemachine;
 using Code.Network.HostMigration;
 using Code.Network.Player;
+using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -328,7 +329,7 @@ namespace Code.Player
         {
             if (input == null || cinemachineCameraTarget == null) return;
 
-            var lookInput = LookCameraLimitRotationRKM && !input.IsRMBDown ? Vector2.zero : input.Look;
+            var lookInput = LookCameraLimitRotationRKM && !input.IsRmbDown ? Vector2.zero : input.Look;
 
             if (lookInput.sqrMagnitude >= Threshold)
             {
@@ -398,7 +399,7 @@ namespace Code.Player
                     else { savedDistance = cameraDistance; cameraDistance = 0f; }
                 }
 
-                cameraDistance -= Input.GetAxis("Mouse ScrollWheel") * Time.deltaTime * 100f;
+                cameraDistance -= PlayerInput.Instance.Zoom * Time.deltaTime * 100f;
             }
 
             cameraDistance = Mathf.Clamp01(cameraDistance);
