@@ -1,451 +1,165 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-using FishNet.Object;
+using System;
 using FishNet.Connection;
+using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
-using Code.Network.HostMigration;
+using UnityEngine;
 
 namespace Code.InteractionSystem
 {
-    public abstract class Interactable : NetworkBehaviour, IMigratableBase
+    public class Interactable : NetworkBehaviour
     {
-        [Header("Base settings")]
         [SerializeField] private float _interactionDistance = 3f;
         [SerializeField] private bool _interactableEnabled = true;
         [SerializeField] private bool _manualRelease = false;
 
         public GameObject[] outlineGameObjects;
+        
+        private int _occupiedConnectionId = -1;
 
-        // Occupied sync
-        private readonly SyncVar<bool> _occupied = new(new SyncTypeSettings
+        protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
 
-        private const string K_OCCUPIED = "occupied";
-
-        private readonly Dictionary<string, object> _boolSlots = new();
-        private readonly Dictionary<string, object> _intSlots = new();
-        private readonly Dictionary<string, object> _floatSlots = new();
-        private readonly Dictionary<string, object> _stringSlots = new();
-
-        public event Action<string, object, object, bool> OnSyncedChanged;
-        public event Action OnForceApply;
+        public bool IsBusy;
 
         public bool IsEnabled => _interactableEnabled;
         public bool ManualRelease => _manualRelease;
-        public bool IsOccupied => _occupied.Value;
-        public bool IsBusy { get; set; }
+        public bool IsOccupied => _isOccupied.Value;
 
         public virtual string InteractionPrompt
         {
             get
             {
                 if (!_interactableEnabled) return "Disabled";
-                if (!IsOccupied) return "Press E to interact";
+                if (!_isOccupied.Value) return "Press E to interact";
                 return _manualRelease ? "Press E to end" : "Occupied";
             }
         }
+        
+        public event Action<bool> InteractCallback_Client;
+        public event Action<bool> InteractCallback_Server;
 
-        private int _occupiedConnectionId = -1;
+        public void RequestInteract(bool force = false) => RequestInteract_ServerRpc(ClientManager.Connection, force);
 
-        public override void OnStartServer()
-        {
-            base.OnStartServer();
-            ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
-            _occupied.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(K_OCCUPIED, prev, next, asServer);
-            EnsureCoreSlotsRegistered();
-        }
-
-        public override void OnStopServer()
-        {
-            base.OnStopServer();
-            ServerManager.OnRemoteConnectionState -= ServerManagerOnRemoteConnectionState;
-        }
-
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-            EnsureCoreSlotsRegistered();
-            ForceApplyAll();
-        }
-
-        private void EnsureCoreSlotsRegistered()
-        {
-            // reserve occupied key visibility
-            OnSyncedChanged?.Invoke(K_OCCUPIED, _occupied.Value, _occupied.Value, IsServer);
-        }
+        public void RequestEndInteract() => RequestEndInteract_ServerRpc(ClientManager.Connection);
+        
 
         [Server]
-        private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
+        public void ReleaseInteractable(NetworkConnection requester = null)
         {
-            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped &&
-                stateArgs.ConnectionId == _occupiedConnectionId)
-            {
-                ReleaseInteractable();
-            }
-        }
-
-#if UNITY_EDITOR
-        protected override void OnValidate()
-        {
-            base.OnValidate();
-            var col = GetComponent<Collider>();
-            if (col != null) col.isTrigger = true;
-        }
-#endif
-
-        // CLIENT API — всегда отправляем на сервер, без раннего local-fail
-        public void RequestInteract()
-        {
-            Server_HandleInteract(ClientManager?.Connection);
-        }
-
-        public void RequestEndInteract()
-        {
-            Server_HandleEndInteract(ClientManager?.Connection);
-        }
-
-        // SERVER RPCs
-        [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleInteract(NetworkConnection conn, bool force = false)
-        {
-            // Серверная валидация
-            if (!_interactableEnabled || conn == null)
-            {
-                OnInteractionCallbackFromServer(conn, false);
-                return;
-            }
-
-            // Не даём занять, если уже занято
-            if (_occupied.Value)
-            {
-                OnInteractionCallbackFromServer(conn, false);
-                return;
-            }
-
-            // Выдаём владение инициатору
-            GiveOwnership(conn);
-            _occupiedConnectionId = conn.ClientId;
-            _occupied.Value = true;
-
-            // Выполняем действие на владельце
-            if (IsOwner)
-                OnInteract(conn, force);
-
-            if (!ManualRelease)
-            {
-                // Автозавершение: последовательный и чистый цикл окончания
-                OnInteractEndOnServer?.Invoke();
-                _occupiedConnectionId = -1;
-                _occupied.Value = false;
-                RemoveOwnership();
-            }
-
-            OnInteractionCallbackFromServer(conn, true);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void Server_HandleEndInteract(NetworkConnection conn)
-        {
-            if (!_manualRelease || !_occupied.Value || !IsOwner)
-            {
-                OnEndInteractionCallbackFromServer(conn, false);
-            }
-            else
-            {
-                OnEndInteract(conn);
-                OnInteractEndOnServer?.Invoke();
-                _occupiedConnectionId = -1;
-                _occupied.Value = false;
-                RemoveOwnership();
-
-                OnEndInteractionCallbackFromServer(conn, true);
-            }
-        }
-
-        [Server]
-        public void ServerForceInteract(NetworkConnection conn, bool force) => HandleInteract(conn, force);
-
-        private void HandleInteract(NetworkConnection conn, bool force = false)
-        {
-            if (!_interactableEnabled || conn == null)
-            {
-                OnInteractionCallbackFromServer(conn, false);
-                return;
-            }
-
-            if (_occupied.Value)
-            {
-                OnInteractionCallbackFromServer(conn, false);
-                return;
-            }
-
-            GiveOwnership(conn);
-            _occupiedConnectionId = conn.ClientId;
-            _occupied.Value = true;
-
-            if (IsOwner)
-                OnInteract(conn, force);
-
-            if (!ManualRelease)
-            {
-                OnInteractEndOnServer?.Invoke();
-                _occupiedConnectionId = -1;
-                _occupied.Value = false;
-                RemoveOwnership();
-            }
-
-            OnInteractionCallbackFromServer(conn, true);
-        }
-
-        [Server]
-        public void ReleaseInteractable()
-        {
-            // Безопасное завершение, даже если ManualRelease=true и владелец отвалился
-            OnEndInteract();
-            OnInteractEndOnServer?.Invoke();
+            _isOccupied.Value = false;
             _occupiedConnectionId = -1;
-            _occupied.Value = false;
+            
+            SendRequestEndInteractCallbacks(requester, true);
+        }
+
+        #region RPC
+
+        [ServerRpc(RequireOwnership = false)]
+        private void RequestInteract_ServerRpc(NetworkConnection requester, bool force = false)
+        {
+            if (!_interactableEnabled || _isOccupied.Value || requester == null)
+            {
+                SendRequestInteractCallbacks(requester, false, force);
+                return;
+            }
+
+            _occupiedConnectionId = requester.ClientId;
+            _isOccupied.Value = true;
+
+            SendRequestInteractCallbacks(requester, true, force);
+        }
+
+        [Server]
+        private void SendRequestInteractCallbacks(NetworkConnection requester, bool success, bool force = false)
+        {
+            OnInteractCallback_Server(requester, success, force);
+            RequestInteractCallback_TargetRpc(requester, success, force);
+            RequestInteractCallback_ObserversRpc(success, force);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void RequestEndInteract_ServerRpc(NetworkConnection requester)
+        {
+            if (requester.ClientId != _occupiedConnectionId)
+            {
+                SendRequestEndInteractCallbacks(requester, false);
+                return;
+            }
+            
+            ReleaseInteractable(requester);
+        }
+
+        [Server]
+        private void SendRequestEndInteractCallbacks(NetworkConnection requester, bool success)
+        {
+            OnInteractEndCallback_Server(requester, success);
+            RequestEndInteractCallback_TargetRpc(requester, success);
+            RequestEndInteractCallback_ObserversRpc(success);
+        }
+
+        [TargetRpc]
+        private void RequestInteractCallback_TargetRpc(NetworkConnection target, bool success, bool force = false) =>
+            OnInteractCallback_Client(success, force);
+
+        [TargetRpc]
+        private void RequestEndInteractCallback_TargetRpc(NetworkConnection target, bool success) =>
+            OnInteractEndCallback_Client(success);
+
+        [ObserversRpc(BufferLast = true)]
+        private void RequestInteractCallback_ObserversRpc(bool success, bool force = false) =>
+            OnInteractCallback_Observers(success, force);
+
+        [ObserversRpc(BufferLast = true)]
+        private void RequestEndInteractCallback_ObserversRpc(bool success) => 
+            OnInteractEndCallback_Observers(success);
+
+        #endregion
+
+        #region Server Callbacks
+
+        [Server]
+        protected virtual void OnInteractCallback_Server(NetworkConnection requester, bool success, bool force = false)
+        {
+            if(!success)
+                return;
+            GiveOwnership(requester);
+        }
+
+        [Server]
+        protected virtual void OnInteractEndCallback_Server(NetworkConnection requester, bool success)
+        {
+            if(!success)
+                return;
             RemoveOwnership();
         }
 
-        // Абстрактные хук-методы
-        protected internal abstract void OnInteract(NetworkConnection conn, bool force);
-        protected internal abstract void OnEndInteract(NetworkConnection conn = null);
+        #endregion
 
-        // Регистрация слотов
-        protected void RegisterBoolSlot(string key, bool initial = default)
+        #region Clients Callbacks
+
+        protected virtual void OnInteractCallback_Client(bool success, bool force = false)
         {
-            if (_boolSlots.ContainsKey(key)) return;
-            var sv = new SyncVar<bool>(new SyncTypeSettings
-            {
-                WritePermission = WritePermission.ServerOnly,
-                ReadPermission = ReadPermission.Observers
-            });
-            sv.Value = initial;
-            sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
-            _boolSlots.Add(key, sv);
+            InteractCallback_Client?.Invoke(success);
         }
 
-        protected void RegisterIntSlot(string key, int initial = default)
+        protected virtual void OnInteractEndCallback_Client(bool success)
         {
-            if (_intSlots.ContainsKey(key)) return;
-            var sv = new SyncVar<int>(new SyncTypeSettings
-            {
-                WritePermission = WritePermission.ServerOnly,
-                ReadPermission = ReadPermission.Observers
-            });
-            sv.Value = initial;
-            sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
-            _intSlots.Add(key, sv);
+            InteractCallback_Client?.Invoke(success);
         }
 
-        protected void RegisterFloatSlot(string key, float initial = default)
+        protected virtual void OnInteractCallback_Observers(bool success, bool force = false)
         {
-            if (_floatSlots.ContainsKey(key)) return;
-            var sv = new SyncVar<float>(new SyncTypeSettings
-            {
-                WritePermission = WritePermission.ServerOnly,
-                ReadPermission = ReadPermission.Observers
-            });
-            sv.Value = initial;
-            sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
-            _floatSlots.Add(key, sv);
+            InteractCallback_Server?.Invoke(success);
         }
 
-        protected void RegisterStringSlot(string key, string initial = default)
+        protected virtual void OnInteractEndCallback_Observers(bool success)
         {
-            if (_stringSlots.ContainsKey(key)) return;
-            var sv = new SyncVar<string>(new SyncTypeSettings
-            {
-                WritePermission = WritePermission.ServerOnly,
-                ReadPermission = ReadPermission.Observers
-            });
-            sv.Value = initial;
-            sv.OnChange += (prev, next, asServer) => OnSyncedChanged?.Invoke(key, prev, next, asServer);
-            _stringSlots.Add(key, sv);
+            InteractCallback_Server?.Invoke(success);
         }
 
-        public bool GetBool(string key) => _boolSlots.TryGetValue(key, out var o) ? ((SyncVar<bool>)o).Value : default;
-        public int GetInt(string key) => _intSlots.TryGetValue(key, out var o) ? ((SyncVar<int>)o).Value : default;
-        public float GetFloat(string key) => _floatSlots.TryGetValue(key, out var o) ? ((SyncVar<float>)o).Value : default;
-        public string GetString(string key) => _stringSlots.TryGetValue(key, out var o) ? ((SyncVar<string>)o).Value : default;
-
-        [Server] protected void SetBool(string key, bool v) { ((SyncVar<bool>)_boolSlots[key]).Value = v; }
-        [Server] protected void SetInt(string key, int v) { ((SyncVar<int>)_intSlots[key]).Value = v; }
-        [Server] protected void SetFloat(string key, float v) { ((SyncVar<float>)_floatSlots[key]).Value = v; }
-        [Server] protected void SetString(string key, string v) { ((SyncVar<string>)_stringSlots[key]).Value = v; }
-
-        [ServerRpc(RequireOwnership = false)]
-        protected void RequestSetBool(string key, bool v, NetworkConnection caller = null)
-        {
-            if (!IsServer) return;
-            if (!_boolSlots.ContainsKey(key)) return;
-            SetBool(key, v);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        protected void RequestSetInt(string key, int v, NetworkConnection caller = null)
-        {
-            if (!IsServer) return;
-            if (!_intSlots.ContainsKey(key)) return;
-            SetInt(key, v);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        protected void RequestSetFloat(string key, float v, NetworkConnection caller = null)
-        {
-            if (!IsServer) return;
-            if (!_floatSlots.ContainsKey(key)) return;
-            SetFloat(key, v);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        protected void RequestSetString(string key, string v, NetworkConnection caller = null)
-        {
-            if (!IsServer) return;
-            if (!_stringSlots.ContainsKey(key)) return;
-            SetString(key, v);
-        }
-
-        public void ForceApplyAll()
-        {
-            OnForceApply?.Invoke();
-            OnSyncedChanged?.Invoke(K_OCCUPIED, _occupied.Value, _occupied.Value, false);
-
-            foreach (var kv in _boolSlots)
-            {
-                var sv = (SyncVar<bool>)kv.Value;
-                OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
-            }
-
-            foreach (var kv in _intSlots)
-            {
-                var sv = (SyncVar<int>)kv.Value;
-                OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
-            }
-
-            foreach (var kv in _floatSlots)
-            {
-                var sv = (SyncVar<float>)kv.Value;
-                OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
-            }
-
-            foreach (var kv in _stringSlots)
-            {
-                var sv = (SyncVar<string>)kv.Value;
-                OnSyncedChanged?.Invoke(kv.Key, sv.Value, sv.Value, false);
-            }
-        }
-
-        [Serializable]
-        private class InteractableMigrationData
-        {
-            public bool occupied;
-            public List<KVBool> bools = new();
-            public List<KVInt> ints = new();
-            public List<KVFloat> floats = new();
-            public List<KVString> strings = new();
-        }
-
-        [Serializable] private struct KVBool { public string k; public bool v; }
-        [Serializable] private struct KVInt { public string k; public int v; }
-        [Serializable] private struct KVFloat { public string k; public float v; }
-        [Serializable] private struct KVString { public string k; public string v; }
-
-        object IMigratableBase.GetMigrateData()
-        {
-            var data = new InteractableMigrationData
-            {
-                occupied = IsOccupied
-            };
-            foreach (var kv in _boolSlots) data.bools.Add(new KVBool { k = kv.Key, v = ((SyncVar<bool>)kv.Value).Value });
-            foreach (var kv in _intSlots) data.ints.Add(new KVInt { k = kv.Key, v = ((SyncVar<int>)kv.Value).Value });
-            foreach (var kv in _floatSlots) data.floats.Add(new KVFloat { k = kv.Key, v = ((SyncVar<float>)kv.Value).Value });
-            foreach (var kv in _stringSlots) data.strings.Add(new KVString { k = kv.Key, v = ((SyncVar<string>)kv.Value).Value ?? string.Empty });
-            return data;
-        }
-
-        string IMigratableBase.GetJson(object data)
-        {
-            return JsonUtility.ToJson((InteractableMigrationData)data, prettyPrint: false);
-        }
-
-        void IMigratableBase.OnMigrateDataReceived(string jsonData)
-        {
-            if (!IsServer) return;
-            if (string.IsNullOrEmpty(jsonData)) return;
-
-            InteractableMigrationData data = null;
-            try
-            {
-                data = JsonUtility.FromJson<InteractableMigrationData>(jsonData);
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[Interactable] Failed to parse migration data: {e.Message}", this);
-                return;
-            }
-
-            if (data == null) return;
-
-            if (data.bools != null)
-            {
-                for (int i = 0; i < data.bools.Count; i++)
-                {
-                    var kv = data.bools[i];
-                    if (!_boolSlots.ContainsKey(kv.k)) RegisterBoolSlot(kv.k, kv.v);
-                    SetBool(kv.k, kv.v);
-                }
-            }
-
-            if (data.ints != null)
-            {
-                for (int i = 0; i < data.ints.Count; i++)
-                {
-                    var kv = data.ints[i];
-                    if (!_intSlots.ContainsKey(kv.k)) RegisterIntSlot(kv.k, kv.v);
-                    SetInt(kv.k, kv.v);
-                }
-            }
-
-            if (data.floats != null)
-            {
-                for (int i = 0; i < data.floats.Count; i++)
-                {
-                    var kv = data.floats[i];
-                    if (!_floatSlots.ContainsKey(kv.k)) RegisterFloatSlot(kv.k, kv.v);
-                    SetFloat(kv.k, kv.v);
-                }
-            }
-
-            if (data.strings != null)
-            {
-                for (int i = 0; i < data.strings.Count; i++)
-                {
-                    var kv = data.strings[i];
-                    if (!_stringSlots.ContainsKey(kv.k)) RegisterStringSlot(kv.k, kv.v);
-                    SetString(kv.k, kv.v);
-                }
-            }
-
-            ForceApplyAll();
-        }
-
-        public delegate void OnInteractCallback(bool success);
-        public event OnInteractCallback InteractCallback;
-        public event Action OnInteractEndOnServer;
-
-        [TargetRpc]
-        private void OnInteractionCallbackFromServer(NetworkConnection target, bool success)
-            => InteractCallback?.Invoke(success);
-
-        [TargetRpc]
-        private void OnEndInteractionCallbackFromServer(NetworkConnection target, bool success)
-            => InteractCallback?.Invoke(success);
+        #endregion
     }
 }

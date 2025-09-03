@@ -70,7 +70,7 @@ namespace Code.Player
                     IsBusy = true;
 
                     _selected = _hovered;
-                    _selected.InteractCallback += OnStartInteractCallback;
+                    _selected.InteractCallback_Client += OnStartInteractCallbackClient;
                     _selected.RequestInteract();
                 }
             }
@@ -81,7 +81,7 @@ namespace Code.Player
                     IsBusy = true;
 
                     _selected = _active;
-                    _selected.InteractCallback += OnEndInteractCallback;
+                    _selected.InteractCallback_Client += OnEndInteractCallbackClient;
                     _selected.RequestEndInteract();
                 }
             }
@@ -161,11 +161,11 @@ namespace Code.Player
             else InteractionUIHint.Instance.HidePrompt();
         }
 
-        private void OnStartInteractCallback(bool success)
+        private void OnStartInteractCallbackClient(bool success)
         {
             IsBusy = false;
             if (_selected != null)
-                _selected.InteractCallback -= OnStartInteractCallback;
+                _selected.InteractCallback_Client -= OnStartInteractCallbackClient;
 
             if (success)
             {
@@ -176,11 +176,11 @@ namespace Code.Player
             _selected = null;
         }
 
-        private void OnEndInteractCallback(bool success)
+        private void OnEndInteractCallbackClient(bool success)
         {
             IsBusy = false;
             if (_selected != null)
-                _selected.InteractCallback -= OnEndInteractCallback;
+                _selected.InteractCallback_Client -= OnEndInteractCallbackClient;
 
             if (success)
             {

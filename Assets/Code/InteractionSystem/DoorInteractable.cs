@@ -1,310 +1,266 @@
 using System;
 using System.Collections;
-using Code.InteractionSystem;
-using FishNet.Connection;
-using FishNet.Object;
+using Code.Player;
+using FishNet.Object.Synchronizing;
 using UnityEngine;
 
-namespace Code.Doors
+namespace Code.InteractionSystem
 {
-  public enum DoorMode { ManualOnly, AutoOnly, AutoAndManual }
-
-  [Serializable]
-  public class DoorElement
-  {
-    public Transform transform;
-    public Vector3 closedRot;
-    public Vector3 openRot;
-  }
-
-  public sealed class DoorInteractable : Interactable
-  {
-    private const string K_TARGET = "door.targetOpen";
-
-    [Header("Mode")]
-    [SerializeField] private DoorMode mode = DoorMode.ManualOnly;
-
-    [Header("Door Elements (multiple panels supported)")]
-    [SerializeField] private DoorElement[] elements = Array.Empty<DoorElement>();
-
-    [Header("Manual settings")]
-    [Tooltip("Скорость изменения степени открытия при Manual (доля в сек).")]
-    [SerializeField] private float manualSpeed = 2f;
-
-    [Header("Auto settings")]
-    [Tooltip("Дистанция полной закрытости.")]
-    [SerializeField] private float closeDistance = 10f;
-    [Tooltip("Дистанция полной открытости.")]
-    [SerializeField] private float fullOpenDistance = 1f;
-    [Tooltip("Порог инерции смены направления (0.01..0.1).")]
-    [SerializeField] private float sensitivity = 0.05f;
-
-    [Header("Client visuals")]
-    [SerializeField] private AnimationCurve openCurve = AnimationCurve.Linear(0, 0, 1, 1);
-    [SerializeField] private AnimationCurve closeCurve = AnimationCurve.Linear(0, 0, 1, 1);
-    [SerializeField, Tooltip("Время анимации на клиенте, сек")]
-    private float animationDuration = 0.5f;
-
-    private float _visualDegree;
-    private AnimationCurve _currentCurve;
-    private float _prevTarget;
-    private int _prevDir;
-    private float _accDelta;
-
-    private Transform[] _players = Array.Empty<Transform>();
-    private float _scanTimer;
-    private float _lastNearest;
-    private Coroutine _manualRoutine;
-    private bool _isOpen;
-    private bool _initedDoor;
-
-    private void EnsureInit()
+    public enum DoorMode
     {
-      if (_initedDoor) return;
-      _initedDoor = true;
-      if (elements == null) elements = Array.Empty<DoorElement>();
-      NormalizeDistances();
-      var col = GetComponent<Collider>();
-      if (col != null) col.isTrigger = true;
+        ManualOnly,
+        AutoOnly,
+        AutoAndManual
     }
 
-    private void NormalizeDistances()
+    [Serializable]
+    public class DoorElement
     {
-      if (fullOpenDistance < 0f) fullOpenDistance = 0f;
-      if (closeDistance < 0.01f) closeDistance = 0.01f;
-      if (fullOpenDistance >= closeDistance)
-        closeDistance = fullOpenDistance + 0.01f;
-      if (sensitivity < 0.001f) sensitivity = 0.001f;
-      if (manualSpeed < 0f) manualSpeed = 0f;
+        public Transform transform;
+        public Vector3 closedRot;
+        public Vector3 openRot;
     }
 
-    private void OnEnable()
+    public sealed class DoorInteractable : Interactable
     {
-      EnsureInit();
-      OnSyncedChanged += HandleSyncedChanged;
-      OnForceApply    += HandleForceApply;
-    }
+        [Header("Mode")]
+        [SerializeField] private DoorMode mode = DoorMode.ManualOnly;
 
-    private void OnDisable()
-    {
-      OnSyncedChanged -= HandleSyncedChanged;
-      OnForceApply    -= HandleForceApply;
-      if (_manualRoutine != null) { StopCoroutine(_manualRoutine); _manualRoutine = null; }
-    }
+        [Header("Door Elements (multiple panels supported)")]
+        [SerializeField] private DoorElement[] elements = Array.Empty<DoorElement>();
 
-    public override void OnStartServer()
-    {
-      base.OnStartServer();
-      NormalizeDistances();
-      RegisterFloatSlot(K_TARGET, 0f);
-      _prevTarget = 0f;
-      SetFloat(K_TARGET, 0f);
-    }
+        [Header("Manual settings")]
+        [Tooltip("Скорость изменения степени открытия при Manual (доля в сек).")]
+        [SerializeField] private float manualSpeed = 2f;
 
-    public override void OnStartClient()
-    {
-      base.OnStartClient();
-      EnsureInit();
-    }
+        [Header("Auto settings")]
+        [Tooltip("Дистанция, на которой дверь полностью закрыта / полностью открыта.")]
+        [SerializeField] private float closeDistance = 10f;
+        [SerializeField] private float fullOpenDistance = 1f;
 
-    private void Update()
-    {
-      if (IsServer && (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual))
-        Server_AutoTick();
+        [Tooltip("Порог инерции смены направления (0.01..0.1).")]
+        [SerializeField] private float sensitivity = 0.05f;
 
-      float target = Mathf.Clamp01(GetFloat(K_TARGET));
-      float targetCurve = EvaluateByCurve(target);
-      float step = (animationDuration > 0f) ? Time.deltaTime / animationDuration : 1f;
-      _visualDegree = Mathf.MoveTowards(_visualDegree, targetCurve, step);
-      ApplyToElements(_visualDegree);
-    }
+        [Header("Client visuals")]
+        [SerializeField] private AnimationCurve openCurve  = AnimationCurve.Linear(0, 0, 1, 1);
+        [SerializeField] private AnimationCurve closeCurve = AnimationCurve.Linear(0, 0, 1, 1);
+        [SerializeField, Tooltip("Время анимации на клиенте, сек")]
+        private float animationDuration = 0.5f;
 
-    #region Manual
+        private readonly SyncVar<float> _targetOpen = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission  = ReadPermission.Observers
+        });
 
-    protected internal override void OnInteract(NetworkConnection conn, bool force = false)
-    {
-      if (mode == DoorMode.AutoOnly) return;
+        private float _visualDegree;
+        private AnimationCurve _currentCurve;
 
-      bool wantOpen = !_isOpen;
-      if (_manualRoutine != null) StopCoroutine(_manualRoutine);
-      _manualRoutine = StartCoroutine(Server_ManualSet(wantOpen));
-    }
+        private float _prevTarget;
+        private int   _prevDir;
+        private float _accDelta;
 
-    protected internal override void OnEndInteract(NetworkConnection conn = null)
-    {
-      
-    }
+        private Transform[] _players = Array.Empty<Transform>();
+        private float _scanTimer;
 
-    private IEnumerator Server_ManualSet(bool open)
-    {
-      _isOpen = open;
-      float target = open ? 1f : 0f;
-      float t = Mathf.Clamp01(GetFloat(K_TARGET));
-      float speed = Mathf.Max(0.0001f, manualSpeed);
-      
-      while (!Mathf.Approximately(t, target))
-      {
-        float dir = Mathf.Sign(target - t);
-        t += dir * speed * Time.deltaTime;
-        t = Mathf.Clamp01(t);
-        SetFloat(K_TARGET, t);
-        yield return null;
-      }
+        private Coroutine _manualRoutine;
+        private bool _isOpen;
 
-      SetFloat(K_TARGET, target);
-      _manualRoutine = null;
-    }
+        private bool _initedDoor;
 
-    #endregion
+        private void EnsureInit()
+        {
+            if (_initedDoor) return;
+            _initedDoor = true;
 
-    #region Auto (server)
+            if (elements == null) elements = Array.Empty<DoorElement>();
+            if (sensitivity < 0.001f) sensitivity = 0.001f;
+            if (manualSpeed < 0f) manualSpeed = 0f;
 
-    private void Server_AutoTick()
-    {
-      Server_AutoScanPlayers();
+            var col = GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+        }
 
-      if (_players.Length == 0)
-      {
-        _lastNearest = float.MaxValue;
-        ApplyTarget(0f);
-        return;
-      }
+        private void OnEnable()
+        {
+            EnsureInit();
+            _targetOpen.OnChange += OnTargetChanged;
+        }
 
-      Vector3 doorPos = transform.position;
-      float nearest = float.MaxValue;
-      for (int i = 0; i < _players.Length; i++)
-      {
-        var t = _players[i];
-        if (t == null) continue;
-        Vector3 a = new Vector3(t.position.x, 0f, t.position.z);
-        Vector3 b = new Vector3(doorPos.x,   0f, doorPos.z);
-        float d = Vector3.Distance(a, b);
-        if (d < nearest) nearest = d;
-      }
-      _lastNearest = nearest;
+        private void OnDisable()
+        {
+            _targetOpen.OnChange -= OnTargetChanged;
 
-      if (nearest <= fullOpenDistance)
-      {
-        ApplyTarget(1f);
-        return;
-      }
-      if (nearest >= closeDistance)
-      {
-        ApplyTarget(0f);
-        return;
-      }
+            if (_manualRoutine != null)
+            {
+                StopCoroutine(_manualRoutine);
+                _manualRoutine = null;
+            }
+        }
 
-      float span = Mathf.Max(0.0001f, closeDistance - fullOpenDistance);
-      float t01 = 1f - Mathf.Clamp01((nearest - fullOpenDistance) / span);
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            EnsureInit();
 
-      int dir = Math.Sign(t01 - _prevTarget);
-      if (_prevDir != 0 && dir != 0 && dir != _prevDir) _accDelta += t01 - _prevTarget;
+            _visualDegree = EvaluateByCurve(_targetOpen.Value);
+            ApplyToElements(_visualDegree);
 
-      float newTarget;
-      if (Mathf.Abs(_accDelta) < sensitivity)
-      {
-        newTarget = _prevTarget;
-        dir = _prevDir;
-      }
-      else
-      {
-        newTarget = t01;
-        _prevDir = dir;
-        _accDelta = 0f;
-      }
+            _prevTarget = _targetOpen.Value;
+        }
 
-      _prevTarget = newTarget;
-      ApplyTarget(newTarget);
-    }
+        private void Update()
+        {
+            if (IsServerInitialized && (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual))
+                Server_AutoTick();
 
-    private void Server_AutoScanPlayers()
-    {
-      _scanTimer -= Time.deltaTime;
-      if (_scanTimer > 0f) return;
-      _scanTimer = 0.25f;
+            float targetCurve = EvaluateByCurve(_targetOpen.Value);
+            float step = (animationDuration > 0f) ? Time.deltaTime / animationDuration : 1f;
+            _visualDegree = Mathf.MoveTowards(_visualDegree, targetCurve, step);
+            ApplyToElements(_visualDegree);
+        }
 
-      var gos = GameObject.FindGameObjectsWithTag("Player");
-      int count = (gos != null) ? gos.Length : 0;
+        #region Interactable (Manual)
+        protected override void OnInteractCallback_Client(bool success, bool force = false)
+        {
+            base.OnInteractCallback_Client(success, force);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
+            if (mode == DoorMode.AutoOnly) return;
 
-      if (count == 0)
-      {
-        _players = Array.Empty<Transform>();
-      }
-      else
-      {
-        if (_players.Length != count) _players = new Transform[count];
-        for (int i = 0; i < count; i++)
-          _players[i] = gos[i] != null ? gos[i].transform : null;
-      }
-    }
+            bool wantOpen = !_isOpen;
+            if (_manualRoutine != null) StopCoroutine(_manualRoutine);
+            _manualRoutine = StartCoroutine(Server_ManualSet(wantOpen));
+        }
 
-    [Server]
-    private void ApplyTarget(float value01)
-    {
-      value01 = Mathf.Clamp01(value01);
-      SetFloat(K_TARGET, value01);
-      _isOpen = value01 >= 0.5f;
-    }
+        private IEnumerator Server_ManualSet(bool open)
+        {
+            _isOpen = open;
+            float target = open ? 1f : 0f;
 
-    #endregion
+            float t = _targetOpen.Value;
+            float speed = Mathf.Max(0.0001f, manualSpeed);
 
-    #region Client visuals
+            while (!Mathf.Approximately(t, target))
+            {
+                float dir = Mathf.Sign(target - t);
+                t += dir * speed * Time.deltaTime;
+                t = Mathf.Clamp01(t);
+                if (!Mathf.Approximately(_targetOpen.Value, t))
+                    _targetOpen.Value = t;
+                yield return null;
+            }
 
-    private void HandleForceApply()
-    {
-      float tgt = Mathf.Clamp01(GetFloat(K_TARGET));
-      _currentCurve = (tgt >= _visualDegree) ? openCurve : closeCurve;
-      _visualDegree = EvaluateByCurve(tgt);
-      ApplyToElements(_visualDegree);
-      _prevTarget = tgt;
-      _isOpen = tgt >= 0.5f;
-    }
+            _manualRoutine = null;
+        }
+        #endregion
 
-    private void HandleSyncedChanged(string key, object prev, object next, bool asServer)
-    {
-      if (key != K_TARGET) return;
-      float p = Convert.ToSingle(prev);
-      float n = Convert.ToSingle(next);
-      if (n > p) _currentCurve = openCurve;
-      else if (n < p) _currentCurve = closeCurve;
-      _isOpen = n >= 0.5f;
-    }
+        #region Server: auto-logic
+        private void Server_AutoTick()
+        {
+            _scanTimer -= Time.deltaTime;
+            if (_scanTimer <= 0f)
+            {
+                _scanTimer = 0.25f;
+                var list = FindObjectsByType<PlayerMovementController>(FindObjectsSortMode.None);
+                int count = (list != null) ? list.Length : 0;
+                if (count == 0) _players = Array.Empty<Transform>();
+                else
+                {
+                    if (_players.Length != count) _players = new Transform[count];
+                    for (int i = 0; i < count; i++)
+                        _players[i] = list != null && list[i] != null ? list[i].transform : null;
+                }
+            }
 
-    private float EvaluateByCurve(float degree01)
-    {
-      var curve = _currentCurve;
-      if (curve == null) curve = (degree01 >= _visualDegree) ? openCurve : closeCurve;
-      degree01 = Mathf.Clamp01(degree01);
-      return curve != null ? curve.Evaluate(degree01) : degree01;
-    }
+            float nearest = float.MaxValue;
+            for (int i = 0; i < _players.Length; i++)
+            {
+                var t = _players[i];
+                if (t == null) continue;
+                float d = Vector3.Distance(t.position, transform.position);
+                if (d < nearest) nearest = d;
+            }
 
-    private void ApplyToElements(float curveValue)
-    {
-      if (elements == null) return;
-      for (int i = 0; i < elements.Length; i++)
-      {
-        var e = elements[i];
-        if (e == null || e.transform == null) continue;
-        Vector3 rot = Vector3.Lerp(e.closedRot, e.openRot, curveValue);
-        e.transform.localRotation = Quaternion.Lerp(
-          e.transform.localRotation,
-          Quaternion.Euler(rot),
-          Time.deltaTime * 3f
-        );
-      }
-    }
+            if (_players.Length == 0 || Mathf.Approximately(nearest, float.MaxValue))
+                nearest = closeDistance + 1f;
 
-    #endregion
+            float denom = Mathf.Max(0.0001f, closeDistance - fullOpenDistance);
+            float newTarget = 1f - Mathf.Clamp01((nearest - fullOpenDistance) / denom);
 
-    #if UNITY_EDITOR
-    protected override void OnValidate()
-    {
-      base.OnValidate();
-      if (elements == null) elements = Array.Empty<DoorElement>();
-      NormalizeDistances();
-      var col = GetComponent<Collider>();
-      if (col != null) col.isTrigger = true;
-    }
+            int dir = Math.Sign(newTarget - _prevTarget);
+            if (_prevDir != 0 && dir != 0 && dir != _prevDir)
+            {
+                _accDelta += newTarget - _prevTarget;
+                if (Mathf.Abs(_accDelta) < sensitivity)
+                {
+                    newTarget = _prevTarget;
+                }
+                else
+                {
+                    _prevDir = dir;
+                    _accDelta = 0f;
+                }
+            }
+            else
+            {
+                _prevDir = dir;
+                _accDelta = 0f;
+            }
+
+            _prevTarget = newTarget;
+
+            if (!Mathf.Approximately(_targetOpen.Value, newTarget))
+                _targetOpen.Value = newTarget;
+        }
+        #endregion
+
+        #region Client visuals helpers
+        private void OnTargetChanged(float prev, float next, bool asServer)
+        {
+            EnsureInit();
+            if (next > prev)      _currentCurve = openCurve;
+            else if (next < prev) _currentCurve = closeCurve;
+        }
+
+        private float EvaluateByCurve(float degree01)
+        {
+            var curve = _currentCurve ?? (degree01 >= _visualDegree ? openCurve : closeCurve);
+            degree01 = Mathf.Clamp01(degree01);
+            return curve?.Evaluate(degree01) ?? degree01;
+        }
+
+        private void ApplyToElements(float curveValue)
+        {
+            if (elements == null) return;
+            for (int i = 0; i < elements.Length; i++)
+            {
+                var e = elements[i];
+                if (e == null || e.transform == null) continue;
+
+                Vector3 rot = Vector3.Lerp(e.closedRot, e.openRot, curveValue);
+                e.transform.localRotation = Quaternion.Lerp(e.transform.localRotation, Quaternion.Euler(rot), Time.deltaTime * 3);
+            }
+        }
+        #endregion
+
+#if UNITY_EDITOR
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+
+            if (elements == null) elements = Array.Empty<DoorElement>();
+            if (sensitivity < 0.001f) sensitivity = 0.001f;
+            if (manualSpeed < 0f) manualSpeed = 0f;
+
+            var col = GetComponent<Collider>();
+            if (col != null) col.isTrigger = true;
+        }
 #endif
-  }
+    }
 }
