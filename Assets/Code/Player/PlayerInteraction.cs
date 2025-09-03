@@ -68,11 +68,7 @@ namespace Code.Player
                     !IsBusy &&
                     _postEndCooldown <= 0f)
                 {
-                    IsBusy = true;
-
-                    _selected = _hovered;
-                    _selected.InteractCallback_Client += OnStartInteractCallbackClient;
-                    _selected.RequestInteract();
+                    RequestInteractWith(_hovered);
                 }
             }
             else
@@ -89,6 +85,15 @@ namespace Code.Player
 
             UpdateOutline();
             UpdateUI();
+        }
+
+        public void RequestInteractWith(Interactable interactable, bool force = false)
+        {
+            IsBusy = true;
+            
+            _selected = interactable;
+            _selected.InteractCallback_Client += OnStartInteractCallbackClient;
+            _selected.RequestInteract(force);
         }
 
         private void UpdateHover()
