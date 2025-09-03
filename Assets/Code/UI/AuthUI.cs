@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.IO;
 using Code.API;
 using Code.API.Models;
@@ -36,8 +35,8 @@ namespace Code.UI
 
         private bool _isResendTimerActive;
         private float _resendTimer;
-        private bool _isRegistered; // вернулся ли check-номер как зарегистрированный
-        private TMP_Text _resendText; // кеш компонента текста на кнопке
+        private bool _isRegistered;
+        private TMP_Text _resendText;
 
         private void Awake()
         {
@@ -86,7 +85,7 @@ namespace Code.UI
                 nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput", string.Empty);
 
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(true);
-            if (authButton != null) authButton.gameObject.SetActive(false);
+            if (authButton != null) authButton.interactable = false;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(false);
             if (resendCodeButton != null) resendCodeButton.gameObject.SetActive(false);
             _isResendTimerActive = false;
@@ -94,8 +93,7 @@ namespace Code.UI
             if (titleText != null)
                 titleText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Welcome back" : "Welcome";
 
-            if (authButtonText != null)
-                authButtonText.text = _isRegistered ? "Login" : "Sign up";
+            if (authButtonText != null) authButtonText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Login" : "Sign up";
 
             if (termsAndConditions != null)
                 termsAndConditions.SetActive(false);
@@ -154,7 +152,7 @@ namespace Code.UI
                     if (phoneInput != null) phoneInput.interactable = false;
                     if (codeInput != null) codeInput.gameObject.SetActive(true);
                     if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
-                    if (authButton != null) authButton.gameObject.SetActive(true);
+                    if (authButton != null) authButton.interactable = true;
                     if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
                     if (titleText != null) titleText.text = _isRegistered ? "Login" : "Sign up";
                     if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
