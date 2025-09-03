@@ -105,7 +105,7 @@ namespace Code.Network.HostMigration.Utility
                     continue;
                 }
 
-                comp.OnMigrateDataReceived(cData.jsonData);
+                comp.OnMigrateDataReceived_Server(cData.jsonData);
             }
         }
 

@@ -674,7 +674,7 @@ namespace Code.Player
         }
 
         #region IMigratable
-        public void OnMigrateDataReceived(CharacterMigrateData data)
+        public void OnMigrateDataReceived_Server(CharacterMigrateData data)
         {
             if (NetworkManager.IsServerStarted)
                 SetPlayerState(Owner, data);
@@ -689,7 +689,7 @@ namespace Code.Player
             FirstPersonView = data.isFirstPersonView;
         }
 
-        public CharacterMigrateData GetMigrateData()
+        public CharacterMigrateData GetMigrateData_Client()
         {
             return new CharacterMigrateData
             {

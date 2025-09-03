@@ -67,9 +67,11 @@ namespace Code.Network.HostMigration
             Debug.Log("[HostMigrator] Client start migrating");
             
             // Сбрасываес все
-            var networkObjects = FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            /*
+             var networkObjects = FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var networkObject in networkObjects)
                 networkObject.ResetState(true);
+            */
             
             if (_clientManager != null)
                 _clientManager.Broadcast(_migrateData);
@@ -119,7 +121,7 @@ namespace Code.Network.HostMigration
                     var mb = migratables[c] as IMigratableBase;
                     if (mb == null) continue;
 
-                    var data = mb.GetMigrateData();
+                    var data = mb.GetMigrateData_Client();
                     compDatas.Add(new MigratableComponentData
                     {
                         componentName = migratables[c].GetType().FullName,

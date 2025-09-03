@@ -21,7 +21,7 @@ namespace Code.Player
         
         #region IMigratable
         
-        public void OnMigrateDataReceived(CharacterInteractableMigrateData data)
+        public void OnMigrateDataReceived_Server(CharacterInteractableMigrateData data)
         {
             if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
                 return;
@@ -29,8 +29,7 @@ namespace Code.Player
             var sceneObject = SceneObject.GetObjectById(data.activeId);
             if (!sceneObject) return;
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
-
-            interactable.RequestInteract(true, Owner);
+            
             SetInteractableOnMigrate(Owner, data);
         }
 
@@ -41,10 +40,10 @@ namespace Code.Player
             if (!sceneObject) return;
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
-            playerInteraction.Active = interactable;
+            interactable.RequestInteract(true);
         }
 
-        public CharacterInteractableMigrateData GetMigrateData()
+        public CharacterInteractableMigrateData GetMigrateData_Client()
         {
             if (playerInteraction.Active == null) return default;
             if (!playerInteraction.Active.TryGetComponent<SceneObject>(out var sceneObject)) return default;
