@@ -39,6 +39,7 @@ namespace Code.InteractionSystem
         }
         
         public event Action<bool> InteractCallback_Client;
+        public event Action<bool> InteractCallback_Server;
 
         public void RequestInteract(bool force = false) => RequestInteract_ServerRpc(ClientManager.Connection, force);
 
@@ -151,10 +152,12 @@ namespace Code.InteractionSystem
 
         protected virtual void OnInteractCallback_Observers(bool success, bool force = false)
         {
+            InteractCallback_Server?.Invoke(success);
         }
 
         protected virtual void OnInteractEndCallback_Observers(bool success)
         {
+            InteractCallback_Server?.Invoke(success);
         }
 
         #endregion

@@ -1,9 +1,7 @@
 ﻿using System.Collections;
 using Code.Player;
+using Code.Utility;
 using UnityEngine;
-using FishNet.Object;
-using FishNet.Connection;
-using FishNet.Object.Synchronizing;
 
 namespace Code.InteractionSystem
 {
@@ -320,8 +318,7 @@ namespace Code.InteractionSystem
             if (anim != null)
             {
                 anim.applyRootMotion = true;
-                int style = 0;
-                int.TryParse(entry.animationID, out style);
+                int.TryParse(entry.animationID, out var style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
             }
@@ -408,8 +405,7 @@ namespace Code.InteractionSystem
             if (anim != null)
             {
                 anim.applyRootMotion = true;
-                int style = 0;
-                int.TryParse(entry != null ? entry.animationID : "0", out style);
+                int.TryParse(entry != null ? entry.animationID : "0", out var style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, false);
             }
@@ -460,24 +456,6 @@ namespace Code.InteractionSystem
                         CursorManager.Instance.HideCursor();
                 }
             }
-        }
-
-        private int PickEntryIndexFor(NetworkConnection conn)
-        {
-            var all = FindObjectsOfType<PlayerMovementController>();
-            for (int i = 0; i < all.Length; i++)
-                if (all[i] != null && all[i].Owner == conn)
-                {
-                    var tf = all[i].transform;
-                    var closest = FindClosestEntryPoint(tf.position);
-                    if (closest == null) return 0;
-                    for (int e = 0; e < entries.Length; e++)
-                        if (entries[e] == closest)
-                            return e;
-                    return 0;
-                }
-
-            return 0;
         }
 
         private EntryData GetEntry(int index)
@@ -607,24 +585,11 @@ namespace Code.InteractionSystem
 
         private PlayerMovementController FindLocalOwnerMovement()
         {
-            var all = FindObjectsOfType<PlayerMovementController>();
+            var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < all.Length; i++)
             {
                 var m = all[i];
                 if (m != null && m.Owner.IsLocalClient)
-                    return m;
-            }
-
-            return null;
-        }
-
-        private PlayerMovementController FindServerSideMovement(NetworkConnection conn)
-        {
-            var all = FindObjectsOfType<PlayerMovementController>();
-            for (int i = 0; i < all.Length; i++)
-            {
-                var m = all[i];
-                if (m != null && m.Owner == conn)
                     return m;
             }
 

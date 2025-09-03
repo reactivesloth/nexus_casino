@@ -1,14 +1,11 @@
 ﻿using System.Linq;
 using Code.Network;
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using TMPro;
 using UnityEngine;
 
 namespace Code.InteractionSystem
 {
-    public class SlotMachineInteractable : InteractableObsolete
+    public class SlotMachineInteractable : Interactable
     {
         [Header("UI Settings")]
         [SerializeField] private Canvas computer3dCanvas;
@@ -22,7 +19,6 @@ namespace Code.InteractionSystem
         public int IDNumber;
 
         private bool _initSlot;
-        private bool _wasStarted;
 
         private void EnsureInit()
         {
@@ -52,9 +48,7 @@ namespace Code.InteractionSystem
         {
             EnsureInit();
         }
-
-        private void Start() => _wasStarted = true;
-
+        
         public override void OnStartClient()
         {
             base.OnStartClient();
@@ -62,38 +56,49 @@ namespace Code.InteractionSystem
         }
 
         public override string InteractionPrompt => !IsOccupied ? "Use Computer" : "Exit Computer";
-
-        protected internal override void OnInteract_Server(NetworkConnection conn, bool force)
+        
+        protected override void OnInteractCallback_Client(bool success, bool force = false)
         {
-            base.OnInteract_Server(conn, force);
-            ObserverActivation(true);
-        }
-
-        protected internal override void OnEndInteract_Server(NetworkConnection conn)
-        {
-            base.OnEndInteract_Server(conn);
-            ObserverActivation(false);
-        }
-
-        protected override void OnInteract_Client(bool force)
-        {
-            base.OnInteract_Client(force);
-            Debug.Log("INTERACT CLIENT SlotMachineInteractable");
+            base.OnInteractCallback_Client(success, force);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
             ToggleComputerUI(true);
         }
 
-        protected override void OnEndInteract_Client()
+        protected override void OnInteractEndCallback_Client(bool success)
         {
-            base.OnEndInteract_Client();
+            base.OnInteractEndCallback_Client(success);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
             ToggleComputerUI(false);
+        }
+
+        protected override void OnInteractCallback_Observers(bool success, bool force = false)
+        {
+            base.OnInteractCallback_Observers(success, force);
+            if (contentCanvas) contentCanvas.gameObject.SetActive(true);
+        }
+
+        protected override void OnInteractEndCallback_Observers(bool success)
+        {
+            base.OnInteractEndCallback_Observers(success);
+            if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
         private void ApplyComputerStateImmediate(bool open)
         {
-            if (!_wasStarted) return;
+            bool useFs = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
 
-            bool useFS = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
-            
             Debug.Log($"Open {open}");
 
             if (!open)
@@ -114,16 +119,14 @@ namespace Code.InteractionSystem
                     PlayerInput.Instance.HideMobileFallback = false;
                     PlayerInput.Instance.IsBusy = false;
                 }
-
-                return;
             }
+            else
+            {
+                if (contentCanvas) contentCanvas.gameObject.SetActive(true);
 
-            if (contentCanvas) contentCanvas.gameObject.SetActive(true);
-
-            
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
 
-                if (useFS)
+                if (useFs)
                 {
                     WebViewManager.Instance.OpenFullscreen();
                     if (networkImageStream != null && WebViewManager.Instance.WebViewRawImage != null)
@@ -141,9 +144,10 @@ namespace Code.InteractionSystem
 
                     if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
                 }
+            }
         }
 
-        public void SwitchFS()
+        public void SwitchFullScreen()
         {
             PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0 ? 1 : 0);
             PlayerPrefs.Save();
@@ -153,14 +157,7 @@ namespace Code.InteractionSystem
 
         private void ToggleComputerUI(bool open)
         {
-            if (!_wasStarted) return;
             ApplyComputerStateImmediate(open);
-        }
-    
-        [ObserversRpc(BufferLast = true)]
-        private void ObserverActivation(bool open)
-        {
-            if (contentCanvas != null) contentCanvas.gameObject.SetActive(open);
         }
 
         public static SlotMachineInteractable FindById(int id)

@@ -1,11 +1,10 @@
 using System;
 using System.Collections;
-using Code.InteractionSystem;
-using FishNet.Connection;
+using Code.Player;
 using FishNet.Object.Synchronizing;
 using UnityEngine;
 
-namespace Code.Doors
+namespace Code.InteractionSystem
 {
     public enum DoorMode
     {
@@ -22,14 +21,7 @@ namespace Code.Doors
         public Vector3 openRot;
     }
 
-    /// <summary>
-    /// Универсальная дверь с корректной синхронизацией состояния для late join:
-    /// - Server хранит “истину” (целевую степень открытия) в SyncVar _targetOpen [0..1].
-    /// - Клиентская визуализация тянется к Evaluate(curve, target) с duration.
-    /// - Авто-логика (по дистанции игроков) только на сервере.
-    /// - Manual-тоггл изменяет цель на сервере плавной корутиной.
-    /// </summary>
-    public sealed class DoorInteractable : InteractableObsolete
+    public sealed class DoorInteractable : Interactable
     {
         [Header("Mode")]
         [SerializeField] private DoorMode mode = DoorMode.ManualOnly;
@@ -119,7 +111,7 @@ namespace Code.Doors
 
         private void Update()
         {
-            if (IsServer && (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual))
+            if (IsServerInitialized && (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual))
                 Server_AutoTick();
 
             float targetCurve = EvaluateByCurve(_targetOpen.Value);
@@ -129,10 +121,16 @@ namespace Code.Doors
         }
 
         #region Interactable (Manual)
-        protected internal override void OnInteract_Server(NetworkConnection conn, bool force = false)
+        protected override void OnInteractCallback_Client(bool success, bool force = false)
         {
-            base.OnInteract_Server(conn, force);
-            if (!IsServer) return;
+            base.OnInteractCallback_Client(success, force);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
             if (mode == DoorMode.AutoOnly) return;
 
             bool wantOpen = !_isOpen;
@@ -169,14 +167,14 @@ namespace Code.Doors
             if (_scanTimer <= 0f)
             {
                 _scanTimer = 0.25f;
-                var list = FindObjectsByType<Code.Player.PlayerMovementController>(FindObjectsSortMode.None);
+                var list = FindObjectsByType<PlayerMovementController>(FindObjectsSortMode.None);
                 int count = (list != null) ? list.Length : 0;
                 if (count == 0) _players = Array.Empty<Transform>();
                 else
                 {
                     if (_players.Length != count) _players = new Transform[count];
                     for (int i = 0; i < count; i++)
-                        _players[i] = list[i] != null ? list[i].transform : null;
+                        _players[i] = list != null && list[i] != null ? list[i].transform : null;
                 }
             }
 
@@ -189,10 +187,10 @@ namespace Code.Doors
                 if (d < nearest) nearest = d;
             }
 
-            if (_players.Length == 0 || nearest == float.MaxValue)
+            if (_players.Length == 0 || Mathf.Approximately(nearest, float.MaxValue))
                 nearest = closeDistance + 1f;
 
-            float denom = Mathf.Max(0.0001f, (closeDistance - fullOpenDistance));
+            float denom = Mathf.Max(0.0001f, closeDistance - fullOpenDistance);
             float newTarget = 1f - Mathf.Clamp01((nearest - fullOpenDistance) / denom);
 
             int dir = Math.Sign(newTarget - _prevTarget);
@@ -202,7 +200,6 @@ namespace Code.Doors
                 if (Mathf.Abs(_accDelta) < sensitivity)
                 {
                     newTarget = _prevTarget;
-                    dir = _prevDir;
                 }
                 else
                 {
@@ -233,11 +230,9 @@ namespace Code.Doors
 
         private float EvaluateByCurve(float degree01)
         {
-            var curve = _currentCurve;
-            if (curve == null)
-                curve = (degree01 >= _visualDegree) ? openCurve : closeCurve;
+            var curve = _currentCurve ?? (degree01 >= _visualDegree ? openCurve : closeCurve);
             degree01 = Mathf.Clamp01(degree01);
-            return curve != null ? curve.Evaluate(degree01) : degree01;
+            return curve?.Evaluate(degree01) ?? degree01;
         }
 
         private void ApplyToElements(float curveValue)

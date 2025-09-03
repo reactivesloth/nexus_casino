@@ -5,11 +5,11 @@ using FishNet.Object;
 
 namespace Code.InteractionSystem
 {
-    public class CompositeInteractable : InteractableObsolete
+    public class CompositeInteractable : Interactable
     {
         [Header("Children to interact with")]
         [SerializeField, Tooltip("Все дочерние Interactable, которые запускаются одним нажатием.")]
-        private InteractableObsolete[] children;
+        private Interactable[] children;
 
         [SerializeField] private bool generateColliderFromChildren = true;
 
@@ -23,7 +23,7 @@ namespace Code.InteractionSystem
                 if (_compositeCollider != null)
                     _compositeCollider.isTrigger = true;
             }
-            if (children == null) children = Array.Empty<InteractableObsolete>();
+            if (children == null) children = Array.Empty<Interactable>();
             
             if (generateColliderFromChildren && _compositeCollider != null)
                 UpdateCompositeColliderBounds();
@@ -105,24 +105,37 @@ namespace Code.InteractionSystem
                 return appended > 0 ? result : base.InteractionPrompt;
             }
         }
-
-        protected internal override void OnInteract_Server(NetworkConnection conn, bool force)
+        
+        protected override void OnInteractCallback_Client(bool success, bool force = false)
         {
+            base.OnInteractCallback_Client(success, force);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
             if (children == null) return;
 
             for (int i = 0; i < children.Length; i++)
             {
                 var child = children[i];
                 if (child == null) continue;
-                if (force)
-                    child.ServerForceInteract(conn);
-                else
-                    child.OnInteract_Server(conn, false);
+                child.RequestInteract(force);
             }
         }
 
-        protected internal override void OnEndInteract_Server(NetworkConnection conn)
+        protected override void OnInteractEndCallback_Client(bool success)
         {
+            base.OnInteractEndCallback_Client(success);
+            
+            if(!success)
+            {
+                // none sucsess action
+                return;
+            }
+            
             if (children != null)
             {
                 for (int i = 0; i < children.Length; i++)
@@ -132,24 +145,10 @@ namespace Code.InteractionSystem
 
                     if (child.ManualRelease)
                     {
-                        child.OnEndInteract_Server(conn);
+                        child.RequestEndInteract();
                     }
                 }
             }
-
-            base.OnEndInteract_Server(conn);
-
-            bool anyChildOccupied = false;
-            if (children != null)
-            {
-                for (int i = 0; i < children.Length; i++)
-                {
-                    var child = children[i];
-                    if (child != null && child.IsOccupied) { anyChildOccupied = true; break; }
-                }
-            }
-            if (IsOccupied || anyChildOccupied)
-                ReleaseAll();
         }
 
         private void Update()
@@ -161,21 +160,6 @@ namespace Code.InteractionSystem
                 var c = children[i];
                 if (c != null && c.IsBusy) { IsBusy = true; break; }
             }
-        }
-
-        [Server]
-        public void ReleaseAll()
-        {
-            if (children != null)
-            {
-                for (int i = 0; i < children.Length; i++)
-                {
-                    var child = children[i];
-                    if (child != null)
-                        child.ReleaseInteractable();
-                }
-            }
-            ReleaseInteractable();
         }
     }
 }
