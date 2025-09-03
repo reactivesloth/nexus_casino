@@ -11,7 +11,7 @@ namespace Code.Player
 {
     public class PlayerInteractionMigrator : NetworkBehaviour, IMigratable<CharacterInteractableMigrateData>
     {
-        [FormerlySerializedAs("_playerInteraction")] [SerializeField] private PlayerInteraction playerInteraction;
+        [SerializeField] private PlayerInteraction playerInteraction;
 
         protected override void OnValidate()
         {
@@ -20,6 +20,7 @@ namespace Code.Player
         }
         
         #region IMigratable
+        
         public void OnMigrateDataReceived(CharacterInteractableMigrateData data)
         {
             if (!NetworkManager.IsServerStarted || string.IsNullOrEmpty(data.activeId))
@@ -28,9 +29,6 @@ namespace Code.Player
             var sceneObject = SceneObject.GetObjectById(data.activeId);
             if (!sceneObject) return;
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
-
-            if (interactable.IsOccupied)
-                return;
 
             interactable.RequestInteract(true, Owner);
             SetInteractableOnMigrate(Owner, data);
@@ -52,6 +50,7 @@ namespace Code.Player
             if (!playerInteraction.Active.TryGetComponent<SceneObject>(out var sceneObject)) return default;
             return new CharacterInteractableMigrateData { activeId = sceneObject.ObjectGuid.ToString() };
         }
+        
         #endregion
     }
 }

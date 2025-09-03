@@ -11,6 +11,7 @@ using FishNet.Transporting;
 using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Events;
+using Object = UnityEngine.Object;
 
 namespace Code.Network.HostMigration
 {
@@ -64,6 +65,12 @@ namespace Code.Network.HostMigration
         public void RunClient()
         {
             Debug.Log("[HostMigrator] Client start migrating");
+            
+            // Сбрасываес все
+            var networkObjects = FindObjectsByType<NetworkObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var networkObject in networkObjects)
+                networkObject.ResetState(true);
+            
             if (_clientManager != null)
                 _clientManager.Broadcast(_migrateData);
             _isMigrating = false;
