@@ -41,6 +41,7 @@ namespace Code.Player
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
             interactable.RequestInteract(true);
+            playerInteraction.Active = interactable;
         }
 
         public CharacterInteractableMigrateData GetMigrateData_Client()

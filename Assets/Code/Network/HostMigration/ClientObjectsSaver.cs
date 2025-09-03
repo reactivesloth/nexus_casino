@@ -76,10 +76,12 @@ namespace Code.Network.HostMigration
         public void CheckObjects()
         {
             var cm = InstanceFinder.ClientManager;
-            if (cm == null || !cm.Started) return;
+            if (cm == null || !cm.Started) 
+                return;
 
             var conn = cm.Connection;
-            if (conn == null) return;
+            if (conn == null || conn.Objects.Count == 0) 
+                return;
 
             // удаляем неактуальные
             for (int i = OwnObjects.Count - 1; i >= 0; i--)
