@@ -20,7 +20,7 @@ namespace Code.InteractionSystem
 
         private bool _initSlot;
 
-        private void EnsureInit()
+        private void Awake()
         {
             if (_initSlot) return;
             _initSlot = true;
@@ -41,19 +41,6 @@ namespace Code.InteractionSystem
             if (networkImageStream == null) networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
         }
 #endif
-
-        private void Awake() => EnsureInit();
-
-        private void OnEnable()
-        {
-            EnsureInit();
-        }
-        
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-            EnsureInit();
-        }
 
         public override string InteractionPrompt => !IsOccupied ? "Use Computer" : "Exit Computer";
         

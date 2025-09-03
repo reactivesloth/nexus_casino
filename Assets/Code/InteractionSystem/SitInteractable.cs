@@ -44,7 +44,7 @@ namespace Code.InteractionSystem
         private bool _initSit;
         private bool _didInitialApply;
 
-        private void EnsureInit()
+        private void Awake()
         {
             if (_initSit) return;
             _initSit = true;
@@ -68,13 +68,6 @@ namespace Code.InteractionSystem
         }
 #endif
 
-        private void Awake() => EnsureInit();
-
-        private void OnEnable()
-        {
-            EnsureInit();
-        }
-
         private void OnDisable()
         {
             if (_sitRoutine != null)
@@ -90,7 +83,6 @@ namespace Code.InteractionSystem
         public override void OnStartClient()
         {
             base.OnStartClient();
-            EnsureInit();
             if (!_didInitialApply)
             {
                 ApplySitStateImmediate(IsOccupied);

@@ -68,7 +68,7 @@ namespace Code.InteractionSystem
 
         private bool _initedDoor;
 
-        private void EnsureInit()
+        private void Awake()
         {
             if (_initedDoor) return;
             _initedDoor = true;
@@ -83,7 +83,6 @@ namespace Code.InteractionSystem
 
         private void OnEnable()
         {
-            EnsureInit();
             _targetOpen.OnChange += OnTargetChanged;
         }
 
@@ -101,7 +100,6 @@ namespace Code.InteractionSystem
         public override void OnStartClient()
         {
             base.OnStartClient();
-            EnsureInit();
 
             _visualDegree = EvaluateByCurve(_targetOpen.Value);
             ApplyToElements(_visualDegree);
@@ -223,7 +221,6 @@ namespace Code.InteractionSystem
         #region Client visuals helpers
         private void OnTargetChanged(float prev, float next, bool asServer)
         {
-            EnsureInit();
             if (next > prev)      _currentCurve = openCurve;
             else if (next < prev) _currentCurve = closeCurve;
         }
