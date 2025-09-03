@@ -78,7 +78,7 @@ namespace Code.InteractionSystem
         {
             OnInteractCallback_Server(requester, success, force);
             RequestInteractCallback_TargetRpc(requester, success, force);
-            RequestInteractCallback_ObserversRpc(success, force);
+            RequestInteractCallback_ObserversRpc(true, success, force);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -98,7 +98,7 @@ namespace Code.InteractionSystem
         {
             OnInteractEndCallback_Server(requester, success);
             RequestEndInteractCallback_TargetRpc(requester, success);
-            RequestEndInteractCallback_ObserversRpc(success);
+            RequestInteractCallback_ObserversRpc(false, success);
         }
 
         [TargetRpc]
@@ -110,12 +110,13 @@ namespace Code.InteractionSystem
             OnInteractEndCallback_Client(success);
 
         [ObserversRpc(BufferLast = true)]
-        private void RequestInteractCallback_ObserversRpc(bool success, bool force = false) =>
-            OnInteractCallback_Observers(success, force);
-
-        [ObserversRpc(BufferLast = true)]
-        private void RequestEndInteractCallback_ObserversRpc(bool success) => 
-            OnInteractEndCallback_Observers(success);
+        private void RequestInteractCallback_ObserversRpc(bool isStartInteract, bool success, bool force = false)
+        {
+            if(isStartInteract)
+                OnInteractCallback_Observers(success, force);
+            else
+                OnInteractEndCallback_Observers(success);
+        }
 
         #endregion
 
