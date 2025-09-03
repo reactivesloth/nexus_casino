@@ -1,6 +1,7 @@
 ﻿using Cinemachine;
 using UnityEngine;
 using Code.InteractionSystem;
+using Code.UI;
 
 namespace Code.Player
 {

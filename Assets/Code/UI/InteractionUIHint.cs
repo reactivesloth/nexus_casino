@@ -1,11 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 
-<<<<<<<< HEAD:Assets/Code/Player/InteractionUIHint.cs
-namespace Code.Player
-========
 namespace Code.UI
->>>>>>>> feature/interactable:Assets/Code/UI/InteractionUIHint.cs
 {
     public class InteractionUIHint : MonoBehaviour
     {
