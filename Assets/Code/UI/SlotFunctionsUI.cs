@@ -61,7 +61,7 @@ namespace Code.UI
         private void SwitchFullscreen()
         {
             if (slotMachineInteractable != null)
-                slotMachineInteractable.SwitchFS();
+                slotMachineInteractable.SwitchFullScreen();
         }
 
         private void OnDisable()
