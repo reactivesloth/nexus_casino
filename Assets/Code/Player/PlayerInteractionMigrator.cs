@@ -32,6 +32,7 @@ namespace Code.Player
             if (interactable.IsOccupied)
                 return;
 
+            interactable.RequestInteract(true, Owner);
             SetInteractableOnMigrate(Owner, data);
         }
 
@@ -43,7 +44,6 @@ namespace Code.Player
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
             playerInteraction.Active = interactable;
-            interactable.RequestInteract(true);
         }
 
         public CharacterInteractableMigrateData GetMigrateData()

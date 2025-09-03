@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using FishNet;
-using FishNet.Managing.Client;
 using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
@@ -69,8 +68,8 @@ namespace Code.Network.HostMigration
             var cm = InstanceFinder.ClientManager;
             while (cm != null && cm.Started)
             {
-                CheckObjects();
                 yield return new WaitForSeconds(checkInterval);
+                CheckObjects();
             }
         }
 

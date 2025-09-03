@@ -41,7 +41,8 @@ namespace Code.InteractionSystem
         public event Action<bool> InteractCallback_Client;
         public event Action<bool> InteractCallback_Server;
 
-        public void RequestInteract(bool force = false) => RequestInteract_ServerRpc(ClientManager.Connection, force);
+        public void RequestInteract(bool force = false, NetworkConnection requester = null) => 
+            RequestInteract_ServerRpc(requester != null ? requester : ClientManager.Connection, force);
 
         public void RequestEndInteract() => RequestEndInteract_ServerRpc(ClientManager.Connection);
         
