@@ -69,8 +69,8 @@ namespace Code.Network.HostMigration
             var cm = InstanceFinder.ClientManager;
             while (cm != null && cm.Started)
             {
-                yield return new WaitForSeconds(checkInterval);
                 CheckObjects();
+                yield return new WaitForSeconds(checkInterval);
             }
         }
 

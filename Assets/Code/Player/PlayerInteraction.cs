@@ -8,13 +8,12 @@ namespace Code.Player
 {
     public class PlayerInteraction : MonoBehaviour
     {
-        [Header("Detection")]
-        [SerializeField] private LayerMask interactableMask;
+        [Header("Detection")] [SerializeField] private LayerMask interactableMask;
         [SerializeField] private float detectionDistance = 3f;
 
         private Interactable _hovered;
         private Interactable _selected;
-        private Interactable _active;
+        public Interactable Active { get; set; }
         private GameObject[] _outlineGameObjects;
 
         private Cinemachine3rdPersonFollow virtualCamera;
@@ -39,12 +38,12 @@ namespace Code.Player
                 virtualCamera = vcam.GetCinemachineComponent<Cinemachine3rdPersonFollow>();
 
             input = PlayerInput.Instance;
-            playerController =  gameObject.GetComponent<PlayerMovementController>();
-            
+            playerController = gameObject.GetComponent<PlayerMovementController>();
+
             var cm = CursorManager.Instance;
             if (cm != null) cm.HideCursor();
         }
-        
+
         private void Update()
         {
             if (!playerController.IsOwner) return;
@@ -52,10 +51,10 @@ namespace Code.Player
             if (_postEndCooldown > 0f)
                 _postEndCooldown -= Time.deltaTime;
 
-            if (_active != null && (!_active || !_active.isActiveAndEnabled))
-                _active = null;
+            if (Active != null && (!Active || !Active.isActiveAndEnabled))
+                Active = null;
 
-            if (_active == null)
+            if (Active == null)
             {
                 UpdateHover();
 
@@ -78,11 +77,11 @@ namespace Code.Player
             }
             else
             {
-                if (input != null && input.InteractDown && !_active.IsBusy && !IsBusy)
+                if (input != null && input.InteractDown && !Active.IsBusy && !IsBusy)
                 {
                     IsBusy = true;
 
-                    _selected = _active;
+                    _selected = Active;
                     _selected.InteractCallback_Client += OnEndInteractCallbackClient;
                     _selected.RequestEndInteract();
                 }
@@ -158,7 +157,7 @@ namespace Code.Player
         {
             if (InteractionUIHint.Instance == null) return;
 
-            if (_active != null) InteractionUIHint.Instance.ShowPrompt(_active.InteractionPrompt);
+            if (Active != null) InteractionUIHint.Instance.ShowPrompt(Active.InteractionPrompt);
             else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(_hovered.InteractionPrompt);
             else InteractionUIHint.Instance.HidePrompt();
         }
@@ -172,7 +171,7 @@ namespace Code.Player
             if (success)
             {
                 if (_selected != null && _selected.ManualRelease)
-                    _active = _selected;
+                    Active = _selected;
             }
 
             _selected = null;
@@ -186,7 +185,7 @@ namespace Code.Player
 
             if (success)
             {
-                _active = null;
+                Active = null;
                 _postEndCooldown = postEndCooldownTime;
             }
 

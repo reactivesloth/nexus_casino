@@ -532,6 +532,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: -8171592292511950176}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7373692588499671618}
     - targetCorrespondingSourceObject: {fileID: -5823106577872157028, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7889299020810858274}
@@ -644,7 +647,10 @@ MonoBehaviour:
   cinemachineTargetPitch: 11.499929
   sitBaseYaw: -30
   sitBasePitch: 30
+  speedLerp: 5
+  angLerp: 7
   spawnPositionUpdateTime: 2
+  ikSendRate: 0.033333335
 --- !u!114 &5084366635518163755
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -667,7 +673,7 @@ MonoBehaviour:
   - {fileID: 6472889869485083012}
   - {fileID: 3089256175066004713}
   - {fileID: 8013488042586796887}
-  - {fileID: -6006401730760851951}
+  - {fileID: 0}
   - {fileID: 2267133584672632614}
   - {fileID: -6419089301180924083}
   - {fileID: 2031047834234726918}
@@ -893,13 +899,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 188f87c970204124b28e52a171bbb2f4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 3
-  _addedNetworkObject: {fileID: 5084366635518163755}
-  _networkObjectCache: {fileID: 5084366635518163755}
   interactableMask:
     serializedVersion: 2
     m_Bits: 512
   detectionDistance: 1.5
+  postEndCooldownTime: 0.05
 --- !u!114 &2267133584672632614
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -948,6 +952,22 @@ MonoBehaviour:
   isDebug: 0
   useLocalLipSync: 1
   amplifyMultipleExperimental: 1
+--- !u!114 &7373692588499671618
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2095315197724490687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 58b08fc907cb0bb42b83809ca16ca024, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerInteractionMigrator
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 5084366635518163755}
+  _networkObjectCache: {fileID: 0}
+  playerInteraction: {fileID: -6006401730760851951}
 --- !u!137 &3903605093316825880 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}

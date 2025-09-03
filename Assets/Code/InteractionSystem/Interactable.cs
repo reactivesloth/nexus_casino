@@ -123,6 +123,7 @@ namespace Code.InteractionSystem
         [Server]
         protected virtual void OnInteractCallback_Server(NetworkConnection requester, bool success, bool force = false)
         {
+            InteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
             GiveOwnership(requester);
@@ -131,6 +132,7 @@ namespace Code.InteractionSystem
         [Server]
         protected virtual void OnInteractEndCallback_Server(NetworkConnection requester, bool success)
         {
+            InteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
             RemoveOwnership();
@@ -152,12 +154,10 @@ namespace Code.InteractionSystem
 
         protected virtual void OnInteractCallback_Observers(bool success, bool force = false)
         {
-            InteractCallback_Server?.Invoke(success);
         }
 
         protected virtual void OnInteractEndCallback_Observers(bool success)
         {
-            InteractCallback_Server?.Invoke(success);
         }
 
         #endregion
