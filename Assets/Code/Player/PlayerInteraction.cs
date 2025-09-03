@@ -2,6 +2,7 @@
 using UnityEngine;
 using Code.InteractionSystem;
 using Code.UI;
+using Code.Utility;
 
 namespace Code.Player
 {
