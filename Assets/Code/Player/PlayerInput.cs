@@ -1,7 +1,4 @@
-﻿using System;
-using Code.UI;
-using UnityEngine;
-using UnityEngine.InputSystem;
+﻿using UnityEngine;
 using Code.Utility;
 
 [DefaultExecutionOrder(-100)]
@@ -48,6 +45,7 @@ public class PlayerInput : MonoBehaviour
     [SerializeField] private bool ForceMobile;
     private bool savedHideMobileFallback;
     private bool prevBusy;
+    
     public bool IsUsingMobileFallback { get; set; }
     public bool HideMobileFallback { get; set; }
     
@@ -91,7 +89,7 @@ public class PlayerInput : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
-    public void SetBusy(bool value, bool forceUpdate = false)
+    private void SetBusy(bool value, bool forceUpdate = false)
     {
         if (forceUpdate)
         {
@@ -136,15 +134,8 @@ public class PlayerInput : MonoBehaviour
             if (HideMobileFallback != savedHideMobileFallback)
             {
                 if (MoveJoystick != null)      MoveJoystick.gameObject.SetActive(!HideMobileFallback);
-                //if (LookArea != null)          LookArea.gameObject.SetActive(!HideMobileFallback);
                 if (JumpButton != null)        JumpButton.gameObject.SetActive(!HideMobileFallback);
                 if (SprintButton != null)      SprintButton.gameObject.SetActive(!HideMobileFallback);
-                //if (InteractButton != null)    InteractButton.gameObject.SetActive(!HideMobileFallback);
-                //if (CameraSwitchButton != null)CameraSwitchButton.gameObject.SetActive(!HideMobileFallback);
-                //if (PauseButton != null)       PauseButton.gameObject.SetActive(!HideMobileFallback);
-                //if (VoiceButton != null)       VoiceButton.gameObject.SetActive(!HideMobileFallback);
-                //if (OpenChatButton != null)    OpenChatButton.gameObject.SetActive(!HideMobileFallback);
-                //if (SwitchChatButton != null)  SwitchChatButton.gameObject.SetActive(!HideMobileFallback);
 
                 savedHideMobileFallback = HideMobileFallback;
             }
@@ -154,13 +145,12 @@ public class PlayerInput : MonoBehaviour
             slotsUI.SetActive(ShowSlotsUI);
     }
 
-    // --- Геттеры ввода ---
     public Vector2 Move
     {
         get
         {
             if (IsUsingMobileFallback && MoveJoystick != null)
-                return new Vector2(MoveJoystick.HorizontalAxis, MoveJoystick.VerticalAxis);
+                return new Vector2(MoveJoystick.HorizontalAxis * 0.85f / 0.85f, MoveJoystick.VerticalAxis * 0.85f / 0.85f);
             return _player.Move.ReadValue<Vector2>();
         }
     }
@@ -181,41 +171,22 @@ public class PlayerInput : MonoBehaviour
         {
             Vector2 v = LookRaw;
             if (invertY) v.y = -v.y;
-            return IsBusy ? Vector2.down : v * lookSensitivity;
+            return IsBusy ? Vector2.down : v * (IsUsingMobileFallback ? lookSensitivity/4 : lookSensitivity);
         }
     }
 
     public bool JumpDown  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : !IsBusy && _player.Jump is { triggered: true };
-    public bool JumpHeld  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButton()     : !IsBusy && _player.Jump != null && _player.Jump.ReadValue<float>() > 0.5f;
     public bool VoiceHeld => IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f;
-    public bool SprintHeld=> IsUsingMobileFallback && SprintButton != null ? SprintButton.GetButton() : !IsBusy && _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
+    public bool SprintHeld=> IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : !IsBusy && _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
     public bool CameraSwitchDown => IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : !IsBusy && _player.CameraSwitch is { triggered: true };
     public bool InteractDown => IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true };
     public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton() : _player.Pause is { triggered: true };
-
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
-
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
-    public bool IsRMB      => !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 :  _player.RMB is { triggered: true });
-    public bool IsRMBDown  => !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
+    public bool IsRmbDown  => !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
     public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
-
+    public float Zoom => !IsBusy ? Input.GetAxis("Mouse ScrollWheel") : 0;
     public bool IsSlotsFullscreen => slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => slotsStreamButton.GetButtonDown();
     public bool IsSlotsScreenshot => slotsScreenshotButton.GetButtonDown();
-    
-    public void SetEnabled(bool enabled) { if (enabled) _player.Enable(); else _player.Disable(); }
-
-    public void SetControlScheme(InputControlScheme scheme)
-    {
-        if (_inputAsset == null) return;
-        _inputAsset.asset.bindingMask = InputBinding.MaskByGroup(scheme.bindingGroup);
-    }
-    public void ClearControlSchemeFilter()
-    {
-        if (_inputAsset == null) return;
-        _inputAsset.asset.bindingMask = null;
-    }
-
-    public InputAsset.PlayerActions PlayerActions => _player;
 }

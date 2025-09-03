@@ -1,7 +1,7 @@
 ﻿using TMPro;
 using UnityEngine;
 
-namespace Code.Player
+namespace Code.UI
 {
     public class InteractionUIHint : MonoBehaviour
     {

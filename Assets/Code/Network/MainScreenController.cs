@@ -75,7 +75,7 @@ namespace Code.Network
         public void SetStream(int slotId, int connectionId, string username)
         {
             if (_currentStreamOnServer != null)
-                _currentStreamOnServer.OnInteractEndOnServer -= OnEndTargetInteraction;
+                _currentStreamOnServer.InteractCallback_Server -= OnEndTargetInteraction;
             
             ServerReset();
 
@@ -85,7 +85,7 @@ namespace Code.Network
 
             _currentStreamOnServer = GetCurrentStream(slotId);
             if (_currentStreamOnServer != null)
-                _currentStreamOnServer.OnInteractEndOnServer += OnEndTargetInteraction;
+                _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
 
             SetConditionsEnable(false);
         }
@@ -137,7 +137,7 @@ namespace Code.Network
         }
 
         [Server]
-        private void OnEndTargetInteraction()
+        private void OnEndTargetInteraction(bool success)
         {
             SetStream(-1, -1, string.Empty);
         }
