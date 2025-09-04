@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Code.API;
 using CurvedUI;
@@ -9,7 +8,6 @@ using Vuplex.WebView;
 
 public class WebViewManager : MonoBehaviour
 {
-
     public static WebViewManager Instance { get; private set; }
 
     [Header("Prefab and Parking")] [SerializeField]
@@ -27,11 +25,12 @@ public class WebViewManager : MonoBehaviour
     public Canvas ParkingCanvas => parkingCanvas;
 
     private bool _initialized;
-
-    private readonly Dictionary<int, CanvasWebViewPrefab> _worldViews = new Dictionary<int, CanvasWebViewPrefab>();
-    private readonly Dictionary<int, RawImage> _worldViewRawImages = new Dictionary<int, RawImage>();
+    
     [SerializeField] private bool refreshUrlOnHide;
 
+    private CanvasWebViewPrefab _view;
+    private RawImage _image;
+    
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -145,44 +144,34 @@ public class WebViewManager : MonoBehaviour
     {
         if (!_initialized || WebView == null || worldCanvas == null) return null;
 
-        if (!_worldViews.TryGetValue(slotId, out var view) || view == null)
+        var view = CanvasWebViewPrefab.Instantiate(WebView);
+        _view = view;
+        
+        _view.transform.SetParent(worldCanvas.transform, false);
+        var rt = _view.transform as RectTransform;
+        if (rt != null)
         {
-            view = CanvasWebViewPrefab.Instantiate(WebView);
-            _worldViews[slotId] = view;
-
-            view.transform.SetParent(worldCanvas.transform, false);
-            var rt = view.transform as RectTransform;
-            if (rt != null)
-            {
-                rt.anchorMin = Vector2.zero;
-                rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero;
-                rt.offsetMax = Vector2.zero;
-            }
-
-            bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
-                              worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
-            if (worldSpace && worldCanvas.worldCamera == null)
-                worldCanvas.worldCamera = Camera.main;
-            if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _))
-                worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
-
-            var curved = view.GetComponentInChildren<CurvedUISettings>(true);
-            if (curved != null) curved.enabled = true;
-
-            var raw = view.GetComponentInChildren<RawImage>(true);
-            _worldViewRawImages[slotId] = raw;
-
-            view.gameObject.SetActive(false);
-        }
-        else
-        {
-            bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
-                              worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
-            RebindToCanvas(view, worldCanvas, bringToFront: false, worldSpace: worldSpace);
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
         }
 
-        return view;
+        bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
+                          worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
+        if (worldSpace && worldCanvas.worldCamera == null)
+            worldCanvas.worldCamera = Camera.main;
+        if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _))
+            worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
+
+        var curved = _view.GetComponentInChildren<CurvedUISettings>(true);
+        if (curved != null) curved.enabled = true;
+        
+        _view.gameObject.SetActive(false);
+        
+        RebindToCanvas(_view, worldCanvas, bringToFront: false, worldSpace: worldSpace);
+
+        return _view;
     }
 
     public RawImage ShowWorldView(int slotId, Canvas worldCanvas)
@@ -205,7 +194,8 @@ public class WebViewManager : MonoBehaviour
         view.gameObject.SetActive(true);
         StartCoroutine(ForceCanvasRebuildNextFrame((RectTransform)view.transform));
 
-        return _worldViewRawImages.TryGetValue(slotId, out var raw) ? raw : null;
+        _image =  view.GetComponentInChildren<RawImage>(true);
+        return _image;
     }
 
     public void HideWorldView(int slotId)
@@ -217,21 +207,13 @@ public class WebViewManager : MonoBehaviour
             WebView.LoadUrl(url);
         }
         
-        if (_worldViews.TryGetValue(slotId, out var view) && view != null)
-        {
-            view.gameObject.SetActive(false);
-        }
+        _view.gameObject.SetActive(false);
     }
 
     public void DestroyWorldView(int slotId)
     {
-        if (_worldViews.TryGetValue(slotId, out var view) && view != null)
-        {
-            Destroy(view.gameObject);
-        }
-
-        _worldViews.Remove(slotId);
-        _worldViewRawImages.Remove(slotId);
+        _image = null;
+        Destroy(_view.gameObject);
     }
 
     private void RebindToCanvas(CanvasWebViewPrefab prefab, Canvas canvas, bool bringToFront, bool worldSpace)
