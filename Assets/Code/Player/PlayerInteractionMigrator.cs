@@ -40,7 +40,7 @@ namespace Code.Player
             if (!sceneObject) return;
             if (!sceneObject.TryGetComponent(out Interactable interactable)) return;
 
-            playerInteraction.RequestInteractWith(interactable);
+            playerInteraction.RequestInteractWith(interactable, true);
         }
 
         public CharacterInteractableMigrateData GetMigrateData_Client()
