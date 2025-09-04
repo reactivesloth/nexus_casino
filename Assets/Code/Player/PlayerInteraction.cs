@@ -177,6 +177,8 @@ namespace Code.Player
             {
                 if (_selected != null && _selected.ManualRelease)
                     Active = _selected;
+
+                _hovered = null;
             }
 
             _selected = null;
