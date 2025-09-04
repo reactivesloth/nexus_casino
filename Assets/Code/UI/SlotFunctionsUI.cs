@@ -44,6 +44,8 @@ namespace Code.UI
             if (resultText != null) resultText.text = string.Empty;
 
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
+            if(_mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber)
+                _mainScreenController.RequestCancel();
             StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
         }
 

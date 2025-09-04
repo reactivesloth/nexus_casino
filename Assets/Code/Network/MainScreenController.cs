@@ -26,13 +26,7 @@ namespace Code.Network
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
-
-        public readonly SyncVar<int> StreamConnectionId = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
-
+        
         public readonly SyncVar<string> StreamerUsername = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
@@ -54,8 +48,32 @@ namespace Code.Network
         private void OnDisable()
         {
             StreamSlotId.OnChange -= OnStreamSlotIdChange;
+            StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
         }
 
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+
+            // Проверяем, есть ли актуальный объект стрима
+            if (StreamSlotId.Value >= 0)
+            {
+                _currentStreamOnServer = GetCurrentStream(StreamSlotId.Value);
+
+                // Если объект не найден (старый хост ушёл), то сбрасываем
+                if (_currentStreamOnServer == null)
+                {
+                    SetStream(-1, -1, string.Empty);
+                }
+                else
+                {
+                    // Восстанавливаем подписку
+                    _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
+                    SetConditionsEnable(false);
+                }
+            }
+        }
+        
         public void RequestStream(int slotId, int connectionId, string username) =>
             SetStream_ServerRpc(slotId, connectionId, username);
 
@@ -80,7 +98,6 @@ namespace Code.Network
             ServerReset();
 
             StreamSlotId.Value = slotId;
-            StreamConnectionId.Value = connectionId;
             StreamerUsername.Value = username;
 
             _currentStreamOnServer = GetCurrentStream(slotId);
@@ -99,6 +116,7 @@ namespace Code.Network
             _currentStreamOnClient = GetCurrentStream(next);
             elementsParent.gameObject.SetActive(_currentStreamOnClient != null);
             if (_currentStreamOnClient == null) return;
+            
             _currentStreamOnClient.NetworkImageStream.OnApplyTexture += ApplyTexture;
             slotIdText.text = $"Slot №{next}";
         }
