@@ -170,16 +170,16 @@ namespace Code.InteractionSystem
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
 
-            _sitEntry = FindClosestEntryPoint(tf.position) ?? GetEntry(0);
-
             if (isSitDown && isForce)
             {
                 _savedPos = tf.position;
                 _savedRot = tf.rotation;
-                ForceSit(move, anim, cc, tf, _sitEntry);
+                ForceSit(move, anim, cc, tf, GetEntry(0));
             }
             else
             {
+                if(isSitDown)
+                    _sitEntry = FindClosestEntryPoint(tf.position) ?? GetEntry(0);
                 _sitRoutine = StartCoroutine(
                     isSitDown
                         ? SitDownFlow(move, anim, cc, tf, _sitEntry)
@@ -397,6 +397,7 @@ namespace Code.InteractionSystem
             if (anim != null)
             {
                 anim.applyRootMotion = true;
+                Debug.Log($"[SitInteractable] {entry?.animationID}");
                 int.TryParse(entry != null ? entry.animationID : "0", out var style);
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, false);
