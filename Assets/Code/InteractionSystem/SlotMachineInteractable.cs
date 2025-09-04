@@ -33,6 +33,12 @@ namespace Code.InteractionSystem
                 networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
         }
 
+        public override void OnStartNetwork()
+        {
+            base.OnStartNetwork();
+            contentCanvas.gameObject.SetActive(false);
+        }
+
 #if UNITY_EDITOR
         protected override void OnValidate()
         {
