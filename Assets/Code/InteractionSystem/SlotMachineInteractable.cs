@@ -73,12 +73,16 @@ namespace Code.InteractionSystem
         protected override void OnInteractCallback_Observers(bool success, bool force = false)
         {
             base.OnInteractCallback_Observers(success, force);
+            if(!success)
+                return;
             if (contentCanvas) contentCanvas.gameObject.SetActive(true);
         }
 
         protected override void OnInteractEndCallback_Observers(bool success)
         {
             base.OnInteractEndCallback_Observers(success);
+            if(!success)
+                return;
             if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 

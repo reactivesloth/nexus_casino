@@ -2,6 +2,7 @@ using System;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using FishNet.Transporting;
 using UnityEngine;
 
 namespace Code.InteractionSystem
@@ -40,21 +41,43 @@ namespace Code.InteractionSystem
         
         public event Action<bool> InteractCallback_Client;
         public event Action<bool> InteractCallback_Server;
+        
+        public override void OnStartServer()
+        {
+            base.OnStartServer();
+            ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
+        }
 
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            ServerManager.OnRemoteConnectionState -= ServerManagerOnRemoteConnectionState;
+        }
+        
         public void RequestInteract(bool force = false, NetworkConnection requester = null) => 
             RequestInteract_ServerRpc(requester != null ? requester : ClientManager.Connection, force);
 
         public void RequestEndInteract() => RequestEndInteract_ServerRpc(ClientManager.Connection);
-        
 
+        #region Server Methods
+        
         [Server]
-        public void ReleaseInteractable(NetworkConnection requester = null)
+        private void ReleaseInteractable(NetworkConnection requester = null)
         {
             _isOccupied.Value = false;
             _occupiedConnectionId = -1;
             
             SendRequestEndInteractCallbacks(requester, true);
         }
+        
+        [Server]
+        private void ServerManagerOnRemoteConnectionState(NetworkConnection connection, RemoteConnectionStateArgs stateArgs)
+        {
+            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped && stateArgs.ConnectionId == _occupiedConnectionId)
+                ReleaseInteractable();
+        }
+        
+        #endregion
 
         #region RPC
 
