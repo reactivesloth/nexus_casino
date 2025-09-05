@@ -73,7 +73,7 @@ namespace Code.Player
             }
             else
             {
-                if (input != null && input.InteractDown && !Active.IsBusy && !IsBusy)
+                if (input != null && input.InteractEndDown && !Active.IsBusy && !IsBusy)
                 {
                     IsBusy = true;
 
@@ -162,8 +162,15 @@ namespace Code.Player
         {
             if (InteractionUIHint.Instance == null) return;
 
-            if (Active != null) InteractionUIHint.Instance.ShowPrompt(Active.InteractionPrompt);
-            else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(_hovered.InteractionPrompt);
+            var interactText = PlayerInput.Instance.IsUsingMobileFallback
+                ? "Press Interact button to use"
+                : "Press E to use";
+            var endInteractText = PlayerInput.Instance.IsUsingMobileFallback
+                ? string.Empty
+                : "Press E to stand up";
+            
+            if (Active != null) InteractionUIHint.Instance.ShowPrompt(endInteractText);
+            else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(interactText);
             else InteractionUIHint.Instance.HidePrompt();
         }
 
@@ -179,6 +186,15 @@ namespace Code.Player
                     Active = _selected;
 
                 _hovered = null;
+
+                if (Active.GetComponentInChildren<SlotMachineInteractable>())
+                {
+                    PlayerInput.Instance.ShowInteractUI(true, "Slots");
+                }
+                else
+                {
+                    PlayerInput.Instance.ShowInteractUI(true, "Base");
+                }
             }
 
             _selected = null;
@@ -194,6 +210,7 @@ namespace Code.Player
             {
                 Active = null;
                 _postEndCooldown = postEndCooldownTime;
+                PlayerInput.Instance.ShowInteractUI(false);
             }
 
             _selected = null;

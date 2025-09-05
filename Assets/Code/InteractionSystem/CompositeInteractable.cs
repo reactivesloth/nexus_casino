@@ -73,38 +73,7 @@ namespace Code.InteractionSystem
             );
             _compositeCollider.size = localSize;
         }
-
-        public override string InteractionPrompt
-        {
-            get
-            {
-                if (!IsEnabled) return "Disabled";
-                if (IsOccupied) return ManualRelease ? "Press E to end" : "Occupied";
-
-                if (children == null || children.Length == 0)
-                    return base.InteractionPrompt;
-
-                int available = 0;
-                for (int i = 0; i < children.Length; i++)
-                {
-                    var c = children[i];
-                    if (c != null && c.IsEnabled && !c.IsOccupied) available++;
-                }
-                if (available == 0) return base.InteractionPrompt;
-
-                string result = string.Empty;
-                int appended = 0;
-                for (int i = 0; i < children.Length; i++)
-                {
-                    var c = children[i];
-                    if (c == null || !c.IsEnabled || c.IsOccupied) continue;
-                    if (appended > 0) result += " + ";
-                    result += c.InteractionPrompt;
-                    appended++;
-                }
-                return appended > 0 ? result : base.InteractionPrompt;
-            }
-        }
+        
         
         protected override void OnInteractCallback_Client(bool success, bool force = false)
         {

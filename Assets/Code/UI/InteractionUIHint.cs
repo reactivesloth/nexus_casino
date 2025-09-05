@@ -40,6 +40,8 @@ namespace Code.UI
             EnsureInit();
             if (_promptUI != null) _promptUI.SetActive(true);
             if (_promptText != null) _promptText.text = message ?? string.Empty;
+            if (message == string.Empty)
+                HidePrompt();
         }
 
         public void HidePrompt()

@@ -30,8 +30,8 @@ namespace Code.UI
         [SerializeField] private float resultShowTime = 5f;
 
         private Coroutine _resultShowCoroutine;
-        private Coroutine _timeoutCoroutine;
         private MainScreenController _mainScreenController;
+        private float _time;
 
         private void Awake()
         {
@@ -52,12 +52,25 @@ namespace Code.UI
         private void Update()
         {
             if (!slotMachineInteractable.IsOwner) return;
-            if (!PlayerInput.Instance.ShowSlotsUI) PlayerInput.Instance.ShowSlotsUI = true;
 
             if (PlayerInput.Instance.IsSlotsFullscreen) SwitchFullscreen();
             if (PlayerInput.Instance.IsSlotsScreenshot && !_screenShotBusy) OnScreenshotClicked();
             if (PlayerInput.Instance.IsSlotsStream && !_streaming) RequestStream();
             if (PlayerInput.Instance.IsSlotsStream && _streaming) CancelStream();
+
+            if (_screenShotBusy)
+            {
+                _time -= Time.deltaTime;
+                if (_time <= 0.1f)
+                {
+                    _screenShotBusy = false;
+                    PlayerInput.Instance.slotsScreenshotButton.ResetCooldown();
+                }
+                else
+                {
+                    PlayerInput.Instance.slotsScreenshotButton.UpdateCooldown(_time, timeout);
+                }
+            }
         }
 
         private void SwitchFullscreen()
@@ -68,12 +81,6 @@ namespace Code.UI
 
         private void OnDisable()
         {
-            if (_timeoutCoroutine != null)
-            {
-                StopCoroutine(_timeoutCoroutine);
-                _timeoutCoroutine = null;
-            }
-
             if (_resultShowCoroutine != null)
             {
                 StopCoroutine(_resultShowCoroutine);
@@ -81,12 +88,12 @@ namespace Code.UI
             }
 
             _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
-            if (PlayerInput.Instance != null) PlayerInput.Instance.ShowSlotsUI = false;
         }
 
         private async void OnScreenshotClicked()
         {
             _screenShotBusy = true;
+            _time = timeout;
             try
             {
                 if (WebViewManager.Instance == null || WebViewManager.Instance.WebView == null)
@@ -109,18 +116,6 @@ namespace Code.UI
             {
                 ShowResult("Screenshot failed: " + ex.Message, Color.red);
             }
-            finally
-            {
-                if (_timeoutCoroutine != null) StopCoroutine(_timeoutCoroutine);
-                _timeoutCoroutine = StartCoroutine(TimeoutRoutine());
-            }
-        }
-
-        private IEnumerator TimeoutRoutine()
-        {
-            yield return new WaitForSeconds(timeout);
-            _screenShotBusy = false;
-            _timeoutCoroutine = null;
         }
 
         private void APIHandle(byte[] screenshotBytes)

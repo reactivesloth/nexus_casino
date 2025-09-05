@@ -28,16 +28,6 @@ namespace Code.InteractionSystem
         public bool IsEnabled => _interactableEnabled;
         public bool ManualRelease => _manualRelease;
         public bool IsOccupied => _isOccupied.Value;
-
-        public virtual string InteractionPrompt
-        {
-            get
-            {
-                if (!_interactableEnabled) return "Disabled";
-                if (!_isOccupied.Value) return "Press E to interact";
-                return _manualRelease ? "Press E to end" : "Occupied";
-            }
-        }
         
         public event Action<bool> InteractCallback_Client;
         public event Action<bool> InteractCallback_Server;

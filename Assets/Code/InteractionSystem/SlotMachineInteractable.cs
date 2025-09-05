@@ -47,8 +47,6 @@ namespace Code.InteractionSystem
             if (networkImageStream == null) networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
         }
 #endif
-
-        public override string InteractionPrompt => !IsOccupied ? "Use Computer" : "Exit Computer";
         
         protected override void OnInteractCallback_Client(bool success, bool force = false)
         {

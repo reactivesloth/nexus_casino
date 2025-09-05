@@ -50,13 +50,19 @@ public class PlayerInput : MonoBehaviour
     public bool HideMobileFallback { get; set; }
     
     
-    [Header(("Slots Specific UI"))] 
-    public GameObject slotsUI;
+    [Header(("Interactable Base UI"))] 
+    public GameObject baseInteractUI;
+    public UltimateButton baseEndInteractButton;
+    
+    [Header(("Interactable Slots UI"))] 
+    public GameObject slotInteractUI;
     public UltimateButton slotsScreenshotButton;
     public UltimateButton slotsFullscreenButton;
     public UltimateButton slotsStreamButton;
-    public bool ShowSlotsUI { get; set; }
-
+    public UltimateButton slotsEndInteractButton;
+    
+    private UltimateButton endInteractButton;
+    
     public bool IsBusy { get; set; }
     
     private void Awake()
@@ -68,6 +74,8 @@ public class PlayerInput : MonoBehaviour
         _inputAsset = new InputAsset();
         _player = _inputAsset.Player;
         _player.Enable();
+        
+        ShowInteractUI(false);
     }
 
     private void OnEnable() => _player.Enable();
@@ -140,9 +148,6 @@ public class PlayerInput : MonoBehaviour
                 savedHideMobileFallback = HideMobileFallback;
             }
         }
-        
-        if (slotsUI != null && ShowSlotsUI != slotsUI.activeSelf)
-            slotsUI.SetActive(ShowSlotsUI);
     }
 
     public Vector2 Move
@@ -175,11 +180,37 @@ public class PlayerInput : MonoBehaviour
         }
     }
 
+    public void ShowInteractUI(bool value, string name = "Base")
+    {
+        switch (name)
+        {
+            case "Slots":
+                slotInteractUI.SetActive(value);
+                baseInteractUI.SetActive(false);
+                endInteractButton = slotsEndInteractButton;
+                InteractButton.gameObject.SetActive(!value);
+                break;
+            case "Base":
+                slotInteractUI.SetActive(false);
+                baseInteractUI.SetActive(value);
+                endInteractButton = baseEndInteractButton;
+                InteractButton.gameObject.SetActive(!value);
+                break;
+            default:
+                slotInteractUI.SetActive(false);
+                baseInteractUI.SetActive(false);
+                InteractButton.gameObject.SetActive(true);
+                endInteractButton = null;
+                break;
+        }
+    }
+    
     public bool JumpDown  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : !IsBusy && _player.Jump is { triggered: true };
     public bool VoiceHeld => IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f;
     public bool SprintHeld=> IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : !IsBusy && _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
     public bool CameraSwitchDown => IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : !IsBusy && _player.CameraSwitch is { triggered: true };
     public bool InteractDown => IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true };
+    public bool InteractEndDown => endInteractButton.GetButtonDown() || _player.Interact is { triggered: true };
     public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton() : _player.Pause is { triggered: true };
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
@@ -188,5 +219,5 @@ public class PlayerInput : MonoBehaviour
     public float Zoom => !IsBusy ? Input.GetAxis("Mouse ScrollWheel") : 0;
     public bool IsSlotsFullscreen => slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => slotsStreamButton.GetButtonDown();
-    public bool IsSlotsScreenshot => slotsScreenshotButton.GetButtonDown();
+    public bool IsSlotsScreenshot => slotsScreenshotButton.GetButtonDown() && !slotsScreenshotButton.InCooldown;
 }

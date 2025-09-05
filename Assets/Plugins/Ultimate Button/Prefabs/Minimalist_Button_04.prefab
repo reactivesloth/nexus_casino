@@ -30,15 +30,15 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 224313582825234092}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 1234.3875, y: 249.975}
-  m_SizeDelta: {x: 120.4425, y: 120.4425}
+  m_AnchoredPosition: {x: 3405, y: 594}
+  m_SizeDelta: {x: 286.19998, y: 286.19998}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222715262388063738
 CanvasRenderer:
@@ -63,6 +63,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 0}
   m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -98,6 +99,7 @@ MonoBehaviour:
   relativeTransform: {fileID: 0}
   centerAngle: 0
   orbitDistance: 1
+  inputHandling: 0
   boundary: 0
   trackInput: 0
   tapDecayRate: 0.5
@@ -151,9 +153,9 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   cooldownText: {fileID: 0}
-  useIcon: 1
   buttonIcon: {fileID: 0}
   buttonName: 
+  _controlPath: 
   onButtonDown:
     m_PersistentCalls:
       m_Calls: []
@@ -200,14 +202,14 @@ RectTransform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 224822078576097500}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 227.25, y: 227.25}
+  m_SizeDelta: {x: 540, y: 540}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &222978277611522254
 CanvasRenderer:
@@ -231,7 +233,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
