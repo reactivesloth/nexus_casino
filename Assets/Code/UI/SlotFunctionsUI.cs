@@ -121,7 +121,7 @@ namespace Code.UI
         private void APIHandle(byte[] screenshotBytes)
         {
             string baseName = Guid.NewGuid().ToString("N");
-            string uid = ClientDataStorage.UserData != null ? ClientDataStorage.UserData.id.ToString() : "unknown";
+            string uid = ClientDataStorage.UserData.id > 0 ? ClientDataStorage.UserData.id.ToString() : "unknown";
             string filename = $"{baseName}_{uid}_{DateTime.Now:yyyyMMdd_HHmmss}.png";
 
             var form = new WWWForm();
@@ -203,7 +203,7 @@ namespace Code.UI
         private void RequestStream()
         {
             var connectionId = InstanceFinder.ClientManager.Connection.ClientId;
-            var nickname = ClientDataStorage.UserData != null ? ClientDataStorage.UserData.username : "unknown";
+            var nickname = !string.IsNullOrEmpty(ClientDataStorage.UserData.username) ? ClientDataStorage.UserData.username : "unknown";
             _mainScreenController.RequestStream(slotMachineInteractable.IDNumber, connectionId, nickname);
         }
 

@@ -165,7 +165,7 @@ namespace Code.UI
                 var story = batch[i];
                 if (playerName != null)
                 {
-                    var name = story != null && story.user != null ? story.user.username : "";
+                    var name = story != null && !string.IsNullOrEmpty(story.user.username) ? story.user.username : "";
                     if (playerName.text != name) playerName.text = name;
                 }
 

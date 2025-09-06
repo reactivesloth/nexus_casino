@@ -408,7 +408,7 @@ namespace Code.Chat
 
         public void HandleGlobalMassage(MessageData m)
         {
-            if (globalChatBox == null || m == null || m.user == null) return;
+            if (globalChatBox == null || m == null || string.IsNullOrEmpty(m.user.username)) return;
 
             string lobbyId = m.lobby_id ?? "main";
             string suffix = lobbyId.Length > 4 ? "..." : "";
@@ -419,7 +419,7 @@ namespace Code.Chat
 
         public void HandleLobbyMassage(MessageData m)
         {
-            if (lobbyChatBox == null || m == null || m.user == null) return;
+            if (lobbyChatBox == null || m == null || string.IsNullOrEmpty(m.user.username)) return;
             lobbyChatBox.RegisterChat(m.user.username, m.message);
             SetLastChatInfo(m);
         }
@@ -543,7 +543,7 @@ namespace Code.Chat
                     var m = pageItems[i];
 
                     var username =
-                        (m.user != null && !string.IsNullOrEmpty(m.user.username))
+                        (string.IsNullOrEmpty(m.user.username) && !string.IsNullOrEmpty(m.user.username))
                             ? m.user.username
                             : (m.user_id != 0 ? ("User#" + m.user_id) : "User");
 

@@ -44,7 +44,7 @@ namespace Code.Chat
         public void ShareBalance()
         {
             var user = ClientDataStorage.UserData;
-            if (user == null) return;
+            if (string.IsNullOrEmpty(user.username)) return;
             ShareBalance_ServerRpc(user.username, user.balance);
         }
 

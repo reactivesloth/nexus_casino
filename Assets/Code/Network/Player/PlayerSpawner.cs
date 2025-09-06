@@ -1,9 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Code.API;
+using Code.API.Models;
 using FishNet;
 using FishNet.Broadcast;
 using FishNet.Connection;
 using FishNet.Managing;
+using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
@@ -44,6 +47,9 @@ namespace Code.Network.Player
 
         private readonly List<NetworkConnection> _dontSpawn = new(8);
         private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
+        
+        private readonly Dictionary<NetworkConnection, MeSchema> _spawnedPlayerData_Server = new();
+        private readonly Dictionary<string, NetworkConnection> _nameConnectionsData_Server = new();
 
         private void Awake()
         {
@@ -70,6 +76,8 @@ namespace Code.Network.Player
             if (InstanceFinder.ServerManager != null)
             {
                 InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived, true);
+                InstanceFinder.ServerManager.RegisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived, true);
+                
                 _networkManager.SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
                 _networkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
@@ -88,6 +96,8 @@ namespace Code.Network.Player
             if (InstanceFinder.ServerManager != null)
             {
                 InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived);
+                InstanceFinder.ServerManager.UnregisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived);
+                
                 _networkManager.SceneManager.OnClientLoadedStartScenes -= OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
                 _networkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
@@ -105,6 +115,21 @@ namespace Code.Network.Player
             Debug.Log($"[Server] Получен тип модели '{msg.PlayerType}' от клиента {conn.ClientId}");
         }
 
+        private void OnPlayerDataBroadcastReceived(NetworkConnection conn, MeSchema data, Channel _)
+        {
+            if (conn == null) return;
+
+            if (_nameConnectionsData_Server.TryGetValue(data.username, out var oldConnection))
+            {
+                InstanceFinder.ServerManager.Kick(oldConnection, KickReason.Unset);
+            }
+                
+            if(!_nameConnectionsData_Server.TryAdd(data.username, conn))
+                _nameConnectionsData_Server[data.username] = conn;
+            if(!_spawnedPlayerData_Server.TryAdd(conn, data))
+                _spawnedPlayerData_Server[conn] = data;
+        }
+        
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===
         private void OnServerConnectionState(ServerConnectionStateArgs args)
         {
@@ -112,6 +137,8 @@ namespace Code.Network.Player
             {
                 _dontSpawn.Clear();
                 _playerTypes.Clear();
+                _spawnedPlayerData_Server.Clear();
+                _nameConnectionsData_Server.Clear();
             }
         }
 
@@ -121,6 +148,7 @@ namespace Code.Network.Player
             if (args.ConnectionState == RemoteConnectionState.Stopped && conn != null)
             {
                 _playerTypes.Remove(conn);
+                _spawnedPlayerData_Server.Remove(conn);
                 for (int i = _dontSpawn.Count - 1; i >= 0; i--)
                     if (_dontSpawn[i] == conn)
                         _dontSpawn.RemoveAt(i);
@@ -214,7 +242,10 @@ namespace Code.Network.Player
             var msg = new PlayerTypeBroadcast { PlayerType = playerModelType };
 
             if (InstanceFinder.ClientManager != null)
+            {
                 InstanceFinder.ClientManager.Broadcast(msg);
+                InstanceFinder.ClientManager.Broadcast(ClientDataStorage.UserData);
+            }
 
             Debug.Log($"[Client] Отправил Broadcast с моделью игрока '{playerModelType}'");
         }
