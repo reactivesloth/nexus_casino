@@ -29,6 +29,7 @@ namespace Code.UI
         [SerializeField] private float storyDisplayTime = 3f;
 
         [Header("Additional settings")]
+        [SerializeField] private GameObject loadingScreen;
         [SerializeField] private SlotMachineInteractable slotMachineInteractable;
 
         private Coroutine _storyCoroutine;
@@ -58,6 +59,8 @@ namespace Code.UI
 
         private void OnEnable()
         {
+            if(loadingScreen != null)
+                loadingScreen.SetActive(true);
             StartNewCycle();
         }
 
@@ -189,12 +192,17 @@ namespace Code.UI
                 yield break;
             }
 
+            if(loadingScreen != null)
+                loadingScreen.SetActive(true);
+            
             string url = string.IsNullOrEmpty(story.image_url) ? "" : Uri.EscapeUriString(story.image_url);
             if (string.IsNullOrEmpty(url)) yield break;
 
             using (var req = UnityWebRequest.Get(url))
             {
                 yield return req.SendWebRequest();
+                if(loadingScreen != null)
+                    loadingScreen.SetActive(false);
                 if (req.result != UnityWebRequest.Result.Success)
                 {
                     Debug.LogWarning("StoriesUI: download failed: " + req.error);
