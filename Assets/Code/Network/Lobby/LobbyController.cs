@@ -499,9 +499,10 @@ namespace Code.Network.Lobby
         
         public void LeaveLobby()
         {
+            Debug.Log("LeavLobby");
             EOS.GetManager()?.StartCoroutine(LeaveLobbyRoutine());
         }
-
+        
         private IEnumerator LeaveLobbyRoutine()
         {
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
@@ -515,7 +516,7 @@ namespace Code.Network.Lobby
             else
                 Debug.Log($"[LobbyController] Successfully leave lobby {lobbyId}");
         }
-
+        
         #region InternalClasses
 
         private class LocalUser
@@ -571,7 +572,6 @@ namespace Code.Network.Lobby
         }
 
         #endregion
-
         
     }
 }

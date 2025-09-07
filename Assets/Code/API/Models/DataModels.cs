@@ -17,6 +17,12 @@ namespace Code.API.Models
         public int balance;
         public DateTime created_at;
         public string role;
+        
+        public bool IsAdmin => role == "admin";
+        public bool IsHost => role == "host";
+        public bool IsModerator => role == "moderator";
+        
+        public bool IsAdminRole => IsAdmin || IsHost || IsModerator;
     }
 
     [Serializable] public class OperatorSchema { public int id; public string name; }

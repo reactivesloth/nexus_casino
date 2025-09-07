@@ -1,8 +1,14 @@
 using System.Text;
 using Code.API;
+using Code.Network.Lobby;
+using Code.Network.Player;
 using Code.Player;
+using FishNet;
 using FishNet.Component.Animating;
+using FishNet.Connection;
+using FishNet.Managing.Server;
 using FishNet.Object;
+using TankAndHealerStudioAssets;
 using UnityEngine;
 
 namespace Code.Chat
@@ -41,31 +47,45 @@ namespace Code.Chat
             chatController.CurrentChatBox.RegisterChat(chatController.SystemName, sb.ToString());
         }
 
-        public void ShareBalance()
+        public void Kick(string username)
         {
-            var user = ClientDataStorage.UserData;
-            if (string.IsNullOrEmpty(user.username)) return;
-            ShareBalance_ServerRpc(user.username, user.balance);
+            
+            //if(false)
+            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            {
+                chatController.SendSystemMessage( "You can't kick other users.", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+            
+            Kick_ServerRPC(ClientManager.Connection, username);
         }
 
-        [ServerRpc(RequireOwnership = false, RunLocally = true)]
-        private void ShareBalance_ServerRpc(string nickname, int balance)
+        [ServerRpc(RequireOwnership = false)]
+        private void Kick_ServerRPC(NetworkConnection sender, string username)
         {
-            ShareBalance_ObserversRpc(nickname, balance);
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                KickCallback_Rpc(sender, $"User {username} not found", false);
+                return;
+            }
+            
+            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData) 
+                && playerData.IsAdminRole)
+            {
+                KickCallback_Rpc(sender, $"User {username} cannot be kicked", false);
+                return;
+            }
+            
+            ServerManager.Kick(connection, KickReason.Unset);
+            KickCallback_Rpc(null, $"User {username} was kicked", true, connection);
         }
 
-        [ObserversRpc(RunLocally = true)]
-        private void ShareBalance_ObserversRpc(string nickname, int balance)
+        [TargetRpc, ObserversRpc]
+        private void KickCallback_Rpc(NetworkConnection target, string message, bool success, NetworkConnection kickedConnection = null)
         {
-            // пример системного сообщения
-            // chatController?.SendSystemMessage($"{nickname}: мой баланс {balance}", UltimateChatBoxStyles.noticeMessage);
-        }
-
-        public void Emotion(string emotion)
-        {
-            if (string.IsNullOrEmpty(emotion) || PlayerMovementController.Own == null) return;
-            if (PlayerMovementController.Own.TryGetComponent(out NetworkAnimator na))
-                na.SetTrigger(emotion);
+            chatController.SendSystemMessage(message, !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
+            if(kickedConnection != null && kickedConnection == ClientManager.Connection)
+                LobbyAutoDisconnect.Disconnect();
         }
     }
 }

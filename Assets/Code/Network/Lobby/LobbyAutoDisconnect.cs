@@ -3,6 +3,7 @@ using UnityEngine;
 using FishNet;
 using FishNet.Managing.Client;
 using FishNet.Managing.Server;
+using FishNet.Transporting;
 
 namespace Code.Network.Lobby
 {
@@ -18,6 +19,13 @@ namespace Code.Network.Lobby
             _clientManager = InstanceFinder.ClientManager;
             _lobbyController = _clientManager.GetComponent<LobbyController>();
             
+            _clientManager.OnClientConnectionState += ClientManagerOnOnClientConnectionState;
+        }
+
+        private void ClientManagerOnOnClientConnectionState(ClientConnectionStateArgs args)
+        {
+            if(args.ConnectionState == LocalConnectionState.Stopped)
+                Disconnect();
         }
 
         private void OnDestroy()
