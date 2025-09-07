@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 33232a82f0044a54a6d6acfcb4731c17, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  socketReconnectTimeout: 10
   systemName: '[SYSTEM]'
   lobbyChatBox: {fileID: 0}
   globalChatBox: {fileID: 0}
@@ -68,15 +69,15 @@ MonoBehaviour:
             m_BoolArgument: 0
           m_CallState: 2
     description: 
-  - commandValue: /share_balance
-    requireMessageValue: 0
+  - commandValue: /kick
+    requireMessageValue: 1
     unityEvent:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
-          m_MethodName: ShareBalance
-          m_Mode: 1
+          m_MethodName: Kick
+          m_Mode: 0
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -85,7 +86,115 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
-    description: Show off your balance in the chat with other players in lobby
+    description: Kick user by username
+  - commandValue: /mute
+    requireMessageValue: 1
+    unityEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2199744421160414387}
+          m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
+          m_MethodName: Mute
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    description: Mute user voice and text chat
+  - commandValue: /unmute
+    requireMessageValue: 1
+    unityEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2199744421160414387}
+          m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
+          m_MethodName: Unmute
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    description: Unute user voice and text chat
+  - commandValue: /mute_chat
+    requireMessageValue: 1
+    unityEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2199744421160414387}
+          m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
+          m_MethodName: MuteChat
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    description: Mute user text chat
+  - commandValue: /unmute_chat
+    requireMessageValue: 1
+    unityEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2199744421160414387}
+          m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
+          m_MethodName: UnmuteChat
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    description: Unute user text chat
+  - commandValue: /mute_voice
+    requireMessageValue: 1
+    unityEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2199744421160414387}
+          m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
+          m_MethodName: MuteVoice
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    description: Mute user voice chat
+  - commandValue: /unmute_voice
+    requireMessageValue: 1
+    unityEvent:
+      m_PersistentCalls:
+        m_Calls:
+        - m_Target: {fileID: 2199744421160414387}
+          m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
+          m_MethodName: UnmuteVoice
+          m_Mode: 0
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+    description: Unute user voice chat
   desktopPosition: {x: 5, y: 5}
   mobilePosition: {x: 10, y: 95}
   pageSize: 50
