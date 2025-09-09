@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Code.API;
 using Code.API.Models;
+using Code.Network.Lobby;
 using FishNet;
 using FishNet.Broadcast;
 using FishNet.Connection;
@@ -19,6 +20,11 @@ namespace Code.Network.Player
         public string PlayerType;
     }
 
+    public struct DisconnectBroadcast : IBroadcast
+    {
+        public string Reason;
+    }
+    
     [Serializable]
     public class PlayerSpawnableModelKeyValuePair
     {
@@ -81,6 +87,7 @@ namespace Code.Network.Player
                 InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived,
                     true);
                 InstanceFinder.ServerManager.RegisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived, true);
+                InstanceFinder.ClientManager.RegisterBroadcast<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived);
 
                 _networkManager.SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
@@ -101,6 +108,7 @@ namespace Code.Network.Player
             {
                 InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived);
                 InstanceFinder.ServerManager.UnregisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived);
+                InstanceFinder.ClientManager.UnregisterBroadcast<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived);
 
                 _networkManager.SceneManager.OnClientLoadedStartScenes -= OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
@@ -127,6 +135,11 @@ namespace Code.Network.Player
                 NameConnectionsData_Server[data.username] = conn;
             if (!SpawnedPlayerData_Server.TryAdd(conn, data))
                 SpawnedPlayerData_Server[conn] = data;
+        }
+
+        private void OnClientDisconnectBroadcastReceived(DisconnectBroadcast data, Channel _)
+        {
+            LobbyAutoDisconnect.Disconnect(true, data.Reason);
         }
 
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===
@@ -198,7 +211,9 @@ namespace Code.Network.Player
             foreach (var networkConnection in InstanceFinder.ServerManager.Clients.Values.Where(networkConnection =>
                          !NameConnectionsData_Server.ContainsValue(networkConnection)))
             {
-                networkConnection.Disconnect(true);
+                // networkConnection.Disconnect(true);
+                InstanceFinder.ServerManager.Broadcast(networkConnection, new DisconnectBroadcast{Reason = "You connect twice"});
+                
             }
         }
 
