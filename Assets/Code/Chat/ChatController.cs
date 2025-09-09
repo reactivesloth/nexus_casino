@@ -389,7 +389,7 @@ namespace Code.Chat
             if (CurrentChatBox == null || CurrentChatBox.InputFieldContainsCommand) return;
             if (IsMuted)
             {
-                SendSystemMessage("You are muted", UltimateChatBoxStyles.errorMessage);
+                SendSystemMessage("You are muted in chat", UltimateChatBoxStyles.errorMessage);
                 return;
             }
 
