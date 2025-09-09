@@ -1,9 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Code.API;
+using Code.API.Models;
 using FishNet;
 using FishNet.Broadcast;
 using FishNet.Connection;
 using FishNet.Managing;
+using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
 using UnityEngine;
@@ -30,8 +34,10 @@ namespace Code.Network.Player
         /// <summary>Вызывается на сервере сразу после спавна игрока.</summary>
         public event Action<NetworkObject> OnSpawned;
 
-        [Tooltip("True to add player to the active scene when no global scenes are specified through the SceneManager.")]
-        [SerializeField] private bool _addToDefaultScene = true;
+        [Tooltip(
+            "True to add player to the active scene when no global scenes are specified through the SceneManager.")]
+        [SerializeField]
+        private bool _addToDefaultScene = true;
 
         [Tooltip("Areas in which players may spawn.")]
         public Transform[] Spawns = Array.Empty<Transform>();
@@ -44,6 +50,9 @@ namespace Code.Network.Player
 
         private readonly List<NetworkConnection> _dontSpawn = new(8);
         private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
+
+        public static readonly Dictionary<NetworkConnection, MeSchema> SpawnedPlayerData_Server = new();
+        public static readonly Dictionary<string, NetworkConnection> NameConnectionsData_Server = new();
 
         private void Awake()
         {
@@ -69,7 +78,10 @@ namespace Code.Network.Player
             // серверная подписка: принимаем тип игрока + спавн по загрузке стартовых сцен
             if (InstanceFinder.ServerManager != null)
             {
-                InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived, true);
+                InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived,
+                    true);
+                InstanceFinder.ServerManager.RegisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived, true);
+
                 _networkManager.SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
                 _networkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
@@ -88,6 +100,8 @@ namespace Code.Network.Player
             if (InstanceFinder.ServerManager != null)
             {
                 InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived);
+                InstanceFinder.ServerManager.UnregisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived);
+
                 _networkManager.SceneManager.OnClientLoadedStartScenes -= OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
                 _networkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
@@ -105,6 +119,16 @@ namespace Code.Network.Player
             Debug.Log($"[Server] Получен тип модели '{msg.PlayerType}' от клиента {conn.ClientId}");
         }
 
+        private void OnPlayerDataBroadcastReceived(NetworkConnection conn, MeSchema data, Channel _)
+        {
+            if (conn == null) return;
+
+            if (!NameConnectionsData_Server.TryAdd(data.username, conn))
+                NameConnectionsData_Server[data.username] = conn;
+            if (!SpawnedPlayerData_Server.TryAdd(conn, data))
+                SpawnedPlayerData_Server[conn] = data;
+        }
+
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===
         private void OnServerConnectionState(ServerConnectionStateArgs args)
         {
@@ -112,6 +136,8 @@ namespace Code.Network.Player
             {
                 _dontSpawn.Clear();
                 _playerTypes.Clear();
+                SpawnedPlayerData_Server.Clear();
+                NameConnectionsData_Server.Clear();
             }
         }
 
@@ -121,6 +147,7 @@ namespace Code.Network.Player
             if (args.ConnectionState == RemoteConnectionState.Stopped && conn != null)
             {
                 _playerTypes.Remove(conn);
+                SpawnedPlayerData_Server.Remove(conn);
                 for (int i = _dontSpawn.Count - 1; i >= 0; i--)
                     if (_dontSpawn[i] == conn)
                         _dontSpawn.RemoveAt(i);
@@ -161,7 +188,18 @@ namespace Code.Network.Player
             if (_addToDefaultScene)
                 _networkManager.SceneManager.AddOwnerToDefaultScene(nob);
 
+            Invoke(nameof(ClearDoubleConnections), 5f);
+
             OnSpawned?.Invoke(nob);
+        }
+
+        private void ClearDoubleConnections()
+        {
+            foreach (var networkConnection in InstanceFinder.ServerManager.Clients.Values.Where(networkConnection =>
+                         !NameConnectionsData_Server.ContainsValue(networkConnection)))
+            {
+                networkConnection.Disconnect(true);
+            }
         }
 
         /// <summary>Определяет позицию/поворот спавна.</summary>
@@ -214,7 +252,10 @@ namespace Code.Network.Player
             var msg = new PlayerTypeBroadcast { PlayerType = playerModelType };
 
             if (InstanceFinder.ClientManager != null)
+            {
                 InstanceFinder.ClientManager.Broadcast(msg);
+                InstanceFinder.ClientManager.Broadcast(ClientDataStorage.UserData);
+            }
 
             Debug.Log($"[Client] Отправил Broadcast с моделью игрока '{playerModelType}'");
         }

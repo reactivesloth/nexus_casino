@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using FishNet.Broadcast;
 
 namespace Code.API.Models
 {
@@ -9,13 +10,19 @@ namespace Code.API.Models
     [Serializable] public class SendCodeRequest { public string phone; public string requested_by; }
 
     [Serializable]
-    public class MeSchema
+    public struct MeSchema: IBroadcast
     {
         public int id;
         public string username;
         public int balance;
         public DateTime created_at;
         public string role;
+        
+        public bool IsAdmin => role == "admin";
+        public bool IsHost => role == "host";
+        public bool IsModerator => role == "moderator";
+        
+        public bool IsAdminRole => IsAdmin || IsHost || IsModerator;
     }
 
     [Serializable] public class OperatorSchema { public int id; public string name; }

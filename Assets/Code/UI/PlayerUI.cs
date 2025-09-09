@@ -35,7 +35,6 @@ namespace Code.UI
             if (!IsOwner) return;
 
             var user = ClientDataStorage.UserData;
-            if (user == null) return;
 
             SendCharacterDataServerRpc(user.username ?? "", user.role ?? "");
         }
