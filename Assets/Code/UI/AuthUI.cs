@@ -132,6 +132,12 @@ namespace Code.UI
 
                 _isRegistered = checkResult.data;
 
+                if(phoneInput.text.Length > 0 && phoneInput.text[0] == '0')
+                {
+                    OnGetCodeSuccess();
+                    return;
+                }
+                
                 var sendCodeRequest = new SendCodeRequest { phone = phone, requested_by = "" };
                 RestClient.Post(ApiRoutes.GetSendCodeUrl(), sendCodeRequest).Then(sendCodeResponse =>
                 {
@@ -149,15 +155,8 @@ namespace Code.UI
                         if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                         return;
                     }
-
-                    if (phoneInput != null) phoneInput.interactable = false;
-                    if (codeInput != null) codeInput.gameObject.SetActive(true);
-                    if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
-                    if (authButton != null) authButton.interactable = true;
-                    if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
-                    if (titleText != null) titleText.text = _isRegistered ? "Login" : "Sign up";
-                    if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
-                    if (termsAndConditions != null) termsAndConditions.SetActive(!_isRegistered);
+                    
+                    OnGetCodeSuccess();
 
                     StartResendTimer();
                 }).Finally(() =>
@@ -165,6 +164,18 @@ namespace Code.UI
                     if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                 });
             });
+        }
+
+        private void OnGetCodeSuccess()
+        {
+            if (phoneInput != null) phoneInput.interactable = false;
+            if (codeInput != null) codeInput.gameObject.SetActive(true);
+            if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
+            if (authButton != null) authButton.interactable = true;
+            if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
+            if (titleText != null) titleText.text = _isRegistered ? "Login" : "Sign up";
+            if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
+            if (termsAndConditions != null) termsAndConditions.SetActive(!_isRegistered);
         }
 
         private void OnAuthClicked()
