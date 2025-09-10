@@ -35,6 +35,7 @@ namespace Code.Chat
 
         public UltimateChatBox CurrentChatBox { get; private set; }
         public string SystemName => systemName;
+        public bool IsMuted { get; set; }
 
         // ===== История =====
         [Header("History")] [SerializeField] private int pageSize = 50;
@@ -386,6 +387,11 @@ namespace Code.Chat
         private void OnInputFieldSubmittedCurrentBox(string text)
         {
             if (CurrentChatBox == null || CurrentChatBox.InputFieldContainsCommand) return;
+            if (IsMuted)
+            {
+                SendSystemMessage("You are muted in chat", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
 
             var lobby = LobbyVariables.Instance != null ? LobbyVariables.Instance.currentLobby : null;
             string lobbyId = _isGlobalChatActive ? "main" : (lobby != null ? lobby.lobbyId : "main");

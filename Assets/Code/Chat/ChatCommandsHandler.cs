@@ -3,6 +3,7 @@ using Code.API;
 using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Player;
+using Dissonance;
 using FishNet;
 using FishNet.Component.Animating;
 using FishNet.Connection;
@@ -47,16 +48,17 @@ namespace Code.Chat
             chatController.CurrentChatBox.RegisterChat(chatController.SystemName, sb.ToString());
         }
 
+        #region Kick
+
         public void Kick(string username)
         {
-            
-            //if(false)
+            // if(false)
             if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
             {
-                chatController.SendSystemMessage( "You can't kick other users.", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage("You can't kick other users.", UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
+
             Kick_ServerRPC(ClientManager.Connection, username);
         }
 
@@ -68,24 +70,151 @@ namespace Code.Chat
                 KickCallback_Rpc(sender, $"User {username} not found", false);
                 return;
             }
-            
-            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData) 
+
+            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
                 KickCallback_Rpc(sender, $"User {username} cannot be kicked", false);
                 return;
             }
-            
-            ServerManager.Kick(connection, KickReason.Unset);
+
+            // ServerManager.Kick(connection, KickReason.Unset);
             KickCallback_Rpc(null, $"User {username} was kicked", true, connection);
         }
 
         [TargetRpc, ObserversRpc]
-        private void KickCallback_Rpc(NetworkConnection target, string message, bool success, NetworkConnection kickedConnection = null)
+        private void KickCallback_Rpc(NetworkConnection target, string message, bool success,
+            NetworkConnection kickedConnection = null)
         {
-            chatController.SendSystemMessage(message, !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
-            if(kickedConnection != null && kickedConnection == ClientManager.Connection)
-                LobbyAutoDisconnect.Disconnect();
+            chatController.SendSystemMessage(message,
+                !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
+            if (kickedConnection != null && kickedConnection == ClientManager.Connection)
+                LobbyAutoDisconnect.Disconnect(true, "You was kicked");
         }
+
+        #endregion
+
+        #region Communacations Commands
+
+        public void Mute(string username) => Mute(username, true, true);
+
+        public void MuteChat(string username) => Mute(username, true, false);
+
+        public void MuteVoice(string username) => Mute(username, false, true);
+
+        private void Mute(string username, bool muteChat, bool muteVoice)
+        {
+            // if(false)
+            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            {
+                chatController.SendSystemMessage("You can't mute other users.", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            Mute_ServerRpc(ClientManager.Connection, username, muteChat, muteVoice);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void Mute_ServerRpc(NetworkConnection sender, string username, bool muteChat, bool muteVoice)
+        {
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                MuteCallback_Rpc(sender, $"User {username} not found", false);
+                return;
+            }
+
+            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
+                && playerData.IsAdminRole)
+            {
+                MuteCallback_Rpc(sender, $"User {username} cannot be muted", false);
+                return;
+            }
+
+            MuteCallback_Rpc(null, $"User {username} was muted", true, muteChat, muteVoice, connection);
+        }
+
+        [ObserversRpc, TargetRpc]
+        private void MuteCallback_Rpc(NetworkConnection target, string message, bool success, bool muteChat = false,
+            bool muteVoice = false, NetworkConnection muteConnection = null)
+        {
+            if (!success)
+            {
+                chatController.SendSystemMessage(message, UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            chatController.SendSystemMessage(message, UltimateChatBoxStyles.noticeMessage);
+
+            if (muteConnection != ClientManager.Connection)
+                return;
+
+            if (muteChat)
+                chatController.IsMuted = true;
+
+            if (muteVoice)
+                FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = true;
+        }
+
+        public void Unmute(string username) => Unmute(username, true, true);
+
+        public void UnmuteChat(string username) => Unmute(username, true, false);
+
+        public void UnmuteVoice(string username) => Unmute(username, false, true);
+
+        private void Unmute(string username, bool unmuteChat, bool unmuteVoice)
+        {
+            // if (false)
+            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            {
+                chatController.SendSystemMessage("You can't unmute other users.",
+                    UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            Unmute_ServerRpc(ClientManager.Connection, username, unmuteChat, unmuteVoice);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void Unmute_ServerRpc(NetworkConnection sender, string username, bool unmuteChat, bool unmuteVoice)
+        {
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                UnmuteCallback_Rpc(sender, $"User {username} not found", false);
+                return;
+            }
+
+            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
+                && playerData.IsAdminRole)
+            {
+                UnmuteCallback_Rpc(sender, $"User {username} cannot be unmuted", false);
+                return;
+            }
+
+            UnmuteCallback_Rpc(null, $"User {username} was unmuted", true, unmuteChat, unmuteVoice, connection);
+        }
+
+        [ObserversRpc, TargetRpc]
+        private void UnmuteCallback_Rpc(NetworkConnection target, string message, bool success, bool unmuteChat = false,
+            bool unmuteVoice = false, NetworkConnection muteConnection = null)
+        {
+            if (!success)
+            {
+                chatController.SendSystemMessage(message, UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            chatController.SendSystemMessage(message, UltimateChatBoxStyles.noticeMessage);
+
+            if (muteConnection != ClientManager.Connection)
+                return;
+
+            if (unmuteChat)
+                chatController.IsMuted = false;
+
+            if (unmuteVoice)
+                FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
+        }
+
+        #endregion
     }
 }
