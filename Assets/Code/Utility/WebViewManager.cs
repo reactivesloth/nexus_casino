@@ -30,6 +30,7 @@ public class WebViewManager : MonoBehaviour
 
     private CanvasWebViewPrefab _view;
     private RawImage _image;
+    private string agregator;
     
     private void Awake()
     {
@@ -48,7 +49,7 @@ public class WebViewManager : MonoBehaviour
         await Task.Delay(2000);
         await EnsureCreatedAsync();
         var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
-        await LoadWithTokenAsync(token);
+        await LoadWithTokenAsync(agregator, token);
     }
 
     public async Task EnsureCreatedAsync()
@@ -93,14 +94,20 @@ public class WebViewManager : MonoBehaviour
         }
     }
 
-    public async Task LoadWithTokenAsync(string jwt)
+    public async Task LoadWithTokenAsync(string jwt, string agregator = "")
     {
         await EnsureCreatedAsync();
-        if (WebView == null) return;
-        string url = $"https://back.nexusmetaclub.com?jwt={jwt}";
-        WebView.LoadUrl(url);
+        LoadURL(agregator, jwt);
     }
 
+    public void LoadURL(string jwt, string agregator = "")
+    {
+        if (WebView == null) return;
+        var url = agregator != "" ? $"https://back.nexusmetaclub.com/games?agregator={agregator}&jwt={jwt}" : $"https://back.nexusmetaclub.com/games?jwt={jwt}";
+        WebView.LoadUrl(url);
+        Debug.Log($"[WebViewManager] {url}");
+    }
+    
     public void OpenFullscreen()
     {
         if (!_initialized || WebViewPrefabInstance == null || parkingCanvas == null) return;
@@ -198,13 +205,11 @@ public class WebViewManager : MonoBehaviour
         return _image;
     }
 
-    public void HideWorldView(int slotId)
+    public void HideWorldView(int slotId, string agregator)
     {
         if (refreshUrlOnHide)
         {
-            var token = string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken;
-            string url = $"https://back.nexusmetaclub.com?jwt={token}"; 
-            WebView.LoadUrl(url);
+            LoadURL(string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken, agregator);
         }
         
         _view.gameObject.SetActive(false);

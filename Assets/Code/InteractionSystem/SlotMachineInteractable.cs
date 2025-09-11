@@ -1,10 +1,22 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using Code.API;
 using Code.Network;
 using TMPro;
 using UnityEngine;
 
 namespace Code.InteractionSystem
 {
+    [Serializable]
+    public enum Providers
+    {
+        all,
+        cq9,
+        superomatic,
+        champion,
+        onlyplay
+    }
+    
     public class SlotMachineInteractable : Interactable
     {
         [Header("UI Settings")]
@@ -15,7 +27,9 @@ namespace Code.InteractionSystem
         [Header("Streaming")]
         [SerializeField] private NetworkImageStream networkImageStream;
         public NetworkImageStream NetworkImageStream => networkImageStream;
-
+        
+        [SerializeField] private Providers provider = Providers.all;
+        
         public int IDNumber;
 
         private bool _initSlot;
@@ -90,6 +104,19 @@ namespace Code.InteractionSystem
             if (contentCanvas) contentCanvas.gameObject.SetActive(false);
         }
 
+        private string GetProvider()
+        {
+            return provider switch
+            {
+                Providers.all => "",
+                Providers.cq9 => "cq9",
+                Providers.superomatic => "superomatic",
+                Providers.champion => "champion",
+                Providers.onlyplay => "onlyplay",
+                _ => ""
+            };
+        }
+
         private void ApplyComputerStateImmediate(bool open)
         {
             bool useFs = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
@@ -105,7 +132,7 @@ namespace Code.InteractionSystem
 
                 if (WebViewManager.Instance != null)
                 {
-                    WebViewManager.Instance.HideWorldView(IDNumber);
+                    WebViewManager.Instance.HideWorldView(IDNumber, GetProvider());
                     WebViewManager.Instance.Hide();
                 }
 
@@ -121,6 +148,11 @@ namespace Code.InteractionSystem
 
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
 
+                WebViewManager.Instance.LoadURL (
+                    string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken, 
+                    GetProvider()
+                );
+                
                 if (useFs)
                 {
                     WebViewManager.Instance.OpenFullscreen();
