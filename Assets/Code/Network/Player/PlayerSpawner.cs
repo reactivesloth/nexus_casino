@@ -139,7 +139,7 @@ namespace Code.Network.Player
 
         private void OnClientDisconnectBroadcastReceived(DisconnectBroadcast data, Channel _)
         {
-            LobbyAutoDisconnect.Disconnect(true, data.Reason);
+            LobbyDisconnector.Disconnect(true, data.Reason);
         }
 
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===

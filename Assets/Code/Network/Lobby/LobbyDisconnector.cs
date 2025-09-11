@@ -10,7 +10,7 @@ using UnityEngine.Events;
 
 namespace Code.Network.Lobby
 {
-    public class LobbyAutoDisconnect : MonoBehaviour
+    public class LobbyDisconnector : MonoBehaviour
     {
         [SerializeField] private ModularPopupOpener disconnectPopup;
         
@@ -41,19 +41,20 @@ namespace Code.Network.Lobby
 
         public static void Disconnect(bool showPopup = false, string popupTitle = "", string popupMessage = "", UnityAction popupOkAction = null)
         {
+            CursorManager.Instance.ShowCursor();
+            
+            if(_serverManager.Started)
+                HandleServerDisconnect();
+            if (showPopup)
+                ShowPopup(popupTitle, popupMessage, popupOkAction);
+            
             if (_clientManager)
                 _clientManager.StopConnection();
             if (_serverManager)
                 _serverManager.StopConnection(false);
             if (_lobbyController)
                 _lobbyController.LeaveLobby();
-            
-            CursorManager.Instance.ShowCursor();
 
-            Debug.Log($"Disconnect {popupTitle}");
-            
-            if (showPopup)
-                ShowPopup(popupTitle, popupMessage, popupOkAction);
         }
 
         private static void ShowPopup(string popupTitle, string popupMessage, UnityAction popupOkAction)
@@ -69,6 +70,12 @@ namespace Code.Network.Lobby
         private static void DefaultOkAction()
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Scenes/Init");
+        }
+
+        private static void HandleServerDisconnect()
+        {
+            // _lobbyController.UpdateLobbyAttribute("PROMOTED", "TRUE");
+            _lobbyController.SelectNewHostAndPromote();
         }
     }
 }

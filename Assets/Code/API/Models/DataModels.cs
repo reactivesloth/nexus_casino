@@ -23,6 +23,11 @@ namespace Code.API.Models
         public bool IsModerator => role == "moderator";
         
         public bool IsAdminRole => IsAdmin || IsHost || IsModerator;
+
+        public static bool CheckAdmin(string role)
+        {
+            return role is "admin" or "host" or "moderator";
+        }
     }
 
     [Serializable] public class OperatorSchema { public int id; public string name; }

@@ -28,14 +28,14 @@ namespace Code.Tests
             }
 
             if (isDisconnect)
-                Code.Network.Lobby.LobbyAutoDisconnect.Disconnect();
+                Code.Network.Lobby.LobbyDisconnector.Disconnect();
         }
 
         public void Load(int buildIndex)
         {
             SceneManager.LoadScene(buildIndex);
             if (isDisconnect)
-                Code.Network.Lobby.LobbyAutoDisconnect.Disconnect();
+                Code.Network.Lobby.LobbyDisconnector.Disconnect();
         }
     }
 }

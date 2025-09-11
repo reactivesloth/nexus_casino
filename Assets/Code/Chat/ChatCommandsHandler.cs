@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Text;
 using Code.API;
 using Code.Network.Lobby;
@@ -89,7 +90,7 @@ namespace Code.Chat
             chatController.SendSystemMessage(message,
                 !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
             if (kickedConnection != null && kickedConnection == ClientManager.Connection)
-                LobbyAutoDisconnect.Disconnect(true, "You was kicked");
+                LobbyDisconnector.Disconnect(true, "You was kicked");
         }
 
         #endregion
@@ -215,6 +216,41 @@ namespace Code.Chat
                 FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
         }
 
+        #endregion
+
+        #region Promote
+        
+        public void PromoteMember(string promotedUserName)
+        {
+            var userMemberData = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m =>
+            {
+                if(!m.Attributes.TryGetValue("NAME", out var memberName))
+                    return false;
+                return memberName == promotedUserName;
+            });
+
+            if (userMemberData == null)
+            {
+                chatController.SendSystemMessage($"User {promotedUserName} not found", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var userId = userMemberData.productUserId;
+            
+            if(ServerManager.Started)
+                FindAnyObjectByType<LobbyController>().Promote(userId);
+            else if(ClientDataStorage.UserData.IsAdminRole)
+                Promote_ServerRpc(userId);
+            else
+                chatController.SendSystemMessage("You can't promote members", UltimateChatBoxStyles.errorMessage);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void Promote_ServerRpc(string userId)
+        {   
+            FindAnyObjectByType<LobbyController>().Promote(userId);
+        }
+        
         #endregion
     }
 }
