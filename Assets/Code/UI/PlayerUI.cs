@@ -55,6 +55,8 @@ namespace Code.UI
         {
             if (playerName != null) playerName.text = _nickname ?? string.Empty;
             if (playerRole != null) playerRole.text = _role ?? string.Empty;
+            isVoiceHeld = _voice;
+            isVoiceMuted = _mute;
         }
 
         public void TransmitLocalCharacter()
