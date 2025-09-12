@@ -15,77 +15,65 @@ MonoBehaviour:
   Outfits:
   - OutfitName: Formal1
     OutfitOptions:
-    - DefaultName: UpperBody_Default
-      Options:
+    - Options:
       - Suit_Jacket_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: LowerBody_Default
-      Options:
+    - Options:
       - Suit_Pants_01
       DefaultChance: 0
       MatchMaterials: 1
       IndexToMatch: 0
-    - DefaultName: Footwear_Default
-      Options:
+    - Options:
       - Dress_Shoes_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Headwear_Default
-      Options:
-      - Glasses
-      - Sunglasses
+    - Options:
+      - Glasses_01
+      - Sunglasses_01
       - Aviator_Glasses
       DefaultChance: 0.9
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Accessory_Default
-      Options: []
+    - Options: []
       DefaultChance: 1
       MatchMaterials: 0
       IndexToMatch: 0
   - OutfitName: Formal2
     OutfitOptions:
-    - DefaultName: UpperBody_Default
-      Options:
+    - Options:
       - Suit_Jacket_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: LowerBody_Default
-      Options:
+    - Options:
       - Suit_Pants_01
-      - Jeans_01_Blue
-      - Jeans_01_Black
+      - Jeans_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Footwear_Default
-      Options:
+    - Options:
       - Sandals_01
       - Sneaker_02
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Headwear_Default
-      Options:
-      - Glasses
-      - Sunglasses
+    - Options:
+      - Glasses_01
+      - Sunglasses_01
       - Aviator_Glasses
       DefaultChance: 0.9
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Accessory_Default
-      Options: []
+    - Options: []
       DefaultChance: 1
       MatchMaterials: 0
       IndexToMatch: 0
   - OutfitName: Casual1
     OutfitOptions:
-    - DefaultName: UpperBody_Default
-      Options:
+    - Options:
       - Casual_Shirt_01
       - Polo_Shirt_01
       - TShirt_01
@@ -94,16 +82,14 @@ MonoBehaviour:
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: LowerBody_Default
-      Options:
+    - Options:
       - Suit_Pants_01
-      - Jeans_01_Blue
-      - Jeans_01_Black
+      - Jeans_01
+      - Jeans_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Footwear_Default
-      Options:
+    - Options:
       - Dress_Shoes_01
       - Sneaker_01
       - Sneaker_02
@@ -112,36 +98,31 @@ MonoBehaviour:
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Headwear_Default
-      Options:
-      - Glasses
-      - Sunglasses
+    - Options:
+      - Glasses_01
+      - Sunglasses_01
       - Aviator_Glasses
       DefaultChance: 0.9
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Accessory_Default
-      Options: []
+    - Options: []
       DefaultChance: 1
       MatchMaterials: 0
       IndexToMatch: 0
   - OutfitName: Casual2
     OutfitOptions:
-    - DefaultName: UpperBody_Default
-      Options:
+    - Options:
       - Casual_Shirt_01
       - Shirt_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: LowerBody_Default
-      Options:
+    - Options:
       - Suit_Pants_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Footwear_Default
-      Options:
+    - Options:
       - Dress_Shoes_01
       - Sneaker_01
       - Sneaker_02
@@ -149,60 +130,51 @@ MonoBehaviour:
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Headwear_Default
-      Options:
-      - Glasses
-      - Sunglasses
+    - Options:
+      - Glasses_01
+      - Sunglasses_01
       - Aviator_Glasses
       DefaultChance: 0.9
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Accessory_Default
-      Options: []
+    - Options: []
       DefaultChance: 1
       MatchMaterials: 0
       IndexToMatch: 0
   - OutfitName: Casual3
     OutfitOptions:
-    - DefaultName: UpperBody_Default
-      Options:
+    - Options:
       - Jacket_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: LowerBody_Default
-      Options:
-      - Jeans_01_Blue
-      - Jeans_01_Blue
-      - Jeans_01_Black
-      - Jeans_01_Black
+    - Options:
+      - Jeans_01
+      - Jeans_01
+      - Jeans_01
       - Cargo_Pants_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Footwear_Default
-      Options:
+    - Options:
       - Boots_01
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Headwear_Default
-      Options:
-      - Glasses
-      - Sunglasses
+    - Options:
+      - Glasses_01
+      - Sunglasses_01
       - Aviator_Glasses
       DefaultChance: 0.9
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Accessory_Default
-      Options: []
+    - Options: []
       DefaultChance: 1
       MatchMaterials: 0
       IndexToMatch: 0
   - OutfitName: Casual4
     OutfitOptions:
-    - DefaultName: UpperBody_Default
-      Options:
+    - Options:
       - Tank_Top_01
       - Hoodie_01
       - TShirt_01
@@ -212,8 +184,7 @@ MonoBehaviour:
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: LowerBody_Default
-      Options:
+    - Options:
       - Jeans_01_Blue
       - Jeans_01_Blue
       - Jeans_01_Black
@@ -223,23 +194,20 @@ MonoBehaviour:
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Footwear_Default
-      Options:
+    - Options:
       - Sandals_01
       - Sneaker_02
       DefaultChance: 0
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Headwear_Default
-      Options:
+    - Options:
       - Glasses
       - Sunglasses
       - Aviator_Glasses
       DefaultChance: 0.9
       MatchMaterials: 0
       IndexToMatch: 0
-    - DefaultName: Accessory_Default
-      Options: []
+    - Options: []
       DefaultChance: 1
       MatchMaterials: 0
       IndexToMatch: 0

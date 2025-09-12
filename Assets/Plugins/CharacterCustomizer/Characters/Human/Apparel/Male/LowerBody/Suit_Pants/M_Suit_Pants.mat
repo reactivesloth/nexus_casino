@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-2261633782482509503
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 0
 --- !u!114 &-144490009980733510
 MonoBehaviour:
   m_ObjectHideFlags: 11
@@ -69,7 +82,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Detail:
-        m_Texture: {fileID: 2800000, guid: a8c9fb4c922d4b0478b5c82e1391db5a, type: 3}
+        m_Texture: {fileID: 2800000, guid: 62856fea1fbe5384f889ddc41811250c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailMap:
@@ -85,7 +98,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Detail_Normal:
-        m_Texture: {fileID: 2800000, guid: 2769049ad1a4c3740a9f3355cd39a0d4, type: 3}
+        m_Texture: {fileID: 2800000, guid: cecad999130572645ba54d3eab141b87, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Detail_R:
@@ -165,7 +178,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tint_Mask:
-        m_Texture: {fileID: 2800000, guid: 3ac3959b351589c4e9f3b3d679998cc4, type: 3}
+        m_Texture: {fileID: 2800000, guid: 057fbac6ad929b143b733e07cc556af1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TransmittanceColorMap:
@@ -201,9 +214,12 @@ Material:
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 0
     - _Anisotropy: 0
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
     - _Base_Color_Tiling: 1
     - _BlendMode: 0
-    - _Cloth_Alpha: 0
+    - _Brightness_Adjust: 0.4
+    - _Cloth_Alpha: 0.8
     - _CoatMask: 0
     - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 2
@@ -215,7 +231,7 @@ Material:
     - _DetailSmoothnessScale: 1
     - _Detail_Main_Only: 1
     - _Detail_Normal_Strength: 0
-    - _Detail_Strength: 0.6
+    - _Detail_Strength: 0
     - _Detail_Strength_B: 0
     - _Detail_Strength_G: 0
     - _Detail_Strength_R: 0
@@ -240,6 +256,7 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EnableGeometricSpecularAA: 0
     - _EnergyConservingSpecularColor: 1
+    - _ExcludeFromTUAndAA: 0
     - _HeightAmplitude: 0.02
     - _HeightCenter: 0.5
     - _HeightMapParametrization: 0
@@ -269,7 +286,7 @@ Material:
     - _PPDMinSamples: 5
     - _PPDPrimitiveLength: 1
     - _PPDPrimitiveWidth: 1
-    - _Packed_Color_Influence: 0.8
+    - _Packed_Color_Influence: 1
     - _Packed_Tiling: 1
     - _Print_Main_Only: 0
     - _Print_Scale: 1
@@ -339,10 +356,10 @@ Material:
     - _Print_Rotation: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _ThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
-    - _Tint: {r: 0.5849056, g: 0.5849056, b: 0.5849056, a: 0}
-    - _Tint_B: {r: 0, g: 0, b: 0, a: 0}
-    - _Tint_G: {r: 0.8679245, g: 0.8679245, b: 0.8679245, a: 0}
-    - _Tint_R: {r: 0.6415094, g: 0.53942406, b: 0.41456032, a: 0}
+    - _Tint: {r: 0.3647059, g: 0.36078432, b: 0.35686275, a: 1}
+    - _Tint_B: {r: 1, g: 1, b: 1, a: 0}
+    - _Tint_G: {r: 1, g: 1, b: 1, a: 0}
+    - _Tint_R: {r: 1, g: 1, b: 1, a: 0}
     - _TransmittanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _UVDetailsMappingMask: {r: 1, g: 0, b: 0, a: 0}
     - _UVMappingMask: {r: 1, g: 0, b: 0, a: 0}
@@ -361,11 +378,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da692e001514ec24dbc4cca1949ff7e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 12
+  version: 13
   hdPluginSubTargetMaterialVersions:
     m_Keys: []
     m_Values: 
---- !u!114 &4241956665662322393
+--- !u!114 &7701759019689635427
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}

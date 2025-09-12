@@ -1,3 +1,4 @@
+using UnityEditor;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,97 +17,121 @@ namespace CC
         [System.Serializable]
         public struct Outfit_Options
         {
-            public string DefaultName;
             public List<string> Options;
             public float DefaultChance;
             public bool MatchMaterials;
-            /// <summary>
-            /// If MatchMaterials == true, copy the material index from this slot index.
-            /// </summary>
             public int IndexToMatch;
         }
 
-        public List<Outfit_Definition> Outfits = new List<Outfit_Definition>();
+        public List<Outfit_Definition> Outfits;
 
         public override bool GetRandomOutfit(CharacterCustomization script, out List<string> apparelOptions, out List<int> apparelMaterials)
         {
-            apparelOptions = null;
-            apparelMaterials = null;
-
-            if (script == null)
-            {
-                Debug.LogError("GetRandomOutfit: script is null");
-                return false;
-            }
-
-            if (Outfits == null || Outfits.Count == 0)
+            if (Outfits.Count < 1)
             {
                 Debug.LogError("Tried to set random outfit but no outfits have been defined");
+                apparelOptions = null;
+                apparelMaterials = null;
                 return false;
             }
 
-            var outfit = Outfits[Random.Range(0, Outfits.Count)];
-            if (outfit.OutfitOptions == null || outfit.OutfitOptions.Count == 0)
-            {
-                Debug.LogError("Outfit options not found");
-                return false;
-            }
+            var outfit = Outfits[Random.Range(0, Outfits.Count)]; //Get random outfit definition (each outfit definition can have multiple options per slot)
 
-            if (script.ApparelTables == null || script.ApparelTables.Count == 0)
-            {
-                Debug.LogError("GetRandomOutfit: script.ApparelTables is empty");
-                return false;
-            }
+            apparelOptions = new List<string>();
+            apparelMaterials = new List<int>();
 
-            apparelOptions = new List<string>(script.ApparelTables.Count);
-            apparelMaterials = new List<int>(script.ApparelTables.Count);
+            var slotsToHide = new HashSet<int>();
 
-            // One Outfit_Options per apparel slot
+            //One Outfit_Options per apparel slot
             for (int i = 0; i < script.ApparelTables.Count; i++)
             {
                 if (outfit.OutfitOptions.Count <= i)
                 {
-                    Debug.LogError("Outfit options not found for slot index: " + i);
-                    apparelOptions.Clear();
-                    apparelMaterials.Clear();
+                    Debug.LogError("Outfit options not found");
                     return false;
                 }
 
-                var opt = outfit.OutfitOptions[i];
-                var options = opt.Options; // can be null
+                //Get available options
+                var options = outfit.OutfitOptions[i].Options;
 
-                // Random chance for default
+                //Get random chance
                 float rand = Random.Range(0f, 1f);
 
-                // If no options available or if it rolls default, set default name
-                if (options == null || options.Count == 0 || rand < opt.DefaultChance)
+                //If no options available or if it rolls default, set default name
+                if (options.Count <= 0 || rand < outfit.OutfitOptions[i].DefaultChance)
                 {
-                    apparelOptions.Add(opt.DefaultName ?? string.Empty);
+                    apparelOptions.Add(script.DefaultApparel[i]);
                     apparelMaterials.Add(0);
                     continue;
                 }
 
-                // Otherwise get random option from table
-                GetRandomApparel(script.ApparelTables[i], options, out string apparelOption, out int apparelMaterial);
+                //Otherwise get random option
+                GetRandomApparel(script.ApparelTables[i], options, out string apparelOption, out int apparelMaterial, out HashSet<int> hiddenSlots);
+
+                slotsToHide.UnionWith(hiddenSlots);
                 apparelOptions.Add(apparelOption);
                 apparelMaterials.Add(apparelMaterial);
             }
 
-            // Match materials: copy material index from IndexToMatch -> i
-            for (int i = 0; i < outfit.OutfitOptions.Count && i < apparelMaterials.Count; i++)
+            //Remove hidden slots from apparel data
+            foreach (var index in slotsToHide)
             {
-                var opt = outfit.OutfitOptions[i];
-                if (!opt.MatchMaterials)
-                    continue;
+                apparelOptions[index] = "";
+            }
 
-                int src = opt.IndexToMatch;
-                if (src >= 0 && src < apparelMaterials.Count)
+            //Match materials
+            for (int i = 0; i < outfit.OutfitOptions.Count; i++)
+            {
+                if (outfit.OutfitOptions[i].MatchMaterials)
                 {
-                    apparelMaterials[i] = apparelMaterials[src];
+                    apparelMaterials[i] = apparelMaterials[outfit.OutfitOptions[i].IndexToMatch];
                 }
             }
 
             return true;
         }
+
+#if UNITY_EDITOR
+
+        [CustomPropertyDrawer(typeof(Outfit_Options))]
+        public class OutfitOptionsDrawer : PropertyDrawer
+        {
+            private readonly string[] labels = {
+            "Upper Body",
+            "Lower Body",
+            "Footwear",
+            "Headwear",
+            "Accessory"
+        };
+
+            public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+            {
+                int index = GetElementIndex(property);
+                string customLabel = (index >= 0 && index < labels.Length) ? labels[index] : $"Option {index}";
+
+                EditorGUI.PropertyField(position, property, new GUIContent(customLabel), true);
+            }
+
+            public override float GetPropertyHeight(SerializedProperty property, GUIContent label)
+            {
+                return EditorGUI.GetPropertyHeight(property, label, true);
+            }
+
+            private int GetElementIndex(SerializedProperty property)
+            {
+                string path = property.propertyPath;
+                int start = path.LastIndexOf("[") + 1;
+                int end = path.LastIndexOf("]");
+                if (start > 0 && end > start)
+                {
+                    string indexStr = path.Substring(start, end - start);
+                    if (int.TryParse(indexStr, out int index))
+                        return index;
+                }
+                return -1;
+            }
+        }
+
+#endif
     }
 }

@@ -8,144 +8,168 @@ namespace CC
     {
         public static CameraController instance;
 
+        private void Awake()
+        {
+            if (instance == null)
+            {
+                instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
+        }
+
         public float ZoomMin = -0.6f;
         public float ZoomMax = -3.1f;
-        public float ZoomPanScale = 0.5f; // (kept for compatibility; not used directly)
+        public float ZoomPanScale = 0.5f;
         public float zoomTarget = 0.5f;
 
-        [SerializeField] private float rotateSpeed = 5f;
-        [SerializeField] private float panSpeed = 3f;
+        private Camera _camera;
+        private Transform cameraRoot;
 
+        private Vector3 mouseOldPos;
+        private Vector3 mouseDelta;
+
+        private Vector3 cameraRotationTarget = new Vector3(10, -5, 0);
+        private Vector3 cameraRotationDefault;
+        public float rotateSpeed = 5;
+        private bool dragging = false;
+
+        private Vector3 cameraOffset;
+        private Vector3 panOffset;
         public Vector3 cameraOffsetMin = new Vector3(-0.15f, 0.5f, 0);
         public Vector3 cameraOffsetMax = new Vector3(-0.3f, -0.1f, 0);
 
+        public float panSpeed = 3;
+
         public float defaultHeadLevel = 1.8f;
-        public GameObject headLevelObject; // can be assigned in inspector
+        private float headAdjust = 0f;
+        public GameObject headLevelObject;
 
-        private Camera _camera;
-        private Transform _cameraRoot;
-
-        private Vector3 _mouseOldPos;
-        private Vector3 _cameraRotationTarget = new Vector3(10, -5, 0);
-        private Vector3 _cameraRotationDefault;
-
-        private bool _dragging;
-        private bool _panning;
-
-        private Vector3 _cameraOffset;
-        private Vector3 _panOffset;
-
-        // reduce expensive FindGameObjectWithTag calls
-        private float _headProbeCooldown;
-        private const float HEAD_PROBE_PERIOD = 0.5f;
-
-        private void Awake()
-        {
-            if (instance == null) instance = this; else { Destroy(gameObject); return; }
-        }
+        private bool panning = false;
 
         private void Start()
         {
             _camera = GetComponentInChildren<Camera>(true);
-            if (_camera == null)
-            {
-                Debug.LogError("CameraController: no Camera found in children.");
-                enabled = false; return;
-            }
 
-            _cameraRoot = transform;
-            _cameraRotationDefault = _cameraRoot.localRotation.eulerAngles;
-            _cameraRotationTarget = _cameraRotationDefault;
+            cameraRoot = gameObject.transform;
+
+            cameraRotationDefault = cameraRoot.localRotation.eulerAngles;
+            cameraRotationTarget = cameraRotationDefault;
         }
 
-        public void ResetCamera()
+        public void resetCamera()
         {
-            _cameraRotationTarget = _cameraRotationDefault;
-            _panOffset = Vector3.zero;
+            cameraRotationTarget = cameraRotationDefault;
+            panOffset = Vector3.zero;
         }
 
-        private void TryUpdateHeadLevel()
+        private void setHeadLevel()
         {
-            // probe not more than twice per second
-            _headProbeCooldown -= Time.deltaTime;
-            if (_headProbeCooldown > 0f) return;
-            _headProbeCooldown = HEAD_PROBE_PERIOD;
-
             if (headLevelObject == null || !headLevelObject.activeInHierarchy)
             {
-                var es = GameObject.FindGameObjectWithTag("HeadLevel");
-                if (es != null) headLevelObject = es;
+                headLevelObject = GameObject.FindGameObjectWithTag("HeadLevel");
             }
-        }
-
-        private float GetHeadAdjust()
-        {
-            if (headLevelObject == null || headLevelObject.transform == null) return 0f;
-            var parent = transform.parent;
-            var parentY = parent != null ? parent.position.y : 0f;
-            return defaultHeadLevel - (headLevelObject.transform.position.y - parentY);
-        }
-
-        private static bool IsPointerOverUI()
-        {
-            // guard – EventSystem might be missing in some scenes
-            return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+            if (headLevelObject == null)
+            {
+                headAdjust = 0f;
+                return;
+            }
+            headAdjust = defaultHeadLevel - (headLevelObject.transform.position.y - transform.parent.position.y);
         }
 
         private void LateUpdate()
         {
-            TryUpdateHeadLevel();
+            setHeadLevel();
         }
 
         private void Update()
         {
-            if (_camera == null || !_camera.gameObject.activeSelf) return;
+            if (!_camera.gameObject.activeSelf) return;
 
-            if (!IsPointerOverUI())
+            //Set dragging/panning when we're not hovering over anything
+            if ((!EventSystem.current.IsPointerOverGameObject()))
             {
+                //Set zoom target
                 var scrollDelta = Input.mouseScrollDelta.y;
+
                 if (scrollDelta < 0)
+                {
                     zoomTarget = Mathf.Clamp(zoomTarget * 1.2f, 0.05f, 1f);
+                }
                 else if (scrollDelta > 0)
+                {
                     zoomTarget = Mathf.Clamp01(zoomTarget * 0.8f);
+                }
 
-                if (scrollDelta != 0f) _panOffset = Vector3.Lerp(_panOffset, Vector3.zero, 0.1f);
+                if (scrollDelta != 0) panOffset = Vector3.Lerp(panOffset, Vector3.zero, 0.1f);
 
-                if (Input.GetMouseButtonDown(1)) { _mouseOldPos = Input.mousePosition; _dragging = true; }
-                if (Input.GetMouseButtonDown(2)) { _mouseOldPos = Input.mousePosition; _panning = true; }
+                if (Input.GetMouseButtonDown(1))
+                {
+                    mouseOldPos = Input.mousePosition;
+                    dragging = true;
+                }
+
+                if (Input.GetMouseButtonDown(2))
+                {
+                    mouseOldPos = Input.mousePosition;
+                    panning = true;
+                }
             }
 
-            if (Input.GetMouseButton(1) && _dragging)
+            //Rotation
+            if (Input.GetMouseButton(1) && dragging)
             {
-                Vector3 mouseDelta = _mouseOldPos - Input.mousePosition;
-                _cameraRotationTarget.x += mouseDelta.y / 5f;
-                _cameraRotationTarget.y -= mouseDelta.x / 5f;
-                _mouseOldPos = Input.mousePosition;
-            }
-            if (Input.GetMouseButtonUp(1)) _dragging = false;
+                mouseDelta = mouseOldPos - Input.mousePosition;
 
-            if (Input.GetMouseButton(2) && _panning)
+                cameraRotationTarget.x = cameraRotationTarget.x + mouseDelta.y / 5;
+                cameraRotationTarget.y = cameraRotationTarget.y - mouseDelta.x / 5;
+
+                mouseOldPos = Input.mousePosition;
+            }
+
+            if (Input.GetMouseButtonUp(1))
+
+                dragging = false;
+
+            //Panning
+            if (Input.GetMouseButton(2) && panning)
             {
-                Vector3 mouseDelta = _mouseOldPos - Input.mousePosition;
-                _panOffset -= mouseDelta / 500f;
-                _mouseOldPos = Input.mousePosition;
+                mouseDelta = mouseOldPos - Input.mousePosition;
+                panOffset -= mouseDelta / 500;
+                mouseOldPos = Input.mousePosition;
             }
-            if (Input.GetMouseButtonUp(2)) _panning = false;
 
-            if (Input.GetKeyDown(KeyCode.F)) ResetCamera();
+            if (Input.GetMouseButtonUp(2))
 
-            float headAdjust = GetHeadAdjust();
+                panning = false;
 
-            _cameraOffset = Vector3.Lerp(cameraOffsetMin, cameraOffsetMax, zoomTarget) + _panOffset;
-            _cameraOffset.z = Mathf.Lerp(ZoomMin, ZoomMax, Mathf.Clamp01(zoomTarget));
-            _cameraOffset.y -= headAdjust;
+            //Reset camera with F
+            if (Input.GetKeyDown(KeyCode.F))
+            {
+                resetCamera();
+            }
 
-            _camera.transform.localPosition = Vector3.Lerp(_camera.transform.localPosition, _cameraOffset, Time.deltaTime * panSpeed);
+            //Camera XY
+            cameraOffset = Vector3.Lerp(cameraOffsetMin, cameraOffsetMax, zoomTarget) + panOffset;
+            //Camera Z offset i.e zoom
+            cameraOffset.z = Mathf.Lerp(ZoomMin, ZoomMax, Mathf.Clamp01(zoomTarget));
+            //Camera height adjust based on head level
+            cameraOffset.y -= headAdjust;
 
-            if (Mathf.Approximately(rotateSpeed, 0f))
-                _cameraRoot.localRotation = Quaternion.Euler(_cameraRotationTarget);
+            //Camera offset interp
+            _camera.transform.localPosition = Vector3.Lerp(_camera.transform.localPosition, cameraOffset, Time.deltaTime * panSpeed);
+
+            //Rotation interp
+            if (rotateSpeed == 0)
+            {
+                cameraRoot.transform.localRotation = Quaternion.Euler(cameraRotationTarget);
+            }
             else
-                _cameraRoot.localRotation = Quaternion.Slerp(_cameraRoot.localRotation, Quaternion.Euler(_cameraRotationTarget), Time.deltaTime * rotateSpeed);
+            {
+                cameraRoot.transform.localRotation = Quaternion.Slerp(cameraRoot.transform.localRotation, Quaternion.Euler(cameraRotationTarget), Time.deltaTime * rotateSpeed);
+            }
         }
     }
 }

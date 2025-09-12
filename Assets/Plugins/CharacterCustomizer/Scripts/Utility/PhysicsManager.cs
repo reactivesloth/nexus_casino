@@ -7,29 +7,37 @@ namespace CC
     public class PhysicsManager : MonoBehaviour
     {
         public Animator animator;
-        public CapsuleCollider capsule;
+        public CharacterController capsule;
         private Rigidbody[] rigidBodies;
-        private Collider[] colliders;
+        private CharacterController[] colliders;
         private ModifyBone[] modifyBones;
 
-        public bool useGravity;
+        public bool useGravity = true;
+
         public bool ragdolling;
-        public bool customizing;
+        public bool customizing; //If customizing, colliders should be activated for hover detection
 
         private void Awake()
         {
-            if (animator == null) animator = GetComponent<Animator>();
-            if (capsule == null) capsule = GetComponent<CapsuleCollider>();
-            rigidBodies = GetComponentsInChildren<Rigidbody>(true);
-            colliders = GetComponentsInChildren<Collider>(true);
-            modifyBones = GetComponentsInChildren<ModifyBone>(true);
+            if (animator == null) animator = gameObject.GetComponent<Animator>();
+            if (capsule == null) capsule = gameObject.GetComponent<CharacterController>();
+            rigidBodies = gameObject.GetComponentsInChildren<Rigidbody>();
+            colliders = gameObject.GetComponentsInChildren<CharacterController>();
+            modifyBones = gameObject.GetComponentsInChildren<ModifyBone>();
 
-            for (int i = 0; i < rigidBodies.Length; i++)
+            //Set rigid bodies to kinematic at start
+            foreach (var item in rigidBodies)
             {
-                var rb = rigidBodies[i];
-                if (rb == null) continue;
-                rb.useGravity = useGravity;
-                rb.isKinematic = true;
+                if (item.gameObject == gameObject) continue; //Skip main rigid body
+                item.useGravity = useGravity;
+                item.isKinematic = true;
+            }
+
+            //Disable colliders if not in customization mode
+            foreach (var item in colliders)
+            {
+                if (item == capsule) continue; //Ignore capsule
+                item.enabled = customizing;
             }
         }
 
@@ -40,16 +48,22 @@ namespace CC
 
         public void customizationSetup()
         {
-            var headRig = GetComponentInChildren<HeadColliders>(true);
-            if (headRig != null) headRig.createColliders();
-
-            for (int i = 0; i < colliders.Length; i++)
+            //Create head rig
+            var headRig = GetComponentInChildren<HeadColliders>();
+            if (headRig != null)
             {
-                var c = colliders[i];
-                if (c != null) c.enabled = true;
+                headRig.createColliders();
             }
 
+            //Enable colliders for hover detection
+            foreach (var item in colliders)
+            {
+                item.enabled = true;
+            }
+
+            //Disable capsule when customizing
             if (capsule != null) capsule.enabled = false;
+
             customizing = true;
         }
 
@@ -57,31 +71,34 @@ namespace CC
         {
             ragdolling = shouldRagdoll;
 
-            for (int i = 0; i < colliders.Length; i++)
+            //Enable colliders if ragdolling
+            foreach (var item in colliders)
             {
-                var c = colliders[i];
-                if (c != null) c.enabled = ragdolling || customizing;
+                item.enabled = ragdolling;
             }
 
-            for (int i = 0; i < modifyBones.Length; i++)
+            //Notify modifyBone scripts
+            foreach (var item in modifyBones)
             {
-                var mb = modifyBones[i];
-                if (mb != null) mb.onSimulate(ragdolling);
+                item.onSimulate(ragdolling);
             }
 
             if (ragdolling) yield return new WaitForFixedUpdate();
 
-            if (capsule != null) capsule.enabled = !ragdolling && !customizing;
+            //Disable capsule when ragdolling or customizing
+            if (capsule != null) capsule.enabled = !ragdolling;
 
-            for (int i = 0; i < rigidBodies.Length; i++)
+            //Enable physics
+            foreach (var item in rigidBodies)
             {
-                var rb = rigidBodies[i];
-                if (rb == null) continue;
-                rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = !ragdolling;
+                item.isKinematic = !ragdolling;
+                item.angularVelocity = Vector3.zero;
             }
 
+            //Disable animator when ragdolling
             if (animator != null) animator.enabled = !ragdolling;
+
+            yield break;
         }
     }
 }

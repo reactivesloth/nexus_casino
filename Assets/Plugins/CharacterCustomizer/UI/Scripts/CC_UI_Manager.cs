@@ -15,31 +15,36 @@ namespace CC
         public delegate void OnDrag(string partX, string partY, float deltaX, float deltaY, bool first, bool last);
         public event OnDrag onDrag;
 
-        [Tooltip("The parent object of your customizable characters")]
-        public GameObject CharacterParent;
-
-        public List<AudioClip> UISounds = new List<AudioClip>();
+        private bool Dragging;
+        private string hoveredPart = "";
+        private string partX, partY = "";
+        private float multX, multY = 1f;
         public float mouseDeltaScale = 0.01f;
+        private Vector3 mousePos;
 
-        private bool _dragging;
-        private string _hoveredPart = "";
-        private string _partX = "", _partY = "";
-        private float _multX = 1f, _multY = 1f;
-        private Vector3 _mousePos;
-        private Canvas _canvas;
-        private Camera _mainCam;
-        private int _currentCharacter;
+        private Canvas canvas;
 
         private void Awake()
         {
-            if (instance == null) instance = this;
-            else { Destroy(gameObject); return; }
+            if (instance == null)
+            {
+                instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
         }
+
+        [Tooltip("The parent object of your customizable characters")]
+        public GameObject CharacterParent;
+
+        private int currentCharacter;
+
+        public List<AudioClip> UISounds = new List<AudioClip>();
 
         public void Start()
         {
-            _mainCam = Camera.main;
-
             string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
             int index = PlayerModelTypeToIndex(playerModelType);
             SetActiveCharacter(index);
@@ -47,86 +52,74 @@ namespace CC
 
         private void Update()
         {
-            bool first = !_dragging && Input.GetMouseButton(0);
-            bool last = _dragging && !Input.GetMouseButton(0);
+            bool first = !Dragging && Input.GetMouseButton(0);
+            bool last = Dragging && !Input.GetMouseButton(0);
 
+            //Set shape on first drag
             if (first)
             {
-                _partX = ""; _partY = "";
-                _multX = _hoveredPart != null && _hoveredPart.Contains("_r") ? -1f : 1f;
-                _multY = -1f;
+                partX = ""; partY = "";
+                multX = hoveredPart.Contains("_r") ? -1 : 1; multY = -1f;
 
-                if (!string.IsNullOrEmpty(_hoveredPart))
-                {
-                    if (_hoveredPart.Contains("spine_05")) { _partX = "BodyCustomization_ShoulderWidth"; _partY = "BodyCustomization_TorsoHeight"; }
-                    else if (_hoveredPart.Contains("spine")) { _partX = "BodyCustomization_WaistSize"; _partY = ""; }
-                    else if (_hoveredPart.Contains("pelvis")) { _partX = "BodyCustomization_HipWidth"; _partY = ""; }
-                    else if (_hoveredPart.Contains("lowerarm")) { _partX = "BodyCustomization_LowerArmScale"; _partY = ""; }
-                    else if (_hoveredPart.Contains("upperarm")) { _partX = "BodyCustomization_UpperArmScale"; _partY = ""; }
-                    else if (_hoveredPart.Contains("thigh")) { _partX = "BodyCustomization_ThighScale"; _partY = ""; }
-                    else if (_hoveredPart.Contains("calf")) { _partX = "BodyCustomization_CalfScale"; _partY = ""; }
-                    else if (_hoveredPart.Contains("head")) { _partX = "BodyCustomization_HeadSize"; _partY = "BodyCustomization_NeckLength"; }
-                    else if (_hoveredPart.Contains("neck")) { _partX = "BodyCustomization_NeckScale"; _partY = "BodyCustomization_NeckLength"; }
-                    else if (_hoveredPart.Contains("collider_nose")) { _partX = "mod_nose_size"; _partY = "mod_nose_height"; _multY = 1f; }
-                    else if (_hoveredPart.Contains("collider_mouth")) { _partX = "mod_mouth_size"; _partY = "mod_mouth_height"; _multY = 1f; }
-                    else if (_hoveredPart.Contains("collider_cheekbones")) { _partX = "mod_cheekbone_size"; _partY = ""; _multX *= -1f; }
-                    else if (_hoveredPart.Contains("collider_cheeks")) { _partX = "mod_cheeks_size"; _partY = ""; _multX *= -1f; }
-                    else if (_hoveredPart.Contains("collider_jaw")) { _partX = "mod_jaw_width"; _partY = "mod_jaw_height"; _multX *= -1f; }
-                    else if (_hoveredPart.Contains("collider_chin")) { _partX = ""; _partY = "mod_chin_size"; }
-                    else if (_hoveredPart.Contains("collider_eye")) { _partX = "mod_eyes_narrow"; _partY = "mod_eyes_height"; _multY = 1f; }
-                    else if (_hoveredPart.Contains("collider_brow")) { _partX = ""; _partY = "mod_brow_height"; }
-                }
+                if (hoveredPart.Contains("spine_05")) { partX = "BodyCustomization_ShoulderWidth"; partY = "BodyCustomization_TorsoHeight"; }
+                else if (hoveredPart.Contains("spine")) { partX = "BodyCustomization_WaistSize"; partY = ""; }
+                else if (hoveredPart.Contains("pelvis")) { partX = "BodyCustomization_HipWidth"; partY = ""; }
+                else if (hoveredPart.Contains("lowerarm")) { partX = "BodyCustomization_LowerArmScale"; partY = ""; }
+                else if (hoveredPart.Contains("upperarm")) { partX = "BodyCustomization_UpperArmScale"; partY = ""; }
+                else if (hoveredPart.Contains("thigh")) { partX = "BodyCustomization_ThighScale"; partY = ""; }
+                else if (hoveredPart.Contains("calf")) { partX = "BodyCustomization_CalfScale"; partY = ""; }
+                else if (hoveredPart.Contains("head")) { partX = "BodyCustomization_HeadSize"; partY = "BodyCustomization_NeckLength"; }
+                else if (hoveredPart.Contains("neck")) { partX = "BodyCustomization_NeckScale"; partY = "BodyCustomization_NeckLength"; }
+                else if (hoveredPart.Contains("collider_nose")) { partX = "mod_nose_size"; partY = "mod_nose_height"; multY = 1; }
+                else if (hoveredPart.Contains("collider_mouth")) { partX = "mod_mouth_size"; partY = "mod_mouth_height"; multY = 1; }
+                else if (hoveredPart.Contains("collider_cheekbones")) { partX = "mod_cheekbone_size"; partY = ""; multX *= -1; }
+                else if (hoveredPart.Contains("collider_cheeks")) { partX = "mod_cheeks_size"; partY = ""; multX *= -1; }
+                else if (hoveredPart.Contains("collider_jaw")) { partX = "mod_jaw_width"; partY = "mod_jaw_height"; multX *= -1; }
+                else if (hoveredPart.Contains("collider_chin")) { partX = ""; partY = "mod_chin_size"; }
+                else if (hoveredPart.Contains("collider_eye")) { partX = "mod_eyes_narrow"; partY = "mod_eyes_height"; multY = 1; }
+                else if (hoveredPart.Contains("collider_brow")) { partX = ""; partY = "mod_brow_height"; }
             }
 
-            _dragging = Input.GetMouseButton(0);
+            Dragging = Input.GetMouseButton(0);
 
-            var canvas = GetCanvas();
-            if (_dragging && canvas != null)
+            if (Dragging && getCanvas() != null)
             {
-                Vector3 mouseDelta = (Input.mousePosition - _mousePos) * mouseDeltaScale / canvas.scaleFactor;
-                onDrag?.Invoke(_partX, _partY, mouseDelta.x * _multX, mouseDelta.y * _multY, first, last);
+                Vector3 mouseDelta = (Input.mousePosition - mousePos) * mouseDeltaScale / canvas.scaleFactor;
+                onDrag?.Invoke(partX, partY, mouseDelta.x * multX, mouseDelta.y * multY, first, last);
             }
-            _mousePos = Input.mousePosition;
+            mousePos = Input.mousePosition;
         }
 
-        private Canvas GetCanvas()
+        private Canvas getCanvas()
         {
-            if (_canvas != null) return _canvas;
-            _canvas = GetComponentInChildren<Canvas>();
-            return _canvas;
+            if (canvas != null) return canvas;
+            else
+            {
+                canvas = GetComponentInChildren<Canvas>();
+                return canvas;
+            }
         }
 
         private void LateUpdate()
         {
-            if (_dragging) return;
-            onHover?.Invoke(_hoveredPart);
+            if (Dragging) return;
+            onHover?.Invoke(hoveredPart);
 
             Physics.SyncTransforms();
 
-            if (_mainCam == null) _mainCam = Camera.main;
-            if (_mainCam == null) { _hoveredPart = ""; return; }
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            if (Physics.Raycast(ray, out RaycastHit hit) && !EventSystem.current.IsPointerOverGameObject())
             {
-                _hoveredPart = "";
-                return;
+                hoveredPart = hit.collider.name;
             }
-
-            Ray ray = _mainCam.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
-                _hoveredPart = hit.collider != null ? hit.collider.name : "";
-            else
-                _hoveredPart = "";
+            else hoveredPart = "";
         }
 
-        public void playUIAudio(int index)
+        public void playUIAudio(int Index)
         {
             var audioSource = gameObject.GetComponent<AudioSource>();
-            if (audioSource != null && UISounds != null && index >= 0 && index < UISounds.Count)
-            {
-                audioSource.clip = UISounds[index];
-                audioSource.Play();
-            }
+            if (audioSource && UISounds.Count > Index) audioSource.clip = UISounds[Index]; audioSource.Play();
         }
 
         public void SetActiveCharacter(int i)
@@ -137,7 +130,7 @@ namespace CC
             if (childCount == 0) return;
 
             if (i < 0 || i >= childCount) i = 0;
-            _currentCharacter = i;
+            currentCharacter = i;
 
             SavePlayerModelType(i);
 
@@ -175,7 +168,7 @@ namespace CC
             int count = CharacterParent.transform.childCount;
             if (count == 0) return;
 
-            int next = (_currentCharacter == count - 1) ? 0 : _currentCharacter + 1;
+            int next = (currentCharacter == count - 1) ? 0 : currentCharacter + 1;
             SetActiveCharacter(next);
         }
 
@@ -185,7 +178,7 @@ namespace CC
             int count = CharacterParent.transform.childCount;
             if (count == 0) return;
 
-            int prev = (_currentCharacter == 0) ? count - 1 : _currentCharacter - 1;
+            int prev = (currentCharacter == 0) ? count - 1 : currentCharacter - 1;
             SetActiveCharacter(prev);
         }
 

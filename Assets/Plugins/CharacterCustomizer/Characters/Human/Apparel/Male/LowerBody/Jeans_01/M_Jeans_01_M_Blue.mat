@@ -50,7 +50,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_Jeans_01_M_Blue
-  m_Shader: {fileID: -6465566751694194690, guid: deaab74720d6ad84eb41fd879a8dee2a, type: 3}
+  m_Shader: {fileID: -6465566751694194690, guid: ec855ac9dde5dad46bf9fb1af1ae8150, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -61,7 +61,6 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap:
     MotionVector: User
-    RenderType: Opaque
   disabledShaderPasses:
   - TransparentDepthPrepass
   - TransparentDepthPostpass
@@ -161,7 +160,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Packed:
-        m_Texture: {fileID: 2800000, guid: d67bfbfc8b2fe954d857e69c878003d2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 54248e260a3193841ae93c109cfc50f2, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Print:
@@ -245,6 +244,7 @@ Material:
     - _Blend: 0
     - _BlendMode: 0
     - _BlendModePreserveSpecular: 0
+    - _Brightness_Adjust: 0.526
     - _CastShadows: 1
     - _Cloth_Alpha: 0
     - _CoatMask: 0
@@ -327,7 +327,7 @@ Material:
     - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 0
-    - _Roughness_Offset: 0.8
+    - _Roughness_Offset: 0
     - _Smoothness: 0.5
     - _SmoothnessRemapMax: 1
     - _SmoothnessRemapMin: 0
@@ -389,10 +389,10 @@ Material:
     - _Print_Rotation: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _ThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
-    - _Tint: {r: 1, g: 1, b: 1, a: 0}
-    - _Tint_B: {r: 0, g: 0, b: 0, a: 0}
-    - _Tint_G: {r: 0, g: 0, b: 0, a: 0}
-    - _Tint_R: {r: 0, g: 0, b: 0, a: 0}
+    - _Tint: {r: 1, g: 1, b: 1, a: 1}
+    - _Tint_B: {r: 1, g: 1, b: 1, a: 1}
+    - _Tint_G: {r: 1, g: 1, b: 1, a: 1}
+    - _Tint_R: {r: 1, g: 1, b: 1, a: 1}
     - _TransmittanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _UVDetailsMappingMask: {r: 1, g: 0, b: 0, a: 0}
     - _UVMappingMask: {r: 1, g: 0, b: 0, a: 0}

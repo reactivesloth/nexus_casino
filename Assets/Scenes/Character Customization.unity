@@ -1301,6 +1301,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Human_Female Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 5386231991092072210, guid: 5513d98658da1684bb89a8736fae2a30, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1503,13 +1507,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6c95c1eff6aa1ce42979924449accff9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mouseDeltaScale: 0.01
   CharacterParent: {fileID: 1823019005}
   UISounds:
   - {fileID: 8300000, guid: 73587a4fc7854d44f803f24acd709772, type: 3}
   - {fileID: 8300000, guid: cdc7cc793a1668f458f9c3dccc823c96, type: 3}
   - {fileID: 8300000, guid: 6329cea8e3249604ea7907c714162f5d, type: 3}
   - {fileID: 8300000, guid: c0df44d0f7db8074abe47d738d2b027a, type: 3}
-  mouseDeltaScale: 0.01
 --- !u!4 &1555288590
 Transform:
   m_ObjectHideFlags: 0

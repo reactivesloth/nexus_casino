@@ -12,10 +12,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da692e001514ec24dbc4cca1949ff7e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 12
+  version: 13
   hdPluginSubTargetMaterialVersions:
     m_Keys: []
     m_Values: 
+--- !u!114 &-7935534306428656775
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 0
+--- !u!114 &-4875104071044562962
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 0
 --- !u!21 &2100000
 Material:
   serializedVersion: 8
@@ -208,8 +234,12 @@ Material:
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 0
     - _Anisotropy: 0
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
     - _Base_Color_Tiling: 1
     - _BlendMode: 0
+    - _Brightness_Adjust: 0.55
+    - _Cloth_Alpha: 0
     - _CoatMask: 0
     - _ConservativeDepthOffsetEnable: 0
     - _CullMode: 2
@@ -219,6 +249,7 @@ Material:
     - _DetailAlbedoScale: 1
     - _DetailNormalScale: 1
     - _DetailSmoothnessScale: 1
+    - _Detail_Main_Only: 0
     - _Detail_Normal_Strength: 0
     - _Detail_Strength: 0
     - _Detail_Strength_B: 0
@@ -245,6 +276,7 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EnableGeometricSpecularAA: 0
     - _EnergyConservingSpecularColor: 1
+    - _ExcludeFromTUAndAA: 0
     - _HeightAmplitude: 0.02
     - _HeightCenter: 0.5
     - _HeightMapParametrization: 0
@@ -266,7 +298,7 @@ Material:
     - _Metallic_Offset: 0
     - _NormalMapSpace: 0
     - _NormalScale: 1
-    - _Normal_Strength: 0.5
+    - _Normal_Strength: 1
     - _Normal_Tiling: 1
     - _Opacity: 0.2
     - _OpaqueCullMode: 2
@@ -277,6 +309,7 @@ Material:
     - _PPDPrimitiveWidth: 1
     - _Packed_Color_Influence: 1
     - _Packed_Tiling: 1
+    - _Print_Main_Only: 0
     - _Print_Scale: 1
     - _QueueControl: 1
     - _QueueOffset: 0
@@ -290,6 +323,7 @@ Material:
     - _Smoothness: 0.5
     - _SmoothnessRemapMax: 1
     - _SmoothnessRemapMin: 0
+    - _Specular: 0.04
     - _SpecularAAScreenSpaceVariance: 0.1
     - _SpecularAAThreshold: 0.2
     - _SpecularOcclusionMode: 1
@@ -343,7 +377,7 @@ Material:
     - _Print_Rotation: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _ThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
-    - _Tint: {r: 0.4245283, g: 0.32104468, b: 0.24630652, a: 0}
+    - _Tint: {r: 0.3962264, g: 0.29579923, b: 0.2224101, a: 0}
     - _Tint_B: {r: 0, g: 0, b: 0, a: 0}
     - _Tint_G: {r: 0, g: 0, b: 0, a: 0}
     - _Tint_R: {r: 0, g: 0, b: 0, a: 0}
@@ -366,16 +400,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 10
---- !u!114 &8993619393142360788
-MonoBehaviour:
-  m_ObjectHideFlags: 11
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  version: 0

@@ -4,29 +4,29 @@ namespace CC
 {
     public class CC_UI_Util : MonoBehaviour
     {
-        private CharacterCustomization _customizer;
+        private CharacterCustomization customizer;
 
+        //Initialize all child UI elements
         public void Initialize(CharacterCustomization customizerScript)
         {
-            _customizer = customizerScript;
+            customizer = customizerScript;
 
             var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
-            if (interfaces == null) return;
 
-            for (int i = 0; i < interfaces.Length; i++)
+            foreach (var element in interfaces)
             {
-                interfaces[i]?.InitializeUIElement(customizerScript, this);
+                element?.InitializeUIElement(customizerScript, this);
             }
         }
 
+        //Refresh UI elements, for example after loading a different preset
         public void refreshUI()
         {
             var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
-            if (interfaces == null) return;
 
-            for (int i = 0; i < interfaces.Length; i++)
+            foreach (var element in interfaces)
             {
-                interfaces[i]?.RefreshUIElement();
+                element?.RefreshUIElement();
             }
         }
 
@@ -44,43 +44,42 @@ namespace CC
 
         public void saveToPreset(string name)
         {
-            _customizer?.SaveToPreset(name);
+            customizer?.SaveToPreset(name);
         }
 
         public void saveToJSON()
         {
-            _customizer?.SaveToJSON();
+            customizer?.SaveToJSON();
         }
 
         public void loadCharacter()
         {
-            _customizer?.LoadFromJSON();
+            customizer?.LoadFromJSON();
             refreshUI();
         }
 
         public void setCharacterName(string newName)
         {
-            _customizer?.setCharacterName(newName);
+            customizer?.setCharacterName(newName);
         }
 
         public void setCharacterPreset(string preset)
         {
-            // reserved (no-op)
         }
 
         public void randomizeCharacter()
         {
-            _customizer?.randomizeAll();
+            customizer?.randomizeAll();
         }
 
         public void randomizeOutfit()
         {
-            _customizer?.setRandomOutfit();
+            customizer?.setRandomOutfit();
         }
 
         public void randomizeCharacterAndOutfit()
         {
-            _customizer?.randomizeCharacterAndOutfit();
+            customizer?.randomizeCharacterAndOutfit();
         }
     }
 }

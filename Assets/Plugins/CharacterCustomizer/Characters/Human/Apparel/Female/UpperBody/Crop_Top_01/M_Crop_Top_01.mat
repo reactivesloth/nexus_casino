@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 10
---- !u!114 &-1367273389828523622
+--- !u!114 &-3532977617190180091
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}
@@ -130,7 +130,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Normal:
-        m_Texture: {fileID: 2800000, guid: cecad999130572645ba54d3eab141b87, type: 3}
+        m_Texture: {fileID: 2800000, guid: f3653a56cfd5dff42b288e82d9dc8b32, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _NormalMap:
@@ -142,7 +142,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Packed:
-        m_Texture: {fileID: 2800000, guid: 7ad6dde752497bc42849ff5c96190118, type: 3}
+        m_Texture: {fileID: 2800000, guid: 8c4c996a25be80f42be86edae3fd3447, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Print:
@@ -206,8 +206,11 @@ Material:
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 0
     - _Anisotropy: 0
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
     - _Base_Color_Tiling: 1
     - _BlendMode: 0
+    - _Brightness_Adjust: 1
     - _Cloth_Alpha: 0
     - _CoatMask: 0
     - _ConservativeDepthOffsetEnable: 0
@@ -245,6 +248,7 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EnableGeometricSpecularAA: 0
     - _EnergyConservingSpecularColor: 1
+    - _ExcludeFromTUAndAA: 0
     - _HeightAmplitude: 0.02
     - _HeightCenter: 0.5
     - _HeightMapParametrization: 0
@@ -347,10 +351,10 @@ Material:
     - _Print_Rotation: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _ThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
-    - _Tint: {r: 0.6226415, g: 0.35537556, b: 0.35537556, a: 0}
-    - _Tint_B: {r: 0.4433962, g: 0.13594696, b: 0.13594696, a: 1}
-    - _Tint_G: {r: 0.2924528, g: 0, b: 0, a: 1}
-    - _Tint_R: {r: 0, g: 0, b: 0, a: 0}
+    - _Tint: {r: 0.7735849, g: 0.7735849, b: 0.7735849, a: 0}
+    - _Tint_B: {r: 0.77254903, g: 0.77254903, b: 0.77254903, a: 0}
+    - _Tint_G: {r: 0.77254903, g: 0.77254903, b: 0.77254903, a: 0}
+    - _Tint_R: {r: 0.77254903, g: 0.77254903, b: 0.77254903, a: 0}
     - _TransmittanceColor: {r: 1, g: 1, b: 1, a: 1}
     - _UVDetailsMappingMask: {r: 1, g: 0, b: 0, a: 0}
     - _UVMappingMask: {r: 1, g: 0, b: 0, a: 0}
@@ -369,7 +373,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da692e001514ec24dbc4cca1949ff7e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 12
+  version: 13
   hdPluginSubTargetMaterialVersions:
     m_Keys: []
     m_Values: 
+--- !u!114 &5756886510830951811
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 0

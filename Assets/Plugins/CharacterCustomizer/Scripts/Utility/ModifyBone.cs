@@ -1,4 +1,7 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.Animations;
 
 namespace CC
@@ -7,18 +10,26 @@ namespace CC
     public class ModifyBone : MonoBehaviour
     {
         public CC_ModifyType Type;
+
         public bool Inverted = false;
+
         public float currentValue = 1f;
-        [Range(0f, 1f)] public float alpha = 1f;
+
+        [Range(0f, 1f)]
+        public float alpha = 1;
+
         public bool updates;
 
-        private Animator _animator;
+        private Animator animator;
         public bool ragdolling;
 
+        private Vector3 positionOffset;
+        private Vector3 rotationOffset;
+
         public Transform constraintRoot;
-        private Transform _constraintObj;
-        private PositionConstraint _posConstraint;
-        private RotationConstraint _rotConstraint;
+        private Transform constraintObj;
+        private PositionConstraint posConstraint;
+        private RotationConstraint rotConstraint;
 
         public bool xAxis;
         public bool yAxis;
@@ -26,7 +37,7 @@ namespace CC
 
         private void Awake()
         {
-            _animator = GetComponentInParent<Animator>(true);
+            animator = GetComponentInParent<Animator>(true);
         }
 
         public void Modify()
@@ -44,18 +55,15 @@ namespace CC
                 case CC_ModifyType.LegsWidth:
                 case CC_ModifyType.ShoulderWidth:
                 case CC_ModifyType.HeightOffset:
-                {
-                    float val = currentValue / 100f * (Inverted ? 1f : -1f);
-                    EnsurePosConstraint();
-                    TogglePosConstraint();
-                    if (_constraintObj != null)
-                        _constraintObj.localPosition = new Vector3(val * (xAxis ? 1 : 0), val * (yAxis ? 1 : 0), val * (zAxis ? 1 : 0));
+                    float val = currentValue / 100 * (Inverted ? 1 : -1);
+                    getPosConstraint();
+                    togglePosConstraint();
+                    constraintObj.localPosition = new Vector3(val * (xAxis ? 1 : 0), val * (yAxis ? 1 : 0), val * (zAxis ? 1 : 0));
                     break;
-                }
 
                 case CC_ModifyType.BreastSize:
                     transform.localScale = new Vector3(currentValue, currentValue, currentValue);
-                    // slight forward offset intentionally left out (positionOffset was not applied in original)
+                    positionOffset = new Vector3(0.02f * currentValue, 0, 0);
                     break;
 
                 case CC_ModifyType.LowerWaistSize:
@@ -68,93 +76,103 @@ namespace CC
                 case CC_ModifyType.LowerArmScale:
                 case CC_ModifyType.NeckScale:
                 case CC_ModifyType.HipWidth:
-                    transform.localScale = new Vector3(1f, currentValue, currentValue);
+                    transform.localScale = new Vector3(1, currentValue, currentValue);
                     break;
 
                 case CC_ModifyType.FootRotation:
                 case CC_ModifyType.BallRotation:
-                {
-                    float rot = currentValue * (Inverted ? -1f : 1f);
-                    EnsureRotConstraint();
-                    ToggleRotConstraint();
-                    if (_constraintObj != null)
-                        _constraintObj.localEulerAngles = new Vector3(rot * (xAxis ? 1 : 0), rot * (yAxis ? 1 : 0), rot * (zAxis ? 1 : 0));
+                    float rot = currentValue * (Inverted ? -1 : 1);
+                    getRotConstraint();
+                    toggleRotConstraint();
+                    rotationOffset = new Vector3(rot * (xAxis ? 1 : 0), rot * (yAxis ? 1 : 0), rot * (zAxis ? 1 : 0));
+                    constraintObj.localEulerAngles = rotationOffset;
                     break;
+            }
+        }
+
+        private void setUpPosConstraint()
+        {
+            if (constraintRoot == null) return;
+
+            createConstraintObj();
+
+            //Constraint
+            posConstraint = GetComponent<PositionConstraint>();
+            if (posConstraint == null) posConstraint = gameObject.AddComponent<PositionConstraint>();
+
+            posConstraint.translationOffset = constraintObj.InverseTransformVector(transform.position - constraintObj.position);
+
+            posConstraint.weight = alpha;
+            ConstraintSource constraintSource = new() { sourceTransform = constraintObj, weight = 1.0f };
+            if (posConstraint.sourceCount == 0) posConstraint.AddSource(constraintSource);
+            else posConstraint.SetSource(0, constraintSource);
+            posConstraint.locked = true;
+            posConstraint.constraintActive = true;
+        }
+
+        private PositionConstraint getPosConstraint()
+        {
+            if (posConstraint == null) setUpPosConstraint();
+            return posConstraint;
+        }
+
+        private void setUpRotConstraint()
+        {
+            if (constraintRoot == null) return;
+
+            createConstraintObj();
+
+            //Constraint
+            rotConstraint = GetComponent<RotationConstraint>();
+            if (rotConstraint == null) rotConstraint = gameObject.AddComponent<RotationConstraint>();
+
+            rotConstraint.rotationOffset = transform.localEulerAngles;
+
+            rotConstraint.weight = alpha;
+            ConstraintSource constraintSource = new() { sourceTransform = constraintObj, weight = 1.0f };
+            if (rotConstraint.sourceCount == 0) rotConstraint.AddSource(constraintSource);
+            else rotConstraint.SetSource(0, constraintSource);
+            rotConstraint.locked = true;
+            rotConstraint.constraintActive = true;
+        }
+
+        private RotationConstraint getRotConstraint()
+        {
+            if (rotConstraint == null) setUpRotConstraint();
+            return rotConstraint;
+        }
+
+        private void createConstraintObj()
+        {
+            //Constraint object
+            if (constraintObj == null)
+            {
+                constraintObj = constraintRoot.Find(transform.name + "Constraint");
+                if (constraintObj == null)
+                {
+                    constraintObj = new GameObject(transform.name + "Constraint").transform;
+                    constraintObj.SetParent(constraintRoot);
+                    constraintObj.localPosition = Vector3.zero;
+                    constraintObj.localRotation = Quaternion.identity;
+                    constraintObj.localScale = Vector3.one;
                 }
             }
         }
 
-        private void EnsurePosConstraint()
+        private void toggleRotConstraint()
         {
-            if (constraintRoot == null) return;
-            CreateConstraintObj();
-            if (_posConstraint == null)
-            {
-                _posConstraint = GetComponent<PositionConstraint>();
-                if (_posConstraint == null) _posConstraint = gameObject.AddComponent<PositionConstraint>();
-            }
-
-            if (_constraintObj == null) return;
-
-            _posConstraint.translationOffset = _constraintObj.InverseTransformVector(transform.position - _constraintObj.position);
-            _posConstraint.weight = alpha;
-            var src = new ConstraintSource { sourceTransform = _constraintObj, weight = 1f };
-            if (_posConstraint.sourceCount == 0) _posConstraint.AddSource(src); else _posConstraint.SetSource(0, src);
-            _posConstraint.locked = true;
-            _posConstraint.constraintActive = true;
+            if (constraintObj == null) return;
+            getRotConstraint().enabled = (currentValue != 0 && updates);
         }
 
-        private void EnsureRotConstraint()
+        private void togglePosConstraint()
         {
-            if (constraintRoot == null) return;
-            CreateConstraintObj();
-            if (_rotConstraint == null)
-            {
-                _rotConstraint = GetComponent<RotationConstraint>();
-                if (_rotConstraint == null) _rotConstraint = gameObject.AddComponent<RotationConstraint>();
-            }
-
-            if (_constraintObj == null) return;
-
-            _rotConstraint.rotationOffset = transform.localEulerAngles;
-            _rotConstraint.weight = alpha;
-            var src = new ConstraintSource { sourceTransform = _constraintObj, weight = 1f };
-            if (_rotConstraint.sourceCount == 0) _rotConstraint.AddSource(src); else _rotConstraint.SetSource(0, src);
-            _rotConstraint.locked = true;
-            _rotConstraint.constraintActive = true;
+            if (constraintObj == null) return;
+            getPosConstraint().enabled = (currentValue != 0 && updates);
         }
 
-        private void CreateConstraintObj()
+        public void onSimulate(bool value)
         {
-            if (_constraintObj != null) return;
-            if (constraintRoot == null) return;
-
-            var name = transform.name + "Constraint";
-            var t = constraintRoot.Find(name);
-            if (t == null)
-            {
-                var go = new GameObject(name);
-                _constraintObj = go.transform;
-                _constraintObj.SetParent(constraintRoot);
-                _constraintObj.localPosition = Vector3.zero;
-                _constraintObj.localRotation = Quaternion.identity;
-                _constraintObj.localScale = Vector3.one;
-            }
-            else _constraintObj = t;
         }
-
-        private void ToggleRotConstraint()
-        {
-            if (_rotConstraint != null)
-                _rotConstraint.enabled = (currentValue != 0f && updates);
-        }
-
-        private void TogglePosConstraint()
-        {
-            if (_posConstraint != null)
-                _posConstraint.enabled = (currentValue != 0f && updates);
-        }
-
-        public void onSimulate(bool value) { /* kept for compatibility */ }
     }
 }

@@ -93,7 +93,8 @@ SkinnedMeshRenderer:
   - {fileID: 5684739444463259175}
   - {fileID: 540123213943597826}
   - {fileID: 6160797438866844656}
-  m_BlendShapeWeights: []
+  m_BlendShapeWeights:
+  - 0
   m_RootBone: {fileID: 5200201971792465986}
   m_AABB:
     m_Center: {x: 0, y: 0, z: 1.6}
@@ -147,6 +148,11 @@ PrefabInstance:
       propertyPath: m_AABB.m_Extent.z
       value: 0.25
       objectReference: {fileID: 0}
+    - target: {fileID: -8703768413780955397, guid: a6a685a482701ce44a147722d4953105,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 921646086df67784b84a7bb1686f7442, type: 2}
     - target: {fileID: -8679921383154817045, guid: a6a685a482701ce44a147722d4953105,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -222,6 +228,16 @@ PrefabInstance:
       propertyPath: m_AABB.m_Extent.z
       value: 0.25
       objectReference: {fileID: 0}
+    - target: {fileID: -5899995143084827763, guid: a6a685a482701ce44a147722d4953105,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 921646086df67784b84a7bb1686f7442, type: 2}
+    - target: {fileID: -5899995143084827763, guid: a6a685a482701ce44a147722d4953105,
+        type: 3}
+      propertyPath: m_BlendShapeWeights.Array.data[0]
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: -2777855960294121667, guid: a6a685a482701ce44a147722d4953105,
         type: 3}
       propertyPath: m_LocalPosition.z
@@ -262,6 +278,11 @@ PrefabInstance:
       propertyPath: m_AABB.m_Extent.z
       value: 0.25
       objectReference: {fileID: 0}
+    - target: {fileID: -1589511747895687934, guid: a6a685a482701ce44a147722d4953105,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: 921646086df67784b84a7bb1686f7442, type: 2}
     - target: {fileID: 919132149155446097, guid: a6a685a482701ce44a147722d4953105,
         type: 3}
       propertyPath: m_Name

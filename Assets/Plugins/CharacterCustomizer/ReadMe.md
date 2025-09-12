@@ -1,4 +1,4 @@
-# Character Customizer v2.0 for Unity
+# Character Customizer v2.2 for Unity
 
 Join the discord channel: https://discord.com/invite/vMVE2kuwzV
 Email: Lindborgdev@gmail.com

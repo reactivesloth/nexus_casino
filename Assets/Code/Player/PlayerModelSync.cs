@@ -1,4 +1,5 @@
 using System.Collections;
+using System.IO;
 using CC;
 using FishNet.Component.Animating;
 using FishNet.Connection;
@@ -86,7 +87,7 @@ namespace Code.Player
         {
             if (!IsOwner) return;
             Debug.Log("[Client] TransmitLocalCharacter");
-            string json = _characterCustomization.GetJSON();
+            string json = File.ReadAllText(_characterCustomization.SavePath);
             SendCharacterJsonServerRpc(json);
 
             if(_updateAvatarCoroutine != null)
@@ -100,7 +101,7 @@ namespace Code.Player
             while (true)
             {
                 yield return wait;
-                string json = _characterCustomization.GetJSON();
+                string json = File.ReadAllText(_characterCustomization.SavePath);
                 SendCharacterJsonServerRpc(json);
             }
         }

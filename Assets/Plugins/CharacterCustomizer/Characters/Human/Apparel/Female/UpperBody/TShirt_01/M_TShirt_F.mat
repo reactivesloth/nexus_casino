@@ -1,5 +1,18 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-8986617649750778468
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 639247ca83abc874e893eb93af2b5e44, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 0
 --- !u!114 &-430431203045222909
 MonoBehaviour:
   m_ObjectHideFlags: 11
@@ -12,7 +25,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da692e001514ec24dbc4cca1949ff7e8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 12
+  version: 13
   hdPluginSubTargetMaterialVersions:
     m_Keys: []
     m_Values: 
@@ -72,7 +85,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Detail:
-        m_Texture: {fileID: 2800000, guid: 72194bc6badf978468404a92f9ee0479, type: 3}
+        m_Texture: {fileID: 2800000, guid: 62856fea1fbe5384f889ddc41811250c, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _DetailMap:
@@ -88,7 +101,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Detail_Normal:
-        m_Texture: {fileID: 2800000, guid: 2769049ad1a4c3740a9f3355cd39a0d4, type: 3}
+        m_Texture: {fileID: 2800000, guid: cecad999130572645ba54d3eab141b87, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Detail_R:
@@ -168,7 +181,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Tint_Mask:
-        m_Texture: {fileID: 2800000, guid: 351e42cf2b566344a9d327c7680b83d2, type: 3}
+        m_Texture: {fileID: 2800000, guid: 057fbac6ad929b143b733e07cc556af1, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _TransmittanceColorMap:
@@ -204,8 +217,11 @@ Material:
     - _AlphaToMask: 0
     - _AlphaToMaskInspectorValue: 0
     - _Anisotropy: 0
+    - _BUILTIN_QueueControl: -1
+    - _BUILTIN_QueueOffset: 0
     - _Base_Color_Tiling: 1
     - _BlendMode: 0
+    - _Brightness_Adjust: 1
     - _Cloth_Alpha: 0
     - _CoatMask: 0
     - _ConservativeDepthOffsetEnable: 0
@@ -217,8 +233,8 @@ Material:
     - _DetailNormalScale: 1
     - _DetailSmoothnessScale: 1
     - _Detail_Main_Only: 0
-    - _Detail_Normal_Strength: 0.2
-    - _Detail_Strength: 0.2
+    - _Detail_Normal_Strength: 0
+    - _Detail_Strength: 0
     - _Detail_Strength_B: 0
     - _Detail_Strength_G: 0
     - _Detail_Strength_R: 0
@@ -243,6 +259,7 @@ Material:
     - _EnableFogOnTransparent: 1
     - _EnableGeometricSpecularAA: 0
     - _EnergyConservingSpecularColor: 1
+    - _ExcludeFromTUAndAA: 0
     - _HeightAmplitude: 0.02
     - _HeightCenter: 0.5
     - _HeightMapParametrization: 0
@@ -275,7 +292,7 @@ Material:
     - _Packed_Color_Influence: 1
     - _Packed_Tiling: 1
     - _Print_Main_Only: 0
-    - _Print_Scale: 2.6
+    - _Print_Scale: 2.615
     - _QueueControl: 1
     - _QueueOffset: 0
     - _RayTracing: 0
@@ -284,7 +301,7 @@ Material:
     - _RefractionModel: 0
     - _RenderQueueType: 1
     - _RequireSplitLighting: 0
-    - _Roughness_Offset: 0.8
+    - _Roughness_Offset: 0
     - _Smoothness: 0.5
     - _SmoothnessRemapMax: 1
     - _SmoothnessRemapMin: 0
@@ -338,7 +355,7 @@ Material:
     - _EmissiveColorLDR: {r: 0, g: 0, b: 0, a: 1}
     - _InvPrimScale: {r: 1, g: 1, b: 0, a: 0}
     - _IridescenceThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
-    - _Print_Offset: {r: 0.06, g: -0.22, b: 0, a: 0}
+    - _Print_Offset: {r: 0.25, g: -0.03, b: 0, a: 0}
     - _Print_Rotation: {r: 0, g: 0, b: 0, a: 0}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
     - _ThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
@@ -365,7 +382,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   version: 10
---- !u!114 &4562147354416688314
+--- !u!114 &3566571663158563749
 MonoBehaviour:
   m_ObjectHideFlags: 11
   m_CorrespondingSourceObject: {fileID: 0}

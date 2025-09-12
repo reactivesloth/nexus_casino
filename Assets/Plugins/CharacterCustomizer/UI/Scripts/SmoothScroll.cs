@@ -5,15 +5,12 @@ using System.Collections;
 
 namespace CC
 {
-    /// <summary>
-    /// ScrollRect с плавной прокруткой. Без лишних аллокаций, корректно останавливает корутины.
-    /// </summary>
     public class SmoothScroll : ScrollRect
     {
         public bool SmoothScrolling { get; set; } = true;
         public float SmoothScrollTime { get; set; } = 0.2f;
 
-        private Coroutine _smoothScrollCoroutine;
+        private Coroutine smoothScrollCoroutine;
 
         public override void OnScroll(PointerEventData data)
         {
@@ -21,15 +18,16 @@ namespace CC
 
             if (SmoothScrolling)
             {
-                if (_smoothScrollCoroutine != null)
-                    StopCoroutine(_smoothScrollCoroutine);
+                // Stop any ongoing smooth scroll
+                if (smoothScrollCoroutine != null)
+                    StopCoroutine(smoothScrollCoroutine);
 
-                Vector2 before = normalizedPosition;
+                Vector2 positionBefore = normalizedPosition;
                 base.OnScroll(data);
-                Vector2 after = normalizedPosition;
-                normalizedPosition = before;
+                Vector2 positionAfter = normalizedPosition;
+                normalizedPosition = positionBefore;
 
-                _smoothScrollCoroutine = StartCoroutine(SmoothScrollToPosition(after));
+                smoothScrollCoroutine = StartCoroutine(SmoothScrollToPosition(positionAfter));
             }
             else
             {
@@ -41,16 +39,15 @@ namespace CC
         {
             if (SmoothScrolling)
             {
-                if (_smoothScrollCoroutine != null)
-                    StopCoroutine(_smoothScrollCoroutine);
+                if (smoothScrollCoroutine != null)
+                    StopCoroutine(smoothScrollCoroutine);
 
-                // Нормализуем целевую позицию через сам ScrollRect (учёт ограничений)
-                Vector2 before = normalizedPosition;
+                Vector2 positionBefore = normalizedPosition;
                 normalizedPosition = targetPosition;
-                Vector2 after = normalizedPosition;
-                normalizedPosition = before;
+                Vector2 positionAfter = normalizedPosition;
+                normalizedPosition = positionBefore;
 
-                _smoothScrollCoroutine = StartCoroutine(SmoothScrollToPosition(after));
+                smoothScrollCoroutine = StartCoroutine(SmoothScrollToPosition(positionAfter));
             }
             else
             {
@@ -58,71 +55,52 @@ namespace CC
             }
         }
 
-        public void resetScroll()
+        public void resetScroll(bool instant = false)
         {
-            SetScrollTarget(new Vector2(0f, 1f));
+            var smoothScroll = SmoothScrolling;
+            if (instant) SmoothScrolling = false;
+            StopAllCoroutines();
+            SetScrollTarget(new Vector2(0, 1));
+            LayoutRebuilder.ForceRebuildLayoutImmediate(content.GetComponent<RectTransform>());
+            if (instant) SmoothScrolling = smoothScroll;
         }
 
         public void ScrollToContent(RectTransform targetContent)
         {
-            if (targetContent == null || content == null || viewport == null || !targetContent.IsChildOf(content))
+            // Ensure targetContent is a child of the content area
+            if (targetContent == null || !targetContent.IsChildOf(content))
             {
-                Debug.LogWarning("SmoothScroll: target content is invalid or not a child of content.");
+                Debug.LogWarning("Target content is not a child of the scroll rect content.");
                 return;
             }
 
-            // Позиция цели во внутренних координатах контента
+            // Calculate the target normalized position
             Vector2 targetLocalPos = content.InverseTransformPoint(targetContent.position);
             Vector2 contentSize = content.rect.size;
             Vector2 viewportSize = viewport.rect.size;
 
-            // Учёт верхнего левого выравнивания ScrollRect (y инвертирован)
-            float nx = (contentSize.x > viewportSize.x)
-                ? Mathf.Clamp01((targetLocalPos.x - viewportSize.x * 0.5f) / (contentSize.x - viewportSize.x))
-                : 0f;
+            Vector2 normalizedPos = new Vector2(
+                Mathf.Clamp01((targetLocalPos.x - viewportSize.x / 2) / (contentSize.x - viewportSize.x)),
+                Mathf.Clamp01((targetLocalPos.y - viewportSize.y / 2) / (contentSize.y - viewportSize.y))
+            );
 
-            float ny = (contentSize.y > viewportSize.y)
-                ? Mathf.Clamp01((targetLocalPos.y - viewportSize.y * 0.5f) / (contentSize.y - viewportSize.y))
-                : 1f;
-
-            SetScrollTarget(new Vector2(nx, ny));
+            SetScrollTarget(normalizedPos);
         }
 
         private IEnumerator SmoothScrollToPosition(Vector2 targetPosition)
         {
-            float elapsed = 0f;
-            Vector2 start = normalizedPosition;
-            float dur = Mathf.Max(0.0001f, SmoothScrollTime);
+            float elapsedTime = 0f;
+            Vector2 startPosition = normalizedPosition;
 
-            while (elapsed < dur)
+            while (elapsedTime < SmoothScrollTime)
             {
-                elapsed += Time.unscaledDeltaTime;
-                normalizedPosition = Vector2.Lerp(start, targetPosition, elapsed / dur);
+                elapsedTime += Time.unscaledDeltaTime;
+                normalizedPosition = Vector2.Lerp(startPosition, targetPosition, elapsedTime / SmoothScrollTime);
                 yield return null;
             }
 
             normalizedPosition = targetPosition;
-            _smoothScrollCoroutine = null;
-        }
-
-        protected override void OnDisable()
-        {
-            base.OnDisable();
-            if (_smoothScrollCoroutine != null)
-            {
-                StopCoroutine(_smoothScrollCoroutine);
-                _smoothScrollCoroutine = null;
-            }
-        }
-
-        protected override void OnDestroy()
-        {
-            if (_smoothScrollCoroutine != null)
-            {
-                StopCoroutine(_smoothScrollCoroutine);
-                _smoothScrollCoroutine = null;
-            }
-            base.OnDestroy();
+            smoothScrollCoroutine = null;
         }
     }
 }

@@ -7,7 +7,7 @@ namespace CC
     public class scrObj_Hair : ScriptableObject
     {
         [System.Serializable]
-        public struct Hairstyle
+        public class Hairstyle
         {
             public string Name;
             public GameObject Mesh;

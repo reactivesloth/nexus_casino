@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -6,21 +7,21 @@ namespace CC
 {
     public class Option_Color_Picker : MonoBehaviour, ICustomizerUI
     {
-        private CharacterCustomization _customizer;
-        private CC_UI_Util _parentUI;
+        private CharacterCustomization customizer;
+        private CC_UI_Util parentUI;
 
         public CC_Property Property;
         public bool useOpacity;
         public string DisplayOption = "Option";
-        public GameObject hsvSliders; // prefab
+        public GameObject hsvSliders;
+        private Image[] imgs;
+
         public Image pickerIcon;
 
-        private Image[] _imgs;
-        private GameObject _activeSliderObj;
-
-        private float h, s, v, a = 1f;
+        private float h; private float s; private float v; private float a = 1f;
 
 #if UNITY_EDITOR
+
         private void OnValidate()
         {
             UnityEditor.EditorApplication.delayCall += OnValidateCallback;
@@ -34,105 +35,71 @@ namespace CC
                 return;
             }
 
-            var txt = GetComponentInChildren<TMPro.TMP_Text>();
-            if (txt != null) txt.text = DisplayOption;
+            GetComponentInChildren<TMPro.TMP_Text>().text = DisplayOption;
             gameObject.name = "ColorPicker_" + DisplayOption;
         }
+
 #endif
 
         public void InitializeUIElement(CharacterCustomization customizerScript, CC_UI_Util ParentUI)
         {
-            _customizer = customizerScript;
-            _parentUI = ParentUI;
+            customizer = customizerScript;
+            parentUI = ParentUI;
+
             RefreshUIElement();
         }
 
         public void RefreshUIElement()
         {
-            if (_customizer == null) return;
-
-            if (_customizer.findProperty(_customizer.StoredCharacterData.ColorProperties, Property, out Property, out int _))
+            //Get saved value
+            if (customizer.findProperty(customizer.StoredCharacterData.ColorProperties, Property, out Property, out int savedIndex))
             {
-                if (pickerIcon != null)
-                {
-                    var c = Property.colorValue;
-                    pickerIcon.color = new Color(c.r, c.g, c.b, 1f);
-                }
+                pickerIcon.color = new Color(Property.colorValue.r, Property.colorValue.g, Property.colorValue.b, 1);
             }
         }
 
         public void toggleSliders()
         {
-            if (_parentUI == null || hsvSliders == null) return;
-
-            // Close previous
-            if (_activeSliderObj != null)
-            {
-                Destroy(_activeSliderObj);
-                _activeSliderObj = null;
-            }
-
             Color.RGBToHSV(Property.colorValue, out h, out s, out v);
             a = Property.colorValue.a;
+            var sliderObj = Instantiate(hsvSliders, parentUI.transform);
 
-            var sliderObj = Instantiate(hsvSliders, _parentUI.transform);
-            _activeSliderObj = sliderObj;
-            if (sliderObj == null) return;
-
+            //Remove on click
             var eventTrigger = sliderObj.GetComponentInChildren<EventTrigger>();
-            if (eventTrigger != null)
+            var entry = new EventTrigger.Entry();
+            entry.eventID = EventTriggerType.PointerDown;
+            entry.callback = new EventTrigger.TriggerEvent();
+            entry.callback.AddListener(a => Destroy(sliderObj));
+            eventTrigger.triggers.Add(entry);
+
+            //Put slider box on this transform
+            var sliderContainer = sliderObj.transform.GetChild(1);
+            sliderContainer.position = transform.position;
+
+            var sliders = sliderObj.GetComponentsInChildren<Slider>();
+            imgs = sliderObj.GetComponentsInChildren<Image>();
+
+            sliders[0].SetValueWithoutNotify(h);
+            sliders[1].SetValueWithoutNotify(s);
+            sliders[2].SetValueWithoutNotify(v);
+            sliders[3].SetValueWithoutNotify(a);
+
+            sliders[0].onValueChanged.AddListener(f => { h = f; setColor(); });
+            sliders[1].onValueChanged.AddListener(f => { s = f; setColor(); });
+            sliders[2].onValueChanged.AddListener(f => { v = f; setColor(); });
+            sliders[3].onValueChanged.AddListener(f => { a = f; setColor(); });
+
+            foreach (var img in imgs)
             {
-                var entry = new EventTrigger.Entry { eventID = EventTriggerType.PointerDown, callback = new EventTrigger.TriggerEvent() };
-                entry.callback.AddListener(_ => { if (_activeSliderObj != null) { Destroy(_activeSliderObj); _activeSliderObj = null; } });
-                eventTrigger.triggers.Add(entry);
+                if (!img.raycastTarget) img.color = Color.HSVToRGB(h, 1, 1);
             }
 
-            // position near this
-            if (sliderObj.transform.childCount > 1)
+            if (!useOpacity)
             {
-                var sliderContainer = sliderObj.transform.GetChild(1);
-                sliderContainer.position = transform.position;
+                Destroy(sliders[3].transform.parent.gameObject);
             }
 
-            var sliders = sliderObj.GetComponentsInChildren<Slider>(true);
-            _imgs = sliderObj.GetComponentsInChildren<Image>(true);
-
-            if (sliders != null && sliders.Length >= 3)
-            {
-                sliders[0].SetValueWithoutNotify(h);
-                sliders[1].SetValueWithoutNotify(s);
-                sliders[2].SetValueWithoutNotify(v);
-
-                sliders[0].onValueChanged.AddListener(f => { h = f; setColor(); });
-                sliders[1].onValueChanged.AddListener(f => { s = f; setColor(); });
-                sliders[2].onValueChanged.AddListener(f => { v = f; setColor(); });
-
-                if (useOpacity && sliders.Length >= 4)
-                {
-                    sliders[3].SetValueWithoutNotify(a);
-                    sliders[3].onValueChanged.AddListener(f => { a = f; setColor(); });
-                }
-                else if (!useOpacity && sliders.Length >= 4)
-                {
-                    var opacityParent = sliders[3].transform.parent != null ? sliders[3].transform.parent.gameObject : null;
-                    if (opacityParent != null) Destroy(opacityParent);
-                }
-            }
-
-            if (_imgs != null)
-            {
-                var hueColor = Color.HSVToRGB(h, 1f, 1f);
-                for (int i = 0; i < _imgs.Length; i++)
-                {
-                    if (_imgs[i] != null && !_imgs[i].raycastTarget) _imgs[i].color = hueColor;
-                }
-            }
-
-            var rt = sliderObj.transform as RectTransform;
-            if (rt != null && rt.parent is RectTransform parentRT)
-            {
-                LayoutRebuilder.ForceRebuildLayoutImmediate(parentRT);
-            }
+            LayoutRebuilder.ForceRebuildLayoutImmediate(sliderContainer.GetComponent<RectTransform>());
         }
 
         public void setColor()
@@ -140,31 +107,13 @@ namespace CC
             Property.colorValue = Color.HSVToRGB(h, s, v);
             Property.colorValue.a = a;
 
-            if (_customizer != null)
-                _customizer.setColorProperty(Property, true);
+            customizer.setColorProperty(Property, true);
 
-            if (pickerIcon != null)
-            {
-                var c = Property.colorValue;
-                pickerIcon.color = new Color(c.r, c.g, c.b, 1f);
-            }
+            pickerIcon.color = new Color(Property.colorValue.r, Property.colorValue.g, Property.colorValue.b, 1);
 
-            if (_imgs != null)
+            foreach (var img in imgs)
             {
-                var hueColor = Color.HSVToRGB(h, 1f, 1f);
-                for (int i = 0; i < _imgs.Length; i++)
-                {
-                    if (_imgs[i] != null && !_imgs[i].raycastTarget) _imgs[i].color = hueColor;
-                }
-            }
-        }
-
-        private void OnDisable()
-        {
-            if (_activeSliderObj != null)
-            {
-                Destroy(_activeSliderObj);
-                _activeSliderObj = null;
+                if (!img.raycastTarget) img.color = Color.HSVToRGB(h, 1, 1);
             }
         }
     }

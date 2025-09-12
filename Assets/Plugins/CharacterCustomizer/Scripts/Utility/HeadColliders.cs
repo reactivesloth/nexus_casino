@@ -9,50 +9,32 @@ namespace CC
 
         public void createColliders()
         {
-            if (colliders == null || colliders.Count == 0) return;
-
-            for (int i = 0; i < colliders.Count; i++)
+            foreach (var colliderSetup in colliders)
             {
-                var setup = colliders[i];
-                if (setup == null) continue;
-
-                if (setup.mirror)
+                if (colliderSetup.mirror)
                 {
-                    CreateColliderObject(setup.position, setup.label + "_l");
-                    Vector3 mirroredPosition = new Vector3(setup.position.x, setup.position.y, -setup.position.z);
-                    CreateColliderObject(mirroredPosition, setup.label + "_r");
+                    CreateColliderObject(colliderSetup.position, colliderSetup.label + "_l");
+                    Vector3 mirroredPosition = new Vector3(colliderSetup.position.x, colliderSetup.position.y, -colliderSetup.position.z);
+                    CreateColliderObject(mirroredPosition, colliderSetup.label + "_r");
                 }
-                else
-                {
-                    CreateColliderObject(setup.position, setup.label);
-                }
+                else CreateColliderObject(colliderSetup.position, colliderSetup.label);
             }
         }
 
         private void CreateColliderObject(Vector3 localPosition, string label)
         {
-            // avoid duplicates if called twice
-            Transform existing = transform.Find(label);
-            GameObject colliderObject;
-            if (existing != null)
-            {
-                colliderObject = existing.gameObject;
-                colliderObject.transform.localPosition = localPosition;
-            }
-            else
-            {
-                colliderObject = new GameObject(label);
-                colliderObject.transform.SetParent(transform);
-                colliderObject.transform.localPosition = localPosition;
-                colliderObject.transform.localRotation = Quaternion.identity;
-                colliderObject.transform.localScale = Vector3.one;
+            GameObject colliderObject = new GameObject(label);
+            //colliderObject.layer = LayerMask.NameToLayer("UI");
 
-                SphereCollider sphereCollider = colliderObject.AddComponent<SphereCollider>();
-                sphereCollider.radius = 0.03f;
+            colliderObject.transform.SetParent(transform);
 
-                var thisCollider = GetComponent<Collider>();
-                if (thisCollider != null) Physics.IgnoreCollision(thisCollider, sphereCollider, true);
-            }
+            colliderObject.transform.localPosition = localPosition;
+
+            SphereCollider sphereCollider = colliderObject.AddComponent<SphereCollider>();
+            sphereCollider.radius = 0.03f;
+
+            var thisCollider = GetComponent<Collider>();
+            if (thisCollider != null) Physics.IgnoreCollision(thisCollider, sphereCollider, true);
         }
     }
 

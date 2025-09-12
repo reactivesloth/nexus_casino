@@ -1,144 +1,108 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Linq;
 
 namespace CC
 {
     public class Apparel_Menu : MonoBehaviour, ICustomizerUI
     {
-        [Header("Prefabs & UI")]
         public GameObject ButtonPrefab;
         public GameObject Container;
-        public TextMeshProUGUI OptionText;
 
-        [Header("Icons")]
+        private CharacterCustomization customizer;
+
         public bool useIcons = true;
         public Sprite defaultIcon;
 
-        private CharacterCustomization _customizer;
-        private Transform _containerTr;
-        private int _navIndex;
-        private int _optionsCount;
+        public GameObject CategoryPrefab;
+        public GameObject CategoryContainer;
+
+        private List<scrObj_Apparel.MenuCategory> menuCategories;
+
+        public SmoothScroll CategoryScroll;
 
         public void InitializeUIElement(CharacterCustomization customizerScript, CC_UI_Util parentUI)
         {
-            _customizer = customizerScript;
-            _containerTr = Container != null ? Container.transform : null;
+            customizer = customizerScript;
             RefreshUIElement();
         }
 
-        public void RefreshUIElement()
+        public void createApparelButtons(scrObj_Apparel.MenuCategory menuCategory)
         {
-            if (_customizer == null || _customizer.ApparelTables == null || _customizer.ApparelTables.Count == 0)
+            foreach (Transform child in Container.transform)
             {
-                _optionsCount = 0;
-                ClearContainer();
-                if (OptionText != null) OptionText.text = string.Empty;
-                return;
+                Destroy(child.gameObject);
             }
-
-            _optionsCount = _customizer.ApparelTables.Count;
-            createApparelButtons(0);
-        }
-
-        public void createApparelButtons(int slot)
-        {
-            if (_customizer == null || _customizer.ApparelTables == null || _customizer.ApparelTables.Count == 0)
+            for (int i = 0; i < customizer.ApparelTables.Count; i++)
             {
-                ClearContainer();
-                return;
-            }
+                var items = customizer.ApparelTables[i].Items.Where(item => item.MenuCategory == menuCategory);
 
-            if (slot < 0 || slot >= _customizer.ApparelTables.Count) slot = 0;
-            _navIndex = slot;
-
-            var table = _customizer.ApparelTables[slot];
-            if (OptionText != null) OptionText.text = table != null ? table.Label : string.Empty;
-
-            ClearContainer();
-
-            if (_containerTr == null || ButtonPrefab == null || table == null || table.Items == null)
-                return;
-
-            var items = table.Items;
-            for (int i = 0; i < items.Count; i++)
-            {
-                var item = items[i];
-
-                var materials = item.Materials;
-                if (materials != null && materials.Count > 0)
+                foreach (var item in items)
                 {
-                    for (int j = 0; j < materials.Count; j++)
+                    for (int j = 0; j < item.Materials.Count; j++)
                     {
-                        var icon = materials[j] != null ? materials[j].Icon : null;
-                        createButton(item.Name, slot, j, icon);
+                        createButton(item.Name, i, j, item.Materials[j].Icon);
+                    }
+
+                    if (item.Materials.Count == 0)
+                    {
+                        createButton(item.Name, i, 0, null);
                     }
                 }
-                else
+            }
+        }
+
+        private void createCategoryButtons()
+        {
+            foreach (Transform child in CategoryContainer.transform)
+            {
+                Destroy(child.gameObject);
+            }
+
+            //Try get tab manager and smooth scrolls
+            var tabManager = CategoryContainer.GetComponentInParent<Tab_Manager>();
+
+            //Get menu categories in order
+            menuCategories = customizer.ApparelTables.SelectMany(table => table.Items).Select(item => item.MenuCategory).Distinct().ToList();
+
+            //Create category button per menu category
+            for (int i = 0; i < menuCategories.Count; i++)
+            {
+                scrObj_Apparel.MenuCategory cat = menuCategories[i];
+                GameObject categoryButton = Instantiate(CategoryPrefab, CategoryContainer.transform).gameObject;
+                categoryButton.GetComponentInChildren<TextMeshProUGUI>().text = menuCategories[i].ToString();
+                var button = categoryButton.GetComponentInChildren<Button>();
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(() => { createApparelButtons(cat); });
+                if (tabManager != null)
                 {
-                    createButton(item.Name, slot, 0, null);
+                    var index = i;
+                    button.onClick.AddListener(() => { tabManager.switchTab(i); });
                 }
             }
         }
 
         private void createButton(string text, int slot, int material, Sprite sprite)
         {
-            if (ButtonPrefab == null || _containerTr == null || _customizer == null) return;
+            string name = text;
+            int matIndex = material;
+            int apparelSlot = slot;
 
-            var go = Instantiate(ButtonPrefab, _containerTr);
-            if (go == null) return;
+            GameObject Button = Instantiate(ButtonPrefab, Container.transform).gameObject;
+            Button.GetComponentInChildren<Button>().onClick.AddListener(() => { customizer.setApparelByName(name, apparelSlot, matIndex); });
 
-            // Components can be nested — use "InChildren"
-            var uiButton = go.GetComponentInChildren<Button>(true);
-            var uiImage = go.GetComponentInChildren<Image>(true);
-            var uiText = go.GetComponentInChildren<TextMeshProUGUI>(true);
-
-            if (uiButton != null)
-            {
-                string nameLocal = text;
-                int matIndexLocal = material;
-                int apparelSlotLocal = slot;
-                uiButton.onClick.AddListener(() =>
-                {
-                    _customizer.setApparelByName(nameLocal, apparelSlotLocal, matIndexLocal);
-                });
-            }
-
-            if (useIcons)
-            {
-                if (uiImage != null)
-                    uiImage.sprite = sprite != null ? sprite : defaultIcon;
-            }
-            else
-            {
-                if (uiText != null) uiText.text = text ?? string.Empty;
-            }
+            if (useIcons) Button.GetComponentInChildren<Image>().sprite = sprite == null ? defaultIcon : sprite;
+            else Button.GetComponentInChildren<TextMeshProUGUI>().text = text;
         }
 
-        private void ClearContainer()
+        public void RefreshUIElement()
         {
-            if (_containerTr == null) return;
-            // Destroy children safely
-            for (int i = _containerTr.childCount - 1; i >= 0; i--)
-            {
-                var child = _containerTr.GetChild(i);
-                if (child != null) Destroy(child.gameObject);
-            }
-        }
-
-        public void navLeft()
-        {
-            if (_optionsCount <= 0) return;
-            int idx = (_navIndex == 0) ? _optionsCount - 1 : _navIndex - 1;
-            createApparelButtons(idx);
-        }
-
-        public void navRight()
-        {
-            if (_optionsCount <= 0) return;
-            int idx = (_navIndex == _optionsCount - 1) ? 0 : _navIndex + 1;
-            createApparelButtons(idx);
+            createCategoryButtons();
+            createApparelButtons(menuCategories[0]);
+            if (CategoryScroll != null) CategoryScroll.resetScroll(true);
         }
     }
 }

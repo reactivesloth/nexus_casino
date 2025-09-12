@@ -7,32 +7,37 @@ namespace CC
         public static Cursor_Manager instance;
 
         public Texture2D cursorTexture;
-        private Vector2 hotSpot = Vector2.zero;
+        private Vector2 hotSpot = new Vector2(0, 0);
 
         private void Awake()
         {
-            if (instance == null) instance = this;
-            else { Destroy(gameObject); return; }
+            if (instance == null)
+            {
+                instance = this;
+            }
+            else
+            {
+                Destroy(gameObject);
+            }
 
             if (cursorTexture != null)
             {
-                hotSpot = new Vector2(cursorTexture.width * 0.5f, cursorTexture.height * 0.5f);
+                hotSpot = new Vector2(cursorTexture.width / 2, cursorTexture.height / 2);
                 setDefaultCursor();
             }
-
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
         }
 
         public void setCursor(Texture2D texture)
         {
-            if (texture == null) return;
-            Cursor.SetCursor(texture, hotSpot, CursorMode.Auto);
+            if (cursorTexture != null)
+            {
+                Cursor.SetCursor(texture, hotSpot, CursorMode.Auto);
+            }
         }
 
         public void setDefaultCursor()
         {
-            if (cursorTexture != null) setCursor(cursorTexture);
+            setCursor(cursorTexture);
         }
     }
 }
