@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Code.Utility;
+using UnityEngine.Serialization;
 
 [DefaultExecutionOrder(-100)]
 public class PlayerInput : MonoBehaviour
@@ -40,7 +41,11 @@ public class PlayerInput : MonoBehaviour
     public UltimateButton PauseButton;
     public UltimateButton VoiceButton;
     public UltimateButton OpenChatButton;
+    
     public UltimateButton SwitchChatButton;
+    public UltimateButton SendChatMessageButton;
+    public UltimateButton ChatScrollUpButton;
+    public UltimateButton ChatScrollDownButton;
 
     [SerializeField] private bool ForceMobile;
     private bool savedHideMobileFallback;
@@ -62,6 +67,8 @@ public class PlayerInput : MonoBehaviour
     public UltimateButton slotsEndInteractButton;
     
     private UltimateButton endInteractButton;
+    
+    
     
     public bool IsBusy { get; set; }
     
@@ -220,4 +227,7 @@ public class PlayerInput : MonoBehaviour
     public bool IsSlotsFullscreen => slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => slotsStreamButton.GetButtonDown();
     public bool IsSlotsScreenshot => slotsScreenshotButton.GetButtonDown() && !slotsScreenshotButton.InCooldown;
+    public bool IsScrollUpButton => ChatScrollUpButton.GetButton();
+    public bool IsScrollDownButton => ChatScrollDownButton.GetButton();
+    public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
 }

@@ -33,7 +33,7 @@ namespace Code.Chat
         private float _pingTimer;
         private bool _isGlobalChatActive;
 
-        public UltimateChatBox CurrentChatBox { get; private set; }
+        public UltimateChatBox CurrentChatBox;
         public string SystemName => systemName;
         public bool IsMuted { get; set; }
 
@@ -45,6 +45,13 @@ namespace Code.Chat
         private void Awake()
         {
             if (devLog) Debug.Log("[CHAT] Awake");
+            if (PlayerInput.Instance.IsUsingMobileFallback)
+            {
+                lobbyChatBox.useExtraImage = false;
+                lobbyChatBox.useExtraImage = false;
+                globalChatBox.useExtraImage = false;
+                globalChatBox.useExtraImage = false;
+            }
         }
 
         private void Start()
@@ -98,8 +105,7 @@ namespace Code.Chat
             _ws.OnClose += OnWsClose;
             _ws.Connect();
 
-            if (PlayerInput.Instance != null && PlayerInput.Instance.SwitchChatButton != null)
-                PlayerInput.Instance.SwitchChatButton.gameObject.SetActive(false);
+            SetActiveMobileInput(false);
         }
 
         private void OnDisable()
@@ -148,6 +154,9 @@ namespace Code.Chat
                 if (input.IsOpenChatDown) OpenChat();
                 if (input.IsSwitchChatDown && CurrentChatBox != null && CurrentChatBox.IsEnabled) ChangeChat();
                 if (input.IsPausedDown && CurrentChatBox != null) CurrentChatBox.Disable();
+                if (input.IsScrollUpButton) MoveUp();
+                if (input.IsScrollDownButton) MoveDown();
+                if(input.SendChatMessageButtonDown) SendMessage();
             }
 
 #if !UNITY_WEBGL || UNITY_EDITOR
@@ -155,6 +164,16 @@ namespace Code.Chat
 #endif
             if (_ws != null && _ws.State == WebSocketState.Open)
                 Ping();
+        }
+
+        public void MoveUp()
+        {
+            CurrentChatBox.ScrollUp();
+        }
+
+        public void MoveDown()
+        {
+            CurrentChatBox.ScrollDown();
         }
 
         private void Ping()
@@ -248,6 +267,7 @@ namespace Code.Chat
         {
             if (CurrentChatBox == null) return;
             bool open = !CurrentChatBox.IsEnabled;
+            Debug.Log(open);
 
             if (open)
             {
@@ -256,7 +276,8 @@ namespace Code.Chat
             }
             else
             {
-                CurrentChatBox.DisableInputField();
+                if(!PlayerInput.Instance.IsUsingMobileFallback)
+                    CurrentChatBox.DisableInputField();
                 CurrentChatBox.Disable();
             }
         }
@@ -282,6 +303,7 @@ namespace Code.Chat
                 CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
                 CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
                 CurrentChatBox.OnInputFieldUpdated -= CurrentChatBoxOnOnInputFieldUpdated;
+                CurrentChatBox.InputField.onTouchScreenKeyboardStatusChanged.RemoveListener(OnKeyboardStatusChanged);
 
                 try
                 {
@@ -306,23 +328,29 @@ namespace Code.Chat
             CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
             CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
             CurrentChatBox.OnInputFieldUpdated += CurrentChatBoxOnOnInputFieldUpdated;
+            CurrentChatBox.InputField.onTouchScreenKeyboardStatusChanged.AddListener(OnKeyboardStatusChanged);
 
             try
             {
-                CurrentChatBox.ReachedTop -= OnReachedTopLoadHistory;
+                CurrentChatBox.ReachedTop += OnReachedTopLoadHistory;
             }
             catch
             {
             }
 
             CurrentChatBox.NoMoreHistory = false;
-            CurrentChatBox.ReachedTop += OnReachedTopLoadHistory;
 
             CurrentChatBox.EnableInputField();
             CurrentChatBox.Enable();
 
             if (!CurrentChatBox.WasInitLoad)
                 _ = LoadHistoryPageAsync(true, _isGlobalChatActive);
+        }
+
+        private void OnKeyboardStatusChanged(TouchScreenKeyboard.Status newStatus)
+        {
+            /*if( newStatus is TouchScreenKeyboard.Status.Done or TouchScreenKeyboard.Status.Canceled)
+                SendMessage();*/
         }
 
         [ContextMenu("Dev Load History Now")]
@@ -340,7 +368,9 @@ namespace Code.Chat
 
         private void SendMessage()
         {
-            CurrentChatBox?.DisableInputField();
+            Debug.Log($"[CHAT] Send Message");
+            CurrentChatBox.DisableInputField();
+            CurrentChatBox.Disable();
         }
 
         private void OnInputFieldEnabled()
@@ -348,9 +378,7 @@ namespace Code.Chat
             if (CursorManager.Instance != null)
                 CursorManager.Instance.ShowCursor();
 
-            var pi = PlayerInput.Instance;
-            if (pi != null && pi.SwitchChatButton != null)
-                pi.SwitchChatButton.gameObject.SetActive(true);
+            SetActiveMobileInput(true);
         }
 
         private void OnInputFieldDisabled()
@@ -358,9 +386,7 @@ namespace Code.Chat
             if (CursorManager.Instance != null)
                 CursorManager.Instance.HideCursor();
 
-            var pi = PlayerInput.Instance;
-            if (pi != null && pi.SwitchChatButton != null)
-                pi.SwitchChatButton.gameObject.SetActive(false);
+            SetActiveMobileInput(false);
         }
 
         private void ChatBoxOnOnInputFieldCommandSubmitted(string command, string message)
@@ -589,6 +615,18 @@ namespace Code.Chat
                 Debug.Log("[CHAT] Loading end");
                 _historyLoading = false;
             }
+        }
+
+        private void SetActiveMobileInput(bool value)
+        {
+            var playerInput = PlayerInput.Instance;
+            if (playerInput == null)
+                return;
+
+            playerInput.SwitchChatButton.gameObject.SetActive(value);
+            playerInput.ChatScrollUpButton.gameObject.SetActive(value);
+            playerInput.ChatScrollDownButton.gameObject.SetActive(value);
+            playerInput.SendChatMessageButton.gameObject.SetActive(value);
         }
     }
 }

@@ -660,6 +660,12 @@ public class UltimateButton : MonoBehaviour, IPointerDownHandler, IDragHandler, 
 		eventDataCalculated = false;
 	}
 
+	protected override void OnDisable()
+	{
+		base.OnDisable();
+		ResetButton();
+	}
+
 	/// <summary>
 	/// This function is called by Unity when the parent of this transform changes.
 	/// </summary>

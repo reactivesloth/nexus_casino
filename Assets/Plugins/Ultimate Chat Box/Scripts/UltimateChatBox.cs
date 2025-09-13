@@ -384,7 +384,7 @@ namespace TankAndHealerStudioAssets
 					interactableUsernameImage.color = interactableUsernameColor;
 			}
 		}
-		[SerializeField] [Tooltip( "The percentage of the line height to add as a modifier to the username highlight image." )] [Range( 0.0f, 1.0f )]
+		[SerializeField] [Tooltip( "The percentage of the line height to add as a modifier to the usSpace RangersГзname highlight image." )] [Range( 0.0f, 1.0f )]
 		private float interactableUsernameWidthModifier = 0.0f;
 		/// <summary>
 		/// The current state of the player hovering over a username in the chat box.
@@ -575,7 +575,7 @@ namespace TankAndHealerStudioAssets
 
 		// EXTRA IMAGE //
 		[SerializeField] [Tooltip( "Should an extra image be used inside the input field?" )]
-		private bool useExtraImage = false;
+		public bool useExtraImage = false;
 		[SerializeField] [Tooltip( "The image component to use as the extra image." )]
 		private Image extraImage;
 		[SerializeField] [HideInInspector]
@@ -625,7 +625,7 @@ namespace TankAndHealerStudioAssets
 
 		// EMOJI WINDOW //
 		[SerializeField] [Tooltip( "Should the players be able to add emojis through a provided window?" )]
-		private bool useEmojiWindow = false;
+		public bool useEmojiWindow = false;
 		[SerializeField] [Tooltip( "The image component to be used as a button to open the emoji window." )]
 		private Image emojiButtonImage;
 		[SerializeField] [Tooltip( "The size of the button." )]
@@ -3457,6 +3457,45 @@ namespace TankAndHealerStudioAssets
 
 			// Return the list of chats from the targeted style.
 			return chatsWithStyle;
+		}
+		
+		/// <summary>
+		/// Прокручивает чат вверх на указанное количество линий
+		/// </summary>
+		/// <param name="lines">Количество линий для прокрутки (по умолчанию 1)</param>
+		public void ScrollUp(int lines = 1)
+		{
+			chatContentBox.anchoredPosition -= new Vector2(0, LineHeight * lines);
+			ConstrainContentBox();
+		}
+
+		/// <summary>
+		/// Прокручивает чат вниз на указанное количество линий
+		/// </summary>
+		/// <param name="lines">Количество линий для прокрутки (по умолчанию 1)</param>
+		public void ScrollDown(int lines = 1)
+		{
+			chatContentBox.anchoredPosition += new Vector2(0, LineHeight * lines);
+			ConstrainContentBox();
+		}
+
+		/// <summary>
+		/// Прокручивает чат до самого верха
+		/// </summary>
+		public void ScrollToTop()
+		{
+			chatContentBox.anchoredPosition = new Vector2(chatContentBox.anchoredPosition.x, 0);
+			ConstrainContentBox();
+		}
+
+		/// <summary>
+		/// Прокручивает чат до самого низа
+		/// </summary>
+		public void ScrollToBottom()
+		{
+			chatContentBox.anchoredPosition = new Vector2(chatContentBox.anchoredPosition.x, 
+				chatContentBox.sizeDelta.y - visibleChatBoundingBox.sizeDelta.y);
+			ConstrainContentBox();
 		}
 		// ---------------------- <END PUBLIC FUNCTIONS FOR THE USER> ---------------------- //
 	}
