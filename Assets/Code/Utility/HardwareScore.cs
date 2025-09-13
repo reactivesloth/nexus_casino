@@ -5,9 +5,9 @@ namespace Code.Utility
     public static class HardwareScore
     {
         // Эталонные значения — можешь менять под свой проект
-        private const int cpuFreqRef = 3000;     // МГц
-        private const int cpuCoresRef = 8;
-        private const int ramRefMB = 16000;      // МБ
+        private const int cpuFreqRef = 10000;     // МГц
+        private const int cpuCoresRef = 32;
+        private const int ramRefMB = 65_536;      // МБ
 
         // Веса
         private const float wCPU = 0.7f;

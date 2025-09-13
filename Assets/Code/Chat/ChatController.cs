@@ -270,7 +270,9 @@ namespace Code.Chat
         private void SetCurrentChat(UltimateChatBox chatBox)
         {
             if (chatBox == null) return;
-            if (devLog) Debug.Log($"[CHAT] SetCurrentChat called; chatBox={(chatBox ? chatBox.name : "")}, Inited={chatBox?.WasInitLoad}");
+            if (devLog)
+                Debug.Log(
+                    $"[CHAT] SetCurrentChat called; chatBox={(chatBox ? chatBox.name : "")}, Inited={chatBox?.WasInitLoad}");
 
             if (CurrentChatBox != null)
             {
@@ -318,8 +320,8 @@ namespace Code.Chat
 
             CurrentChatBox.EnableInputField();
             CurrentChatBox.Enable();
-            
-            if(!CurrentChatBox.WasInitLoad)
+
+            if (!CurrentChatBox.WasInitLoad)
                 _ = LoadHistoryPageAsync(true, _isGlobalChatActive);
         }
 
@@ -433,7 +435,7 @@ namespace Code.Chat
         private void SetLastChatInfo(MessageData m)
         {
             var chatInfo = lobbyChatBox.ChatInformations.LastOrDefault();
-            if(chatInfo != null)
+            if (chatInfo != null)
                 chatInfo.MessageId = m.id;
         }
 
@@ -530,7 +532,7 @@ namespace Code.Chat
 
                 var (itemsA, hasMoreA, minIdA) = await FetchAsync(beforeA);
 
-                
+
                 var pageItems = itemsA;
                 var hasMore = hasMoreA;
                 var minId = minIdA;
@@ -543,15 +545,16 @@ namespace Code.Chat
 
                 Array.Reverse(pageItems);
 
-                var batch = new List<(string username, string message, UltimateChatBox.ChatStyle, long id)>(pageItems.Length);
+                var batch =
+                    new List<(string username, string message, UltimateChatBox.ChatStyle, long id)>(pageItems.Length);
                 for (var i = 0; i < pageItems.Length; i++)
                 {
                     var m = pageItems[i];
 
-                    var username =
-                        (string.IsNullOrEmpty(m.user.username) && !string.IsNullOrEmpty(m.user.username))
-                            ? m.user.username
-                            : (m.user_id != 0 ? ("User#" + m.user_id) : "User");
+                    Debug.Log(JsonUtility.ToJson(m));
+
+                    var username = !string.IsNullOrEmpty(m.user.username) ? m.user.username :
+                        m.user_id != 0 ? "User#" + m.user_id : "User";
 
                     var style = (m.type == "important")
                         ? UltimateChatBoxStyles.warningMessage
@@ -559,12 +562,14 @@ namespace Code.Chat
 
                     var lobbyId = m.lobby_id ?? "main";
                     var suffix = lobbyId.Length > 4 ? "..." : "";
-                    var prefix = lobbyId == "main" ? "" : $"[{suffix}{lobbyId.Substring(Mathf.Max(0, lobbyId.Length - 4))}]";
+                    var prefix = lobbyId == "main"
+                        ? ""
+                        : $"[{suffix}{lobbyId.Substring(Mathf.Max(0, lobbyId.Length - 4))}] ";
                     prefix = isGlobalChatActive ? prefix : string.Empty;
                     batch.Add(($"{prefix}{username}", m.message ?? string.Empty, style, m.id));
                 }
 
-                if(!updatedChat.IsEnabled)
+                if (!updatedChat.IsEnabled)
                     return;
 
                 try

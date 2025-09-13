@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Code.API;
+using Code.API.Models;
 using Code.Network.Lobby.EOSCoroutines;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
@@ -399,23 +401,29 @@ namespace Code.Network.Lobby
             UpdateMembers();
         }
 
-        private void OnLobbyMemberStatusReceived(LobbyMemberStatusReceivedCallbackInfo arg0)
+        private void OnLobbyMemberStatusReceived(LobbyMemberStatusReceivedCallbackInfo arg)
         {
             UpdateMembers();
+            CheckNewOwner(arg);
+        }
 
-            if (arg0.CurrentStatus is LobbyMemberStatus.Promoted &&
-                arg0.TargetUserId.ToString() == LobbyVariables.Instance.ProductUserId.ToString())
-                PromoteHandle();
+        private async void CheckNewOwner(LobbyMemberStatusReceivedCallbackInfo arg)
+        {
+            if (arg.CurrentStatus is LobbyMemberStatus.Promoted &&
+                arg.TargetUserId.ToString() == LobbyVariables.Instance.ProductUserId.ToString())
+            {
+                await Task.Delay(2_500);
+                if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
+                   || isPromoteManually == "FALSE")
+                    SelectNewHostAndPromote();
+                else
+                    PromoteHandle();
+            }
         }
 
         private void PromoteHandle()
         {
-            /*if (!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTED", out var promoted) ||
-                promoted == "FALSE")
-            {
-                SelectNewHostAndPromote();
-                return;
-            }*/
+            StartCoroutine(UpdateLobbyAttributes("PROMOTE_MANUALLY", "FALSE"));
             OnCurrentHostDisconnected?.Invoke(LobbyVariables.Instance.ProductUserId.ToString());
         }
 
@@ -614,6 +622,7 @@ namespace Code.Network.Lobby
 
         public void Promote(string newHostId)
         {
+            StartCoroutine(UpdateLobbyAttributes("PROMOTE_MANUALLY", "TRUE"));
             StartCoroutine(PromoteLobbyRoutine(newHostId));
         }
 
@@ -622,8 +631,10 @@ namespace Code.Network.Lobby
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
             if (string.IsNullOrEmpty(lobbyId))
                 yield break;
+
+            var clientData = ClientDataStorage.UserData.username;
             
-            yield return LobbyPromoteHost.Run(out var lobbyPromoteHost, lobbyId, newHostId);
+            yield return LobbyPromoteHost.Run(out var lobbyPromoteHost, lobbyId, newHostId, clientData);
             if (lobbyPromoteHost.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogError(
                     $"[LobbyController] Failed to promote lobby: {lobbyPromoteHost.CallbackInfo?.ResultCode}");
