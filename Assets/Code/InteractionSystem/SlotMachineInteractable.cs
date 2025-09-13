@@ -2,6 +2,7 @@
 using System.Linq;
 using Code.API;
 using Code.Network;
+using Code.Utility;
 using TMPro;
 using UnityEngine;
 
@@ -72,7 +73,7 @@ namespace Code.InteractionSystem
                 return;
             }
             
-            ToggleComputerUI(true);
+            ToggleComputerUI(true, force);
         }
 
         protected override void OnInteractEndCallback_Client(bool success)
@@ -85,7 +86,7 @@ namespace Code.InteractionSystem
                 return;
             }
             
-            ToggleComputerUI(false);
+            ToggleComputerUI(false, false);
         }
 
         protected override void OnInteractCallback_Observers(bool success, bool force = false)
@@ -117,7 +118,7 @@ namespace Code.InteractionSystem
             };
         }
 
-        private void ApplyComputerStateImmediate(bool open)
+        private void ApplyComputerStateImmediate(bool open, bool silentURL = false)
         {
             bool useFs = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
 
@@ -125,6 +126,9 @@ namespace Code.InteractionSystem
 
             if (!open)
             {
+                if (CursorManager.Instance != null)
+                    CursorManager.Instance.HideCursor();
+                
                 if (contentCanvas) contentCanvas.gameObject.SetActive(false);
                 if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
 
@@ -144,15 +148,21 @@ namespace Code.InteractionSystem
             }
             else
             {
+                if (CursorManager.Instance != null)
+                    CursorManager.Instance.ShowCursor();
+                
                 if (contentCanvas) contentCanvas.gameObject.SetActive(true);
 
                 if (PlayerInput.Instance != null) PlayerInput.Instance.HideMobileFallback = true;
 
-                WebViewManager.Instance.LoadURL (
-                    string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken, 
-                    GetProvider()
-                );
-                
+                if (!silentURL)
+                {
+                    WebViewManager.Instance.LoadURL(
+                        string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken,
+                        GetProvider()
+                    );
+                }
+
                 if (useFs)
                 {
                     WebViewManager.Instance.OpenFullscreen();
@@ -179,12 +189,12 @@ namespace Code.InteractionSystem
             PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 0 ? 1 : 0);
             PlayerPrefs.Save();
 
-            ApplyComputerStateImmediate(true);
+            ApplyComputerStateImmediate(true, true);
         }
 
-        private void ToggleComputerUI(bool open)
+        private void ToggleComputerUI(bool open, bool force = false)
         {
-            ApplyComputerStateImmediate(open);
+            ApplyComputerStateImmediate(open, force);
         }
 
         public static SlotMachineInteractable FindById(int id)

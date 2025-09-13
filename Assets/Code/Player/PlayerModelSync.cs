@@ -87,7 +87,7 @@ namespace Code.Player
         {
             if (!IsOwner) return;
             Debug.Log("[Client] TransmitLocalCharacter");
-            string json = File.ReadAllText(_characterCustomization.SavePath);
+            string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);
 
             if(_updateAvatarCoroutine != null)
@@ -101,7 +101,7 @@ namespace Code.Player
             while (true)
             {
                 yield return wait;
-                string json = File.ReadAllText(_characterCustomization.SavePath);
+                string json = _characterCustomization.GetJSON();
                 SendCharacterJsonServerRpc(json);
             }
         }

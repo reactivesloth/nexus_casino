@@ -33,7 +33,7 @@ namespace CC
         public scrObj_Presets Presets; //Available presets
         public CC_CharacterData StoredCharacterData; //Current character data
 
-        public string SavePath
+        private string SavePath
         {
             get
             {
@@ -54,13 +54,25 @@ namespace CC
 
         //Async loading
         private Coroutine activeCoroutine;
+        [SerializeField] private bool initializeOnStartInsteadOfAwake;
 
         //Store character LOD size for hair/apparel bounds
         private float mainLODSize;
 
         #region Initialize script
+        private void Awake()
+        {
+            if (!initializeOnStartInsteadOfAwake)
+                InitializeScript();
+        }
 
         private void Start()
+        {
+            if (initializeOnStartInsteadOfAwake)
+                InitializeScript();
+        }
+
+        private void InitializeScript()
         {
             foreach (var item in GetComponentsInChildren<SkinnedMeshRenderer>(true))
             {
@@ -121,6 +133,16 @@ namespace CC
                 Destroy(toDelete.gameObject);
             }
 
+            foreach (var hairObject in HairObjects)
+                if(hairObject != null)
+                    Destroy(hairObject.gameObject);
+            HairObjects.Clear();
+            
+            foreach (var apparelObject in ApparelObjects)
+                if(apparelObject != null)
+                    Destroy(apparelObject.gameObject);
+            ApparelObjects.Clear();
+            
             foreach (var mesh in GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 //Add a blendshape manager script to every mesh
@@ -211,6 +233,8 @@ namespace CC
                 //Save to JSON
                 string jsonSave = JsonUtility.ToJson(CC_SaveData, true);
                 File.WriteAllText(SavePath, jsonSave);
+                    
+                ApplyCharacterVars(StoredCharacterData);
             }
         }
 
@@ -223,15 +247,26 @@ namespace CC
             string jsonLoad = File.ReadAllText(SavePath);
             var CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
-            //Find character index by CharacterName and load character data
-            int index = CC_SaveData.SavedCharacters.FindIndex(t => t.CharacterName == name);
+            int index = -1;
+            for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
+            {
+                if (CC_SaveData.SavedCharacters[i].CharacterName == name) { index = i; break; }
+            }
+
             if (index != -1)
             {
-                //Instantiate character from resources folder, set name and initialize the script
-                var newCharacter = (GameObject)Instantiate(Resources.Load(CC_SaveData.SavedCharacters[index].CharacterPrefab), _transform);
-                newCharacter.GetComponent<CharacterCustomization>().CharacterName = name;
-                newCharacter.GetComponent<CharacterCustomization>().Initialize();
-                newCharacter.GetComponent<CharacterCustomization>().LoadFromJSON();
+                var prefabPath = CC_SaveData.SavedCharacters[index].CharacterPrefab;
+                var loaded = Resources.Load(prefabPath);
+                if (loaded != null)
+                {
+                    var newCharacter = (GameObject)Instantiate(loaded, _transform);
+                    var cc = newCharacter.GetComponent<CharacterCustomization>();
+                    if (cc != null)
+                    {
+                        cc.CharacterName = name;
+                        cc.Initialize();
+                    }
+                }
             }
         }
 
@@ -270,17 +305,26 @@ namespace CC
             //Create new prefab
             string prefabPath = AssetDatabase.GetAssetPath(ogPrefab);
             string newPath = prefabPath.Replace(".prefab", prefabSuffix + ".prefab");
-            newPrefab.GetComponent<CharacterCustomization>().CharacterName = CharacterName;
-            newPrefab.GetComponent<CharacterCustomization>().Autoload = true;
-            PrefabUtility.SaveAsPrefabAsset(newPrefab, newPath);
-
-            //Overwrite or add new preset
-            int presetIndex = Presets.Presets.FindIndex(t => t.CharacterName == characterDataCopy.CharacterName);
-            if (presetIndex != -1)
+            var cc = newPrefab.GetComponent<CharacterCustomization>();
+            if (cc != null)
             {
-                Presets.Presets[presetIndex] = characterDataCopy;
+                cc.CharacterName = CharacterName;
+                cc.Autoload = true;
             }
-            else Presets.Presets.Add(characterDataCopy);
+            PrefabUtility.SaveAsPrefabAsset(newPrefab, newPath);
+            if (Presets != null)
+
+
+
+            {
+                int presetIndex = -1;
+                for (int i = 0; i < Presets.Presets.Count; i++)
+                {
+                    if (Presets.Presets[i].CharacterName == characterDataCopy.CharacterName) { presetIndex = i; break; }
+                }
+                if (presetIndex != -1) Presets.Presets[presetIndex] = characterDataCopy;
+                else Presets.Presets.Add(characterDataCopy);
+            }
 
             DestroyImmediate(newPrefab);
 #endif
@@ -309,8 +353,10 @@ namespace CC
 
         public void LoadFromJSON(string jsonString = "")
         {
-            //Load if file exists, otherwise create a save file and rerun the function
-            if (!File.Exists(SavePath)) createSaveFile();
+            if (!File.Exists(SavePath))
+            {
+                createSaveFile();
+            }
 
             if (!string.IsNullOrEmpty(CharacterName))
             {
@@ -318,20 +364,35 @@ namespace CC
                 if (!string.IsNullOrEmpty(jsonString)) jsonLoad = jsonString;
                 CC_SaveData CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
 
-                //Find character index by CharacterName and load character data
-                StoredCharacterData = CC_SaveData.SavedCharacters.Find(t => t.CharacterName == CharacterName);
+                // find by name
+                StoredCharacterData = null;
+                for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
+                {
+                    if (CC_SaveData.SavedCharacters[i].CharacterName == CharacterName)
+                    {
+                        StoredCharacterData = CC_SaveData.SavedCharacters[i];
+                        break;
+                    }
+                }
 
-                //If saved character was not found, load preset character
+
                 if (StoredCharacterData == null)
                 {
                     randomizeAll();
                     randomizeCharacterAndOutfit();
                 }
 
-                //Apply stored data to character
+
                 ApplyCharacterVars(StoredCharacterData);
             }
         }
+        
+        public string GetJSON()
+        {
+            if (!File.Exists(SavePath)) createSaveFile();
+            return !string.IsNullOrEmpty(CharacterName) ? File.ReadAllText(SavePath) : string.Empty;
+        }
+
 
         public bool LoadFromPreset(string presetName)
         {
@@ -351,9 +412,32 @@ namespace CC
             preset = Presets.Presets.Find(t => t.CharacterName == presetName) ?? Presets.Presets.FirstOrDefault();
             return preset != null;
         }
+        
+        private void EnsureCharacterData(ref CC_CharacterData characterData)
+        {
+            if (characterData == null)
 
+            {
+                characterData = new CC_CharacterData
+                {
+                    CharacterName = CharacterName,
+                    CharacterPrefab = gameObject.name,
+                    Blendshapes = new List<CC_Property>(),
+                    HairNames = new List<string>(),
+                    ApparelNames = new List<string>(),
+                    ApparelMaterials = new List<int>(),
+                    FloatProperties = new List<CC_Property>(),
+                    TextureProperties = new List<CC_Property>(),
+                    ColorProperties = new List<CC_Property>()
+                };
+            }
+        }
+        
         public void ApplyCharacterVars(CC_CharacterData characterData)
         {
+            EnsureCharacterData(ref characterData);
+            StoredCharacterData = characterData;
+            
             //Start coroutine if async
             if (LoadAsync)
             {
@@ -418,6 +502,9 @@ namespace CC
 
         public IEnumerator ApplyCharacterVarsAsync(CC_CharacterData characterData)
         {
+            EnsureCharacterData(ref characterData);
+            StoredCharacterData = characterData;
+            
             //Create material instances
             var meshes = GetComponentsInChildren<Renderer>();
             var materials = new List<Material>();
