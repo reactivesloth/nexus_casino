@@ -133,6 +133,16 @@ namespace CC
                 Destroy(toDelete.gameObject);
             }
 
+            foreach (var hairObject in HairObjects)
+                if(hairObject != null)
+                    Destroy(hairObject.gameObject);
+            HairObjects.Clear();
+            
+            foreach (var apparelObject in ApparelObjects)
+                if(apparelObject != null)
+                    Destroy(apparelObject.gameObject);
+            ApparelObjects.Clear();
+            
             foreach (var mesh in GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 //Add a blendshape manager script to every mesh
