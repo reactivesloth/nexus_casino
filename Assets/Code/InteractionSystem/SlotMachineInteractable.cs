@@ -73,7 +73,7 @@ namespace Code.InteractionSystem
                 return;
             }
             
-            ToggleComputerUI(true);
+            ToggleComputerUI(true, force);
         }
 
         protected override void OnInteractEndCallback_Client(bool success)
@@ -86,7 +86,7 @@ namespace Code.InteractionSystem
                 return;
             }
             
-            ToggleComputerUI(false);
+            ToggleComputerUI(false, false);
         }
 
         protected override void OnInteractCallback_Observers(bool success, bool force = false)
@@ -192,9 +192,9 @@ namespace Code.InteractionSystem
             ApplyComputerStateImmediate(true, true);
         }
 
-        private void ToggleComputerUI(bool open)
+        private void ToggleComputerUI(bool open, bool force = false)
         {
-            ApplyComputerStateImmediate(open);
+            ApplyComputerStateImmediate(open, force);
         }
 
         public static SlotMachineInteractable FindById(int id)
