@@ -1,11 +1,16 @@
-﻿using Cinemachine;
+﻿using System;
+using System.Text;
+using Cinemachine;
+using Code.API;
 using Code.Network.HostMigration;
 using Code.Network.Player;
 using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using Proyecto26;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Code.Player
 {
@@ -14,8 +19,7 @@ namespace Code.Player
     {
         public static PlayerMovementController Own { get; private set; }
 
-        [Header("Settings")]
-        [SerializeField] private float moveSpeed = 2.0f;
+        [Header("Settings")] [SerializeField] private float moveSpeed = 2.0f;
         [SerializeField] private float sprintSpeed = 5.335f;
         [SerializeField] private float rotationSmoothTime = 0.12f;
         [SerializeField] private float speedChangeRate = 10.0f;
@@ -29,8 +33,7 @@ namespace Code.Player
         [SerializeField] private float terminalVelocity = 53.0f;
         [SerializeField] private bool spawnOnSawedPosition = true;
 
-        [Header("Camera")]
-        [SerializeField] private GameObject cinemachineCameraTarget;
+        [Header("Camera")] [SerializeField] private GameObject cinemachineCameraTarget;
         [SerializeField] private GameObject[] hideForFirstPersonViewLocal;
         [SerializeField] private float minCameraDistance = 1f;
         [SerializeField] private float maxCameraDistance = 4f;
@@ -41,8 +44,7 @@ namespace Code.Player
         [SerializeField] public float cameraAngleOverride = 0f;
         [SerializeField] private Transform headTarget;
 
-        [Header("Audio")]
-        [SerializeField] private AudioClip landingAudioClip;
+        [Header("Audio")] [SerializeField] private AudioClip landingAudioClip;
         [SerializeField] private AudioClip[] footstepAudioClips;
         [Range(0, 1)] [SerializeField] private float footstepAudioVolume = 0.5f;
 
@@ -50,6 +52,7 @@ namespace Code.Player
         public bool LockCameraPosition = true;
 
         private bool _firstPersonView = true;
+
         public bool FirstPersonView
         {
             get => _firstPersonView;
@@ -69,6 +72,7 @@ namespace Code.Player
         public float CameraDistance => cameraDistance;
 
         private bool lookCameraLimitRotation;
+
         public bool LookCameraLimitRotation
         {
             get => lookCameraLimitRotation;
@@ -79,6 +83,7 @@ namespace Code.Player
                     sitBaseYaw = cinemachineTargetYaw;
                     sitBasePitch = cinemachineTargetPitch;
                 }
+
                 lookCameraLimitRotation = value;
             }
         }
@@ -86,15 +91,17 @@ namespace Code.Player
         public bool LookCameraLimitRotationRKM { get; set; } = false;
         public bool LockCursor { get; set; } = true;
 
-        [Header("Sit Camera Limits")]
-        [SerializeField] private float sitYawRange = 45f;
+        [Header("Sit Camera Limits")] [SerializeField]
+        private float sitYawRange = 45f;
+
         [SerializeField] private float sitMinPitch = -10f;
         [SerializeField] private float sitMaxPitch = 30f;
 
         public GameObject CinemachineCameraTarget => cinemachineCameraTarget;
 
-        [Header("IK Settings")]
-        [SerializeField] private float ikTransitionSpeed = 5f;
+        [Header("IK Settings")] [SerializeField]
+        private float ikTransitionSpeed = 5f;
+
         [SerializeField] private float lookAtSmoothSpeed = 5f;
         [SerializeField, Range(0f, 1f)] private float lookAtClampWeight = 0.5f;
 
@@ -132,7 +139,7 @@ namespace Code.Player
         [SerializeField] private float angLerp = 7f;
         private float _animSpeed;
         private float _animTurn;
-        
+
         private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ClientUnsynchronized,
@@ -168,11 +175,17 @@ namespace Code.Player
 
         private bool _initedPlayer;
 
+        private void Awake()
+        {
+            EnsureInit();
+        }
+
         private void EnsureInit()
         {
             if (_initedPlayer) return;
             _initedPlayer = true;
 
+            CanMove = false;
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
             AssignAnimationIDs();
@@ -195,8 +208,8 @@ namespace Code.Player
             {
                 EnsureInit();
                 Own = this;
-                if (spawnOnSawedPosition)
-                    LoadSpawnPosition();
+                /*if (spawnOnSawedPosition)
+                    LoadSpawnPosition();*/
                 jumpTimeoutDelta = jumpTimeout;
                 fallTimeoutDelta = fallTimeout;
             }
@@ -217,7 +230,35 @@ namespace Code.Player
         private void LoadSpawnPosition()
         {
             if (!IsOwner) return;
-            if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
+
+            CanMove = false;
+            var getSpawnRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
+                Headers = ClientDataStorage.GetJwtHeader(),
+                Timeout = 5
+            };
+
+            RestClient.Get(getSpawnRequest).Then(spawnResponse =>
+            {
+                if (spawnResponse.StatusCode != 200)
+                    return;
+
+                var responseParts = spawnResponse.Text.Split(' ');
+                var posX = float.Parse(responseParts[0]);
+                var posY = float.Parse(responseParts[1]);
+                var posZ = float.Parse(responseParts[2]);
+                var rotX = float.Parse(responseParts[3]);
+                var rotY = float.Parse(responseParts[4]);
+                var rotZ = float.Parse(responseParts[5]);
+
+                transform.position = new Vector3(posX, posY, posZ);
+                Debug.Log($"[Spawn data] {spawnResponse.Text}");
+                Debug.Log($"[Spawn data] {transform.position} {CanMove}");
+                transform.rotation = Quaternion.Euler(rotX, rotY, rotZ);
+            }).Finally(() => CanMove = true);
+
+            /*if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
 
             transform.position = new Vector3(
                 PlayerPrefs.GetFloat("SavedSpawnPositionX"),
@@ -229,7 +270,7 @@ namespace Code.Player
                 PlayerPrefs.GetFloat("SavedSpawnRotationY"),
                 PlayerPrefs.GetFloat("SavedSpawnRotationZ")
             );
-            PlayerPrefs.DeleteKey("SavedSpawnPosition");
+            PlayerPrefs.DeleteKey("SavedSpawnPosition");*/
         }
 
         private void UpdateSpawnPositionTimer()
@@ -248,18 +289,33 @@ namespace Code.Player
 
         private void SaveSpawnPosition()
         {
-            if (!IsOwner) return;
-            var p = transform.position;
-            var r = transform.rotation.eulerAngles;
+            if (!IsOwner || !CanMove) return;
+            var spawnPos = transform.position;
+            var spawnRot = transform.rotation.eulerAngles;
 
-            PlayerPrefs.SetFloat("SavedSpawnPositionX", p.x);
-            PlayerPrefs.SetFloat("SavedSpawnPositionY", p.y);
-            PlayerPrefs.SetFloat("SavedSpawnPositionZ", p.z);
-            PlayerPrefs.SetFloat("SavedSpawnRotationX", r.x);
-            PlayerPrefs.SetFloat("SavedSpawnRotationY", r.y);
-            PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
+            var dataText = $"{spawnPos.x} {spawnPos.y} {spawnPos.z} {spawnRot.x} {spawnRot.y} {spawnRot.z}";
+
+            var loadSpawnForm = new WWWForm();
+            loadSpawnForm.AddBinaryData("file", Encoding.UTF8.GetBytes(dataText),
+                $"SpawnPoint_{ClientDataStorage.UserData.id}.txt");
+
+            var loadSavedSpawnRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetLoadFileUrl(),
+                FormData = loadSpawnForm,
+                Headers = ClientDataStorage.GetJwtHeader()
+            };
+
+            RestClient.Post(loadSavedSpawnRequest);
+
+            /*PlayerPrefs.SetFloat("SavedSpawnPositionX", spawnPos.x);
+            PlayerPrefs.SetFloat("SavedSpawnPositionY", spawnPos.y);
+            PlayerPrefs.SetFloat("SavedSpawnPositionZ", spawnPos.z);
+            PlayerPrefs.SetFloat("SavedSpawnRotationX", spawnRot.x);
+            PlayerPrefs.SetFloat("SavedSpawnRotationY", spawnRot.y);
+            PlayerPrefs.SetFloat("SavedSpawnRotationZ", spawnRot.z);
             PlayerPrefs.SetInt("SavedSpawnPosition", 1);
-            PlayerPrefs.Save();
+            PlayerPrefs.Save();*/
         }
 
         private void Update()
@@ -396,7 +452,11 @@ namespace Code.Player
                 if (input.CameraSwitchDown)
                 {
                     if (FirstPersonView) cameraDistance = savedDistance;
-                    else { savedDistance = cameraDistance; cameraDistance = 0f; }
+                    else
+                    {
+                        savedDistance = cameraDistance;
+                        cameraDistance = 0f;
+                    }
                 }
 
                 cameraDistance -= PlayerInput.Instance.Zoom * Time.deltaTime * 100f;
@@ -448,7 +508,8 @@ namespace Code.Player
         private void GroundedCheck()
         {
             Vector3 spherePosition = transform.position + Vector3.down * groundedOffset;
-            grounded = Physics.CheckSphere(spherePosition, groundedRadius, groundLayers, QueryTriggerInteraction.Ignore);
+            grounded = Physics.CheckSphere(spherePosition, groundedRadius, groundLayers,
+                QueryTriggerInteraction.Ignore);
             if (animator != null) animator.SetBool(animIDGrounded, grounded);
         }
 
@@ -465,9 +526,10 @@ namespace Code.Player
 
             var currentSpeed = new Vector3(controller.velocity.x, 0f, controller.velocity.z).magnitude;
             var inputMagnitude = mvUsed.magnitude;
-            
+
             if (Mathf.Abs(currentSpeed - targetSpeed) > 0.1f)
-                speed = Mathf.Round(Mathf.Lerp(currentSpeed, targetSpeed * inputMagnitude, Time.deltaTime * speedChangeRate) * 1000f) / 1000f;
+                speed = Mathf.Round(Mathf.Lerp(currentSpeed, targetSpeed * inputMagnitude,
+                    Time.deltaTime * speedChangeRate) * 1000f) / 1000f;
             else
                 speed = targetSpeed;
 
@@ -480,7 +542,8 @@ namespace Code.Player
 
             if (mv != Vector2.zero)
             {
-                var rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity, rotationSmoothTime);
+                var rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetRotation, ref rotationVelocity,
+                    rotationSmoothTime);
 
                 if (!FirstPersonView && _cursorUsable)
                     transform.rotation = Quaternion.Euler(0f, rotation, 0f);
@@ -492,7 +555,8 @@ namespace Code.Player
             var moveDir = Quaternion.Euler(0f, targetRotation, 0f) * Vector3.forward;
 
             if (_cursorUsable)
-                controller.Move(moveDir.normalized * (speed * Time.deltaTime) + Vector3.up * verticalVelocity * Time.deltaTime);
+                controller.Move(moveDir.normalized * (speed * Time.deltaTime) +
+                                Vector3.up * verticalVelocity * Time.deltaTime);
 
             UpdateAnimByKinematics();
         }
@@ -547,7 +611,8 @@ namespace Code.Player
 
             cinemachineTargetYaw = ClampAngle(cinemachineTargetYaw, float.MinValue, float.MaxValue);
             cinemachineTargetPitch = ClampAngle(cinemachineTargetPitch, bottomClamp, topClamp);
-            cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride, cinemachineTargetYaw, 0f);
+            cinemachineCameraTarget.transform.rotation = Quaternion.Euler(cinemachineTargetPitch + cameraAngleOverride,
+                cinemachineTargetYaw, 0f);
         }
 
         private static float ClampAngle(float angle, float min, float max)
@@ -579,7 +644,8 @@ namespace Code.Player
         {
             if (controller == null || landingAudioClip == null) return;
             if (evt.animatorClipInfo.weight > 0.5f)
-                AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center), footstepAudioVolume);
+                AudioSource.PlayClipAtPoint(landingAudioClip, transform.TransformPoint(controller.center),
+                    footstepAudioVolume);
         }
 
         private float _lastIkSendTime;
@@ -630,7 +696,7 @@ namespace Code.Player
 
             horizontal = Mathf.Lerp(horizontal, localRight, Time.deltaTime * 5f);
             animator.SetFloat(animIDHorizontal, horizontal);
-            
+
             var turnClamped = Mathf.Clamp(_animTurn, -360f, 360f);
             animator.SetFloat(animIDTurn, turnClamped);
 
@@ -649,7 +715,9 @@ namespace Code.Player
 
                 if (Time.unscaledTime - _lastIkSendTime >= ikSendRate)
                 {
-                    var nowPos = headTarget != null ? headTarget.position : transform.position + transform.forward * 10f;
+                    var nowPos = headTarget != null
+                        ? headTarget.position
+                        : transform.position + transform.forward * 10f;
                     if ((Vector3.SqrMagnitude(_lastSentLookPos - nowPos) > 0.0001f) ||
                         (Mathf.Abs(_lastSentWeight - currentIkWeight) > 0.001f))
                     {
@@ -674,6 +742,7 @@ namespace Code.Player
         }
 
         #region IMigratable
+
         public void OnMigrateDataReceived_Server(CharacterMigrateData data)
         {
             if (NetworkManager.IsServerStarted)
@@ -699,6 +768,7 @@ namespace Code.Player
                 isFirstPersonView = FirstPersonView
             };
         }
+
         #endregion
     }
 }
