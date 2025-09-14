@@ -26,5 +26,10 @@ namespace Ricimi
             m_popup.SetActive(true);
             m_popup.GetComponent<Popup>().Open();
         }
+
+        public virtual void ClosePopup()
+        {
+            m_popup.GetComponent<Popup>().Close();
+        }
     }
 }
