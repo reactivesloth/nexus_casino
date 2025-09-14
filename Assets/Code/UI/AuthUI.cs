@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using Code.API;
 using Code.API.Models;
@@ -72,11 +70,23 @@ namespace Code.UI
 
         private void Start()
         {
-            ToStartState();
             InitializeResendButton();
 
             if (CursorManager.Instance != null)
                 CursorManager.Instance.ShowCursor();
+
+            // Проверка сохраненного токена
+            string savedToken = PlayerPrefs.GetString("auth_accessToken", string.Empty);
+            if (!string.IsNullOrEmpty(savedToken))
+            {
+                ClientDataStorage.AccessToken = savedToken;
+                ClientDataStorage.RefreshToken = PlayerPrefs.GetString("auth_refreshToken", string.Empty);
+                ValidateSavedToken();
+            }
+            else
+            {
+                ToStartState();
+            }
         }
 
         private void Update()
@@ -103,7 +113,7 @@ namespace Code.UI
             _isResendTimerActive = false;
 
             if (titleText != null)
-                titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput}" : "Welcome to the Nexus Meta Club";
+                titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
 
             if (authButtonText != null)
                 authButtonText.text = _isRegistered ? "Login" : "Sign up";
@@ -112,6 +122,35 @@ namespace Code.UI
                 startGameButton.gameObject.SetActive(_isAuthorized);
             if (loginPopup != null)
                 loginPopup.SetActive(!_isAuthorized);
+        }
+
+        private void ValidateSavedToken()
+        {
+            var userDataRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetMeUrl(),
+                Headers = ClientDataStorage.GetJwtHeader()
+            };
+
+            RestClient.Get(userDataRequest).Then(userDataResponse =>
+            {
+                if (userDataResponse.StatusCode == 200
+                    && JsonUtility.FromJson<SuccessResponse<MeSchema>>(userDataResponse.Text).success)
+                {
+                    var successResponse = JsonUtility.FromJson<SuccessResponse<MeSchema>>(userDataResponse.Text);
+                    if (successResponse != null && successResponse.success)
+                    {
+                        ClientDataStorage.UserData = successResponse.data;
+                        _isAuthorized = true;
+                        ToStartState();
+                        return;
+                    }
+                }
+                PlayerPrefs.DeleteKey("auth_accessToken");
+                PlayerPrefs.DeleteKey("auth_refreshToken");
+                _isAuthorized = false;
+                ToStartState();
+            });
         }
 
         private void OnGetCodeClicked()
@@ -171,7 +210,6 @@ namespace Code.UI
                     }
                     
                     OnGetCodeSuccess();
-
                     StartResendTimer();
                 }).Finally(() =>
                 {
@@ -187,7 +225,7 @@ namespace Code.UI
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
             if (authButton != null) authButton.interactable = true;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
-            if (titleText != null) titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput}" : "Welcome to the Nexus Meta Club";
+            if (titleText != null) titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
             if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
         }
 
@@ -324,6 +362,10 @@ namespace Code.UI
             ClientDataStorage.AccessToken = authResponse.access_jwt;
             ClientDataStorage.RefreshToken = authResponse.refresh_jwt;
 
+            // Сохраняем токены
+            PlayerPrefs.SetString("auth_accessToken", authResponse.access_jwt);
+            PlayerPrefs.SetString("auth_refreshToken", authResponse.refresh_jwt);
+
             var userDataRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetMeUrl(),
@@ -338,7 +380,8 @@ namespace Code.UI
                 if (successResponse != null && successResponse.success)
                 {
                     ClientDataStorage.UserData = successResponse.data;
-                    OnUserCanStartGame();
+                    _isAuthorized = true;
+                    ToStartState();
                 }
                 else
                 {
