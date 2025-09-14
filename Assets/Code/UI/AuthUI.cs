@@ -22,6 +22,7 @@ namespace Code.UI
         public Button authButton;
         public Button resendCodeButton;
         public Button exit;
+        public Button logoutButton;
 
         public Button startGameButton;
         public GameObject loginPopup;
@@ -57,6 +58,7 @@ namespace Code.UI
             if (resendCodeButton != null) resendCodeButton.onClick.AddListener(OnResendCodeClicked);
             if (exit != null) exit.onClick.AddListener(OnExitClicked);
             if (startGameButton != null) startGameButton.onClick.AddListener(OnUserCanStartGame);
+            if (logoutButton != null) logoutButton.onClick.AddListener(OnLogoutClicked);
         }
 
         private void OnDisable()
@@ -66,6 +68,7 @@ namespace Code.UI
             if (resendCodeButton != null) resendCodeButton.onClick.RemoveListener(OnResendCodeClicked);
             if (exit != null) exit.onClick.RemoveListener(OnExitClicked);
             if (startGameButton != null) startGameButton.onClick.RemoveListener(OnUserCanStartGame);
+            if (logoutButton != null) logoutButton.onClick.RemoveListener(OnLogoutClicked);
         }
 
         private void Start()
@@ -102,9 +105,11 @@ namespace Code.UI
                 phoneInput.text = PlayerPrefs.GetString("auth_phoneInput", string.Empty);
             }
 
+
             if (codeInput != null) codeInput.text = string.Empty;
             if (nicknameInput != null)
                 nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput", string.Empty);
+
 
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(true);
             if (authButton != null) authButton.interactable = false;
@@ -112,18 +117,23 @@ namespace Code.UI
             if (resendCodeButton != null) resendCodeButton.gameObject.SetActive(false);
             _isResendTimerActive = false;
 
+
             if (titleText != null)
                 titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
+
 
             if (authButtonText != null)
                 authButtonText.text = _isRegistered ? "Login" : "Sign up";
 
+
             if (startGameButton != null)
                 startGameButton.gameObject.SetActive(_isAuthorized);
+            if (logoutButton != null)
+                logoutButton.gameObject.SetActive(_isAuthorized);
             if (loginPopup != null)
                 loginPopup.SetActive(!_isAuthorized);
         }
-
+        
         private void ValidateSavedToken()
         {
             var userDataRequest = new RequestHelper
@@ -131,6 +141,7 @@ namespace Code.UI
                 Uri = ApiRoutes.GetMeUrl(),
                 Headers = ClientDataStorage.GetJwtHeader()
             };
+
 
             RestClient.Get(userDataRequest).Then(userDataResponse =>
             {
@@ -430,6 +441,17 @@ namespace Code.UI
             }
             else
                 Debug.LogWarning($"{title}: {errorMessage}");
+        }
+        
+        private void OnLogoutClicked()
+        {
+            PlayerPrefs.DeleteKey("auth_accessToken");
+            PlayerPrefs.DeleteKey("auth_refreshToken");
+            ClientDataStorage.AccessToken = string.Empty;
+            ClientDataStorage.RefreshToken = string.Empty;
+            ClientDataStorage.UserData = default;
+            _isAuthorized = false;
+            ToStartState();
         }
     }
 }
