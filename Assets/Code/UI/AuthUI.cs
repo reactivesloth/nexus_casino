@@ -118,7 +118,7 @@ namespace Code.UI
 
             if (titleText != null)
                 titleText.text =
-                    _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
+                    _isAuthorized ? $"Welcome back, {ClientDataStorage.UserData.username}" : "Welcome to the Nexus Meta Club";
 
 
             if (authButtonText != null)
@@ -240,7 +240,7 @@ namespace Code.UI
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
             if (titleText != null)
                 titleText.text =
-                    _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
+                    _isAuthorized ? $"Welcome back, {ClientDataStorage.UserData.username}" : "Welcome to the Nexus Meta Club";
             if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
         }
 
