@@ -26,9 +26,12 @@ namespace Ricimi
         public void Close()
         {
             var animator = GetComponent<Animator>();
-            if (animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
+            if (animator != null)
             {
-                animator.Play("Close");
+                if (animator.GetCurrentAnimatorStateInfo(0).IsName("Open"))
+                {
+                    animator.Play("Close");
+                }
             }
 
             RemoveBackground();

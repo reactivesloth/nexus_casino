@@ -97,11 +97,11 @@ namespace EOSLobby
             var maxLobbyUsers = LobbyVariables.Instance.maxLobbyUsers;
             var bucketId = LobbyVariables.Instance.bucketId;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Logging in...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Logging in...", 10);
             yield return LocalUser.Get(out var localUser);
             var localUserId = localUser.Id;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Creating Lobby...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Creating Lobby...", 20);
             yield return LobbyCreateLobby.Run(out var createLobby, localUserId, maxLobbyUsers, bucketId);
             if (createLobby.CallbackInfo?.ResultCode != Result.Success)
             {
@@ -113,7 +113,7 @@ namespace EOSLobby
             }
 
             var lobbyId = createLobby.CallbackInfo?.LobbyId;
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...", 30);
             yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName.Value);
             if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
@@ -127,19 +127,19 @@ namespace EOSLobby
             var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxLobbyUsers };
             LobbyVariables.Instance.currentLobby = currentLobby;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...", 50);
             yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, "NAME",
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Ready...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Ready...", 99);
             yield return LobbySetMemberAttribute.Run(out var setReady, lobbyId, localUserId, "READY",
                 "Ready");
             if (setReady.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member ready: {setReady.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...", 100);
             yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID",
                 localUserId.ToString());
             if (setId.CallbackInfo?.ResultCode != Result.Success)
@@ -184,7 +184,7 @@ namespace EOSLobby
             LobbyEvents.Instance.LobbyMemberUpdateReceived.AddPersistentListener(OnLobbyMemberUpdateReceived);
             LobbyEvents.Instance.LobbyUpdateReceived.AddPersistentListener(OnLobbyUpdateReceived);
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Please wait...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Please wait...", 10);
             yield return LobbyJoinLobby.Run(out var joinLobby, localUserId, lobbyDetails);
             if (joinLobby.CallbackInfo?.ResultCode != Result.Success)
             {
@@ -197,7 +197,7 @@ namespace EOSLobby
                 yield break;
             }
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Info...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Info...", 20);
             var getLobbyInfoResult = Lobby.GetLobbyInfo(lobbyDetails, out var lobbyInfo);
             if (getLobbyInfoResult != Result.Success)
             {
@@ -212,7 +212,7 @@ namespace EOSLobby
 
             var lobbyId = lobbyInfo?.LobbyId;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Name...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Name...", 30);
             var getAttributeResult = Lobby.GetAttribute(lobbyDetails, "NAME", out var lobbyNameAttribute);
             if (getAttributeResult != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to get lobby name: {getAttributeResult}");
@@ -221,13 +221,13 @@ namespace EOSLobby
             var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyNameAttribute?.Data?.Value.AsUtf8, };
             LobbyVariables.Instance.currentLobby = currentLobby;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Setting Local User Display Name...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Setting Local User Display Name...", 50);
             yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, "NAME",
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...", 99);
             var attributes = Lobby.GetAttributes(lobbyDetails);
             currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
             currentLobby.attributeValues =
@@ -260,7 +260,7 @@ namespace EOSLobby
             var lobbyId = LobbyVariables.Instance.currentLobby.lobbyId;
             LobbyVariables.Instance.hostLobbyName.Value = string.Empty;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Leaving Lobby...", "Please wait...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("Leaving Lobby...", "Please wait...", 100);
             yield return LobbyLeaveLobby.Run(out var leaveLobby, lobbyId, localUserId);
             LobbyVariables.Instance.lobbyPopupUI.Hide();
 

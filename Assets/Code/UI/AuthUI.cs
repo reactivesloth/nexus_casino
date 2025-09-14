@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Code.API;
 using Code.API.Models;
@@ -5,6 +7,7 @@ using Code.Utility;
 using Proyecto26;
 using Ricimi;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -20,8 +23,11 @@ namespace Code.UI
         public Button getConfirmCodeButton;
         public Button authButton;
         public Button resendCodeButton;
-        public GameObject termsAndConditions;
+        public Button exit;
 
+        public Button startGameButton;
+        public GameObject loginPopup;
+        
         [Header("Texts")]
         public TMP_Text authButtonText;
         public TMP_Text titleText;
@@ -36,6 +42,7 @@ namespace Code.UI
 
         private bool _isResendTimerActive;
         private float _resendTimer;
+        private bool _isAuthorized;
         private bool _isRegistered;
         private TMP_Text _resendText;
 
@@ -50,6 +57,8 @@ namespace Code.UI
             if (authButton != null) authButton.onClick.AddListener(OnAuthClicked);
             if (getConfirmCodeButton != null) getConfirmCodeButton.onClick.AddListener(OnGetCodeClicked);
             if (resendCodeButton != null) resendCodeButton.onClick.AddListener(OnResendCodeClicked);
+            if (exit != null) exit.onClick.AddListener(OnExitClicked);
+            if (startGameButton != null) startGameButton.onClick.AddListener(OnUserCanStartGame);
         }
 
         private void OnDisable()
@@ -57,6 +66,8 @@ namespace Code.UI
             if (authButton != null) authButton.onClick.RemoveListener(OnAuthClicked);
             if (getConfirmCodeButton != null) getConfirmCodeButton.onClick.RemoveListener(OnGetCodeClicked);
             if (resendCodeButton != null) resendCodeButton.onClick.RemoveListener(OnResendCodeClicked);
+            if (exit != null) exit.onClick.RemoveListener(OnExitClicked);
+            if (startGameButton != null) startGameButton.onClick.RemoveListener(OnUserCanStartGame);
         }
 
         private void Start()
@@ -92,12 +103,15 @@ namespace Code.UI
             _isResendTimerActive = false;
 
             if (titleText != null)
-                titleText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Welcome back" : "Welcome";
+                titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput}" : "Welcome to the Nexus Meta Club";
 
-            if (authButtonText != null) authButtonText.text = PlayerPrefs.HasKey("auth_phoneInput") ? "Login" : "Sign up";
+            if (authButtonText != null)
+                authButtonText.text = _isRegistered ? "Login" : "Sign up";
 
-            if (termsAndConditions != null)
-                termsAndConditions.SetActive(false);
+            if (startGameButton != null)
+                startGameButton.gameObject.SetActive(_isAuthorized);
+            if (loginPopup != null)
+                loginPopup.SetActive(!_isAuthorized);
         }
 
         private void OnGetCodeClicked()
@@ -173,9 +187,8 @@ namespace Code.UI
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
             if (authButton != null) authButton.interactable = true;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
-            if (titleText != null) titleText.text = _isRegistered ? "Login" : "Sign up";
+            if (titleText != null) titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput}" : "Welcome to the Nexus Meta Club";
             if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
-            if (termsAndConditions != null) termsAndConditions.SetActive(!_isRegistered);
         }
 
         private void OnAuthClicked()
@@ -335,6 +348,15 @@ namespace Code.UI
             });
         }
 
+        private void OnExitClicked()
+        {
+#if UNITY_EDITOR
+            EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+        
         private void OnUserCanStartGame()
         {
             string savePath = Application.persistentDataPath + "/CharacterCustomizer.json";
@@ -348,7 +370,10 @@ namespace Code.UI
                 hasCC = !string.IsNullOrEmpty(jsonLoad) && jsonLoad.Length > 200;
             }
 
-            SceneManager.LoadSceneAsync(hasCC ? "Main" : "Character Customization");
+            if (LoadingScreenUI.Instance != null)
+                LoadingScreenUI.Instance.LoadScene(hasCC ? "Main" : "Character Customization", "Please wait...", "Loading...");
+            else
+                SceneManager.LoadSceneAsync(hasCC ? "Main" : "Character Customization");
         }
 
         private void HandleError(string title, string errorMessage)
@@ -357,6 +382,7 @@ namespace Code.UI
             {
                 popupPanel.Title = title ?? "Error";
                 popupPanel.Message = errorMessage ?? "Unknown error";
+                popupPanel.Buttons.Clear();
                 popupPanel.OpenPopup();
             }
             else

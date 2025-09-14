@@ -32,5 +32,11 @@ namespace Ricimi
             base.OpenPopup();
             m_popup.GetComponent<ModularPopup>().Initialize(this);
         }
+
+        public override void ClosePopup()
+        {
+	        base.ClosePopup();
+	        m_popup.GetComponent<ModularPopup>().Close();
+        }
     }
 }
