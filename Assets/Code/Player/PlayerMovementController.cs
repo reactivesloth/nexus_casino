@@ -185,7 +185,6 @@ namespace Code.Player
             if (_initedPlayer) return;
             _initedPlayer = true;
 
-            CanMove = false;
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
             AssignAnimationIDs();
@@ -208,8 +207,8 @@ namespace Code.Player
             {
                 EnsureInit();
                 Own = this;
-                /*if (spawnOnSawedPosition)
-                    LoadSpawnPosition();*/
+                if (spawnOnSawedPosition)
+                    LoadSpawnPosition();
                 jumpTimeoutDelta = jumpTimeout;
                 fallTimeoutDelta = fallTimeout;
             }
@@ -231,8 +230,8 @@ namespace Code.Player
         {
             if (!IsOwner) return;
 
-            CanMove = false;
-            var getSpawnRequest = new RequestHelper
+            /*CanMove = false;
+             getSpawnRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
                 Headers = ClientDataStorage.GetJwtHeader(),
@@ -256,9 +255,9 @@ namespace Code.Player
                 Debug.Log($"[Spawn data] {spawnResponse.Text}");
                 Debug.Log($"[Spawn data] {transform.position} {CanMove}");
                 transform.rotation = Quaternion.Euler(rotX, rotY, rotZ);
-            }).Finally(() => CanMove = true);
+            }).Finally(() => CanMove = true);*/
 
-            /*if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
+            if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
 
             transform.position = new Vector3(
                 PlayerPrefs.GetFloat("SavedSpawnPositionX"),
@@ -270,7 +269,7 @@ namespace Code.Player
                 PlayerPrefs.GetFloat("SavedSpawnRotationY"),
                 PlayerPrefs.GetFloat("SavedSpawnRotationZ")
             );
-            PlayerPrefs.DeleteKey("SavedSpawnPosition");*/
+            PlayerPrefs.DeleteKey("SavedSpawnPosition");
         }
 
         private void UpdateSpawnPositionTimer()
@@ -307,15 +306,15 @@ namespace Code.Player
             };
 
             RestClient.Post(loadSavedSpawnRequest);
-
-            /*PlayerPrefs.SetFloat("SavedSpawnPositionX", spawnPos.x);
+            
+            PlayerPrefs.SetFloat("SavedSpawnPositionX", spawnPos.x);
             PlayerPrefs.SetFloat("SavedSpawnPositionY", spawnPos.y);
             PlayerPrefs.SetFloat("SavedSpawnPositionZ", spawnPos.z);
             PlayerPrefs.SetFloat("SavedSpawnRotationX", spawnRot.x);
             PlayerPrefs.SetFloat("SavedSpawnRotationY", spawnRot.y);
             PlayerPrefs.SetFloat("SavedSpawnRotationZ", spawnRot.z);
             PlayerPrefs.SetInt("SavedSpawnPosition", 1);
-            PlayerPrefs.Save();*/
+            PlayerPrefs.Save();
         }
 
         private void Update()
@@ -333,14 +332,7 @@ namespace Code.Player
 
             if (CanMove || LookCameraLimitRotation)
                 UpdateCameraDistance();
-
-            if (!CanMove)
-            {
-                if (spawnOnSawedPosition)
-                    UpdateSpawnPositionTimer();
-                return;
-            }
-
+            
             GroundedCheck();
             JumpAndGravity();
             Move();

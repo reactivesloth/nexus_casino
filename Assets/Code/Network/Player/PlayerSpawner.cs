@@ -11,6 +11,7 @@ using FishNet.Managing;
 using FishNet.Managing.Server;
 using FishNet.Object;
 using FishNet.Transporting;
+using Proyecto26;
 using UnityEngine;
 
 namespace Code.Network.Player
@@ -220,6 +221,44 @@ namespace Code.Network.Player
         /// <summary>Определяет позицию/поворот спавна.</summary>
         private void SetSpawn(Transform prefab, out Vector3 pos, out Quaternion rot)
         {
+            var getSpawnRequest = new RequestHelper { Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"), Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5 };
+
+            Vector3 p = Vector3.zero;
+            Quaternion r = Quaternion.identity;
+
+            RestClient.Get(getSpawnRequest).Then(spawnResponse =>
+            {
+                if (spawnResponse.StatusCode != 200)
+                    return;
+
+                var responseParts = spawnResponse.Text.Split(' ');
+                var posX = float.Parse(responseParts[0]);
+                var posY = float.Parse(responseParts[1]);
+                var posZ = float.Parse(responseParts[2]);
+                var rotX = float.Parse(responseParts[3]);
+                var rotY = float.Parse(responseParts[4]);
+                var rotZ = float.Parse(responseParts[5]);
+
+                p = new Vector3(posX, posY, posZ);
+                r = Quaternion.Euler(rotX, rotY, rotZ);
+                
+                PlayerPrefs.SetFloat("SavedSpawnPositionX", p.x);
+                PlayerPrefs.SetFloat("SavedSpawnPositionY", p.y);
+                PlayerPrefs.SetFloat("SavedSpawnPositionZ", p.z);
+                PlayerPrefs.SetFloat("SavedSpawnRotationX", r.x);
+                PlayerPrefs.SetFloat("SavedSpawnRotationY", r.y);
+                PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
+                PlayerPrefs.SetInt("SavedSpawnPosition", 1);
+                PlayerPrefs.Save();
+            });
+
+            if (p != Vector3.zero && r != Quaternion.identity)
+            {
+                pos = p;
+                rot = r;
+                return;
+            }
+            
             if (Spawns == null || Spawns.Length == 0)
             {
                 SetSpawnUsingPrefab(prefab, out pos, out rot);
