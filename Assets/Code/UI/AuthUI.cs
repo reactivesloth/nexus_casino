@@ -438,13 +438,19 @@ namespace Code.UI
                 Uri = ApiRoutes.GetFileUrl($"Avatar_{meData.id}.json"),
                 Headers = ClientDataStorage.GetJwtHeader()
             };
-
-
+            
             var isAvatarLoaded = false;
+            var isModelTypeLoaded = false;
             RestClient.Get(getAvatarRequest).Then(getAvatarResponse =>
             {
+                var getModelTypeRequest = new RequestHelper
+                {
+                    Uri = ApiRoutes.GetFileUrl($"PlayerModelType_{ClientDataStorage.UserData.id}.txt"),
+                    Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5
+                };
+                
                 if (getAvatarResponse.StatusCode != 200)
-                    return;
+                    return RestClient.Get(getModelTypeRequest);
 
                 isAvatarLoaded = true;
                 try
@@ -456,13 +462,56 @@ namespace Code.UI
                     Debug.LogError($"Ошибка при записи аватара в файл: {ex}");
                     isAvatarLoaded = false;
                 }
+                
+                return RestClient.Get(getModelTypeRequest);
+            }).Then(getModelTypeResponse =>
+            {
+                var getSpawnRequest = new RequestHelper
+                {
+                    Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
+                    Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5
+                };
+                
+                if (getModelTypeResponse.StatusCode != 200)
+                    return RestClient.Get(getSpawnRequest);
+
+                isModelTypeLoaded = true;
+                PlayerPrefs.SetString("PlayerModelType", getModelTypeResponse.Text);
+                
+                return RestClient.Get(getSpawnRequest);
+            }).Then(getSpawnResponse =>
+            {
+                if (getSpawnResponse.StatusCode != 200)
+                    return;
+
+                var responseParts = getSpawnResponse.Text.Split(' ');
+                var posX = float.Parse(responseParts[0]);
+                var posY = float.Parse(responseParts[1]);
+                var posZ = float.Parse(responseParts[2]);
+                var rotX = float.Parse(responseParts[3]);
+                var rotY = float.Parse(responseParts[4]);
+                var rotZ = float.Parse(responseParts[5]);
+
+                var p = new Vector3(posX, posY, posZ);
+                var r = Quaternion.Euler(rotX, rotY, rotZ);
+                
+                PlayerPrefs.SetFloat("SavedSpawnPositionX", p.x);
+                PlayerPrefs.SetFloat("SavedSpawnPositionY", p.y);
+                PlayerPrefs.SetFloat("SavedSpawnPositionZ", p.z);
+                PlayerPrefs.SetFloat("SavedSpawnRotationX", r.x);
+                PlayerPrefs.SetFloat("SavedSpawnRotationY", r.y);
+                PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
+                PlayerPrefs.SetInt("SavedSpawnPosition", 1);
+                PlayerPrefs.Save();
+                
             }).Finally(() =>
             {
+                var isLoadGame = isAvatarLoaded && isModelTypeLoaded;
                 if (LoadingScreenUI.Instance != null)
-                    LoadingScreenUI.Instance.LoadScene(isAvatarLoaded ? "Main" : "Character Customization", "Please wait...",
+                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization", "Please wait...",
                         "Loading...");
                 else
-                    SceneManager.LoadSceneAsync(isAvatarLoaded ? "Main" : "Character Customization"); 
+                    SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization"); 
             });
         }
 

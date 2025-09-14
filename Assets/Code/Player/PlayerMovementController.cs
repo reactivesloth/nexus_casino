@@ -306,7 +306,7 @@ namespace Code.Player
             };
 
             RestClient.Post(loadSavedSpawnRequest);
-            
+            /*
             PlayerPrefs.SetFloat("SavedSpawnPositionX", spawnPos.x);
             PlayerPrefs.SetFloat("SavedSpawnPositionY", spawnPos.y);
             PlayerPrefs.SetFloat("SavedSpawnPositionZ", spawnPos.z);
@@ -314,7 +314,7 @@ namespace Code.Player
             PlayerPrefs.SetFloat("SavedSpawnRotationY", spawnRot.y);
             PlayerPrefs.SetFloat("SavedSpawnRotationZ", spawnRot.z);
             PlayerPrefs.SetInt("SavedSpawnPosition", 1);
-            PlayerPrefs.Save();
+            PlayerPrefs.Save();*/
         }
 
         private void Update()

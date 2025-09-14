@@ -283,6 +283,7 @@ GameObject:
   - component: {fileID: 5733565265521739004}
   - component: {fileID: 7378173874975335864}
   - component: {fileID: -7663034267908521155}
+  - component: {fileID: 5606002303517019210}
   m_Layer: 0
   m_Name: UI_CC
   m_TagString: Untagged
@@ -422,6 +423,18 @@ MonoBehaviour:
   mobileScale: 600
   desktopScale: 850
   forceMobile: 0
+--- !u!114 &5606002303517019210
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2396302900887007917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 333d596867af6234d8f53b54fbc67ffc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Utility.ChatacterCastomizationApplyer
 --- !u!1 &2396881471970180188
 GameObject:
   m_ObjectHideFlags: 0
@@ -6932,7 +6945,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4469082703919055065, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_Size
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4469082703919055065, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_Value
@@ -12304,11 +12317,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4469082703919055065, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_Size
-      value: 0
+      value: 0.6933337
       objectReference: {fileID: 0}
     - target: {fileID: 4469082703919055065, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_Value
-      value: 1.0000002
+      value: 0.0000004599759
       objectReference: {fileID: 0}
     - target: {fileID: 8208505788607784152, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_SizeDelta.x
@@ -12316,7 +12329,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8208505788607784152, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -132.69214
+      value: -0.000030517578
       objectReference: {fileID: 0}
     - target: {fileID: 8325496086322565212, guid: 0a2fc29630bb9254c8ffba2e1f2ca93b, type: 3}
       propertyPath: m_Name
@@ -12789,7 +12802,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Mode
-      value: 5
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_Mode
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
@@ -12798,7 +12815,7 @@ PrefabInstance:
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Target
       value: 
-      objectReference: {fileID: 7378173874975335864}
+      objectReference: {fileID: 5606002303517019210}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
@@ -12808,12 +12825,16 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
       value: saveToJSON
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_MethodName
-      value: Load
+      value: ApplyChatacterCastomization
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
@@ -12821,6 +12842,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_TargetAssemblyTypeName
+      value: Code.Utility.ChatacterCastomizationApplyer, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[2].m_TargetAssemblyTypeName
       value: Code.Tests.SceneLoader, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
@@ -12829,7 +12854,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[1].m_Arguments.m_StringArgument
-      value: Main
+      value: 
       objectReference: {fileID: 0}
     - target: {fileID: 7945597309463463411, guid: fc49f165eeb11a3438ebdc4e61485aea, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
