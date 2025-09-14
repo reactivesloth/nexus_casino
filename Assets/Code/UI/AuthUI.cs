@@ -364,7 +364,7 @@ namespace Code.UI
                 popupPanel.Buttons.Add(new ButtonInfo());
 
                 yield return popupPanel.Buttons.Count >= 2;
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(1);
                 
                 popupPanel.Buttons[0].Label = "Cancel";
                 popupPanel.Buttons[0].OnClickedEvent.RemoveAllListeners();
