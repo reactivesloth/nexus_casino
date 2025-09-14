@@ -71,4 +71,10 @@ namespace Code.API.Models
         public int total_count;
         public bool has_more;
     }
+
+    public class BanData
+    {
+        public string username;
+        public int timeout_minutes = 0;
+    }
 }

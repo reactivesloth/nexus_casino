@@ -16,7 +16,10 @@ namespace Code.API
         
         public const string LOAD_FILE_URL = "/api/s3/upload";
         public const string GET_FILE_URL = "/api/s3/{0}";
-
+        
+        public const string BAN_URL = "/api/client/commands/ban";
+        public const string UNBAN_URL = "/api/client/commands/unban";
+        
         public static string GetCheckNumberUrl() => DOMAIN.TrimEnd('/') + CHECK_NUMBER;
         public static string GetSignUpUrl() => DOMAIN.TrimEnd('/') + SIGN_UP;
         public static string GetLoginUrl() => DOMAIN.TrimEnd('/') + LOGIN;
@@ -28,5 +31,8 @@ namespace Code.API
         
         public static string GetLoadFileUrl() => DOMAIN.TrimEnd('/') + LOAD_FILE_URL;
         public static string GetFileUrl(string key) => DOMAIN.TrimEnd('/') + string.Format(GET_FILE_URL, key);
+
+        public static string GetBanUrl() => DOMAIN.TrimEnd('/') + BAN_URL;
+        public static string GetUnbanUrl() => DOMAIN.TrimEnd('/') + UNBAN_URL;
     }
 }

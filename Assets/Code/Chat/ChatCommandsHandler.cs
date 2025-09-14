@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text;
 using Code.API;
+using Code.API.Models;
 using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Player;
@@ -10,6 +11,7 @@ using FishNet.Component.Animating;
 using FishNet.Connection;
 using FishNet.Managing.Server;
 using FishNet.Object;
+using Proyecto26;
 using TankAndHealerStudioAssets;
 using UnityEngine;
 
@@ -90,7 +92,10 @@ namespace Code.Chat
             chatController.SendSystemMessage(message,
                 !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
             if (kickedConnection != null && kickedConnection == ClientManager.Connection)
-                LobbyDisconnector.Disconnect(true, "You was kicked");
+            {
+                PlayerPrefs.DeleteKey("auth_accessToken");
+                LobbyDisconnector.Disconnect(true, "You was kicked / baned");
+            }
         }
 
         #endregion
@@ -219,27 +224,28 @@ namespace Code.Chat
         #endregion
 
         #region Promote
-        
+
         public void PromoteMember(string promotedUserName)
         {
             var userMemberData = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m =>
             {
-                if(!m.Attributes.TryGetValue("NAME", out var memberName))
+                if (!m.Attributes.TryGetValue("NAME", out var memberName))
                     return false;
                 return memberName == promotedUserName;
             });
 
             if (userMemberData == null)
             {
-                chatController.SendSystemMessage($"User {promotedUserName} not found", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage($"User {promotedUserName} not found",
+                    UltimateChatBoxStyles.errorMessage);
                 return;
             }
 
             var userId = userMemberData.productUserId;
-            
-            if(ServerManager.Started)
+
+            if (ServerManager.Started)
                 FindAnyObjectByType<LobbyController>().Promote(userId);
-            else if(ClientDataStorage.UserData.IsAdminRole)
+            else if (ClientDataStorage.UserData.IsAdminRole)
                 Promote_ServerRpc(userId);
             else
                 chatController.SendSystemMessage("You can't promote members", UltimateChatBoxStyles.errorMessage);
@@ -247,10 +253,103 @@ namespace Code.Chat
 
         [ServerRpc(RequireOwnership = false)]
         private void Promote_ServerRpc(string userId)
-        {   
+        {
             FindAnyObjectByType<LobbyController>().Promote(userId);
         }
-        
+
+        #endregion
+
+        #region Ban
+
+        public void BanUser(string usernameTime)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage($"You can't ban users", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var parametres = usernameTime.Split(' ');
+            var username = parametres[0];
+            var time = parametres.Length > 1 ? int.Parse(parametres[1]) : 0;
+
+            if (LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username) ==
+                null)
+            {
+                chatController.SendSystemMessage($"User not found in lobby", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var banRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetBanUrl(),
+                Body = new BanData
+                {
+                    username = username,
+                    timeout_minutes = time
+                },
+                Headers = ClientDataStorage.GetJwtHeader(),
+            };
+
+            RestClient.Post(banRequest).Then(banResponse =>
+            {
+                if (banResponse.StatusCode != 200)
+                {
+                    chatController.SendSystemMessage(banResponse.Error, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+
+                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(banResponse.Text);
+                if (!responseData.success)
+                {
+                    chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+                
+                chatController.SendSystemMessage($"User {username} was banned", UltimateChatBoxStyles.noticeMessage);
+                
+                Kick(username);
+            });
+        }
+
+        public void UnbanUser(string username)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage($"You can't unban users", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var unbanRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetUnbanUrl(),
+                Body = new BanData
+                {
+                    username = username
+                },
+                Headers = ClientDataStorage.GetJwtHeader(),
+            };
+
+            RestClient.Post(unbanRequest).Then(unbanResponse =>
+            {
+                if (unbanResponse.StatusCode != 200)
+                {
+                    chatController.SendSystemMessage(unbanResponse.Error, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+
+                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(unbanResponse.Text);
+                if (!responseData.success)
+                {
+                    chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+                
+                chatController.SendSystemMessage($"User {username} was unbanned", UltimateChatBoxStyles.noticeMessage);
+                
+            });
+        }
+
         #endregion
     }
 }
