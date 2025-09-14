@@ -4,6 +4,8 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System.Collections;
+using Code.API;
+using Proyecto26;
 
 namespace CC
 {
@@ -33,7 +35,7 @@ namespace CC
         public scrObj_Presets Presets; //Available presets
         public CC_CharacterData StoredCharacterData; //Current character data
 
-        private string SavePath
+        public static string SavePath
         {
             get
             {
@@ -47,6 +49,7 @@ namespace CC
 
         //Event you can bind to notify when character has finished loading
         public delegate void OnCharacterLoaded(CharacterCustomization script);
+
         public event OnCharacterLoaded onCharacterLoaded;
 
         //Hover customization
@@ -60,6 +63,7 @@ namespace CC
         private float mainLODSize;
 
         #region Initialize script
+
         private void Awake()
         {
             if (!initializeOnStartInsteadOfAwake)
@@ -120,7 +124,9 @@ namespace CC
             if (hoverIndex != lastHoverIndex)
             {
                 setFloatProperty(new CC_Property { propertyName = "_HoverSamplePoint", floatValue = hoverIndex });
-                if (hoverIndex == 1) setFloatProperty(new CC_Property { propertyName = "_HoverSamplePoint", floatValue = 11, meshTag = "Head" });
+                if (hoverIndex == 1)
+                    setFloatProperty(new CC_Property
+                        { propertyName = "_HoverSamplePoint", floatValue = 11, meshTag = "Head" });
                 lastHoverIndex = hoverIndex;
             }
         }
@@ -134,19 +140,20 @@ namespace CC
             }
 
             foreach (var hairObject in HairObjects)
-                if(hairObject != null)
+                if (hairObject != null)
                     Destroy(hairObject.gameObject);
             HairObjects.Clear();
-            
+
             foreach (var apparelObject in ApparelObjects)
-                if(apparelObject != null)
+                if (apparelObject != null)
                     Destroy(apparelObject.gameObject);
             ApparelObjects.Clear();
-            
+
             foreach (var mesh in GetComponentsInChildren<SkinnedMeshRenderer>())
             {
                 //Add a blendshape manager script to every mesh
-                if (mesh.gameObject.GetComponent<BlendshapeManager>() == null) mesh.gameObject.AddComponent<BlendshapeManager>().parseBlendshapes();
+                if (mesh.gameObject.GetComponent<BlendshapeManager>() == null)
+                    mesh.gameObject.AddComponent<BlendshapeManager>().parseBlendshapes();
 
                 //If UI prefab is valid
                 if (UI != null)
@@ -154,7 +161,9 @@ namespace CC
                     //Set Customization bool in material for hover effects etc
                     foreach (var material in mesh.materials)
                     {
-                        if (material.shader.keywordSpace.keywordNames.Contains("_CUSTOMIZATION")) material.SetKeyword(new UnityEngine.Rendering.LocalKeyword(material.shader, "_CUSTOMIZATION"), true);
+                        if (material.shader.keywordSpace.keywordNames.Contains("_CUSTOMIZATION"))
+                            material.SetKeyword(
+                                new UnityEngine.Rendering.LocalKeyword(material.shader, "_CUSTOMIZATION"), true);
                     }
                 }
             }
@@ -180,7 +189,12 @@ namespace CC
 
                 //Create UI
                 UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
-                if (UI_Instance.GetComponent<CC_UI_Util>() == null) { Debug.LogError("UI is missing CC_UI_Util script"); return; }
+                if (UI_Instance.GetComponent<CC_UI_Util>() == null)
+                {
+                    Debug.LogError("UI is missing CC_UI_Util script");
+                    return;
+                }
+
                 UI_Instance.GetComponent<CC_UI_Util>().Initialize(this);
             }
         }
@@ -198,6 +212,7 @@ namespace CC
         #endregion Initialize script
 
         #region Save & Load
+
         public void SaveToJSON(string name = null)
         {
             //Create save file
@@ -233,7 +248,21 @@ namespace CC
                 //Save to JSON
                 string jsonSave = JsonUtility.ToJson(CC_SaveData, true);
                 File.WriteAllText(SavePath, jsonSave);
-                    
+
+                //Load to API
+                var loadForm = new WWWForm();
+                loadForm.AddBinaryData("file", File.ReadAllBytes(SavePath),
+                    $"Avatar_{ClientDataStorage.UserData.id}.json");
+
+                var loadAvatarRequest = new RequestHelper
+                {
+                    Uri = ApiRoutes.GetLoadFileUrl(),
+                    FormData = loadForm
+                };
+
+                RestClient.Post(loadAvatarRequest).Then(loadAvatarResponse =>
+                    Debug.Log($"Load result: {loadAvatarResponse.StatusCode}"));
+
                 ApplyCharacterVars(StoredCharacterData);
             }
         }
@@ -250,7 +279,11 @@ namespace CC
             int index = -1;
             for (int i = 0; i < CC_SaveData.SavedCharacters.Count; i++)
             {
-                if (CC_SaveData.SavedCharacters[i].CharacterName == name) { index = i; break; }
+                if (CC_SaveData.SavedCharacters[i].CharacterName == name)
+                {
+                    index = i;
+                    break;
+                }
             }
 
             if (index != -1)
@@ -289,7 +322,8 @@ namespace CC
                 //Load CC_SaveData from JSON file
                 string jsonLoad = File.ReadAllText(SavePath);
                 var CC_SaveData = JsonUtility.FromJson<CC_SaveData>(jsonLoad);
-                int index = CC_SaveData.SavedCharacters.FindIndex(t => t.CharacterName == StoredCharacterData.CharacterName);
+                int index = CC_SaveData.SavedCharacters.FindIndex(t =>
+                    t.CharacterName == StoredCharacterData.CharacterName);
                 if (index != -1)
                 {
                     CC_SaveData.SavedCharacters.RemoveAt(index);
@@ -311,17 +345,22 @@ namespace CC
                 cc.CharacterName = CharacterName;
                 cc.Autoload = true;
             }
+
             PrefabUtility.SaveAsPrefabAsset(newPrefab, newPath);
             if (Presets != null)
-
 
 
             {
                 int presetIndex = -1;
                 for (int i = 0; i < Presets.Presets.Count; i++)
                 {
-                    if (Presets.Presets[i].CharacterName == characterDataCopy.CharacterName) { presetIndex = i; break; }
+                    if (Presets.Presets[i].CharacterName == characterDataCopy.CharacterName)
+                    {
+                        presetIndex = i;
+                        break;
+                    }
                 }
+
                 if (presetIndex != -1) Presets.Presets[presetIndex] = characterDataCopy;
                 else Presets.Presets.Add(characterDataCopy);
             }
@@ -386,7 +425,7 @@ namespace CC
                 ApplyCharacterVars(StoredCharacterData);
             }
         }
-        
+
         public string GetJSON()
         {
             if (!File.Exists(SavePath)) createSaveFile();
@@ -403,6 +442,7 @@ namespace CC
                 ApplyCharacterVars(StoredCharacterData);
                 return true;
             }
+
             return false;
         }
 
@@ -412,7 +452,7 @@ namespace CC
             preset = Presets.Presets.Find(t => t.CharacterName == presetName) ?? Presets.Presets.FirstOrDefault();
             return preset != null;
         }
-        
+
         private void EnsureCharacterData(ref CC_CharacterData characterData)
         {
             if (characterData == null)
@@ -432,12 +472,12 @@ namespace CC
                 };
             }
         }
-        
+
         public void ApplyCharacterVars(CC_CharacterData characterData)
         {
             EnsureCharacterData(ref characterData);
             StoredCharacterData = characterData;
-            
+
             //Start coroutine if async
             if (LoadAsync)
             {
@@ -451,10 +491,12 @@ namespace CC
             {
                 StoredCharacterData.HairNames.Add("");
             }
+
             while (StoredCharacterData.ApparelNames.Count < ApparelObjects.Count)
             {
                 StoredCharacterData.ApparelNames.Add("");
             }
+
             while (StoredCharacterData.ApparelMaterials.Count < ApparelObjects.Count)
             {
                 StoredCharacterData.ApparelMaterials.Add(0);
@@ -463,7 +505,8 @@ namespace CC
             //Set blendshapes
             for (int i = 0; i < characterData.Blendshapes.Count; i++)
             {
-                setBlendshapeByName(characterData.Blendshapes[i].propertyName, characterData.Blendshapes[i].floatValue, false);
+                setBlendshapeByName(characterData.Blendshapes[i].propertyName, characterData.Blendshapes[i].floatValue,
+                    false);
             }
 
             //Set hair
@@ -504,7 +547,7 @@ namespace CC
         {
             EnsureCharacterData(ref characterData);
             StoredCharacterData = characterData;
-            
+
             //Create material instances
             var meshes = GetComponentsInChildren<Renderer>();
             var materials = new List<Material>();
@@ -523,10 +566,12 @@ namespace CC
             {
                 StoredCharacterData.HairNames.Add("");
             }
+
             while (StoredCharacterData.ApparelNames.Count < ApparelObjects.Count)
             {
                 StoredCharacterData.ApparelNames.Add("");
             }
+
             while (StoredCharacterData.ApparelMaterials.Count < ApparelObjects.Count)
             {
                 StoredCharacterData.ApparelMaterials.Add(0);
@@ -535,7 +580,8 @@ namespace CC
             //Set blendshapes
             for (int i = 0; i < characterData.Blendshapes.Count; i++)
             {
-                setBlendshapeByName(characterData.Blendshapes[i].propertyName, characterData.Blendshapes[i].floatValue, false);
+                setBlendshapeByName(characterData.Blendshapes[i].propertyName, characterData.Blendshapes[i].floatValue,
+                    false);
                 if (i % 5 == 0) yield return null;
             }
 
@@ -589,9 +635,11 @@ namespace CC
             CharacterName = newName;
             if (StoredCharacterData != null) StoredCharacterData.CharacterName = newName;
         }
+
         #endregion
 
         #region Customization
+
         public void setHair(int selection, int slot)
         {
             if (slot >= HairTables.Count) Debug.LogError("Tried to set hair from non-existing hair table");
@@ -653,16 +701,22 @@ namespace CC
 
                         //Recalculate bounds
                         var lodGroup = HairObject.GetComponentInChildren<LODGroup>();
-                        if (lodGroup != null) { lodGroup.RecalculateBounds(); lodGroup.size = mainLODSize; }
+                        if (lodGroup != null)
+                        {
+                            lodGroup.RecalculateBounds();
+                            lodGroup.size = mainLODSize;
+                        }
                     }
                 }
 
                 //Set shadow map
                 var shadowMapProperty = HairTables[slot].SkinShadowMapProperty;
-                if (shadowMapProperty.propertyName != "" && HairData.ShadowMap != null) setTextureProperty(shadowMapProperty, false, HairData.ShadowMap);
+                if (shadowMapProperty.propertyName != "" && HairData.ShadowMap != null)
+                    setTextureProperty(shadowMapProperty, false, HairData.ShadowMap);
 
                 //Update hair color
-                if (findProperty(StoredCharacterData.ColorProperties, HairTables[slot].HairTintProperty, out var hairProperty, out int index))
+                if (findProperty(StoredCharacterData.ColorProperties, HairTables[slot].HairTintProperty,
+                        out var hairProperty, out int index))
                 {
                     setColorProperty(hairProperty, false);
                 }
@@ -725,7 +779,8 @@ namespace CC
                 if (equippedApparelData[i] == null) continue;
                 var checkSlots = new HashSet<int>(equippedApparelData[i].HidesTheseSlots) { i };
 
-                if (checkSlots.Overlaps(occupiedSlots)) //If there is any overlap, add all checked slots to the reset hash set
+                if (checkSlots.Overlaps(
+                        occupiedSlots)) //If there is any overlap, add all checked slots to the reset hash set
                 {
                     slotsToReset.UnionWith(checkSlots);
                 }
@@ -740,7 +795,8 @@ namespace CC
             //Reset slots to default apparel
             foreach (var slotToReset in slotsToReset)
             {
-                StoredCharacterData.ApparelNames[slotToReset] = DefaultApparel[slotToReset]; //Store name ahead of time to avoid infinite loop
+                StoredCharacterData.ApparelNames[slotToReset] =
+                    DefaultApparel[slotToReset]; //Store name ahead of time to avoid infinite loop
                 setApparelByName(DefaultApparel[slotToReset], slotToReset, 0);
             }
 
@@ -754,15 +810,20 @@ namespace CC
                 {
                     Destroy(ApparelObjects[slotToHide]);
                 }
+
                 //Reset mask
-                setTextureProperty(ApparelTables[slotToHide].SkinMaskProperty, false, (Texture2D)Resources.Load("T_Flat_Black"));
+                setTextureProperty(ApparelTables[slotToHide].SkinMaskProperty, false,
+                    (Texture2D)Resources.Load("T_Flat_Black"));
                 //Reset neck shrink
                 if (equippedApparelData[slotToHide] != null && equippedApparelData[slotToHide].NeckShrink >= 0)
                 {
-                    setFloatProperty(new CC_Property() { propertyName = "_Neck_Shrink", materialIndex = 0, meshTag = "Head", floatValue = 0 });
+                    setFloatProperty(new CC_Property()
+                        { propertyName = "_Neck_Shrink", materialIndex = 0, meshTag = "Head", floatValue = 0 });
                 }
+
                 //Reset foot transform
-                if (equippedApparelData[slotToHide] != null && equippedApparelData[slotToHide].FootOffset.HeightOffset >= 0)
+                if (equippedApparelData[slotToHide] != null &&
+                    equippedApparelData[slotToHide].FootOffset.HeightOffset >= 0)
                 {
                     setBodyCustomization("BodyCustomization_FootRotation", 0);
                     setBodyCustomization("BodyCustomization_BallRotation", 0);
@@ -806,13 +867,17 @@ namespace CC
                     {
                         if (i >= baseMaterials.Length) break;
 
-                        if (matDefinitions[i].MaterialOverride != null) baseMaterials[i] = new Material(matDefinitions[i].MaterialOverride);
+                        if (matDefinitions[i].MaterialOverride != null)
+                            baseMaterials[i] = new Material(matDefinitions[i].MaterialOverride);
 
                         baseMaterials[i].SetColor("_Tint", matDefinitions[i].MainTint);
                         baseMaterials[i].SetColor("_Tint_R", matDefinitions[i].TintR);
                         baseMaterials[i].SetColor("_Tint_G", matDefinitions[i].TintG);
                         baseMaterials[i].SetColor("_Tint_B", matDefinitions[i].TintB);
-                        baseMaterials[i].SetTexture("_Print", matDefinitions[i].Print != null ? matDefinitions[i].Print : Resources.Load<Texture2D>("T_Transparent"));
+                        baseMaterials[i].SetTexture("_Print",
+                            matDefinitions[i].Print != null
+                                ? matDefinitions[i].Print
+                                : Resources.Load<Texture2D>("T_Transparent"));
                     }
 
                     mesh.materials = baseMaterials;
@@ -850,7 +915,11 @@ namespace CC
 
                     //Recalculate bounds
                     var lodGroup = ApparelObject.GetComponentInChildren<LODGroup>();
-                    if (lodGroup != null) { lodGroup.RecalculateBounds(); lodGroup.size = mainLODSize; }
+                    if (lodGroup != null)
+                    {
+                        lodGroup.RecalculateBounds();
+                        lodGroup.size = mainLODSize;
+                    }
                 }
             }
 
@@ -863,7 +932,12 @@ namespace CC
             }
 
             //Set neck shrink
-            if (ApparelData.NeckShrink >= 0) setFloatProperty(new CC_Property() { propertyName = "_Neck_Shrink", materialIndex = 0, meshTag = "Head", floatValue = ApparelData.NeckShrink / 100 });
+            if (ApparelData.NeckShrink >= 0)
+                setFloatProperty(new CC_Property()
+                {
+                    propertyName = "_Neck_Shrink", materialIndex = 0, meshTag = "Head",
+                    floatValue = ApparelData.NeckShrink / 100
+                });
 
             //Set hair compress
             if (ApparelData.CompressHair >= 0)
@@ -895,7 +969,8 @@ namespace CC
 
         public List<scrObj_Apparel.Apparel> getEquippedApparelData()
         {
-            return ApparelTables.Zip(StoredCharacterData.ApparelNames, (table, name) => table.Items.FirstOrDefault(item => item.Name == name)).ToList();
+            return ApparelTables.Zip(StoredCharacterData.ApparelNames,
+                (table, name) => table.Items.FirstOrDefault(item => item.Name == name)).ToList();
         }
 
         public void setRandomOutfit()
@@ -921,7 +996,11 @@ namespace CC
             if (Randomizer == null) return;
             if (activeCoroutine != null) StopCoroutine(activeCoroutine);
             activeCoroutine = StartCoroutine(Randomizer.randomizeAll(this));
-            if (UI_Instance != null) { var u = UI_Instance.GetComponent<CC_UI_Util>(); if (u != null) u.refreshUI(); }
+            if (UI_Instance != null)
+            {
+                var u = UI_Instance.GetComponent<CC_UI_Util>();
+                if (u != null) u.refreshUI();
+            }
         }
 
         public void randomizeCharacterAndOutfit()
@@ -942,10 +1021,16 @@ namespace CC
             if (name != "")
             {
                 //Save property
-                if (save) saveProperty(ref StoredCharacterData.Blendshapes, new CC_Property() { propertyName = name, floatValue = value });
+                if (save)
+                    saveProperty(ref StoredCharacterData.Blendshapes,
+                        new CC_Property() { propertyName = name, floatValue = value });
 
                 //Set body customization
-                if (name.Contains("BodyCustomization")) { setBodyCustomization(name, value); return; }
+                if (name.Contains("BodyCustomization"))
+                {
+                    setBodyCustomization(name, value);
+                    return;
+                }
 
                 //Set blendshape on every mesh with a blendshape manager
 
@@ -1002,7 +1087,8 @@ namespace CC
             //Get relevant materials and set texture
             foreach (var material in getRelevantMaterials(p.materialIndex, p.meshTag))
             {
-                if (material.HasProperty(p.propertyName)) material.SetTexture(p.propertyName, (t != null) ? t : Resources.Load<Texture2D>(p.stringValue));
+                if (material.HasProperty(p.propertyName))
+                    material.SetTexture(p.propertyName, (t != null) ? t : Resources.Load<Texture2D>(p.stringValue));
             }
 
             if (save) saveProperty(ref StoredCharacterData.TextureProperties, p);
@@ -1034,7 +1120,8 @@ namespace CC
 
         public bool findProperty(List<CC_Property> properties, CC_Property p, out CC_Property pOut, out int index)
         {
-            int i = properties.FindIndex(t => t.propertyName == p.propertyName && t.materialIndex == p.materialIndex && t.meshTag == p.meshTag);
+            int i = properties.FindIndex(t =>
+                t.propertyName == p.propertyName && t.materialIndex == p.materialIndex && t.meshTag == p.meshTag);
             if (i >= 0)
             {
                 pOut = properties[i];
@@ -1052,7 +1139,8 @@ namespace CC
         //Save property to list, overwrite if already exists
         public void saveProperty(ref List<CC_Property> properties, CC_Property p)
         {
-            var propertyIndex = properties.FindIndex(t => t.materialIndex == p.materialIndex && t.propertyName == p.propertyName && t.meshTag == p.meshTag);
+            var propertyIndex = properties.FindIndex(t =>
+                t.materialIndex == p.materialIndex && t.propertyName == p.propertyName && t.meshTag == p.meshTag);
 
             if (propertyIndex == -1)
             {

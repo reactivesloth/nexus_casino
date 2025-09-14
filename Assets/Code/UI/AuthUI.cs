@@ -1,4 +1,6 @@
+using System;
 using System.IO;
+using CC;
 using Code.API;
 using Code.API.Models;
 using Code.Utility;
@@ -14,8 +16,7 @@ namespace Code.UI
 {
     public class AuthUI : MonoBehaviour
     {
-        [Header("UI Elements")]
-        public TMP_InputField nicknameInput;
+        [Header("UI Elements")] public TMP_InputField nicknameInput;
         public TMP_InputField phoneInput;
         public TMP_InputField codeInput;
         public Button getConfirmCodeButton;
@@ -26,18 +27,15 @@ namespace Code.UI
 
         public Button startGameButton;
         public GameObject loginPopup;
-        
-        [Header("Texts")]
-        public TMP_Text authButtonText;
+
+        [Header("Texts")] public TMP_Text authButtonText;
         public TMP_Text titleText;
 
-        [Header("Resend Settings")]
-        public int resendCooldownSeconds = 60;
+        [Header("Resend Settings")] public int resendCooldownSeconds = 60;
         public string resendButtonText = "Resend";
         public string resendButtonTextWithTimer = "Resend ({0})";
 
-        [Header("Results Handle")]
-        public ModularPopupOpener popupPanel;
+        [Header("Results Handle")] public ModularPopupOpener popupPanel;
 
         private bool _isResendTimerActive;
         private float _resendTimer;
@@ -119,7 +117,8 @@ namespace Code.UI
 
 
             if (titleText != null)
-                titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
+                titleText.text =
+                    _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
 
 
             if (authButtonText != null)
@@ -133,7 +132,7 @@ namespace Code.UI
             if (loginPopup != null)
                 loginPopup.SetActive(!_isAuthorized);
         }
-        
+
         private void ValidateSavedToken()
         {
             var userDataRequest = new RequestHelper
@@ -157,6 +156,7 @@ namespace Code.UI
                         return;
                     }
                 }
+
                 PlayerPrefs.DeleteKey("auth_accessToken");
                 PlayerPrefs.DeleteKey("auth_refreshToken");
                 _isAuthorized = false;
@@ -189,19 +189,20 @@ namespace Code.UI
                 var checkResult = JsonUtility.FromJson<SuccessResponse<bool>>(checkResponse.Text);
                 if (checkResult == null || !checkResult.success)
                 {
-                    HandleError(checkResult != null ? checkResult.code : "Error", checkResult != null ? checkResult.detail : "Invalid response");
+                    HandleError(checkResult != null ? checkResult.code : "Error",
+                        checkResult != null ? checkResult.detail : "Invalid response");
                     if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                     return;
                 }
 
                 _isRegistered = checkResult.data;
 
-                if(phoneInput.text.Length > 0 && phoneInput.text[0] == '0')
+                if (phoneInput.text.Length > 0 && phoneInput.text[0] == '0')
                 {
                     OnGetCodeSuccess();
                     return;
                 }
-                
+
                 var sendCodeRequest = new SendCodeRequest { phone = phone, requested_by = "" };
                 RestClient.Post(ApiRoutes.GetSendCodeUrl(), sendCodeRequest).Then(sendCodeResponse =>
                 {
@@ -215,11 +216,12 @@ namespace Code.UI
                     var sendCodeResult = JsonUtility.FromJson<SuccessResponse<object>>(sendCodeResponse.Text);
                     if (sendCodeResult == null || !sendCodeResult.success)
                     {
-                        HandleError(sendCodeResult != null ? sendCodeResult.code : "Error", sendCodeResult != null ? sendCodeResult.detail : "Invalid response");
+                        HandleError(sendCodeResult != null ? sendCodeResult.code : "Error",
+                            sendCodeResult != null ? sendCodeResult.detail : "Invalid response");
                         if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                         return;
                     }
-                    
+
                     OnGetCodeSuccess();
                     StartResendTimer();
                 }).Finally(() =>
@@ -236,7 +238,9 @@ namespace Code.UI
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
             if (authButton != null) authButton.interactable = true;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
-            if (titleText != null) titleText.text = _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
+            if (titleText != null)
+                titleText.text =
+                    _isAuthorized ? $"Welcome back, {nicknameInput.text}" : "Welcome to the Nexus Meta Club";
             if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
         }
 
@@ -268,7 +272,8 @@ namespace Code.UI
                     OnAuthSuccess(responseData.data);
                 else
                 {
-                    HandleError(responseData != null ? responseData.code : "Error", responseData != null ? responseData.detail : "Invalid response");
+                    HandleError(responseData != null ? responseData.code : "Error",
+                        responseData != null ? responseData.detail : "Invalid response");
                     ToStartState();
                 }
             }).Finally(() =>
@@ -300,7 +305,8 @@ namespace Code.UI
                     OnAuthSuccess(responseData.data);
                 else
                 {
-                    HandleError(responseData != null ? responseData.code : "Error", responseData != null ? responseData.detail : "Invalid response");
+                    HandleError(responseData != null ? responseData.code : "Error",
+                        responseData != null ? responseData.detail : "Invalid response");
                     ToStartState();
                 }
             }).Finally(() =>
@@ -341,6 +347,7 @@ namespace Code.UI
                 _isResendTimerActive = false;
                 if (resendCodeButton != null) resendCodeButton.interactable = true;
             }
+
             UpdateResendButtonText();
         }
 
@@ -368,7 +375,11 @@ namespace Code.UI
 
         private void OnAuthSuccess(AuthResponse authResponse)
         {
-            if (authResponse == null) { HandleError("Error", "Empty auth response"); return; }
+            if (authResponse == null)
+            {
+                HandleError("Error", "Empty auth response");
+                return;
+            }
 
             ClientDataStorage.AccessToken = authResponse.access_jwt;
             ClientDataStorage.RefreshToken = authResponse.refresh_jwt;
@@ -385,7 +396,11 @@ namespace Code.UI
 
             RestClient.Get(userDataRequest).Then(userDataResponse =>
             {
-                if (userDataResponse.StatusCode != 200) { HandleError("Error", "Get user failed"); return; }
+                if (userDataResponse.StatusCode != 200)
+                {
+                    HandleError("Error", "Get user failed");
+                    return;
+                }
 
                 var successResponse = JsonUtility.FromJson<SuccessResponse<MeSchema>>(userDataResponse.Text);
                 if (successResponse != null && successResponse.success)
@@ -396,7 +411,8 @@ namespace Code.UI
                 }
                 else
                 {
-                    HandleError(successResponse != null ? successResponse.code : "Error", successResponse != null ? successResponse.detail : "Invalid response");
+                    HandleError(successResponse != null ? successResponse.code : "Error",
+                        successResponse != null ? successResponse.detail : "Invalid response");
                     ToStartState();
                 }
             });
@@ -410,24 +426,44 @@ namespace Code.UI
             Application.Quit();
 #endif
         }
-        
+
         private void OnUserCanStartGame()
         {
-            string savePath = Application.persistentDataPath + "/CharacterCustomizer.json";
-#if UNITY_EDITOR
-            savePath = Application.dataPath + "/CharacterCustomizer.json";
-#endif
-            bool hasCC = false;
-            if (File.Exists(savePath))
-            {
-                string jsonLoad = File.ReadAllText(savePath);
-                hasCC = !string.IsNullOrEmpty(jsonLoad) && jsonLoad.Length > 200;
-            }
+            var savePath = CharacterCustomization.SavePath;
+            
+            var meData = ClientDataStorage.UserData;
 
-            if (LoadingScreenUI.Instance != null)
-                LoadingScreenUI.Instance.LoadScene(hasCC ? "Main" : "Character Customization", "Please wait...", "Loading...");
-            else
-                SceneManager.LoadSceneAsync(hasCC ? "Main" : "Character Customization");
+            var getAvatarRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetFileUrl($"Avatar_{meData.id}.json"),
+                Headers = ClientDataStorage.GetJwtHeader()
+            };
+
+
+            var isAvatarLoaded = false;
+            RestClient.Get(getAvatarRequest).Then(getAvatarResponse =>
+            {
+                if (getAvatarResponse.StatusCode != 200)
+                    return;
+
+                isAvatarLoaded = true;
+                try
+                {
+                    File.WriteAllText(savePath, getAvatarResponse.Text);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"Ошибка при записи аватара в файл: {ex}");
+                    isAvatarLoaded = false;
+                }
+            }).Finally(() =>
+            {
+                if (LoadingScreenUI.Instance != null)
+                    LoadingScreenUI.Instance.LoadScene(isAvatarLoaded ? "Main" : "Character Customization", "Please wait...",
+                        "Loading...");
+                else
+                    SceneManager.LoadSceneAsync(isAvatarLoaded ? "Main" : "Character Customization"); 
+            });
         }
 
         private void HandleError(string title, string errorMessage)
@@ -442,7 +478,7 @@ namespace Code.UI
             else
                 Debug.LogWarning($"{title}: {errorMessage}");
         }
-        
+
         private void OnLogoutClicked()
         {
             PlayerPrefs.DeleteKey("auth_accessToken");
