@@ -54,11 +54,13 @@ namespace Code.UI
                 while (!asyncOperation.isDone)
                 {
                     percentageSlider.value = asyncOperation.progress * 100;
-                    percentageText.text = asyncOperation.progress * 100 + "%";
+                    percentageText.text = (asyncOperation.progress * 100).ToString("F0") + "%";
                     titleText.text = title;
                     messageText.text = message;
                     if (asyncOperation.progress >= 0.9f)
                     {
+                        percentageSlider.value = 100;
+                        percentageText.text = 100 + "%";
                         messageText.text = "Press any key to continue";
                         if (Input.anyKeyDown)
                         {

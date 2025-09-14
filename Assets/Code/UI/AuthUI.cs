@@ -350,34 +350,6 @@ namespace Code.UI
 
         private void OnExitClicked()
         {
-            StartCoroutine(ExitClicked());
-        }
-
-        private IEnumerator ExitClicked()
-        {
-            if (popupPanel != null)
-            {
-                popupPanel.Title = "Leave...";
-                popupPanel.Message = "Are you sure you want to exit?";
-                popupPanel.Buttons.Clear();
-                popupPanel.Buttons.Add(new ButtonInfo());
-                popupPanel.Buttons.Add(new ButtonInfo());
-
-                yield return popupPanel.Buttons.Count >= 2;
-                yield return new WaitForSeconds(1);
-                
-                popupPanel.Buttons[0].Label = "Cancel";
-                popupPanel.Buttons[0].OnClickedEvent.RemoveAllListeners();
-                popupPanel.Buttons[0].OnClickedEvent.AddListener(popupPanel.ClosePopup);
-                popupPanel.Buttons[1].Label = "Confirm";
-                popupPanel.Buttons[1].OnClickedEvent.RemoveAllListeners();
-                popupPanel.Buttons[1].OnClickedEvent.AddListener(OnQuitClick);
-                popupPanel.OpenPopup();
-            }
-        }
-        
-        private void OnQuitClick()
-        {
 #if UNITY_EDITOR
             EditorApplication.isPlaying = false;
 #else
