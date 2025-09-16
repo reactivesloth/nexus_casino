@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 6419376402012608418}
   - component: {fileID: 7295716426900697802}
+  - component: {fileID: 2199744421160414387}
+  - component: {fileID: 9005878822212773671}
   m_Layer: 0
   m_Name: ChatSystem
   m_TagString: Untagged
@@ -29,8 +31,7 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 5379188060389744387}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7295716426900697802
@@ -55,7 +56,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Help
           m_Mode: 1
@@ -73,7 +74,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Kick
           m_Mode: 0
@@ -91,7 +92,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Mute
           m_Mode: 0
@@ -110,7 +111,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Unmute
           m_Mode: 0
@@ -128,7 +129,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: MuteChat
           m_Mode: 0
@@ -146,7 +147,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: UnmuteChat
           m_Mode: 0
@@ -164,7 +165,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: MuteVoice
           m_Mode: 0
@@ -182,7 +183,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: UnmuteVoice
           m_Mode: 0
@@ -200,7 +201,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: PromoteMember
           m_Mode: 0
@@ -218,7 +219,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: BanUser
           m_Mode: 0
@@ -236,7 +237,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 363726065579044487}
+        - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: UnbanUser
           m_Mode: 0
@@ -254,46 +255,13 @@ MonoBehaviour:
   CurrentChatBox: {fileID: 0}
   pageSize: 50
   devLog: 0
---- !u!1 &7208233952953606203
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 5379188060389744387}
-  - component: {fileID: 363726065579044487}
-  - component: {fileID: 2289135367494818553}
-  m_Layer: 0
-  m_Name: CommandHandler
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &5379188060389744387
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7208233952953606203}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 6419376402012608418}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &363726065579044487
+--- !u!114 &2199744421160414387
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7208233952953606203}
+  m_GameObject: {fileID: 2511283305394129235}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e56c620ed686459bad68d51816490682, type: 3}
@@ -304,13 +272,13 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 0}
   chatController: {fileID: 7295716426900697802}
   helpText: 'Comands:'
---- !u!114 &2289135367494818553
+--- !u!114 &9005878822212773671
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7208233952953606203}
+  m_GameObject: {fileID: 2511283305394129235}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
