@@ -55,6 +55,13 @@ namespace Code.Network
             StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
         }
 
+        public override void OnStopNetwork()
+        {
+            base.OnStopNetwork();
+            if(_currentStreamOnClient != null)
+                _currentStreamOnClient.NetworkImageStream.OnApplyTexture -= ApplyTexture;
+        }
+
         public override void OnStartServer()
         {
             base.OnStartServer();
@@ -101,7 +108,11 @@ namespace Code.Network
             slotIdText.text = $"Slot №{next}";
             
             // Server callback 
-            if(!asServer) return;
+            if(!asServer)
+            {
+                _currentStreamOnServer = null;
+                return;
+            }
             if (_currentStreamOnServer != null)
                 _currentStreamOnServer.InteractCallback_Server -= OnEndTargetInteraction;
             ServerReset();
