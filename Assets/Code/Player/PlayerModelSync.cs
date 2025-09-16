@@ -68,7 +68,7 @@ namespace Code.Player
             if (IsOwner) StartCoroutine(WaitAndSendLocalCharacter());
         }
 
-        [ServerRpc(RunLocally = true)]
+        [ServerRpc(RequireOwnership = false)]
         public void SendCharacterJsonServerRpc(string json)
         {
             Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
@@ -80,16 +80,7 @@ namespace Code.Player
             while (!IsClientInitialized || !IsClientStarted || !IsSpawned)
                 yield return null;
             yield return null;
-            TransmitLocalCharacter();
-        }
-
-        public void TransmitLocalCharacter()
-        {
-            if (!IsOwner) return;
-            Debug.Log("[Client] TransmitLocalCharacter");
-            string json = _characterCustomization.GetJSON();
-            SendCharacterJsonServerRpc(json);
-
+            
             if(_updateAvatarCoroutine != null)
                 StopCoroutine(_updateAvatarCoroutine);
             _updateAvatarCoroutine = StartCoroutine(UpdateLoop());
@@ -98,12 +89,19 @@ namespace Code.Player
         private IEnumerator UpdateLoop()
         {
             var wait = new WaitForSeconds(updateAvatarInterval);
-            while (true)
+            for (var i = 0; i < 50; i++)
             {
+                TransmitLocalCharacter();
                 yield return wait;
-                string json = _characterCustomization.GetJSON();
-                SendCharacterJsonServerRpc(json);
             }
+        }
+        
+        public void TransmitLocalCharacter()
+        {
+            if (!IsOwner) return;
+            Debug.Log("[Client] TransmitLocalCharacter");
+            string json = _characterCustomization.GetJSON();
+            SendCharacterJsonServerRpc(json);
         }
     }
 }

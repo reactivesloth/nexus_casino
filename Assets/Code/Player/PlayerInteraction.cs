@@ -13,7 +13,7 @@ namespace Code.Player
 
         private Interactable _hovered;
         private Interactable _selected;
-        public Interactable Active { get; set; }
+        public Interactable Active;
         private GameObject[] _outlineGameObjects;
 
         private Cinemachine3rdPersonFollow virtualCamera;
