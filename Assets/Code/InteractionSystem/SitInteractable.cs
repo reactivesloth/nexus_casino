@@ -42,7 +42,6 @@ namespace Code.InteractionSystem
         
         private EntryData _sitEntry;
         private bool _initSit;
-        private bool _didInitialApply;
 
         private void Awake()
         {
@@ -77,33 +76,20 @@ namespace Code.InteractionSystem
             }
 
             _isSittingLocal = false;
-            _didInitialApply = false;
         }
-
-        public override void OnStartClient()
-        {
-            base.OnStartClient();
-            if (!_didInitialApply)
-            {
-                ApplySitStateImmediate(IsOccupied);
-                _didInitialApply = true;
-            }
-        }
-
+        
         public override void OnStopNetwork()
         {
             base.OnStopNetwork();
             _isSittingLocal = false;
             _sitRoutine = null;
-            _didInitialApply = false;
         }
 
         private void Update()
         {
             if (_isSittingLocal && allowRotateCamera && useRightMouseButtonToRotate)
             {
-                var cm = CursorManager.Instance;
-                if (cm != null) cm.ShowCursor();
+                CursorManager.Instance.ShowCursor();
             }
         }
 
@@ -132,32 +118,6 @@ namespace Code.InteractionSystem
             
             TargetToggleSit(false);
         }
-
-        private void ApplySitStateImmediate(bool sit)
-        {
-            if (!IsOwner) return;
-            var move = FindLocalOwnerMovement();
-            if (move == null) return;
-
-            var cc = move.GetComponent<CharacterController>();
-            var anim = move.GetComponent<Animator>();
-            var tf = move.transform;
-
-            var entry = _sitEntry ?? FindClosestEntryPoint(tf.position) ?? GetEntry(0);
-
-            if (sit)
-            {
-                _savedPos = tf.position;
-                _savedRot = tf.rotation;
-                ForceSit(move, anim, cc, tf, entry);
-                _isSittingLocal = true;
-            }
-            else
-            {
-                ForceStand(move, anim, cc, tf, entry);
-                _isSittingLocal = false;
-            }
-        }
         
         private void TargetToggleSit(bool isSitDown, bool isForce = false)
         {
@@ -169,15 +129,19 @@ namespace Code.InteractionSystem
             var tf = move.transform;
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
-
+            
             if (isSitDown && isForce)
             {
                 _savedPos = tf.position;
                 _savedRot = tf.rotation;
                 ForceSit(move, anim, cc, tf, GetEntry(0));
+                _isSittingLocal = true;
             }
             else
             {
+                if (isForce) 
+                    _isSittingLocal = false;
+                
                 if(isSitDown)
                     _sitEntry = FindClosestEntryPoint(tf.position) ?? GetEntry(0);
                 _sitRoutine = StartCoroutine(
