@@ -39,9 +39,6 @@ namespace Code.Player
 
             input = PlayerInput.Instance;
             playerController = gameObject.GetComponent<PlayerMovementController>();
-
-            var cm = CursorManager.Instance;
-            if (cm != null) cm.HideCursor();
         }
 
         private void Update()
