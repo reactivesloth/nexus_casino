@@ -1,4 +1,3 @@
-using System;
 using Code.InteractionSystem;
 using Code.Utility;
 using FishNet.Component.Observing;
@@ -26,7 +25,7 @@ namespace Code.Network
             WritePermission = WritePermission.ServerOnly,
             ReadPermission = ReadPermission.Observers
         });
-        
+
         public readonly SyncVar<string> StreamerUsername = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
@@ -61,28 +60,16 @@ namespace Code.Network
             base.OnStartServer();
 
             // Проверяем, есть ли актуальный объект стрима
-            if (StreamSlotId.Value < 0) 
+            if (StreamSlotId.Value < 0)
                 return;
-            
-            _currentStreamOnServer = GetCurrentStream(StreamSlotId.Value);
 
-            // Если объект не найден (старый хост ушёл), то сбрасываем
-            if (_currentStreamOnServer == null)
-            {
-                SetStream(-1, -1, string.Empty);
-            }
-            else
-            {
-                SetStream(StreamSlotId.Value, -1, StreamerUsername.Value);
-                _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
-                SetConditionsEnable(false);
-            }
+            SetStream(StreamSlotId.Value, StreamerUsername.Value);
         }
-        
-        public void RequestStream(int slotId, int connectionId, string username) =>
-            SetStream_ServerRpc(slotId, connectionId, username);
 
-        public void RequestCancel() => SetStream_ServerRpc(-1, -1, string.Empty);
+        public void RequestStream(int slotId, string username) =>
+            SetStream_ServerRpc(slotId, username);
+
+        public void RequestCancel() => SetStream_ServerRpc(-1, string.Empty);
 
         public void ApplyTexture(Texture texture)
         {
@@ -91,39 +78,38 @@ namespace Code.Network
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SetStream_ServerRpc(int slotId, int connectionId, string username) =>
-            SetStream(slotId, connectionId, username);
+        public void SetStream_ServerRpc(int slotId, string username) =>
+            SetStream(slotId, username);
 
         [Server]
-        public void SetStream(int slotId, int connectionId, string username)
+        public void SetStream(int slotId, string username)
         {
-            if (_currentStreamOnServer != null)
-                _currentStreamOnServer.InteractCallback_Server -= OnEndTargetInteraction;
-            
-            ServerReset();
-
             StreamSlotId.Value = slotId;
             StreamerUsername.Value = username;
-
-            _currentStreamOnServer = GetCurrentStream(slotId);
-            if (_currentStreamOnServer != null)
-                _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
-
-            SetConditionsEnable(false);
         }
 
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
-            if (prev == next) return;
-
             currentSlotId = next;
+            
             ClientReset();
             _currentStreamOnClient = GetCurrentStream(next);
             elementsParent.gameObject.SetActive(_currentStreamOnClient != null);
             if (_currentStreamOnClient == null) return;
-            
+
             _currentStreamOnClient.NetworkImageStream.OnApplyTexture += ApplyTexture;
             slotIdText.text = $"Slot №{next}";
+            
+            // Server callback 
+            if(!asServer) return;
+            if (_currentStreamOnServer != null)
+                _currentStreamOnServer.InteractCallback_Server -= OnEndTargetInteraction;
+            ServerReset();
+            _currentStreamOnServer = _currentStreamOnClient;
+            if (_currentStreamOnServer != null)
+                _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
+
+            SetConditionsEnable(false);
         }
 
         private void StreamerUsernameOnOnChange(string prev, string next, bool asServer)
@@ -162,7 +148,7 @@ namespace Code.Network
         [Server]
         private void OnEndTargetInteraction(bool success)
         {
-            SetStream(-1, -1, string.Empty);
+            SetStream(-1, string.Empty);
         }
 
         private SlotMachineInteractable GetCurrentStream(int id) => SlotMachineInteractable.FindById(id);
