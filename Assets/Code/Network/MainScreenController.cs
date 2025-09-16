@@ -39,6 +39,11 @@ namespace Code.Network
             elementsParent ??= screenRawImage.transform.parent.gameObject;
         }
 
+        private void Awake()
+        {
+            StreamSlotId.SetInitialValues(-1);
+        }
+
         private void OnEnable()
         {
             StreamSlotId.OnChange += OnStreamSlotIdChange;
@@ -56,21 +61,21 @@ namespace Code.Network
             base.OnStartServer();
 
             // Проверяем, есть ли актуальный объект стрима
-            if (StreamSlotId.Value >= 0)
-            {
-                _currentStreamOnServer = GetCurrentStream(StreamSlotId.Value);
+            if (StreamSlotId.Value < 0) 
+                return;
+            
+            _currentStreamOnServer = GetCurrentStream(StreamSlotId.Value);
 
-                // Если объект не найден (старый хост ушёл), то сбрасываем
-                if (_currentStreamOnServer == null)
-                {
-                    SetStream(-1, -1, string.Empty);
-                }
-                else
-                {
-                    // Восстанавливаем подписку
-                    _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
-                    SetConditionsEnable(false);
-                }
+            // Если объект не найден (старый хост ушёл), то сбрасываем
+            if (_currentStreamOnServer == null)
+            {
+                SetStream(-1, -1, string.Empty);
+            }
+            else
+            {
+                SetStream(StreamSlotId.Value, -1, StreamerUsername.Value);
+                _currentStreamOnServer.InteractCallback_Server += OnEndTargetInteraction;
+                SetConditionsEnable(false);
             }
         }
         
