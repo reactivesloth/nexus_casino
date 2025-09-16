@@ -93,7 +93,6 @@ namespace Code.Chat
 
             SetCurrentChat(lobbyChatBox);
             CurrentChatBox.Disable();
-            PlayerInput.Instance.IsChatOpened  = false;
             CurrentChatBox.DisableInputField();
 
             string jwt = ClientDataStorage.AccessToken ?? string.Empty;
@@ -157,7 +156,6 @@ namespace Code.Chat
                 if (input.IsPausedDown && CurrentChatBox != null)
                 {
                     CurrentChatBox.Disable();
-                    PlayerInput.Instance.IsChatOpened  = false;
                 }
                 if (input.IsScrollUpButton) MoveUp();
                 if (input.IsScrollDownButton) MoveDown();
@@ -169,6 +167,12 @@ namespace Code.Chat
 #endif
             if (_ws != null && _ws.State == WebSocketState.Open)
                 Ping();
+
+            if (CurrentChatBox != null)
+            {
+                if (CurrentChatBox.InputFieldEnabled != PlayerInput.Instance.IsChatOpened)
+                    PlayerInput.Instance.IsChatOpened = CurrentChatBox.InputFieldEnabled;
+            }
         }
 
         public void MoveUp()
@@ -278,14 +282,12 @@ namespace Code.Chat
             {
                 CurrentChatBox.Enable();
                 CurrentChatBox.EnableInputField();
-                PlayerInput.Instance.IsChatOpened = true;
             }
             else
             {
                 if(!PlayerInput.Instance.IsUsingMobileFallback)
                     CurrentChatBox.DisableInputField();
                 CurrentChatBox.Disable();
-                PlayerInput.Instance.IsChatOpened = false;
             }
         }
 
@@ -321,7 +323,6 @@ namespace Code.Chat
                 }
 
                 CurrentChatBox.Disable();
-                PlayerInput.Instance.IsChatOpened = false;
             }
 
             CurrentChatBox = chatBox;
@@ -350,7 +351,6 @@ namespace Code.Chat
 
             CurrentChatBox.EnableInputField();
             CurrentChatBox.Enable();
-            PlayerInput.Instance.IsChatOpened = true;
 
             if (!CurrentChatBox.WasInitLoad)
                 _ = LoadHistoryPageAsync(true, _isGlobalChatActive);
@@ -380,7 +380,6 @@ namespace Code.Chat
             Debug.Log($"[CHAT] Send Message");
             CurrentChatBox.DisableInputField();
             CurrentChatBox.Disable();
-            PlayerInput.Instance.IsChatOpened = false;
         }
 
         private void OnInputFieldEnabled()
