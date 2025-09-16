@@ -93,6 +93,7 @@ namespace Code.Chat
 
             SetCurrentChat(lobbyChatBox);
             CurrentChatBox.Disable();
+            PlayerInput.Instance.IsChatOpened  = false;
             CurrentChatBox.DisableInputField();
 
             string jwt = ClientDataStorage.AccessToken ?? string.Empty;
