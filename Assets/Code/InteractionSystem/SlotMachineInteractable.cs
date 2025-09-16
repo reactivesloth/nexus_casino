@@ -179,7 +179,7 @@ namespace Code.InteractionSystem
                     if (networkImageStream != null)
                         networkImageStream.SetTexture(raw);
 
-                    if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
+                    if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = true;
                 }
             }
         }
