@@ -153,7 +153,11 @@ namespace Code.Chat
             {
                 if (input.IsOpenChatDown) OpenChat();
                 if (input.IsSwitchChatDown && CurrentChatBox != null && CurrentChatBox.IsEnabled) ChangeChat();
-                if (input.IsPausedDown && CurrentChatBox != null) CurrentChatBox.Disable();
+                if (input.IsPausedDown && CurrentChatBox != null)
+                {
+                    CurrentChatBox.Disable();
+                    PlayerInput.Instance.IsChatOpened  = false;
+                }
                 if (input.IsScrollUpButton) MoveUp();
                 if (input.IsScrollDownButton) MoveDown();
                 if(input.SendChatMessageButtonDown) SendMessage();
@@ -268,19 +272,19 @@ namespace Code.Chat
             if (CurrentChatBox == null) return;
             bool open = !CurrentChatBox.IsEnabled;
             Debug.Log(open);
-
-            PlayerInput.Instance.IsChatOpened = open;
             
             if (open)
             {
                 CurrentChatBox.Enable();
                 CurrentChatBox.EnableInputField();
+                PlayerInput.Instance.IsChatOpened = true;
             }
             else
             {
                 if(!PlayerInput.Instance.IsUsingMobileFallback)
                     CurrentChatBox.DisableInputField();
                 CurrentChatBox.Disable();
+                PlayerInput.Instance.IsChatOpened = false;
             }
         }
 
@@ -316,6 +320,7 @@ namespace Code.Chat
                 }
 
                 CurrentChatBox.Disable();
+                PlayerInput.Instance.IsChatOpened = false;
             }
 
             CurrentChatBox = chatBox;
@@ -344,6 +349,7 @@ namespace Code.Chat
 
             CurrentChatBox.EnableInputField();
             CurrentChatBox.Enable();
+            PlayerInput.Instance.IsChatOpened = true;
 
             if (!CurrentChatBox.WasInitLoad)
                 _ = LoadHistoryPageAsync(true, _isGlobalChatActive);
@@ -373,6 +379,7 @@ namespace Code.Chat
             Debug.Log($"[CHAT] Send Message");
             CurrentChatBox.DisableInputField();
             CurrentChatBox.Disable();
+            PlayerInput.Instance.IsChatOpened = false;
         }
 
         private void OnInputFieldEnabled()
