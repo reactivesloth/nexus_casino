@@ -14,58 +14,81 @@ namespace Code.UI
         [SerializeField] private TextMeshProUGUI playerRole;
         [SerializeField] private Image voiceImage;
         
-        private VoiceBroadcastTrigger voiceBroadcastTrigger;
+        private VoiceBroadcastTrigger _voiceBroadcastTrigger;
 
-        private bool isVoiceHeld;
-        private bool isVoiceMuted;
+        private bool _isVoiceHeld;
+        private bool _isVoiceMuted;
         
         private void Start()
         {
-            voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
+            _voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
         }
 
         private void Update()
         {
             if (IsOwner)
             {
-                isVoiceHeld = voiceBroadcastTrigger.VoiceHeld;
-                isVoiceMuted =  voiceBroadcastTrigger.IsMuted;
+                var newHeld = _voiceBroadcastTrigger.VoiceHeld;
+                var newMuted = _voiceBroadcastTrigger.IsMuted;
+
+                // Если изменилось состояние — пересылаем на сервер только голосовые данные
+                if (newHeld != _isVoiceHeld || newMuted != _isVoiceMuted)
+                {
+                    _isVoiceHeld = newHeld;
+                    _isVoiceMuted = newMuted;
+                    TransmitVoiceState();
+                }
             }
 
             if (voiceImage != null)
             {
-                voiceImage.color = isVoiceMuted ? Color.red : isVoiceHeld ? Color.green : Color.clear;
+                voiceImage.color = _isVoiceMuted ? Color.red : _isVoiceHeld ? Color.green : Color.clear;
             }
         }
         
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            TransmitLocalCharacter();
+            TransmitStaticCharacterData();
         }
 
-        [ServerRpc] // при необходимости можно добавить RequireOwnership=false
-        public void SendCharacterDataServerRpc(string _nickname, string _role, bool _voice, bool _mute, NetworkConnection sender = null)
+        [ServerRpc(RequireOwnership = false)]
+        public void SendStaticDataServerRpc(string nickname, string role, NetworkConnection sender = null)
         {
-            SendCharacterDataObserversRpc(_nickname, _role, _voice, _mute);
+            SendStaticDataObserversRpc(nickname, role);
         }
 
         [ObserversRpc(BufferLast = true)]
-        private void SendCharacterDataObserversRpc(string _nickname, string _role, bool _voice, bool _mute)
+        private void SendStaticDataObserversRpc(string nickname, string role)
         {
-            if (playerName != null) playerName.text = _nickname ?? string.Empty;
-            if (playerRole != null) playerRole.text = _role ?? string.Empty;
-            isVoiceHeld = _voice;
-            isVoiceMuted = _mute;
+            if (playerName != null) playerName.text = nickname ?? string.Empty;
+            if (playerRole != null) playerRole.text = role ?? string.Empty;
         }
 
-        public void TransmitLocalCharacter()
+        public void TransmitStaticCharacterData()
         {
             if (!IsOwner) return;
-
             var user = ClientDataStorage.UserData;
+            SendStaticDataServerRpc(user.username ?? "", user.role ?? "");
+        }
 
-            SendCharacterDataServerRpc(user.username ?? "", user.role ?? "", isVoiceHeld, isVoiceMuted);
+        [ServerRpc(RequireOwnership = false)]
+        public void SendVoiceStateServerRpc(bool voice, bool mute, NetworkConnection sender = null)
+        {
+            SendVoiceStateObserversRpc(voice, mute);
+        }
+
+        [ObserversRpc]
+        private void SendVoiceStateObserversRpc(bool voice, bool mute)
+        {
+            _isVoiceHeld = voice;
+            _isVoiceMuted = mute;
+        }
+
+        public void TransmitVoiceState()
+        {
+            if (!IsOwner) return;
+            SendVoiceStateServerRpc(_isVoiceHeld, _isVoiceMuted);
         }
     }
 }
