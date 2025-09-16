@@ -333,6 +333,8 @@ namespace Code.Player
             if (CanMove || LookCameraLimitRotation)
                 UpdateCameraDistance();
             
+            if (!CanMove) return;
+            
             GroundedCheck();
             JumpAndGravity();
             Move();
