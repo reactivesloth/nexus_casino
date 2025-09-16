@@ -20,7 +20,7 @@ namespace Code.InteractionSystem
         protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
+            ReadPermission = ReadPermission.Observers,
         });
 
         public bool IsBusy;
@@ -31,11 +31,18 @@ namespace Code.InteractionSystem
         
         public event Action<bool> InteractCallback_Client;
         public event Action<bool> InteractCallback_Server;
-        
+
+        private void Awake()
+        {
+            _isOccupied.SetInitialValues(false);
+        }
+
         public override void OnStartServer()
         {
             base.OnStartServer();
             ServerManager.OnRemoteConnectionState += ServerManagerOnRemoteConnectionState;
+            _isOccupied.Value = false;
+            _occupiedConnectionId = -1;
         }
 
         public override void OnStopServer()
