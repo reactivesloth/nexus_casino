@@ -224,7 +224,7 @@ public class PlayerInput : MonoBehaviour
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
     public bool IsRmbDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
-    public bool ForceCursorHeld => _player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f;
+    public bool ForceCursorHeld => IsChatOpened || (_player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f);
     public float Zoom => !IsChatOpened && !IsBusy ? Input.GetAxis("Mouse ScrollWheel") : 0;
     public bool IsSlotsFullscreen => !IsChatOpened && slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => !IsChatOpened && slotsStreamButton.GetButtonDown();

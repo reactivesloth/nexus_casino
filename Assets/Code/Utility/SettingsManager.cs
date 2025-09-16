@@ -44,6 +44,10 @@ namespace Code.Utility
         private void Awake()
         {
             Instance = this;
+        }
+
+        private void Start()
+        {
             LoadAllSettings();
         }
 

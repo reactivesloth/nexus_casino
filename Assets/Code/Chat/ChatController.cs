@@ -171,7 +171,16 @@ namespace Code.Chat
             if (CurrentChatBox != null)
             {
                 if (CurrentChatBox.InputFieldEnabled != PlayerInput.Instance.IsChatOpened)
-                    PlayerInput.Instance.IsChatOpened = CurrentChatBox.InputFieldEnabled;
+                {
+                    if (CurrentChatBox.InputFieldEnabled)
+                    {
+                        PlayerInput.Instance.IsChatOpened = true;
+                    }
+                    else
+                    {
+                        PlayerInput.Instance.IsChatOpened = false;
+                    }
+                }
             }
         }
 
@@ -371,8 +380,6 @@ namespace Code.Chat
 
         private void CurrentChatBoxOnOnInputFieldUpdated(string _)
         {
-            if (CursorManager.Instance != null)
-                CursorManager.Instance.ShowCursor();
         }
 
         private void SendMessage()
@@ -384,17 +391,11 @@ namespace Code.Chat
 
         private void OnInputFieldEnabled()
         {
-            if (CursorManager.Instance != null)
-                CursorManager.Instance.ShowCursor();
-
             SetActiveMobileInput(true);
         }
 
         private void OnInputFieldDisabled()
         {
-            if (CursorManager.Instance != null)
-                CursorManager.Instance.HideCursor();
-
             SetActiveMobileInput(false);
         }
 
