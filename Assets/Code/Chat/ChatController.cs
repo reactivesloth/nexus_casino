@@ -269,7 +269,7 @@ namespace Code.Chat
             bool open = !CurrentChatBox.IsEnabled;
             Debug.Log(open);
 
-            PlayerInput.Instance.IsBusy = open;
+            PlayerInput.Instance.IsChatOpened = open;
             
             if (open)
             {
