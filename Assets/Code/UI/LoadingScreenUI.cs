@@ -61,8 +61,8 @@ namespace Code.UI
                     {
                         percentageSlider.value = 100;
                         percentageText.text = 100 + "%";
-                        messageText.text = "Press any key to continue";
-                        if (Input.anyKeyDown)
+                        messageText.text = "Starting scene...";
+                        if (!asyncOperation.allowSceneActivation)
                         {
                             //loadingScreenUI.SetActive(false);
                             asyncOperation.allowSceneActivation = true;
