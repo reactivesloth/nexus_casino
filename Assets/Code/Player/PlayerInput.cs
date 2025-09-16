@@ -212,13 +212,13 @@ public class PlayerInput : MonoBehaviour
         }
     }
     
-    public bool JumpDown  => IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : !IsBusy && _player.Jump is { triggered: true };
-    public bool VoiceHeld => IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f;
-    public bool SprintHeld=> IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : !IsBusy && _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f;
-    public bool CameraSwitchDown => IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : !IsBusy && _player.CameraSwitch is { triggered: true };
-    public bool InteractDown => IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true };
-    public bool InteractEndDown => endInteractButton.GetButtonDown() || _player.Interact is { triggered: true };
-    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton() : _player.Pause is { triggered: true };
+    public bool JumpDown  => !IsBusy && (IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : _player.Jump is { triggered: true });
+    public bool VoiceHeld => !IsBusy && (IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f);
+    public bool SprintHeld=> !IsBusy && (IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f);
+    public bool CameraSwitchDown => !IsBusy && (IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : _player.CameraSwitch is { triggered: true });
+    public bool InteractDown => !IsBusy && (IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true });
+    public bool InteractEndDown => !IsBusy && (endInteractButton.GetButtonDown() || _player.Interact is { triggered: true });
+    public bool IsPausedDown =>  IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton() : _player.Pause is { triggered: true };
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
     public bool IsRmbDown  => !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
