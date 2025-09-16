@@ -269,6 +269,8 @@ namespace Code.Chat
             bool open = !CurrentChatBox.IsEnabled;
             Debug.Log(open);
 
+            PlayerInput.Instance.IsBusy = open;
+            
             if (open)
             {
                 CurrentChatBox.Enable();
