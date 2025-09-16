@@ -187,7 +187,7 @@ namespace Code.Player
 
                 _hovered = null;
 
-                if (Active.GetComponentInChildren<SlotMachineInteractable>())
+                if (Active.GetComponentInChildren<SlotMachineInteractable>(true))
                 {
                     PlayerInput.Instance.ShowInteractUI(true, "Slots");
                 }
