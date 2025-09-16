@@ -6,6 +6,7 @@ using Code.InteractionSystem;
 using Code.Network;
 using Code.Network.Lobby;
 using FishNet;
+using FishNet.Transporting;
 using Proyecto26;
 using TMPro;
 using UnityEngine;
@@ -36,6 +37,15 @@ namespace Code.UI
         private void Awake()
         {
             _mainScreenController = FindAnyObjectByType<MainScreenController>();
+            InstanceFinder.ClientManager.OnClientConnectionState += OnClientStarted;
+        }
+
+        private void OnClientStarted(ClientConnectionStateArgs args)
+        {
+            if(args.ConnectionState != LocalConnectionState.Started) return;
+            if(_mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber)
+                _mainScreenController.RequestCancel();
+            StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
         }
 
         private void OnEnable()
@@ -44,9 +54,6 @@ namespace Code.UI
             if (resultText != null) resultText.text = string.Empty;
 
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
-            if(_mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber)
-                _mainScreenController.RequestCancel();
-            StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
         }
 
         private void Update()
@@ -222,7 +229,6 @@ namespace Code.UI
         {
             _streaming = true;
             slotMachineInteractable.NetworkImageStream.SetQualitySettings(streamDownscale, streamJpgQuality);
-            // Источник текстуры уже назначается при открытии/переключении через SlotMachineInteractable
         }
 
         private void OnEndStreaming()

@@ -53,18 +53,30 @@ namespace Code.Network
         {
             StreamSlotId.OnChange -= OnStreamSlotIdChange;
             StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            ClientReset();
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
             ClientReset();
         }
 
         public override void OnStartServer()
         {
             base.OnStartServer();
+            ServerReset();
+        }
 
-            // Проверяем, есть ли актуальный объект стрима
-            if (StreamSlotId.Value < 0)
-                return;
-
-            SetStream(StreamSlotId.Value, StreamerUsername.Value);
+        public override void OnStopServer()
+        {
+            base.OnStopServer();
+            ServerReset();
         }
 
         public void RequestStream(int slotId, string username) =>
