@@ -126,8 +126,7 @@ namespace Code.InteractionSystem
 
             if (!open)
             {
-                if (CursorManager.Instance != null)
-                    CursorManager.Instance.HideCursor();
+                CursorManager.Instance.HideCursor();
                 
                 if (contentCanvas) contentCanvas.gameObject.SetActive(false);
                 if (computer3dCanvas) computer3dCanvas.gameObject.SetActive(false);
@@ -148,8 +147,7 @@ namespace Code.InteractionSystem
             }
             else
             {
-                if (CursorManager.Instance != null)
-                    CursorManager.Instance.ShowCursor();
+                CursorManager.Instance.ShowCursor();
                 
                 if (contentCanvas) contentCanvas.gameObject.SetActive(true);
 
