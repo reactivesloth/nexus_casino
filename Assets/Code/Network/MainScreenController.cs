@@ -53,13 +53,7 @@ namespace Code.Network
         {
             StreamSlotId.OnChange -= OnStreamSlotIdChange;
             StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
-        }
-
-        public override void OnStopNetwork()
-        {
-            base.OnStopNetwork();
-            if(_currentStreamOnClient != null)
-                _currentStreamOnClient.NetworkImageStream.OnApplyTexture -= ApplyTexture;
+            ClientReset();
         }
 
         public override void OnStartServer()
@@ -113,8 +107,7 @@ namespace Code.Network
                 _currentStreamOnServer = null;
                 return;
             }
-            if (_currentStreamOnServer != null)
-                _currentStreamOnServer.InteractCallback_Server -= OnEndTargetInteraction;
+            
             ServerReset();
             _currentStreamOnServer = _currentStreamOnClient;
             if (_currentStreamOnServer != null)
@@ -141,6 +134,7 @@ namespace Code.Network
         private void ServerReset()
         {
             if (_currentStreamOnServer == null) return;
+            _currentStreamOnServer.InteractCallback_Server -= OnEndTargetInteraction;
             SetConditionsEnable(true);
             _currentStreamOnServer = null;
         }
