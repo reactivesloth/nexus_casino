@@ -903,6 +903,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   detectionDistance: 1.5
+  Active: {fileID: 0}
   postEndCooldownTime: 0.05
 --- !u!114 &2267133584672632614
 MonoBehaviour:
@@ -922,6 +923,7 @@ MonoBehaviour:
   playerName: {fileID: 3016589416717469956}
   playerRole: {fileID: 5673751639316256807}
   voiceImage: {fileID: 5406887723112317175}
+  hostIndicator: {fileID: 349737175657259841}
 --- !u!114 &-6419089301180924083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1951,6 +1953,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+--- !u!1 &349737175657259841 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7037562653399577515, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+  m_PrefabInstance: {fileID: 7309612580318957802}
+  m_PrefabAsset: {fileID: 0}
 --- !u!114 &3016589416717469956 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5525320800619895278, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}

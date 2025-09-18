@@ -2007,6 +2007,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 3558eb0a702523843a4411225f7037ef, type: 2}
   - {fileID: 11400000, guid: 18f51fd4165ff3f4ba7b90296a1f5ac8, type: 2}
   - {fileID: 11400000, guid: 207d0a15366ff1b40a5e452a2c7439c8, type: 2}
+  DefaultApparel: []
   Outfits: {fileID: 11400000, guid: 5bac15eafbc6dba45804c271a5f45aa5, type: 2}
   Randomizer: {fileID: 11400000, guid: b7a91e7c5189b6b4d98d01940843f555, type: 2}
   Presets: {fileID: 11400000, guid: 563f2810faaf86440ba957986c40ddbb, type: 2}
@@ -2040,14 +2041,14 @@ Animator:
   m_AnimatePhysics: 0
   m_WarningMessage: "\nBinding warning: Some generic clip(s) animate transforms that
     are already bound by a Humanoid avatar. These transforms can only be changed
-    by Humanoid clips.\n\tTransform 'clavicle_r'\n\tTransform 'root'\n\tTransform
-    'spine_04'\n\tTransform 'head'\n\tTransform 'neck_01'\n\tTransform 'spine_02'\n\tTransform
-    'upperarm_r'\n\tTransform 'upperarm_l'\n\tTransform 'pelvis'\n\tTransform 'spine_03'\n\tand
-    more ...\n\tFrom animation clip 'FACS_001'\n\tFrom animation clip 'FACS_002'\n\tFrom
-    animation clip 'FACS_003'\n\tFrom animation clip 'FACS_004'\n\tFrom animation
-    clip 'FACS_005'\n\tFrom animation clip 'FACS_006'\n\tFrom animation clip 'FACS_007'\n\tFrom
-    animation clip 'FACS_008'\n\tFrom animation clip 'FACS_009'\n\tFrom animation
-    clip 'FACS_010'\n\tand more ..."
+    by Humanoid clips.\n\tTransform 'clavicle_r'\n\tTransform 'index_metacarpal_l'\n\tTransform
+    'pinky_01_l'\n\tTransform 'pinky_03_l'\n\tTransform 'lowerarm_r'\n\tTransform
+    'ring_02_l'\n\tTransform 'index_metacarpal_r'\n\tTransform 'root'\n\tTransform
+    'spine_04'\n\tTransform 'ring_metacarpal_r'\n\tand more ...\n\tFrom animation
+    clip 'FACS_001'\n\tFrom animation clip 'FACS_002'\n\tFrom animation clip 'FACS_003'\n\tFrom
+    animation clip 'FACS_004'\n\tFrom animation clip 'FACS_005'\n\tFrom animation
+    clip 'FACS_006'\n\tFrom animation clip 'FACS_007'\n\tFrom animation clip 'FACS_008'\n\tFrom
+    animation clip 'FACS_009'\n\tFrom animation clip 'FACS_010'\n\tand more ..."
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
@@ -3115,6 +3116,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   detectionDistance: 1.5
+  Active: {fileID: 0}
   postEndCooldownTime: 0.05
 --- !u!114 &-626117860274373281
 MonoBehaviour:
@@ -3165,6 +3167,7 @@ MonoBehaviour:
   playerName: {fileID: 1423232093092712731}
   playerRole: {fileID: 8403845641354313784}
   voiceImage: {fileID: 8148240599701002472}
+  hostIndicator: {fileID: 4523802055945714526}
 --- !u!82 &4155454088143405929
 AudioSource:
   m_ObjectHideFlags: 0
@@ -6136,6 +6139,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1 &4523802055945714526 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7037562653399577515, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
+  m_PrefabInstance: {fileID: 6876354456791582965}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &8125988336367093982 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 3434268101353160747, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}

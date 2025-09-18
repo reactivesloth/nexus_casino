@@ -13,12 +13,13 @@ namespace Code.UI
         [SerializeField] private TextMeshProUGUI playerName;
         [SerializeField] private TextMeshProUGUI playerRole;
         [SerializeField] private Image voiceImage;
+        [SerializeField] private GameObject hostIndicator;
         
         private VoiceBroadcastTrigger _voiceBroadcastTrigger;
 
         private bool _isVoiceHeld;
         private bool _isVoiceMuted;
-        
+
         private void Start()
         {
             _voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
@@ -53,23 +54,24 @@ namespace Code.UI
         }
 
         [ServerRpc(RequireOwnership = false)]
-        public void SendStaticDataServerRpc(string nickname, string role, NetworkConnection sender = null)
+        public void SendStaticDataServerRpc(string nickname, string role, bool isHost, NetworkConnection sender = null)
         {
-            SendStaticDataObserversRpc(nickname, role);
+            SendStaticDataObserversRpc(nickname, role, isHost);
         }
 
         [ObserversRpc(BufferLast = true)]
-        private void SendStaticDataObserversRpc(string nickname, string role)
+        private void SendStaticDataObserversRpc(string nickname, string role, bool isHost)
         {
             if (playerName != null) playerName.text = nickname ?? string.Empty;
             if (playerRole != null) playerRole.text = role ?? string.Empty;
+            hostIndicator.SetActive(isHost);
         }
 
         public void TransmitStaticCharacterData()
         {
             if (!IsOwner) return;
             var user = ClientDataStorage.UserData;
-            SendStaticDataServerRpc(user.username ?? "", user.role ?? "");
+            SendStaticDataServerRpc(user.username ?? "", user.role ?? "", ServerManager.Started);
         }
 
         [ServerRpc(RequireOwnership = false)]
