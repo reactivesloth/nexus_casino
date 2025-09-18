@@ -16,6 +16,7 @@ namespace Code.InteractionSystem
         public GameObject[] outlineGameObjects;
         
         private int _occupiedConnectionId = -1;
+        private NetworkConnection OccupierConnection => ServerManager.Clients.TryGetValue(_occupiedConnectionId, out var conn) ? conn : null;
 
         protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {
@@ -59,12 +60,13 @@ namespace Code.InteractionSystem
         #region Server Methods
         
         [Server]
-        private void ReleaseInteractable(NetworkConnection requester = null)
+        public void ReleaseInteractable(NetworkConnection requester = null)
         {
+            var occupier = requester != null ? requester : OccupierConnection;
             _isOccupied.Value = false;
             _occupiedConnectionId = -1;
             
-            SendRequestEndInteractCallbacks(requester, true);
+            SendRequestEndInteractCallbacks(occupier, true);
         }
         
         [Server]
@@ -97,7 +99,8 @@ namespace Code.InteractionSystem
         private void SendRequestInteractCallbacks(NetworkConnection requester, bool success, bool force = false)
         {
             OnInteractCallback_Server(requester, success, force);
-            RequestInteractCallback_TargetRpc(requester, success, force);
+            if(requester != null)
+                RequestInteractCallback_TargetRpc(requester, success, force);
             RequestInteractCallback_ObserversRpc(true, success, force);
         }
 
@@ -117,7 +120,8 @@ namespace Code.InteractionSystem
         private void SendRequestEndInteractCallbacks(NetworkConnection requester, bool success)
         {
             OnInteractEndCallback_Server(requester, success);
-            RequestEndInteractCallback_TargetRpc(requester, success);
+            if(requester != null)
+                RequestEndInteractCallback_TargetRpc(requester, success);
             RequestInteractCallback_ObserversRpc(false, success);
         }
 

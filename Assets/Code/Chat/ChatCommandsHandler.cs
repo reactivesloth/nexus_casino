@@ -2,6 +2,7 @@ using System.Linq;
 using System.Text;
 using Code.API;
 using Code.API.Models;
+using Code.InteractionSystem;
 using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Player;
@@ -96,6 +97,99 @@ namespace Code.Chat
                 PlayerPrefs.DeleteKey("auth_accessToken");
                 LobbyDisconnector.Disconnect(true, "You was kicked / baned");
             }
+        }
+
+        #endregion
+        
+        #region Ban
+
+        public void BanUser(string usernameTime)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage($"You can't ban users", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var parametres = usernameTime.Split(' ');
+            var username = parametres[0];
+            var time = parametres.Length > 1 ? int.Parse(parametres[1]) : 0;
+
+            if (LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username) ==
+                null)
+            {
+                chatController.SendSystemMessage($"User not found in lobby", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var banRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetBanUrl(),
+                Body = new BanData
+                {
+                    username = username,
+                    timeout_minutes = time
+                },
+                Headers = ClientDataStorage.GetJwtHeader(),
+            };
+
+            RestClient.Post(banRequest).Then(banResponse =>
+            {
+                if (banResponse.StatusCode != 200)
+                {
+                    chatController.SendSystemMessage(banResponse.Error, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+
+                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(banResponse.Text);
+                if (!responseData.success)
+                {
+                    chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+                
+                chatController.SendSystemMessage($"User {username} was banned", UltimateChatBoxStyles.noticeMessage);
+                
+                Kick(username);
+            });
+        }
+
+        public void UnbanUser(string username)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage($"You can't unban users", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var unbanRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetUnbanUrl(),
+                Body = new BanData
+                {
+                    username = username
+                },
+                Headers = ClientDataStorage.GetJwtHeader(),
+            };
+
+            RestClient.Post(unbanRequest).Then(unbanResponse =>
+            {
+                if (unbanResponse.StatusCode != 200)
+                {
+                    chatController.SendSystemMessage(unbanResponse.Error, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+
+                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(unbanResponse.Text);
+                if (!responseData.success)
+                {
+                    chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
+                    return;
+                }
+                
+                chatController.SendSystemMessage($"User {username} was unbanned", UltimateChatBoxStyles.noticeMessage);
+                
+            });
         }
 
         #endregion
@@ -259,95 +353,39 @@ namespace Code.Chat
 
         #endregion
 
-        #region Ban
+        #region Slots
 
-        public void BanUser(string usernameTime)
+        public void ResetSlot(string idString)
         {
             if (!ClientDataStorage.UserData.IsAdminRole)
             {
-                chatController.SendSystemMessage($"You can't ban users", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage("You can't reset slots", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+            
+            if(!int.TryParse(idString, out var id))
+            {
+                chatController.SendSystemMessage("Invalid param", UltimateChatBoxStyles.errorMessage);
                 return;
             }
 
-            var parametres = usernameTime.Split(' ');
-            var username = parametres[0];
-            var time = parametres.Length > 1 ? int.Parse(parametres[1]) : 0;
-
-            if (LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username) ==
-                null)
+            if (SlotMachineInteractable.FindById(id) == null)
             {
-                chatController.SendSystemMessage($"User not found in lobby", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage("Slot not found", UltimateChatBoxStyles.errorMessage);
                 return;
             }
-
-            var banRequest = new RequestHelper
-            {
-                Uri = ApiRoutes.GetBanUrl(),
-                Body = new BanData
-                {
-                    username = username,
-                    timeout_minutes = time
-                },
-                Headers = ClientDataStorage.GetJwtHeader(),
-            };
-
-            RestClient.Post(banRequest).Then(banResponse =>
-            {
-                if (banResponse.StatusCode != 200)
-                {
-                    chatController.SendSystemMessage(banResponse.Error, UltimateChatBoxStyles.errorMessage);
-                    return;
-                }
-
-                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(banResponse.Text);
-                if (!responseData.success)
-                {
-                    chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
-                    return;
-                }
-                
-                chatController.SendSystemMessage($"User {username} was banned", UltimateChatBoxStyles.noticeMessage);
-                
-                Kick(username);
-            });
+            
+            chatController.SendSystemMessage($"Request reset slot {id}", UltimateChatBoxStyles.noticeMessage);
+            ResetSlot_ServerRpc(id);
         }
 
-        public void UnbanUser(string username)
+        [ServerRpc(RequireOwnership = false)]
+        public void ResetSlot_ServerRpc(int id)
         {
-            if (!ClientDataStorage.UserData.IsAdminRole)
-            {
-                chatController.SendSystemMessage($"You can't unban users", UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            var unbanRequest = new RequestHelper
-            {
-                Uri = ApiRoutes.GetUnbanUrl(),
-                Body = new BanData
-                {
-                    username = username
-                },
-                Headers = ClientDataStorage.GetJwtHeader(),
-            };
-
-            RestClient.Post(unbanRequest).Then(unbanResponse =>
-            {
-                if (unbanResponse.StatusCode != 200)
-                {
-                    chatController.SendSystemMessage(unbanResponse.Error, UltimateChatBoxStyles.errorMessage);
-                    return;
-                }
-
-                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(unbanResponse.Text);
-                if (!responseData.success)
-                {
-                    chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
-                    return;
-                }
-                
-                chatController.SendSystemMessage($"User {username} was unbanned", UltimateChatBoxStyles.noticeMessage);
-                
-            });
+            var slot = SlotMachineInteractable.FindById(id);
+            var compositeInteractionComponent = slot.GetComponentInParent<CompositeInteractable>();
+            if(compositeInteractionComponent != null)
+                compositeInteractionComponent.ReleaseInteractable();
         }
 
         #endregion

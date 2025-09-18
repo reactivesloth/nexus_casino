@@ -75,7 +75,6 @@ namespace Code.Player
                     IsBusy = true;
 
                     _selected = Active;
-                    _selected.InteractCallback_Client += OnEndInteractCallbackClient;
                     _selected.RequestEndInteract();
                 }
             }
@@ -175,7 +174,10 @@ namespace Code.Player
         {
             IsBusy = false;
             if (_selected != null)
+            {
                 _selected.InteractCallback_Client -= OnStartInteractCallbackClient;
+                _selected.InteractCallback_Client += OnEndInteractCallbackClient;
+            }
 
             if (success)
             {
@@ -200,8 +202,8 @@ namespace Code.Player
         private void OnEndInteractCallbackClient(bool success)
         {
             IsBusy = false;
-            if (_selected != null)
-                _selected.InteractCallback_Client -= OnEndInteractCallbackClient;
+            if (Active != null)
+                Active.InteractCallback_Client -= OnEndInteractCallbackClient;
 
             if (success)
             {
