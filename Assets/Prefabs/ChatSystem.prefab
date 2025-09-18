@@ -250,14 +250,14 @@ MonoBehaviour:
             m_BoolArgument: 0
           m_CallState: 2
     description: 
-  - commandValue: /new_room
+  - commandValue: /reset_slot
     requireMessageValue: 1
     unityEvent:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
-          m_MethodName: UnbanUser
+          m_MethodName: ResetSlot
           m_Mode: 0
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -268,14 +268,14 @@ MonoBehaviour:
             m_BoolArgument: 0
           m_CallState: 2
     description: 
-  - commandValue: /reset_slot
-    requireMessageValue: 1
+  - commandValue: /new_room
+    requireMessageValue: 0
     unityEvent:
       m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 2199744421160414387}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
-          m_MethodName: ResetSlot
+          m_MethodName: NewRoom
           m_Mode: 0
           m_Arguments:
             m_ObjectArgument: {fileID: 0}

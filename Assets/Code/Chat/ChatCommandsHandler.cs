@@ -389,5 +389,22 @@ namespace Code.Chat
         }
 
         #endregion
+
+        #region Room
+
+        public void NewRoom(string roomName)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage("You can not create new rooms", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+            
+            LobbyDisconnector.Disconnect();
+            var lobbyController = FindAnyObjectByType<LobbyController>();
+            lobbyController.CreateLobbyManual(roomName, 64);
+        }
+
+        #endregion
     }
 }
