@@ -417,7 +417,7 @@ namespace Code.Network.Lobby
         {
             if (arg.CurrentStatus is not LobbyMemberStatus.Promoted ||
                 arg.TargetUserId.ToString() != LobbyVariables.Instance.ProductUserId.ToString()) return;
-            await Task.Delay(5_000);
+            await Task.Delay(2_500);
             Debug.Log($"[HostMigration] I am new owner");
             if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
                || isPromoteManually == "FALSE")
