@@ -24,7 +24,6 @@ namespace Code.Network.Lobby
                 if(meMember != null)
                     members.Remove(meMember);
             }
-
             
             var adminMembers = members
                 .Where(m => m.Attributes.TryGetValue("ROLE", out var role) && MeSchema.CheckAdmin(role))

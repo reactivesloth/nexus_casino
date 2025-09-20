@@ -138,7 +138,7 @@ namespace Code.Network.Player
 
         private void OnClientDisconnectBroadcastReceived(DisconnectBroadcast data, Channel _)
         {
-            LobbyDisconnector.Disconnect(true, data.Reason);
+            LobbyDisconnector.Disconnect(true, true, data.Reason);
         }
 
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===

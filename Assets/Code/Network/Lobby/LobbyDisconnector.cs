@@ -31,19 +31,19 @@ namespace Code.Network.Lobby
 
         private void OnDestroy()
         {
-            Disconnect();
+            Disconnect(false);
         }
 
         private void OnApplicationQuit()
         {
-            Disconnect();
+            Disconnect(false);
         }
 
-        public static void Disconnect(bool showPopup = false, string popupTitle = "", string popupMessage = "", UnityAction popupOkAction = null)
+        public static void Disconnect(bool promote = true, bool showPopup = false, string popupTitle = "", string popupMessage = "", UnityAction popupOkAction = null)
         {
             CursorManager.Instance.ShowCursor();
             
-            if(_serverManager.Started)
+            if(_serverManager.Started && promote)
                 HandleServerDisconnect();
             if (showPopup)
                 ShowPopup(popupTitle, popupMessage, popupOkAction);
@@ -74,7 +74,6 @@ namespace Code.Network.Lobby
 
         private static void HandleServerDisconnect()
         {
-            // _lobbyController.UpdateLobbyAttribute("PROMOTED", "TRUE");
             _lobbyController.SelectNewHostAndPromote();
         }
     }

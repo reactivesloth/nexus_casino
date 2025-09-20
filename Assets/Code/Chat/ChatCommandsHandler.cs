@@ -95,7 +95,7 @@ namespace Code.Chat
             if (kickedConnection != null && kickedConnection == ClientManager.Connection)
             {
                 PlayerPrefs.DeleteKey("auth_accessToken");
-                LobbyDisconnector.Disconnect(true, "You was kicked / baned");
+                LobbyDisconnector.Disconnect(false,true, "You was kicked / baned");
             }
         }
 
