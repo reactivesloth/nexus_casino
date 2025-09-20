@@ -415,16 +415,14 @@ namespace Code.Network.Lobby
 
         private async void CheckNewOwner(LobbyMemberStatusReceivedCallbackInfo arg)
         {
-            if (arg.CurrentStatus is LobbyMemberStatus.Promoted &&
-                arg.TargetUserId.ToString() == LobbyVariables.Instance.ProductUserId.ToString())
-            {
-                await Task.Delay(2_500);
-                if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
-                   || isPromoteManually == "FALSE")
-                    SelectNewHostAndPromote();
-                else
-                    PromoteHandle();
-            }
+            if (arg.CurrentStatus is not LobbyMemberStatus.Promoted ||
+                arg.TargetUserId.ToString() != LobbyVariables.Instance.ProductUserId.ToString()) return;
+            await Task.Delay(5_000);
+            if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
+               || isPromoteManually == "FALSE")
+                SelectNewHostAndPromote();
+            else
+                PromoteHandle();
         }
 
         private void PromoteHandle()
