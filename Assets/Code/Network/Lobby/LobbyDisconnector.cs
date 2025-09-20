@@ -31,20 +31,18 @@ namespace Code.Network.Lobby
 
         private void OnDestroy()
         {
-            Disconnect(false);
+            Disconnect();
         }
 
         private void OnApplicationQuit()
         {
-            Disconnect(false);
+            Disconnect();
         }
 
-        public static void Disconnect(bool promote = true, bool showPopup = false, string popupTitle = "", string popupMessage = "", UnityAction popupOkAction = null)
+        public static void Disconnect(bool showPopup = false, string popupTitle = "", string popupMessage = "", UnityAction popupOkAction = null)
         {
             CursorManager.Instance.ShowCursor();
             
-            if(_serverManager.Started && promote)
-                HandleServerDisconnect();
             if (showPopup)
                 ShowPopup(popupTitle, popupMessage, popupOkAction);
             
@@ -70,11 +68,6 @@ namespace Code.Network.Lobby
         private static void DefaultOkAction()
         {
             UnityEngine.SceneManagement.SceneManager.LoadScene("Scenes/Init");
-        }
-
-        private static void HandleServerDisconnect()
-        {
-            _lobbyController.SelectNewHostAndPromote();
         }
     }
 }
