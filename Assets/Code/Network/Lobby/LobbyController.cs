@@ -418,6 +418,7 @@ namespace Code.Network.Lobby
             if (arg.CurrentStatus is not LobbyMemberStatus.Promoted ||
                 arg.TargetUserId.ToString() != LobbyVariables.Instance.ProductUserId.ToString()) return;
             await Task.Delay(5_000);
+            Debug.Log($"[HostMigration] I am new owner");
             if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
                || isPromoteManually == "FALSE")
                 SelectNewHostAndPromote();
@@ -427,6 +428,7 @@ namespace Code.Network.Lobby
 
         private void PromoteHandle()
         {
+            Debug.Log($"[HostMigration] I manually promoted");
             StartCoroutine(UpdateLobbyAttributes("PROMOTE_MANUALLY", "FALSE"));
             OnCurrentHostDisconnected?.Invoke(LobbyVariables.Instance.ProductUserId.ToString());
         }
@@ -620,7 +622,9 @@ namespace Code.Network.Lobby
 
         public void SelectNewHostAndPromote()
         {
+            Debug.Log($"[HostMigration] I Select new host");
             var newHostId = NewHostAutoSelector.GetNewHostIdAuto();
+            Debug.Log($"[HostMigration] New host ID: {newHostId}");
             Promote(newHostId);
         }
 
