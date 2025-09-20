@@ -1231,6 +1231,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1765251472944961214}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7728273655064638457}
   m_SourcePrefab: {fileID: 100100000, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
 --- !u!95 &877163164070511682 stripped
 Animator:
@@ -1403,7 +1406,7 @@ MonoBehaviour:
   <AssetPathHash>k__BackingField: 11694091506212731513
   <SceneId>k__BackingField: 0
   SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
+    Position: {x: -2.52891, y: -2.23596, z: 5.59859}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
     Scale: {x: 1, y: 1, z: 1}
     IsValid: 1
@@ -1668,6 +1671,21 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 8762398165049904545}
   _networkObjectCache: {fileID: 8762398165049904545}
   playerInteraction: {fileID: 161650767903664296}
+--- !u!114 &-7728273655064638457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5874861292224152706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be35b16721424d128d5f352cc42f9bca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.CharacterRoleFilter
+  IsAdmin: 1
+  IsHost: 1
+  IsModerator: 1
 --- !u!4 &6542713848401944120 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}

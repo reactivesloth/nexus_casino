@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using Code.API;
+using Code.Player;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -128,10 +131,11 @@ namespace CC
 
             int childCount = CharacterParent.transform.childCount;
             if (childCount == 0) return;
-
+            
             if (i < 0 || i >= childCount) i = 0;
+            int prevIndex = currentCharacter;
             currentCharacter = i;
-
+            
             SavePlayerModelType(i);
 
             for (int j = 0; j < childCount; j++)
@@ -144,7 +148,22 @@ namespace CC
 
                 if (j == i)
                 {
-                    character.SetActive(true);
+                    if (character.GetComponentInChildren<CharacterRoleFilter>() != null)
+                    {
+                        if (ClientDataStorage.UserData.IsAdminRole !=
+                            character.GetComponentInChildren<CharacterRoleFilter>().IsAdminRole)
+                        {
+                            character.SetActive(false);
+                            if (prevIndex > currentCharacter || currentCharacter == 0)
+                                characterNext();
+                            if (prevIndex < currentCharacter)
+                                characterPrev();
+                        }
+                    }
+                    else
+                    {
+                        character.SetActive(true);
+                    }
                 }
                 else
                 {
