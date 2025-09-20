@@ -627,6 +627,8 @@ namespace Code.Network.Lobby
             Debug.Log($"[HostMigration] New host ID: {newHostId}");
             if(newHostId != LobbyVariables.Instance.productUserId)
                 Promote(newHostId);
+            else
+                PromoteHandle();
         }
 
         public void Promote(string newHostId)
