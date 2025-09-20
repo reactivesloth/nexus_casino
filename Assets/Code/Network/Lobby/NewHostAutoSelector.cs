@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API.Models;
@@ -9,40 +10,79 @@ namespace Code.Network.Lobby
     {
         private const long GoodPing = 300;
 
+        // веса влияния (можно настроить под проект)
+        private const float PingWeight = 0.5f;      // чем больше, тем важнее пинг
+        private const float HardwareWeight = 0.5f;  // чем больше, тем важнее железо
+
         public static string GetNewHostIdAuto()
         {
             var members = LobbyVariables.Instance.currentLobby.lobbyMembers;
 
             var adminMembers = members
-                .Where(m => m.Attributes.TryGetValue("ROLE", out var role) && MeSchema.CheckAdmin(role)).ToList();
+                .Where(m => m.Attributes.TryGetValue("ROLE", out var role) && MeSchema.CheckAdmin(role))
+                .ToList();
 
             if (adminMembers.Count > 0)
-                return SelectWithBestPing(adminMembers);
+                return SelectWithCombinedScore(adminMembers);
 
-            var goodPingMembers =
-                members.Where(m => m.Attributes.TryGetValue("PING", out var ping) && long.Parse(ping) <= GoodPing)
-                    .ToList();
-            
+            var goodPingMembers = members
+                .Where(m => m.Attributes.TryGetValue("PING", out var ping)
+                            && long.TryParse(ping, out var pingValue)
+                            && pingValue <= GoodPing)
+                .ToList();
+
             if (goodPingMembers.Count == 0)
-                return SelectWithBestPing(members);
-            
-            return SelectWithBestHardware(goodPingMembers);
+                return SelectWithCombinedScore(members);
+
+            return SelectWithCombinedScore(goodPingMembers);
         }
 
-        private static string SelectWithBestPing(List<LobbyData.LobbyMember> members)
+        private static string SelectWithCombinedScore(List<LobbyData.LobbyMember> members)
         {
-            var membersWithPing = members
-                .Where(m => m.Attributes.TryGetValue("PING", out _)
-                ).OrderBy(m => long.Parse(m.Attributes["PING"])).ToList();
-            return membersWithPing.Count > 0 ? membersWithPing.First().productUserId : members.First().productUserId;
+            // Собираем максимальные значения для нормализации
+            var pings = members
+                .Select(m => TryGetLong(m.Attributes, "PING"))
+                .Where(v => v.HasValue)
+                .Select(v => v.Value)
+                .ToList();
+
+            var hardwares = members
+                .Select(m => TryGetLong(m.Attributes, "HARDWARE_SCORE"))
+                .Where(v => v.HasValue)
+                .Select(v => v.Value)
+                .ToList();
+
+            long maxPing = pings.Count > 0 ? pings.Max() : 1;
+            long maxHardware = hardwares.Count > 0 ? hardwares.Max() : 1;
+
+            var scoredMembers = members
+                .Select(m =>
+                {
+                    var ping = TryGetLong(m.Attributes, "PING") ?? maxPing;  // если нет — считаем худшим
+                    var hw = TryGetLong(m.Attributes, "HARDWARE_SCORE") ?? 0; // если нет — минимальное железо
+
+                    // Нормализация [0..1]
+                    float pingNorm = (float)ping / maxPing;
+                    float hwNorm = (float)hw / maxHardware;
+
+                    // Чем меньше результат, тем лучше
+                    float score = PingWeight * pingNorm - HardwareWeight * hwNorm;
+
+                    return new { Member = m, Score = score };
+                })
+                .OrderBy(x => x.Score) // минимальный Score — лучший
+                .ToList();
+
+            return scoredMembers.Count > 0
+                ? scoredMembers.First().Member.productUserId
+                : members.First().productUserId;
         }
 
-        private static string SelectWithBestHardware(List<LobbyData.LobbyMember> members)
+        private static long? TryGetLong(Dictionary<string, string> attrs, string key)
         {
-            var membersWithPing = members
-                .Where(m => m.Attributes.TryGetValue("HARDWARE_SCORE", out _)
-                ).OrderBy(m => long.Parse(m.Attributes["HARDWARE_SCORE"])).ToList();
-            return membersWithPing.Count > 0 ? membersWithPing.First().productUserId : members.First().productUserId;
+            if (attrs.TryGetValue(key, out var val) && long.TryParse(val, out var result))
+                return result;
+            return null;
         }
     }
 }
