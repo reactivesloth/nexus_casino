@@ -192,6 +192,7 @@ namespace CC
                 case "PlayerM1": return 2;
                 case "PlayerM2": return 3;
                 case "PlayerM3": return 4;
+                case "ChostisF1": return 5;
                 default: return 1;
             }
         }
@@ -206,6 +207,7 @@ namespace CC
                 case 2: val = "PlayerM1"; break;
                 case 3: val = "PlayerM2"; break;
                 case 4: val = "PlayerM3"; break;
+                case 5: val = "ChostisF1"; break;
             }
             PlayerPrefs.SetString("PlayerModelType", val);
         }
