@@ -159,6 +159,10 @@ namespace CC
                             if (prevIndex < currentCharacter)
                                 characterPrev();
                         }
+                        else
+                        {
+                            character.SetActive(true);
+                        }
                     }
                     else
                     {
