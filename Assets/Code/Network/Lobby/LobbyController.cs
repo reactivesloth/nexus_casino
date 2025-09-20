@@ -421,7 +421,7 @@ namespace Code.Network.Lobby
             Debug.Log($"[HostMigration] I am new owner");
             if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
                || isPromoteManually == "FALSE")
-                SelectNewHostAndPromote();
+                SelectNewHostAndPromote(true);
             else
                 PromoteHandle();
         }
@@ -620,10 +620,10 @@ namespace Code.Network.Lobby
             EOS.GetManager()?.StartCoroutine(LeaveLobbyRoutine());
         }
 
-        public void SelectNewHostAndPromote()
+        public void SelectNewHostAndPromote(bool includeMe = false)
         {
             Debug.Log($"[HostMigration] I Select new host");
-            var newHostId = NewHostAutoSelector.GetNewHostIdAuto();
+            var newHostId = NewHostAutoSelector.GetNewHostIdAuto(includeMe);
             Debug.Log($"[HostMigration] New host ID: {newHostId}");
             Promote(newHostId);
         }

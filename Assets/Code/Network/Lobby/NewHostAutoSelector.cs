@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Code.API.Models;
 using Code.Network.Lobby.Data;
+using UnityEngine;
 
 namespace Code.Network.Lobby
 {
@@ -14,14 +15,23 @@ namespace Code.Network.Lobby
         private const float PingWeight = 0.5f;      // чем больше, тем важнее пинг
         private const float HardwareWeight = 0.5f;  // чем больше, тем важнее железо
 
-        public static string GetNewHostIdAuto()
+        public static string GetNewHostIdAuto(bool includeMe)
         {
             var members = LobbyVariables.Instance.currentLobby.lobbyMembers;
+            if (!includeMe)
+            {
+                var meMember = members.FirstOrDefault(m => m.productUserId == LobbyVariables.Instance.productUserId);
+                if(meMember != null)
+                    members.Remove(meMember);
+            }
 
+            
             var adminMembers = members
                 .Where(m => m.Attributes.TryGetValue("ROLE", out var role) && MeSchema.CheckAdmin(role))
                 .ToList();
 
+            Debug.Log(adminMembers.Count);
+            
             if (adminMembers.Count > 0)
                 return SelectWithCombinedScore(adminMembers);
 
