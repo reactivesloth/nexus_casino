@@ -30,7 +30,7 @@ namespace Code.Network.Lobby
                 .Where(m => m.Attributes.TryGetValue("ROLE", out var role) && MeSchema.CheckAdmin(role))
                 .ToList();
 
-            Debug.Log(adminMembers.Count);
+            Debug.Log($"[HostMigration] Admins {adminMembers.Count}");
             
             if (adminMembers.Count > 0)
                 return SelectWithCombinedScore(adminMembers);

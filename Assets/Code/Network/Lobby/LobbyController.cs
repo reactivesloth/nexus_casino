@@ -625,7 +625,8 @@ namespace Code.Network.Lobby
             Debug.Log($"[HostMigration] I Select new host");
             var newHostId = NewHostAutoSelector.GetNewHostIdAuto(includeMe);
             Debug.Log($"[HostMigration] New host ID: {newHostId}");
-            Promote(newHostId);
+            if(newHostId != LobbyVariables.Instance.productUserId)
+                Promote(newHostId);
         }
 
         public void Promote(string newHostId)
