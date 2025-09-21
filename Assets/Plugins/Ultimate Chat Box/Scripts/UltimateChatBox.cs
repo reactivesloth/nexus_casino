@@ -3318,11 +3318,11 @@ namespace TankAndHealerStudioAssets
 					string command = InputFieldValue;
 					string message = "";
 
-					// If the input field value contains a space, then split the command from the follow up and store the values.
-					if( InputFieldValue.Contains( " " ) )
+					int firstSpace = InputFieldValue.IndexOf(' ');
+					if (firstSpace >= 0)
 					{
-						command = InputFieldValue.Split( ' ' )[ 0 ];
-						message = InputFieldValue.Split( ' ' )[ 1 ];
+						command = InputFieldValue.Substring(0, firstSpace);
+						message = InputFieldValue.Substring(firstSpace + 1); // всё, что после первого пробела
 					}
 
 					// Inform any subscribers about the potential command.

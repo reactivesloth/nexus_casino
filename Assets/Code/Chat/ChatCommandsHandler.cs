@@ -6,6 +6,7 @@ using Code.InteractionSystem;
 using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Player;
+using Code.Scene.SceneObjectControl;
 using Dissonance;
 using FishNet;
 using FishNet.Component.Animating;
@@ -23,10 +24,13 @@ namespace Code.Chat
         [SerializeField] private ChatController chatController;
         [SerializeField, TextArea] private string helpText;
 
-        private void OnValidate()
+        [SerializeField] private SceneObjectController sceneObjectController;
+
+        protected override void OnValidate()
         {
-            if (chatController == null)
-                chatController = GetComponent<ChatController>();
+            base.OnValidate();
+            chatController ??= GetComponent<ChatController>();
+            sceneObjectController ??= FindAnyObjectByType<SceneObjectController>();
         }
 
         public void Help()
@@ -403,6 +407,31 @@ namespace Code.Chat
             LobbyDisconnector.Disconnect();
             var lobbyController = FindAnyObjectByType<LobbyController>();
             lobbyController.CreateLobbyManual(roomName, 64);
+        }
+
+        public void SceneControl(string args)
+        {
+            Debug.Log($"[Command] SceneControl: {args}");
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage("You can not control scene objects", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+            
+            var arguments = args.Split(' ');
+            if (arguments.Length != 2)
+            {
+                chatController.SendSystemMessage("Command must contain 2 args: object name and action", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            if (!sceneObjectController.IsObjectExist(arguments[0]))
+            {
+                chatController.SendSystemMessage($"Object \"{arguments[0]}\" not found", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+            
+            sceneObjectController.MakeAction(arguments[0], arguments[1]);
         }
 
         #endregion
