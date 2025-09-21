@@ -4,6 +4,7 @@ using System.Linq;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Client;
+using FishNet.Managing.Scened;
 using FishNet.Managing.Server;
 using FishNet.Transporting;
 using UnityEngine;
@@ -14,6 +15,7 @@ namespace Code.Scene.SceneObjectControl
     {
         private ServerManager ServerManager => InstanceFinder.ServerManager;
         private ClientManager ClientManager => InstanceFinder.ClientManager;
+        private SceneManager SceneManager => InstanceFinder.SceneManager;
 
         private readonly Dictionary<string, IControlledSceneObject> _sceneObjects = new();
         private readonly Dictionary<string, ActionMessage> _lastActions = new();
@@ -33,14 +35,14 @@ namespace Code.Scene.SceneObjectControl
         {
             ClientManager.RegisterBroadcast<ActionMessage>(MakeAction);
             ServerManager.RegisterBroadcast<ActionMessage>(ServerReceiveAction);
-            ServerManager.OnRemoteConnectionState += OnClientConnectionState;
+            SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
         private void OnDisable()
         {
             ClientManager.UnregisterBroadcast<ActionMessage>(MakeAction);
             ServerManager.UnregisterBroadcast<ActionMessage>(ServerReceiveAction);
-            ServerManager.OnRemoteConnectionState -= OnClientConnectionState;
+            SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
         public bool IsObjectExist(string objectName) => _sceneObjects.ContainsKey(objectName);
@@ -61,14 +63,12 @@ namespace Code.Scene.SceneObjectControl
                 ClientManager.Broadcast(actionMessage);
         }
 
-        private void OnClientConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        private void OnClientConnectionState(NetworkConnection conn, bool asServer)
         {
-            if (args.ConnectionState == RemoteConnectionState.Started)
+            if (!asServer) return;
+            foreach (var action in _lastActions.Values)
             {
-                foreach (var action in _lastActions.Values)
-                {
-                    ServerManager.Broadcast(conn, action);
-                }
+                ServerManager.Broadcast(conn, action);
             }
         }
 
