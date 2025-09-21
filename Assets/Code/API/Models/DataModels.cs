@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using FishNet.Broadcast;
+using NUnit.Framework;
 
 namespace Code.API.Models
 {
@@ -72,9 +73,27 @@ namespace Code.API.Models
         public bool has_more;
     }
 
+    [Serializable]
     public class BanData
     {
         public string username;
         public int timeout_minutes = 0;
+    }
+
+    [Serializable]
+    public class TopSchema
+    {
+        public List<TopRecord> records;
+        public string period;
+    }
+    
+    [Serializable]
+    public class TopRecord
+    {
+        public int user_id;
+        public string username;
+        public int total_amount;
+        public int deposits_count;
+        public int withdrawals_count;
     }
 }
