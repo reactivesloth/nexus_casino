@@ -14,8 +14,9 @@ namespace Code.Scene.SceneObjectControl
     {
         private ServerManager ServerManager => InstanceFinder.ServerManager;
         private ClientManager ClientManager => InstanceFinder.ClientManager;
-        
+
         private readonly Dictionary<string, IControlledSceneObject> _sceneObjects = new();
+        private readonly Dictionary<string, ActionMessage> _lastActions = new();
 
         private void Awake()
         {
@@ -32,12 +33,14 @@ namespace Code.Scene.SceneObjectControl
         {
             ClientManager.RegisterBroadcast<ActionMessage>(MakeAction);
             ServerManager.RegisterBroadcast<ActionMessage>(ServerReceiveAction);
+            ServerManager.OnRemoteConnectionState += OnClientConnectionState;
         }
 
         private void OnDisable()
         {
             ClientManager.UnregisterBroadcast<ActionMessage>(MakeAction);
             ServerManager.UnregisterBroadcast<ActionMessage>(ServerReceiveAction);
+            ServerManager.OnRemoteConnectionState -= OnClientConnectionState;
         }
 
         public bool IsObjectExist(string objectName) => _sceneObjects.ContainsKey(objectName);
@@ -49,25 +52,38 @@ namespace Code.Scene.SceneObjectControl
         /// <param name="action"></param>
         public void MakeAction(string objectName, string action)
         {
-            if(!IsObjectExist(objectName))
+            if (!IsObjectExist(objectName))
                 return;
-            var actionMessage = new ActionMessage{ObjectName = objectName, Action = action};
-            if(ServerManager.Started)
+            var actionMessage = new ActionMessage { ObjectName = objectName, Action = action };
+            if (ServerManager.Started)
                 ServerManager.Broadcast(actionMessage);
-            else if(ClientManager.Started)
+            else if (ClientManager.Started)
                 ClientManager.Broadcast(actionMessage);
         }
 
-        private void ServerReceiveAction(NetworkConnection conn, ActionMessage actionMessage,
+        private void OnClientConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
+        {
+            if (args.ConnectionState == RemoteConnectionState.Started)
+            {
+                foreach (var action in _lastActions.Values)
+                {
+                    ServerManager.Broadcast(conn, action);
+                }
+            }
+        }
+
+        private void ServerReceiveAction(NetworkConnection conn, ActionMessage message,
             Channel channel = Channel.Reliable)
         {
-            ServerManager.Broadcast(actionMessage);
+            _lastActions[message.ObjectName] = message;
+            ServerManager.Broadcast(message);
         }
 
         private void MakeAction(ActionMessage message, Channel channel = Channel.Reliable)
         {
-            if(!_sceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
+            if (!_sceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
                 return;
+            _lastActions[message.ObjectName] = message;
             sceneObject.Action(message.Action);
         }
     }
