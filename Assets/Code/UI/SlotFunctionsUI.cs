@@ -18,7 +18,7 @@ namespace Code.UI
     {
 
         [Header("Stories")] [SerializeField] private StoriesUI updateStoryUiOnLoad;
-        [SerializeField] private float timeout = 10f;
+        [SerializeField] private float timeout = 15f;
         private bool _screenShotBusy;
 
         [Header("Stream")] [SerializeField] private Image streamIndicator;
@@ -27,8 +27,6 @@ namespace Code.UI
         private bool _streaming;
 
         [Space] [SerializeField] private SlotMachineInteractable slotMachineInteractable;
-        [SerializeField] private TMP_Text resultText;
-        [SerializeField] private float resultShowTime = 5f;
 
         private Coroutine _resultShowCoroutine;
         private MainScreenController _mainScreenController;
@@ -51,7 +49,7 @@ namespace Code.UI
         private void OnEnable()
         {
             if (!slotMachineInteractable.IsOwner) return;
-            if (resultText != null) resultText.text = string.Empty;
+            if (PlayerInput.Instance.feedbackText != null) PlayerInput.Instance.feedbackText.text = string.Empty;
 
             _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
         }
@@ -105,23 +103,24 @@ namespace Code.UI
             {
                 if (WebViewManager.Instance == null || WebViewManager.Instance.WebView == null)
                 {
-                    ShowResult("No WebView available.", Color.red);
+                    ShowResult("No WebView available.", Color.red, 2);
                     return;
                 }
 
                 var bytes = await WebViewManager.Instance.WebView.CaptureScreenshot(); // глобальный вебвью [1]
                 if (bytes == null || bytes.Length == 0)
                 {
-                    ShowResult("Empty screenshot.", Color.red);
+                    ShowResult("Empty screenshot.", Color.red, 2);
                 }
                 else
                 {
+                    ShowResult("Loading story...", Color.gray);
                     APIHandle(bytes);
                 }
             }
             catch (Exception ex)
             {
-                ShowResult("Screenshot failed: " + ex.Message, Color.red);
+                ShowResult("Screenshot failed: " + ex.Message, Color.red, 2);
             }
         }
 
@@ -138,17 +137,19 @@ namespace Code.UI
             {
                 Uri = ApiRoutes.GetLoadFileUrl(),
                 Headers = ClientDataStorage.GetJwtHeader(),
-                FormData = form
+                FormData = form,
+                Timeout = 8
             };
 
             RestClient.Post(loadFileRequest).Then(fileLoadResponse =>
             {
                 if (fileLoadResponse.StatusCode != 200)
                 {
-                    ShowResult($"File load error. {fileLoadResponse.StatusCode}: {fileLoadResponse.Error}", Color.red);
+                    ShowResult($"File load error. {fileLoadResponse.StatusCode}: {fileLoadResponse.Error}", Color.red, 2);
                     return null;
                 }
 
+                Debug.Log("File load successful");
                 var fileUri = fileLoadResponse.Text.Trim('\"');
 
                 var loadStoryRequest = new RequestHelper
@@ -161,8 +162,9 @@ namespace Code.UI
                         slot_id = slotMachineInteractable != null ? slotMachineInteractable.IDNumber : 0,
                         lobby_id = LobbyVariables.Instance != null && LobbyVariables.Instance.currentLobby != null
                             ? LobbyVariables.Instance.currentLobby.lobbyId
-                            : 0.ToString()
-                    }
+                            : 0.ToString(),
+                    },
+                    Timeout = 7
                 };
                 return RestClient.Post(loadStoryRequest);
             })?.Then(loadStoryResponse =>
@@ -170,7 +172,7 @@ namespace Code.UI
                 if (loadStoryResponse.StatusCode != 200)
                 {
                     ShowResult($"Story load error. {loadStoryResponse.StatusCode}: {loadStoryResponse.Error}",
-                        Color.red);
+                        Color.red,2);
                     return;
                 }
 
@@ -179,31 +181,36 @@ namespace Code.UI
                 {
                     ShowResult(
                         $"Story load error. {(parsed != null ? parsed.code : "Error")}: {(parsed != null ? parsed.detail : "Invalid response")}",
-                        Color.red);
+                        Color.red, 2);
                     return;
                 }
-
-                ShowResult($"Story load success id = {parsed.data?.id}", Color.black);
+                
+                ShowResult($"Story load success id = {parsed.data?.id}", Color.gray, 2);
                 if (updateStoryUiOnLoad != null)
                     updateStoryUiOnLoad.StartNewCycle();
+            }).Catch(err => {
+                ShowResult($"Load story error: {err.Message}", Color.red, 2);
             });
         }
-
-        private void ShowResult(string text, Color color)
+        
+        private void ShowResult(string text, Color color, int timeoutInSeconds = int.MaxValue)
         {
+            if(timeoutInSeconds < 0) timeoutInSeconds = 0;
             if (_resultShowCoroutine != null) StopCoroutine(_resultShowCoroutine);
-            _resultShowCoroutine = StartCoroutine(ShowResultCoroutine(text ?? string.Empty, color));
+            _resultShowCoroutine = StartCoroutine(ShowResultCoroutine(text ?? string.Empty, color, timeoutInSeconds));
         }
 
-        private IEnumerator ShowResultCoroutine(string text, Color color)
+        private IEnumerator ShowResultCoroutine(string text, Color color, int timeoutInSeconds = int.MaxValue)
         {
+            var resultText = PlayerInput.Instance.feedbackText;
+            
             if (resultText != null)
             {
                 resultText.color = color;
                 resultText.text = text;
             }
 
-            yield return new WaitForSeconds(resultShowTime);
+            yield return new WaitForSeconds(timeoutInSeconds);
             if (resultText != null) resultText.text = string.Empty;
         }
 

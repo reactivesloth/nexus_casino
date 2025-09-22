@@ -2,6 +2,7 @@
 using UnityEngine;
 using Code.Utility;
 using NUnit.Framework;
+using TMPro;
 using UnityEngine.Serialization;
 
 [DefaultExecutionOrder(-100)]
@@ -67,8 +68,10 @@ public class PlayerInput : MonoBehaviour
     public UltimateButton slotsFullscreenButton;
     public UltimateButton slotsStreamButton;
     public UltimateButton slotsEndInteractButton;
+    public TMP_Text feedbackText;
     
     private UltimateButton endInteractButton;
+    
     
     
     
