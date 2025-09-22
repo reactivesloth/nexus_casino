@@ -227,7 +227,7 @@ public class PlayerInput : MonoBehaviour
     public bool CameraSwitchDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : _player.CameraSwitch is { triggered: true });
     public bool InteractDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true });
     public bool InteractEndDown => !IsChatOpened && (endInteractButton.GetButtonDown() || _player.Interact is { triggered: true });
-    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButtonDown() : _player.Pause is { triggered: true };
+    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton()  : _player.Pause is { triggered: true };
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
     public bool IsRmbDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);

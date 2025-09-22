@@ -1,4 +1,3 @@
-using System;
 using Code.Utility;
 using UnityEngine;
 using UnityEngine.UI;
@@ -44,16 +43,13 @@ namespace Code.UI
             if (_isPaused && CursorManager.Instance != null)
                 CursorManager.Instance.ShowCursor();
 
-            if (settingsPanel != null && settingsPanel.activeSelf) return;
-
-            var input = PlayerInput.Instance;
-            if (input != null && input.IsPausedDown)
-                _isPaused = !_isPaused;
-
-            if (pausePanel != null && pausePanel.activeSelf != _isPaused)
+            if (PlayerInput.Instance.IsPausedDown)
             {
-                if (_isPaused) OnPauseClick();
-                else OnContinueClick();
+                Debug.LogError("Pause Click");
+                if (!_isPaused) 
+                    OnPauseClick();
+                else 
+                    OnContinueClick();
             }
         }
 
