@@ -109,71 +109,64 @@ namespace Code.Network.Lobby
             if (_pollCoroutine != null) StopCoroutine(_pollCoroutine);
         }
 
-        private IEnumerator PollLobbiesRoutine()
+private IEnumerator PollLobbiesRoutine()
+{
+    yield return LocalUser.Get(out var localUser);
+
+    // 🔹 Количество проходок поиска (можно вынести в настройки LobbyVariables)
+    int maxSearchAttempts = ClientDataStorage.UserData.IsAdminRole ? 1 : 3;  
+    float waitBetweenAttempts = LobbyVariables.Instance.pollLobbiesInterval;
+
+    while (enabled)
+    {
+        bool lobbyFound = false;
+
+        for (int attempt = 0; attempt < maxSearchAttempts; attempt++)
         {
-            yield return LocalUser.Get(out var localUser);
+            LobbyVariables.Instance.lobbyPopupUI.Show(
+                $"Searching lobby...", "", 10);
 
-            while (enabled)
+            // 🔹 Запрос поиска лобби
+            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+
+            // 🔹 Сохраняем результаты поиска (для UI/отладки)
+            LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
+
+            // 🔹 Фильтрация по версии игры
+            var lobbyList = searchLobbies.LobbyDetailsArray
+                .Where(lobby =>
+                {
+                    var res = global::Code.Network.Lobby.EOSCoroutines.Lobby
+                        .GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttr);
+                    return res == Result.Success &&
+                           versionAttr.HasValue &&
+                           versionAttr?.Data?.Value.AsUtf8 == Application.version;
+                })
+                .ToList();
+
+            // Если нашли хотя бы одно подходящее лобби — прекращаем поиск
+            if (lobbyList.Count > 0)
             {
-                LobbyVariables.Instance.lobbyPopupUI.Show("Searching lobby...", "", 10);
-                yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
-
-                // Обновляем массив найденных лобби
-                LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
-
-                var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
-
-                // 🔹 фильтруем по версии
-                lobbyList = lobbyList
-                    .Where(lobby =>
-                    {
-                        var res = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "PRODUCT_VERSION",
-                            out var versionAttr);
-                        return res == Result.Success &&
-                               versionAttr.HasValue &&
-                               versionAttr?.Data?.Value.AsUtf8 == Application.version;
-                    })
-                    .ToList();
-
-                if (lobbyList == null || lobbyList.Count == 0)
-                {
-                    StartCoroutine(OnHobbyLobbyClickedRoutine());
-                }
-                else
-                {
-                    bool isConnected = false;
-                    var lobies = new List<LobbyDetails>(lobbyList);
-
-                    while (lobies.Count > 0)
-                    {
-                        var randomLobby = lobies[Random.Range(0, lobies.Count)];
-
-                        global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(randomLobby, out var info);
-                        var maxMembers = info.Value.MaxMembers;
-                        var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(randomLobby).Count;
-
-                        if (memberCount >= maxMembers || memberCount < 1)
-                        {
-                            lobies.Remove(randomLobby);
-                            continue;
-                        }
-
-                        StartCoroutine(OnJoinLobbyClickedRoutine(randomLobby));
-                        isConnected = true;
-                        break;
-                    }
-
-                    if (!isConnected)
-                        StartCoroutine(OnHobbyLobbyClickedRoutine());
-                }
-                
-                
-                LobbyVariables.Instance.lobbyPopupUI.Show("Searching lobby...", "", 100);
-
-                StopPollingLobbies();
-                yield return new WaitForSeconds(LobbyVariables.Instance.pollLobbiesInterval);
+                lobbyFound = true;
+                break;
             }
+
+            // ⏳ Пауза между попытками поиска
+            yield return new WaitForSeconds(waitBetweenAttempts);
         }
+
+        if (!lobbyFound)
+        {
+            // ❗ За N попыток не найдено ни одного лобби → создаем свое
+            LobbyVariables.Instance.lobbyPopupUI.Show("Creating lobby...", "", 10);
+            StartCoroutine(OnHobbyLobbyClickedRoutine());
+        }
+
+        // 🔁 Интервал до следующего полного цикла поиска/создания
+        yield return new WaitForSeconds(waitBetweenAttempts);
+    }
+}
+
 
         private IEnumerator OnHobbyLobbyClickedRoutine()
         {

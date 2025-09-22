@@ -11,15 +11,15 @@ namespace Code.Network.Lobby.EOSCoroutines
         public LobbySearchFindCallbackInfo? CallbackInfo { get; private set; }
         public LobbyDetails[] LobbyDetailsArray { get; private set; }
     
-        public static Coroutine Run(out LobbySearchLobbies lobbySearchLobbies, ProductUserId localUserId, uint maxResults = 10)
+        public static Coroutine Run(out LobbySearchLobbies lobbySearchLobbies, ProductUserId localUserId, float timeout = 30f, uint maxResults = 100)
         {
             lobbySearchLobbies = new LobbySearchLobbies();
-            return EOS.GetManager().StartCoroutine(lobbySearchLobbies.SearchLobbiesCoroutine(localUserId, maxResults));
+            return EOS.GetManager().StartCoroutine(lobbySearchLobbies.SearchLobbiesCoroutine(localUserId, timeout, maxResults));
         }
     
-        private IEnumerator SearchLobbiesCoroutine(ProductUserId localUserId, uint maxResults)
+        private IEnumerator SearchLobbiesCoroutine(ProductUserId localUserId, float timeout, uint maxResults)
         {
-            var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = maxResults, };
+            var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = maxResults };
             var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
             lobbyInterface.CreateLobbySearch(ref createLobbySearchOptions, out var lobbySearch);
             var lobbySearchFindOptions = new LobbySearchFindOptions { LocalUserId = localUserId, };
@@ -37,7 +37,7 @@ namespace Code.Network.Lobby.EOSCoroutines
             lobbySearch.Find(ref lobbySearchFindOptions, null,
                 (ref LobbySearchFindCallbackInfo data) => { CallbackInfo = data; });
         
-            yield return new WaitUntilOrTimeout(() => CallbackInfo.HasValue, 10,
+            yield return new WaitUntilOrTimeout(() => CallbackInfo.HasValue, timeout,
                 () => CallbackInfo = new LobbySearchFindCallbackInfo { ResultCode = Result.TimedOut });
         
             if (CallbackInfo?.ResultCode != Result.Success)
