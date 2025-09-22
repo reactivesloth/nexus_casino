@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Code.UI;
+using UnityEngine;
 using Code.Utility;
 using NUnit.Framework;
 using UnityEngine.Serialization;
@@ -143,8 +144,14 @@ public class PlayerInput : MonoBehaviour
         IsUsingMobileFallback = ForceMobile;
 #endif
 
-        if (mobileCanvas != null && IsUsingMobileFallback != mobileCanvas.activeSelf)
+        var isPaused = false;
+        if (PauseUI.Instance != null)
+            isPaused = PauseUI.Instance.IsPaused;
+        
+        if (mobileCanvas != null && IsUsingMobileFallback != mobileCanvas.activeSelf && !isPaused)
             mobileCanvas.SetActive(IsUsingMobileFallback);
+        else if (isPaused)
+            mobileCanvas.SetActive(false);
 
         if (IsUsingMobileFallback && mobileCanvas != null)
         {
@@ -220,7 +227,7 @@ public class PlayerInput : MonoBehaviour
     public bool CameraSwitchDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : _player.CameraSwitch is { triggered: true });
     public bool InteractDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true });
     public bool InteractEndDown => !IsChatOpened && (endInteractButton.GetButtonDown() || _player.Interact is { triggered: true });
-    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton() : _player.Pause is { triggered: true };
+    public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButtonDown() : _player.Pause is { triggered: true };
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
     public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
     public bool IsRmbDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
@@ -229,7 +236,7 @@ public class PlayerInput : MonoBehaviour
     public bool IsSlotsFullscreen => !IsChatOpened && slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => !IsChatOpened && slotsStreamButton.GetButtonDown();
     public bool IsSlotsScreenshot => !IsChatOpened && slotsScreenshotButton.GetButtonDown() && !slotsScreenshotButton.InCooldown;
-    public bool IsScrollUpButton => ChatScrollUpButton.GetButton();
-    public bool IsScrollDownButton => ChatScrollDownButton.GetButton();
+    public bool IsScrollUpButton => ChatScrollUpButton.GetButtonDown();
+    public bool IsScrollDownButton => ChatScrollDownButton.GetButtonDown();
     public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
 }

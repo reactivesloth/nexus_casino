@@ -1,3 +1,4 @@
+using System;
 using Code.Utility;
 using UnityEngine;
 using UnityEngine.UI;
@@ -14,6 +15,14 @@ namespace Code.UI
         [SerializeField] private GameObject settingsPanel;
 
         private bool _isPaused;
+        
+        public static PauseUI Instance { get; private set; }
+        public bool IsPaused => _isPaused;
+        
+        private void Awake()
+        {
+            Instance = this;
+        }
 
         private void OnEnable()
         {
