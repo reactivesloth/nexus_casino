@@ -138,6 +138,7 @@ namespace Code.Network.Lobby
                     if (lobbyList.Count > 0)
                     {
                         lobbyFound = true;
+                        ChoiceAndJoinLobby(lobbyList);
                         break;
                     }
 
@@ -157,6 +158,31 @@ namespace Code.Network.Lobby
             }
         }
 
+        private void ChoiceAndJoinLobby(List<LobbyDetails> lobbies)
+        {
+            //var randomLobby = lobbies[Random.Range(0, lobbies.Count)];
+
+            var filteredLobby = lobbies.Where(l =>
+            {
+                global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
+                
+                if (info != null)
+                {
+                    var maxMembers = info.Value.MaxMembers;
+                    var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(l).Count;
+                    var freeSlots = maxMembers - memberCount;
+                
+                    // return ClientDataStorage.UserData.IsAdminRole ? freeSlots > 0 : freeSlots > 3;
+                    return freeSlots > 0;
+                }
+
+                return false;
+            }).ToList();
+
+            StartCoroutine(filteredLobby.Count > 0
+                ? OnJoinLobbyClickedRoutine(filteredLobby.First())
+                : OnHobbyLobbyClickedRoutine());
+        }
 
         private IEnumerator OnHobbyLobbyClickedRoutine()
         {
