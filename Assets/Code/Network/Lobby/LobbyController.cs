@@ -160,23 +160,39 @@ namespace Code.Network.Lobby
 
         private void ChoiceAndJoinLobby(List<LobbyDetails> lobbies)
         {
-            //var randomLobby = lobbies[Random.Range(0, lobbies.Count)];
+            var freeSlotsReq = 1;
 
             var filteredLobby = lobbies.Where(l =>
             {
                 global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
-                
-                if (info != null)
+
+                if (info == null)
+                    return false;
+
+                var maxMembers = info.Value.MaxMembers;
+                var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(l).Count;
+                var isHostResult =
+                    global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "HOST_IN", out var isHost);
+                var isAdminResult =
+                    global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "ADMIN_IN", out var isAdmin);
+                var isModerResult =
+                    global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "MODER_IN", out var isModer);
+                var freeSlots = maxMembers - memberCount;
+
+                if (!ClientDataStorage.UserData.IsAdminRole)
                 {
-                    var maxMembers = info.Value.MaxMembers;
-                    var memberCount = global::Code.Network.Lobby.EOSCoroutines.Lobby.GetMembers(l).Count;
-                    var freeSlots = maxMembers - memberCount;
-                
-                    // return ClientDataStorage.UserData.IsAdminRole ? freeSlots > 0 : freeSlots > 3;
-                    return freeSlots > 0;
+                    freeSlotsReq += isHostResult != Result.Success || isHost.Value.Data.Value.Value.AsUtf8 == "FALSE"
+                        ? 1
+                        : 0;
+                    freeSlotsReq += isAdminResult != Result.Success || isAdmin.Value.Data.Value.Value.AsUtf8 == "FALSE"
+                        ? 1
+                        : 0;
+                    freeSlotsReq += isModerResult != Result.Success || isModer.Value.Data.Value.Value.AsUtf8 == "FALSE"
+                        ? 1
+                        : 0;
                 }
 
-                return false;
+                return freeSlots >= freeSlotsReq;
             }).ToList();
 
             StartCoroutine(filteredLobby.Count > 0
@@ -449,6 +465,23 @@ namespace Code.Network.Lobby
         private void OnMembersUpdate(LobbyMemberUpdateReceivedCallbackInfo e)
         {
             UpdateMembers();
+
+            if (!InstanceFinder.ServerManager.Started)
+                return;
+
+            var members = LobbyVariables.Instance.currentLobby.lobbyMembers;
+
+            var isHost = members.FirstOrDefault(m =>
+                m.Attributes.TryGetValue("ROLE", out var roleValue) && roleValue == "host") != null;
+            UpdateLobbyAttribute("HOST_IN", isHost ? "TRUE" : "FALSE");
+
+            var isAdmin = members.FirstOrDefault(m =>
+                m.Attributes.TryGetValue("ROLE", out var roleValue) && roleValue == "admin") != null;
+            UpdateLobbyAttribute("ADMIN_IN", isAdmin ? "TRUE" : "FALSE");
+
+            var isModer = members.FirstOrDefault(m =>
+                m.Attributes.TryGetValue("ROLE", out var roleValue) && roleValue == "moderator") != null;
+            UpdateLobbyAttribute("MODER_IN", isModer ? "TRUE" : "FALSE");
         }
 
         private void UpdateMembers()
