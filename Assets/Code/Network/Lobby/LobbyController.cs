@@ -64,7 +64,6 @@ namespace Code.Network.Lobby
                 StopCoroutine(_pingCoroutine);
         }
 
-
         private IEnumerator UpdatePingRoutine(float interval)
         {
             while (true)
@@ -80,15 +79,16 @@ namespace Code.Network.Lobby
                 var localUserId = LobbyVariables.Instance.ProductUserId;
                 if (localUserId == null)
                     continue;
-                
+
                 var ping = GetCurrentPing();
-                
-                yield return LobbySetMemberAttribute.Run(out var setPing, lobby.lobbyId, localUserId, "PING", ping.ToString());
+
+                yield return LobbySetMemberAttribute.Run(out var setPing, lobby.lobbyId, localUserId, "PING",
+                    ping.ToString());
                 if (setPing.CallbackInfo?.ResultCode != Result.Success)
                     Debug.LogWarning($"[LobbyController] Failed to update ping: {setPing.CallbackInfo?.ResultCode}");
             }
         }
-        
+
         private long GetCurrentPing()
         {
             var ping = InstanceFinder.TimeManager.RoundTripTime;
@@ -109,63 +109,53 @@ namespace Code.Network.Lobby
             if (_pollCoroutine != null) StopCoroutine(_pollCoroutine);
         }
 
-private IEnumerator PollLobbiesRoutine()
-{
-    yield return LocalUser.Get(out var localUser);
-
-    // 🔹 Количество проходок поиска (можно вынести в настройки LobbyVariables)
-    int maxSearchAttempts = ClientDataStorage.UserData.IsAdminRole ? 1 : 3;  
-    float waitBetweenAttempts = LobbyVariables.Instance.pollLobbiesInterval;
-
-    while (enabled)
-    {
-        bool lobbyFound = false;
-
-        for (int attempt = 0; attempt < maxSearchAttempts; attempt++)
+        private IEnumerator PollLobbiesRoutine()
         {
-            LobbyVariables.Instance.lobbyPopupUI.Show(
-                $"Searching lobby...", "", 10);
+            yield return LocalUser.Get(out var localUser);
 
-            // 🔹 Запрос поиска лобби
-            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+            // 🔹 Количество проходок поиска (можно вынести в настройки LobbyVariables)
+            int maxSearchAttempts = ClientDataStorage.UserData.IsAdminRole ? 1 : 3;
+            float waitBetweenAttempts = LobbyVariables.Instance.pollLobbiesInterval;
 
-            // 🔹 Сохраняем результаты поиска (для UI/отладки)
-            LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
-
-            // 🔹 Фильтрация по версии игры
-            var lobbyList = searchLobbies.LobbyDetailsArray
-                .Where(lobby =>
-                {
-                    var res = global::Code.Network.Lobby.EOSCoroutines.Lobby
-                        .GetAttribute(lobby, "PRODUCT_VERSION", out var versionAttr);
-                    return res == Result.Success &&
-                           versionAttr.HasValue &&
-                           versionAttr?.Data?.Value.AsUtf8 == Application.version;
-                })
-                .ToList();
-
-            // Если нашли хотя бы одно подходящее лобби — прекращаем поиск
-            if (lobbyList.Count > 0)
+            while (enabled)
             {
-                lobbyFound = true;
-                break;
+                bool lobbyFound = false;
+
+                for (int attempt = 0; attempt < maxSearchAttempts; attempt++)
+                {
+                    LobbyVariables.Instance.lobbyPopupUI.Show(
+                        $"Searching lobby...", "", 10);
+
+                    // 🔹 Запрос поиска лобби
+                    yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+
+                    // 🔹 Сохраняем результаты поиска (для UI/отладки)
+                    LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
+
+                    var lobbyList = searchLobbies.LobbyDetailsArray.ToList();
+
+                    // Если нашли хотя бы одно подходящее лобби — прекращаем поиск
+                    if (lobbyList.Count > 0)
+                    {
+                        lobbyFound = true;
+                        break;
+                    }
+
+                    // ⏳ Пауза между попытками поиска
+                    yield return new WaitForSeconds(waitBetweenAttempts);
+                }
+
+                if (!lobbyFound)
+                {
+                    // ❗ За N попыток не найдено ни одного лобби → создаем свое
+                    LobbyVariables.Instance.lobbyPopupUI.Show("Creating lobby...", "", 10);
+                    StartCoroutine(OnHobbyLobbyClickedRoutine());
+                }
+
+                // 🔁 Интервал до следующего полного цикла поиска/создания
+                yield return new WaitForSeconds(waitBetweenAttempts);
             }
-
-            // ⏳ Пауза между попытками поиска
-            yield return new WaitForSeconds(waitBetweenAttempts);
         }
-
-        if (!lobbyFound)
-        {
-            // ❗ За N попыток не найдено ни одного лобби → создаем свое
-            LobbyVariables.Instance.lobbyPopupUI.Show("Creating lobby...", "", 10);
-            StartCoroutine(OnHobbyLobbyClickedRoutine());
-        }
-
-        // 🔁 Интервал до следующего полного цикла поиска/создания
-        yield return new WaitForSeconds(waitBetweenAttempts);
-    }
-}
 
 
         private IEnumerator OnHobbyLobbyClickedRoutine()
@@ -219,16 +209,17 @@ private IEnumerator PollLobbiesRoutine()
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
-            
+
             yield return LobbySetMemberAttribute.Run(out var setRole, lobbyId, localUserId, "ROLE",
                 ClientDataStorage.UserData.role);
             if (setRole.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member role: {setRole.CallbackInfo?.ResultCode}");
-            
+
             yield return LobbySetMemberAttribute.Run(out var setHardScore, lobbyId, localUserId, "HARDWARE_SCORE",
                 HardwareScore.GetScore().ToString());
             if (setHardScore.CallbackInfo?.ResultCode != Result.Success)
-                Debug.LogWarning($"[LobbyCode] Failed to update lobby member score: {setHardScore.CallbackInfo?.ResultCode}");
+                Debug.LogWarning(
+                    $"[LobbyCode] Failed to update lobby member score: {setHardScore.CallbackInfo?.ResultCode}");
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...", 99);
             yield return LobbyUpdateLobby.Run(out var setId, lobbyId, "HOST_ID",
@@ -237,9 +228,9 @@ private IEnumerator PollLobbiesRoutine()
             yield return LobbyUpdateLobby.Run(out var setVersion, lobbyId, "PRODUCT_VERSION",
                 Application.version);
 
-            
+
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...", 100);
-            
+
             if (setId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
 
@@ -249,7 +240,7 @@ private IEnumerator PollLobbiesRoutine()
 
             OnHostConnectionReady();
             StartUpdatingPing(10);
-            
+
             lobbyDetails.Release();
         }
 
@@ -309,16 +300,17 @@ private IEnumerator PollLobbiesRoutine()
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
-            
+
             yield return LobbySetMemberAttribute.Run(out var setRole, lobbyId, localUserId, "ROLE",
                 ClientDataStorage.UserData.role);
             if (setRole.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member role: {setRole.CallbackInfo?.ResultCode}");
-            
+
             yield return LobbySetMemberAttribute.Run(out var setHardScore, lobbyId, localUserId, "HARDWARE_SCORE",
                 HardwareScore.GetScore().ToString());
             if (setHardScore.CallbackInfo?.ResultCode != Result.Success)
-                Debug.LogWarning($"[LobbyCode] Failed to update lobby member score: {setHardScore.CallbackInfo?.ResultCode}");
+                Debug.LogWarning(
+                    $"[LobbyCode] Failed to update lobby member score: {setHardScore.CallbackInfo?.ResultCode}");
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...", 100);
             SetLobbyAttributes(currentLobby, lobbyDetails);
@@ -326,7 +318,7 @@ private IEnumerator PollLobbiesRoutine()
             LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             OnClientConnectionReady();
-            
+
             StartUpdatingPing(10);
         }
 
@@ -341,12 +333,13 @@ private IEnumerator PollLobbiesRoutine()
             if (lobby == null) yield break;
 
             var lobbyId = lobby.lobbyId;
-            
+
             yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, attr, value);
             if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
-                Debug.LogWarning($"[LobbyCode] Failed to update lobby arr {attr}: {updateLobby.CallbackInfo?.ResultCode}");
+                Debug.LogWarning(
+                    $"[LobbyCode] Failed to update lobby arr {attr}: {updateLobby.CallbackInfo?.ResultCode}");
         }
-        
+
         private void OnLobbyAttributesUpdated(LobbyUpdateReceivedCallbackInfo e)
         {
             var localUserId = LobbyVariables.Instance.ProductUserId;
@@ -412,8 +405,9 @@ private IEnumerator PollLobbiesRoutine()
                 arg.TargetUserId.ToString() != LobbyVariables.Instance.ProductUserId.ToString()) return;
             await Task.Delay(2_500);
             Debug.Log($"[HostMigration] I am new owner");
-            if(!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY", out var isPromoteManually)
-               || isPromoteManually == "FALSE")
+            if (!LobbyVariables.Instance.currentLobby.Attributes.TryGetValue("PROMOTE_MANUALLY",
+                    out var isPromoteManually)
+                || isPromoteManually == "FALSE")
                 SelectNewHostAndPromote(true);
             else
                 PromoteHandle();
@@ -618,7 +612,7 @@ private IEnumerator PollLobbiesRoutine()
             Debug.Log($"[HostMigration] I Select new host");
             var newHostId = NewHostAutoSelector.GetNewHostIdAuto(includeMe);
             Debug.Log($"[HostMigration] New host ID: {newHostId}");
-            if(newHostId != LobbyVariables.Instance.productUserId)
+            if (newHostId != LobbyVariables.Instance.productUserId)
                 Promote(newHostId);
             else
                 PromoteHandle();
@@ -637,7 +631,7 @@ private IEnumerator PollLobbiesRoutine()
                 yield break;
 
             var clientData = ClientDataStorage.UserData.username;
-            
+
             yield return LobbyPromoteHost.Run(out var lobbyPromoteHost, lobbyId, newHostId, clientData);
             if (lobbyPromoteHost.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogError(

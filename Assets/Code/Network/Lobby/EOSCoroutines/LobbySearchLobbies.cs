@@ -22,18 +22,19 @@ namespace Code.Network.Lobby.EOSCoroutines
             var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = maxResults };
             var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
             lobbyInterface.CreateLobbySearch(ref createLobbySearchOptions, out var lobbySearch);
-            var lobbySearchFindOptions = new LobbySearchFindOptions { LocalUserId = localUserId, };
-            var lobbySearchParameterOptions = new LobbySearchSetParameterOptions
+            var lobbySearchFindOptions = new LobbySearchFindOptions { LocalUserId = localUserId };
+            
+            var versionEqualParameter = new LobbySearchSetParameterOptions
             {
-                ComparisonOp = ComparisonOp.Notequal,
+                ComparisonOp = ComparisonOp.Equal,
                 Parameter = new AttributeData
                 {
-                    Key = "NAME",
-                    Value = new AttributeDataValue { AsUtf8 = "" },
+                    Key = "PRODUCT_VERSION",
+                    Value = new AttributeDataValue { AsUtf8 = Application.version },
                 },
             };
-            lobbySearch.SetParameter(ref lobbySearchParameterOptions);
-        
+            lobbySearch.SetParameter(ref versionEqualParameter);
+            
             lobbySearch.Find(ref lobbySearchFindOptions, null,
                 (ref LobbySearchFindCallbackInfo data) => { CallbackInfo = data; });
         
