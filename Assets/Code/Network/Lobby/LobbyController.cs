@@ -101,7 +101,7 @@ namespace Code.Network.Lobby
 
         public void StartPollingLobbies()
         {
-            _pollCoroutine = StartCoroutine(PollLobbiesRoutine());
+            _pollCoroutine = StartCoroutine(PollLobbiesRoutineWithConnection());
         }
 
         public void StopPollingLobbies()
@@ -109,7 +109,15 @@ namespace Code.Network.Lobby
             if (_pollCoroutine != null) StopCoroutine(_pollCoroutine);
         }
 
-        private IEnumerator PollLobbiesRoutine()
+        public IEnumerator PollLobbiesRoutine()
+        {
+            yield return LocalUser.Get(out var localUser);
+            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+            // 🔹 Сохраняем результаты поиска (для UI/отладки)
+            LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
+        }
+        
+        private IEnumerator PollLobbiesRoutineWithConnection()
         {
             yield return LocalUser.Get(out var localUser);
 
@@ -611,26 +619,26 @@ namespace Code.Network.Lobby
         }
 
         // === Ручное подключение к лобби по HOST_ID ===
-        public void JoinLobbyByHostId(string hostId)
+        public void JoinLobbyById(string lobbyId)
         {
-            StartCoroutine(OnJoinLobbyByHostIdRoutine(hostId));
+            StartCoroutine(OnJoinLobbyByHostIdRoutine(lobbyId));
         }
 
-        private IEnumerator OnJoinLobbyByHostIdRoutine(string hostId)
+        private IEnumerator OnJoinLobbyByHostIdRoutine(string id)
         {
             yield return LocalUser.Get(out var localUser);
             yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
 
-            var lobby = searchLobbies.LobbyDetailsArray
-                .FirstOrDefault(l =>
-                    Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "HOST_ID", out var attr) ==
-                    Epic.OnlineServices.Result.Success &&
-                    attr?.Data.Value.Value.AsUtf8 == hostId);
+            var lobby = searchLobbies.LobbyDetailsArray.FirstOrDefault(l =>
+                {
+                    Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
+                    return info.HasValue && info.Value.LobbyId == id;
+                });
 
             if (lobby != null)
                 StartCoroutine(OnJoinLobbyClickedRoutine(lobby));
             else
-                Debug.LogWarning($"[LobbyController] Lobby with HOST_ID {hostId} not found.");
+                Debug.LogWarning($"[LobbyController] Lobby with HOST_ID {id} not found.");
         }
 
         // === Возврат всех лобби ===

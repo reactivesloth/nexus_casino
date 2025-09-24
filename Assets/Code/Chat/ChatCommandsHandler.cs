@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq;
 using System.Text;
 using Code.API;
@@ -8,6 +9,7 @@ using Code.Network.Player;
 using Code.Player;
 using Code.Scene.SceneObjectControl;
 using Dissonance;
+using Epic.OnlineServices;
 using FishNet;
 using FishNet.Component.Animating;
 using FishNet.Connection;
@@ -104,7 +106,7 @@ namespace Code.Chat
         }
 
         #endregion
-        
+
         #region Ban
 
         public void BanUser(string usernameTime)
@@ -151,9 +153,9 @@ namespace Code.Chat
                     chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
                     return;
                 }
-                
+
                 chatController.SendSystemMessage($"User {username} was banned", UltimateChatBoxStyles.noticeMessage);
-                
+
                 Kick(username);
             });
         }
@@ -190,9 +192,8 @@ namespace Code.Chat
                     chatController.SendSystemMessage(responseData.detail, UltimateChatBoxStyles.errorMessage);
                     return;
                 }
-                
+
                 chatController.SendSystemMessage($"User {username} was unbanned", UltimateChatBoxStyles.noticeMessage);
-                
             });
         }
 
@@ -366,8 +367,8 @@ namespace Code.Chat
                 chatController.SendSystemMessage("You can't reset slots", UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
-            if(!int.TryParse(idString, out var id))
+
+            if (!int.TryParse(idString, out var id))
             {
                 chatController.SendSystemMessage("Invalid param", UltimateChatBoxStyles.errorMessage);
                 return;
@@ -378,7 +379,7 @@ namespace Code.Chat
                 chatController.SendSystemMessage("Slot not found", UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
+
             chatController.SendSystemMessage($"Request reset slot {id}", UltimateChatBoxStyles.noticeMessage);
             ResetSlot_ServerRpc(id);
         }
@@ -388,13 +389,13 @@ namespace Code.Chat
         {
             var slot = SlotMachineInteractable.FindById(id);
             var compositeInteractionComponent = slot.GetComponentInParent<CompositeInteractable>();
-            if(compositeInteractionComponent != null)
+            if (compositeInteractionComponent != null)
                 compositeInteractionComponent.ReleaseInteractable();
         }
 
         #endregion
 
-        #region Room
+        #region Lobbies
 
         public void NewRoom(string roomName)
         {
@@ -403,7 +404,7 @@ namespace Code.Chat
                 chatController.SendSystemMessage("You can not create new rooms", UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
+
             LobbyDisconnector.Disconnect();
             var lobbyController = FindAnyObjectByType<LobbyController>();
             lobbyController.CreateLobbyManual(roomName, 64);
@@ -414,26 +415,154 @@ namespace Code.Chat
             Debug.Log($"[Command] SceneControl: {args}");
             if (!ClientDataStorage.UserData.IsAdminRole)
             {
-                chatController.SendSystemMessage("You can not control scene objects", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage("You can not control scene objects",
+                    UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
+
             var arguments = args.Split(' ');
             if (arguments.Length != 2)
             {
-                chatController.SendSystemMessage("Command must contain 2 args: object name and action", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage("Command must contain 2 args: object name and action",
+                    UltimateChatBoxStyles.errorMessage);
                 return;
             }
 
             if (!sceneObjectController.IsObjectExist(arguments[0]))
             {
-                chatController.SendSystemMessage($"Object \"{arguments[0]}\" not found", UltimateChatBoxStyles.errorMessage);
+                chatController.SendSystemMessage($"Object \"{arguments[0]}\" not found",
+                    UltimateChatBoxStyles.errorMessage);
                 return;
             }
-            
+
             sceneObjectController.MakeAction(arguments[0], arguments[1]);
         }
 
+        public void GetRooms()
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage("You can not get rooms", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            StartCoroutine(GetRoomsCoroutine());
+        }
+
+        private IEnumerator GetRoomsCoroutine()
+        {
+            var lobbyController = FindAnyObjectByType<LobbyController>();
+            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
+            var lobbies = lobbyController.GetAllLobbies();
+
+            var textToInput = new StringBuilder();
+            foreach (var lobby in lobbies)
+            {
+                Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
+                if (!info.HasValue)
+                    continue;
+
+                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "NAME", out var nameAttr);
+
+                var lobbyId = info.Value.LobbyId;
+                var lobbyName = nameResult == Result.Success
+                    ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
+                    : string.Empty;
+                var maxPlayersCount = info.Value.MaxMembers;
+                var currentPlayersCount = Network.Lobby.EOSCoroutines.Lobby.GetMembers(lobby).Count;
+
+                textToInput.Append(
+                    $"<color=red>{lobbyId}</color> {lobbyName} [{currentPlayersCount}/{maxPlayersCount}] \n");
+            }
+
+            chatController.SendSystemMessage(textToInput.ToString(), UltimateChatBoxStyles.noticeMessage);
+        }
+
+        public void MoveUserToRoom(string args)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage("You can not move users", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var argsArray = args.Split(' ');
+
+            if (argsArray.Length != 2)
+            {
+                chatController.SendSystemMessage("Invalid params", UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            MoveUserServerRpc(ClientManager.Connection, argsArray[0], argsArray[1]);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void MoveUserServerRpc(NetworkConnection sender, string username, string lobbyName)
+        {
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                CommandCallback(sender, $"User {username} not found", false);
+                return;
+            }
+            
+            StartCoroutine(MoveUserToRoomCoroutine(sender, connection, username, lobbyName));
+        }
+
+        private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
+        {
+            var lobbyController = FindAnyObjectByType<LobbyController>();
+            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
+            var lobbies = lobbyController.GetAllLobbies().ToList();
+
+            var lobby = lobbies.Find(l =>
+            {
+                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "NAME", out var nameAttr);
+                
+                var findLobbyName = nameResult == Result.Success
+                    ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
+                    : string.Empty;
+
+                return findLobbyName == lobbyName;
+            });
+
+            if (lobby == null)
+            {
+                CommandCallback(sender, $"Lobby {lobbyName} not found", false);
+                yield break;
+            }
+            
+            Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
+            if (!info.HasValue)
+            {
+                CommandCallback(sender, $"Unknown error", false);
+                yield break;
+            }
+            
+            var lobbyId = info.Value.LobbyId;
+            
+            MoveUserTargetRpc(target, lobbyId);
+            CommandCallback(sender, $"Moved {username} to {lobbyId}", true);
+        }
+
+        [TargetRpc]
+        private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
+        {
+            var lobbyController = FindAnyObjectByType<LobbyController>();
+            
+            chatController.SendSystemMessage("You moved to another lobby", UltimateChatBoxStyles.noticeMessage);
+            
+            LobbyDisconnector.Disconnect();
+            lobbyController.JoinLobbyById(lobbyId);
+        }
+
         #endregion
+
+        [TargetRpc, ObserversRpc]
+        private void CommandCallback(NetworkConnection target, string message, bool success)
+        {
+            chatController.SendSystemMessage(message,
+                !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
+        }
     }
 }
