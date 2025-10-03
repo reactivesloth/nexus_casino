@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Text;
-using Cinemachine;
+using Unity.Cinemachine;
 using Code.API;
 using Code.Network.HostMigration;
 using Code.Network.Player;

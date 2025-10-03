@@ -1,4 +1,4 @@
-using Cinemachine;
+using Unity.Cinemachine;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
