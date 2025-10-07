@@ -6,6 +6,7 @@ using Code.API.Models;
 using Code.Utility;
 using Proyecto26;
 using Ricimi;
+using RSG;
 using TMPro;
 using UnityEditor;
 using UnityEngine;
@@ -24,6 +25,7 @@ namespace Code.UI
         public Button resendCodeButton;
         public Button exit;
         public Button logoutButton;
+        public TMP_Text nicknameResultText;
 
         public Button startGameButton;
         public GameObject loginPopup;
@@ -43,6 +45,8 @@ namespace Code.UI
         private bool _isRegistered;
         private TMP_Text _resendText;
 
+        private IPromise _currentCheckNamePromise;
+
         private void Awake()
         {
             if (resendCodeButton != null)
@@ -57,6 +61,8 @@ namespace Code.UI
             if (exit != null) exit.onClick.AddListener(OnExitClicked);
             if (startGameButton != null) startGameButton.onClick.AddListener(OnUserCanStartGame);
             if (logoutButton != null) logoutButton.onClick.AddListener(OnLogoutClicked);
+
+            if (nicknameInput != null) nicknameInput.onValueChanged.AddListener(OnNickNameChanged);
         }
 
         private void OnDisable()
@@ -67,6 +73,8 @@ namespace Code.UI
             if (exit != null) exit.onClick.RemoveListener(OnExitClicked);
             if (startGameButton != null) startGameButton.onClick.RemoveListener(OnUserCanStartGame);
             if (logoutButton != null) logoutButton.onClick.RemoveListener(OnLogoutClicked);
+
+            if (nicknameInput != null) nicknameInput.onValueChanged.RemoveListener(OnNickNameChanged);
         }
 
         private void Start()
@@ -94,6 +102,58 @@ namespace Code.UI
         {
             UpdateResendTimer();
         }
+        
+        private void OnNickNameChanged(string newNickName)
+        {
+            if (_isRegistered)
+                return;
+
+            nicknameResultText.text = string.Empty;
+            
+            var checkNicknameRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.CheckNickNameUrl,
+                Body = new CheckUsernameRequest
+                {
+                    username = newNickName,
+                }
+            };
+
+            _currentCheckNamePromise?.Done();
+
+            _currentCheckNamePromise = RestClient.Post(checkNicknameRequest).Then(response =>
+            {
+                if (response.StatusCode != 200)
+                {
+                    OnUsernameInvalid("Nickname check error");
+                    return;
+                }
+                
+                var result = JsonUtility.FromJson<SuccessResponse<Empty>>(response.Text);
+                if (!result.success)
+                {
+                    OnUsernameInvalid(result.detail);
+                    return;
+                }
+                
+                OnUsernameValid();
+            }).Catch(ex => { OnUsernameInvalid("Username check error"); });
+        }
+
+        private void OnUsernameInvalid(string text)
+        {
+            Debug.LogWarning($"Invalid Username: {text}");
+            nicknameResultText.gameObject.SetActive(true);
+            nicknameResultText.text = text;
+            authButton.enabled = false;
+        }
+
+        private void OnUsernameValid()
+        {
+            Debug.Log("Valid nickname");
+            nicknameResultText.gameObject.SetActive(false);
+            authButton.enabled = true;
+        }
 
         private void ToStartState()
         {
@@ -109,7 +169,11 @@ namespace Code.UI
                 nicknameInput.text = PlayerPrefs.GetString("auth_nicknameInput", string.Empty);
 
 
-            if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(true);
+            if (getConfirmCodeButton != null)
+            {
+                getConfirmCodeButton.gameObject.SetActive(true);
+                getConfirmCodeButton.interactable = true;
+            }
             if (authButton != null) authButton.interactable = false;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(false);
             if (resendCodeButton != null) resendCodeButton.gameObject.SetActive(false);
@@ -118,7 +182,9 @@ namespace Code.UI
 
             if (titleText != null)
                 titleText.text =
-                    _isAuthorized ? $"Welcome back, {ClientDataStorage.UserData.username}" : "Welcome to the Nexus Meta Club";
+                    _isAuthorized
+                        ? $"Welcome back, {ClientDataStorage.UserData.username}"
+                        : "Welcome to the Nexus Meta Club";
 
 
             if (authButtonText != null)
@@ -240,8 +306,11 @@ namespace Code.UI
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
             if (titleText != null)
                 titleText.text =
-                    _isAuthorized ? $"Welcome back, {ClientDataStorage.UserData.username}" : "Welcome to the Nexus Meta Club";
+                    _isAuthorized
+                        ? $"Welcome back, {ClientDataStorage.UserData.username}"
+                        : "Welcome to the Nexus Meta Club";
             if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
+            if (!_isRegistered) OnNickNameChanged(nicknameInput.text);
         }
 
         private void OnAuthClicked()
@@ -430,7 +499,7 @@ namespace Code.UI
         private void OnUserCanStartGame()
         {
             var savePath = CharacterCustomization.SavePath;
-            
+
             var meData = ClientDataStorage.UserData;
 
             var getAvatarRequest = new RequestHelper
@@ -438,7 +507,7 @@ namespace Code.UI
                 Uri = ApiRoutes.GetFileUrl($"Avatar_{meData.id}.json"),
                 Headers = ClientDataStorage.GetJwtHeader()
             };
-            
+
             var isAvatarLoaded = false;
             var isModelTypeLoaded = false;
             RestClient.Get(getAvatarRequest).Then(getAvatarResponse =>
@@ -448,7 +517,7 @@ namespace Code.UI
                     Uri = ApiRoutes.GetFileUrl($"PlayerModelType_{ClientDataStorage.UserData.id}.txt"),
                     Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5
                 };
-                
+
                 if (getAvatarResponse.StatusCode != 200)
                     return RestClient.Get(getModelTypeRequest);
 
@@ -462,7 +531,7 @@ namespace Code.UI
                     Debug.LogError($"Ошибка при записи аватара в файл: {ex}");
                     isAvatarLoaded = false;
                 }
-                
+
                 return RestClient.Get(getModelTypeRequest);
             }).Then(getModelTypeResponse =>
             {
@@ -471,13 +540,13 @@ namespace Code.UI
                     Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
                     Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5
                 };
-                
+
                 if (getModelTypeResponse.StatusCode != 200)
                     return RestClient.Get(getSpawnRequest);
 
                 isModelTypeLoaded = true;
                 PlayerPrefs.SetString("PlayerModelType", getModelTypeResponse.Text);
-                
+
                 return RestClient.Get(getSpawnRequest);
             }).Then(getSpawnResponse =>
             {
@@ -494,7 +563,7 @@ namespace Code.UI
 
                 var p = new Vector3(posX, posY, posZ);
                 var r = Quaternion.Euler(rotX, rotY, rotZ);
-                
+
                 PlayerPrefs.SetFloat("SavedSpawnPositionX", p.x);
                 PlayerPrefs.SetFloat("SavedSpawnPositionY", p.y);
                 PlayerPrefs.SetFloat("SavedSpawnPositionZ", p.z);
@@ -503,15 +572,15 @@ namespace Code.UI
                 PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
                 PlayerPrefs.SetInt("SavedSpawnPosition", 1);
                 PlayerPrefs.Save();
-                
             }).Finally(() =>
             {
                 var isLoadGame = isAvatarLoaded && isModelTypeLoaded;
                 if (LoadingScreenUI.Instance != null)
-                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization", "Please wait...",
+                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization",
+                        "Please wait...",
                         "Loading...");
                 else
-                    SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization"); 
+                    SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization");
             });
         }
 

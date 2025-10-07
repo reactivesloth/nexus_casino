@@ -96,4 +96,10 @@ namespace Code.API.Models
         public int deposits_count;
         public int withdrawals_count;
     }
+
+    [Serializable]
+    public class CheckUsernameRequest
+    {
+        public string username;
+    }
 }
