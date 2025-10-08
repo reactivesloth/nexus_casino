@@ -54,10 +54,15 @@ namespace Code.InteractionSystem
             if (networkImageStream == null)
                 networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
         }
-
+        
         private void Start()
         {
-            _slotsScreenPromoMaterial = _slotScreenPromoMeshRenderer.materials[slotsScreenPromoMaterialIndex];
+            SetupScreensForPromo();
+        }
+
+        private void SetupScreensForPromo()
+        {
+            _slotsScreenPromoMaterial = _slotScreenPromoMeshRenderer.sharedMaterials[slotsScreenPromoMaterialIndex];
 
             switch (provider)
             {
@@ -93,6 +98,7 @@ namespace Code.InteractionSystem
             base.OnValidate();
             if (idNumberText != null) idNumberText.text = IDNumber.ToString();
             if (networkImageStream == null) networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
+            if (_slotScreenPromoMeshRenderer != null && slotsScreenPromoSpriteSheet.Length > 0) SetupScreensForPromo();
         }
 #endif
         
