@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using FishNet;
@@ -18,8 +17,10 @@ namespace Code.Scene.SceneObjectControl
         private SceneManager SceneManager => InstanceFinder.SceneManager;
 
         private readonly Dictionary<string, IControlledSceneObject> _sceneObjects = new();
-        private readonly Dictionary<string, ActionMessage> _lastActions = new();
+        private readonly Dictionary<string, StateMessage> _lastStates = new();
 
+        public List<IControlledSceneObject> AllSceneObjects => _sceneObjects.Values.ToList();
+        
         private void Awake()
         {
             var components = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
@@ -33,15 +34,15 @@ namespace Code.Scene.SceneObjectControl
 
         private void OnEnable()
         {
-            ClientManager.RegisterBroadcast<ActionMessage>(MakeAction);
-            ServerManager.RegisterBroadcast<ActionMessage>(ServerReceiveAction);
+            ClientManager.RegisterBroadcast<StateMessage>(MakeAction);
+            ServerManager.RegisterBroadcast<StateMessage>(ServerReceiveAction);
             SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
         private void OnDisable()
         {
-            ClientManager.UnregisterBroadcast<ActionMessage>(MakeAction);
-            ServerManager.UnregisterBroadcast<ActionMessage>(ServerReceiveAction);
+            ClientManager.UnregisterBroadcast<StateMessage>(MakeAction);
+            ServerManager.UnregisterBroadcast<StateMessage>(ServerReceiveAction);
             SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
@@ -51,12 +52,12 @@ namespace Code.Scene.SceneObjectControl
         /// Local call for command
         /// </summary>
         /// <param name="objectName"></param>
-        /// <param name="action"></param>
-        public void MakeAction(string objectName, string action)
+        /// <param name="state"></param>
+        public void MakeAction(string objectName, string state)
         {
             if (!IsObjectExist(objectName))
                 return;
-            var actionMessage = new ActionMessage { ObjectName = objectName, Action = action };
+            var actionMessage = new StateMessage { ObjectName = objectName, Action = state };
             if (ServerManager.Started)
                 ServerManager.Broadcast(actionMessage);
             else if (ClientManager.Started)
@@ -66,25 +67,25 @@ namespace Code.Scene.SceneObjectControl
         private void OnClientConnectionState(NetworkConnection conn, bool asServer)
         {
             if (!asServer) return;
-            foreach (var action in _lastActions.Values)
+            foreach (var action in _lastStates.Values)
             {
                 ServerManager.Broadcast(conn, action);
             }
         }
 
-        private void ServerReceiveAction(NetworkConnection conn, ActionMessage message,
+        private void ServerReceiveAction(NetworkConnection conn, StateMessage message,
             Channel channel = Channel.Reliable)
         {
-            _lastActions[message.ObjectName] = message;
+            _lastStates[message.ObjectName] = message;
             ServerManager.Broadcast(message);
         }
 
-        private void MakeAction(ActionMessage message, Channel channel = Channel.Reliable)
+        private void MakeAction(StateMessage message, Channel channel = Channel.Reliable)
         {
             if (!_sceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
                 return;
-            _lastActions[message.ObjectName] = message;
-            sceneObject.Action(message.Action);
+            _lastStates[message.ObjectName] = message;
+            sceneObject.SetState(message.Action);
         }
     }
 }

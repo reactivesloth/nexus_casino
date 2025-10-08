@@ -1,8 +1,13 @@
+using System.Collections.Generic;
+
 namespace Code.Scene.SceneObjectControl
 {
     public interface IControlledSceneObject
     {
         public string Name { get; }
-        public void Action(string actionName);
+        public List<string> States { get; }
+        public int CurrentStateIndex { get; }
+        
+        public void SetState(string stateName);
     }
 }

@@ -6,14 +6,10 @@ using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network.Lobby;
 using Code.Network.Player;
-using Code.Player;
 using Code.Scene.SceneObjectControl;
 using Dissonance;
 using Epic.OnlineServices;
-using FishNet;
-using FishNet.Component.Animating;
 using FishNet.Connection;
-using FishNet.Managing.Server;
 using FishNet.Object;
 using Proyecto26;
 using TankAndHealerStudioAssets;
@@ -21,7 +17,7 @@ using UnityEngine;
 
 namespace Code.Chat
 {
-    public class ChatCommandsHandler : NetworkBehaviour
+    public class AdminPanelHandler : NetworkBehaviour
     {
         [SerializeField] private ChatController chatController;
         [SerializeField, TextArea] private string helpText;
@@ -77,32 +73,26 @@ namespace Code.Chat
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
-                KickCallback_Rpc(sender, $"User {username} not found", false);
+                CommandCallback(sender, $"User {username} not found", false);
                 return;
             }
 
             if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
-                KickCallback_Rpc(sender, $"User {username} cannot be kicked", false);
+                CommandCallback(sender, $"User {username} cannot be kicked", false);
                 return;
             }
-
-            // ServerManager.Kick(connection, KickReason.Unset);
-            KickCallback_Rpc(null, $"User {username} was kicked", true, connection);
+            
+            CommandCallback(null, $"User {username} was kicked", true);
+            Kick_TargetRpc(connection);
         }
 
-        [TargetRpc, ObserversRpc]
-        private void KickCallback_Rpc(NetworkConnection target, string message, bool success,
-            NetworkConnection kickedConnection = null)
+        [TargetRpc]
+        private void Kick_TargetRpc(NetworkConnection target)
         {
-            chatController.SendSystemMessage(message,
-                !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
-            if (kickedConnection != null && kickedConnection == ClientManager.Connection)
-            {
-                PlayerPrefs.DeleteKey("auth_accessToken");
-                LobbyDisconnector.Disconnect(true, "You was kicked / baned");
-            }
+            PlayerPrefs.DeleteKey("auth_accessToken");
+            LobbyDisconnector.Disconnect(true, "You was kicked / baned");
         }
 
         #endregion
@@ -224,38 +214,26 @@ namespace Code.Chat
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
-                MuteCallback_Rpc(sender, $"User {username} not found", false);
+                CommandCallback(sender, $"User {username} not found", false);
                 return;
             }
 
             if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
-                MuteCallback_Rpc(sender, $"User {username} cannot be muted", false);
+                CommandCallback(sender, $"User {username} cannot be muted", false);
                 return;
             }
 
-            MuteCallback_Rpc(null, $"User {username} was muted", true, muteChat, muteVoice, connection);
+            CommandCallback(null, $"User {username} was muted", true);
+            Mute_TargetRpc(connection, muteChat, muteVoice);
         }
 
-        [ObserversRpc, TargetRpc]
-        private void MuteCallback_Rpc(NetworkConnection target, string message, bool success, bool muteChat = false,
-            bool muteVoice = false, NetworkConnection muteConnection = null)
+        [TargetRpc]
+        private void Mute_TargetRpc(NetworkConnection target, bool muteChat = false, bool muteVoice = false)
         {
-            if (!success)
-            {
-                chatController.SendSystemMessage(message, UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            chatController.SendSystemMessage(message, UltimateChatBoxStyles.noticeMessage);
-
-            if (muteConnection != ClientManager.Connection)
-                return;
-
             if (muteChat)
                 chatController.IsMuted = true;
-
             if (muteVoice)
                 FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = true;
         }
@@ -284,38 +262,26 @@ namespace Code.Chat
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
-                UnmuteCallback_Rpc(sender, $"User {username} not found", false);
+                CommandCallback(sender, $"User {username} not found", false);
                 return;
             }
 
             if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
-                UnmuteCallback_Rpc(sender, $"User {username} cannot be unmuted", false);
+                CommandCallback(sender, $"User {username} cannot be unmuted", false);
                 return;
             }
 
-            UnmuteCallback_Rpc(null, $"User {username} was unmuted", true, unmuteChat, unmuteVoice, connection);
+            CommandCallback(null, $"User {username} was unmuted", true);
+            UnmuteCallback_Rpc(connection, unmuteChat, unmuteVoice);
         }
 
-        [ObserversRpc, TargetRpc]
-        private void UnmuteCallback_Rpc(NetworkConnection target, string message, bool success, bool unmuteChat = false,
-            bool unmuteVoice = false, NetworkConnection muteConnection = null)
+        [TargetRpc]
+        private void UnmuteCallback_Rpc(NetworkConnection target, bool unmuteChat = false, bool unmuteVoice = false)
         {
-            if (!success)
-            {
-                chatController.SendSystemMessage(message, UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            chatController.SendSystemMessage(message, UltimateChatBoxStyles.noticeMessage);
-
-            if (muteConnection != ClientManager.Connection)
-                return;
-
             if (unmuteChat)
                 chatController.IsMuted = false;
-
             if (unmuteVoice)
                 FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
         }
@@ -410,34 +376,6 @@ namespace Code.Chat
             lobbyController.CreateLobbyManual(roomName, 64);
         }
 
-        public void SceneControl(string args)
-        {
-            Debug.Log($"[Command] SceneControl: {args}");
-            if (!ClientDataStorage.UserData.IsAdminRole)
-            {
-                chatController.SendSystemMessage("You can not control scene objects",
-                    UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            var arguments = args.Split(' ');
-            if (arguments.Length != 2)
-            {
-                chatController.SendSystemMessage("Command must contain 2 args: object name and action",
-                    UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            if (!sceneObjectController.IsObjectExist(arguments[0]))
-            {
-                chatController.SendSystemMessage($"Object \"{arguments[0]}\" not found",
-                    UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            sceneObjectController.MakeAction(arguments[0], arguments[1]);
-        }
-
         public void GetRooms()
         {
             if (!ClientDataStorage.UserData.IsAdminRole)
@@ -505,11 +443,12 @@ namespace Code.Chat
                 CommandCallback(sender, $"User {username} not found", false);
                 return;
             }
-            
+
             StartCoroutine(MoveUserToRoomCoroutine(sender, connection, username, lobbyName));
         }
 
-        private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
+        private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username,
+            string lobbyName)
         {
             var lobbyController = FindAnyObjectByType<LobbyController>();
             yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
@@ -518,7 +457,7 @@ namespace Code.Chat
             var lobby = lobbies.Find(l =>
             {
                 var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "NAME", out var nameAttr);
-                
+
                 var findLobbyName = nameResult == Result.Success
                     ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
                     : string.Empty;
@@ -531,16 +470,16 @@ namespace Code.Chat
                 CommandCallback(sender, $"Lobby {lobbyName} not found", false);
                 yield break;
             }
-            
+
             Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
             if (!info.HasValue)
             {
                 CommandCallback(sender, $"Unknown error", false);
                 yield break;
             }
-            
+
             var lobbyId = info.Value.LobbyId;
-            
+
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback(sender, $"Moved {username} to {lobbyId}", true);
         }
@@ -549,14 +488,48 @@ namespace Code.Chat
         private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
         {
             var lobbyController = FindAnyObjectByType<LobbyController>();
-            
+
             chatController.SendSystemMessage("You moved to another lobby", UltimateChatBoxStyles.noticeMessage);
-            
+
             LobbyDisconnector.Disconnect();
             lobbyController.JoinLobbyById(lobbyId);
         }
 
         #endregion
+
+        #region Scene
+        
+        public void SceneControl(string args)
+        {
+            Debug.Log($"[Command] SceneControl: {args}");
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                chatController.SendSystemMessage("You can not control scene objects",
+                    UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            var arguments = args.Split(' ');
+            if (arguments.Length != 2)
+            {
+                chatController.SendSystemMessage("Command must contain 2 args: object name and action",
+                    UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            if (!sceneObjectController.IsObjectExist(arguments[0]))
+            {
+                chatController.SendSystemMessage($"Object \"{arguments[0]}\" not found",
+                    UltimateChatBoxStyles.errorMessage);
+                return;
+            }
+
+            sceneObjectController.MakeAction(arguments[0], arguments[1]);
+        }
+        
+        #endregion
+        
+        #region Commons
 
         [TargetRpc, ObserversRpc]
         private void CommandCallback(NetworkConnection target, string message, bool success)
@@ -564,5 +537,7 @@ namespace Code.Chat
             chatController.SendSystemMessage(message,
                 !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
         }
+
+        #endregion
     }
 }
