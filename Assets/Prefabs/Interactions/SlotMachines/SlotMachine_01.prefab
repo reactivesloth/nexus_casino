@@ -419,6 +419,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -7725788941522193923, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4597109874812765741}
+    - targetCorrespondingSourceObject: {fileID: -7725788941522193923, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5016227486788733095}
     - targetCorrespondingSourceObject: {fileID: 681339942146994871, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1016129486923278222}
@@ -506,6 +509,29 @@ MonoBehaviour:
   columns: 10
   rows: 10
   index: 4
+  startIndex: 0
+  endIndex: 100
+  fps: 8
+  loop: 1
+  playOnAwake: 1
+  useInstanceMaterial: 1
+  overrideTiling: 1
+  frameOrder: 1
+--- !u!114 &5016227486788733095
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6540810375628623677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 927eea2c3c04ec042a9a14d9690352e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TileSheetAnimator
+  columns: 10
+  rows: 10
+  index: 5
   startIndex: 0
   endIndex: 100
   fps: 8

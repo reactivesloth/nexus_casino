@@ -24,6 +24,8 @@ public sealed class UVScroller : MonoBehaviour
     private static readonly int BaseMapStId = Shader.PropertyToID("_BaseMap_ST");
     private static readonly int MainTexStId = Shader.PropertyToID("_MainTex_ST");
 
+    private bool _isVisible;
+
     private void Awake()
     {
         _rend = GetComponent<Renderer>();
@@ -93,6 +95,7 @@ public sealed class UVScroller : MonoBehaviour
 
     private void Update()
     {
+        if (!_isVisible) return;
         // без аллокаций: только арифметика и SetPropertyBlock
         float t = Time.time + _phase;
         Vector2 dynamicOffset = _baseOffset + t * scrollSpeed;
@@ -104,7 +107,17 @@ public sealed class UVScroller : MonoBehaviour
         // важнo: используем перегрузку с индексом, чтобы не трогать другие сабмеши
         _rend.SetPropertyBlock(_mpb, materialIndex);
     }
+    
+    private void OnBecameInvisible()
+    {
+        _isVisible = false;
+    }
 
+    private void OnBecameVisible()
+    {
+        _isVisible = true;
+    }
+    
     private void OnDisable()
     {
         // очищаем MPB для этого индекса, чтобы вернуть исходные UV

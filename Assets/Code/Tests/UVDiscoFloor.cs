@@ -26,6 +26,8 @@ public sealed class UVDiscoFloor : MonoBehaviour
 
     private float _timer;
 
+    private bool _isVisible;
+
     private void Awake()
     {
         _rend = GetComponent<Renderer>();
@@ -93,6 +95,7 @@ public sealed class UVDiscoFloor : MonoBehaviour
 
     private void Update()
     {
+        if (!_isVisible) return;
         _timer -= Time.deltaTime;
         if (_timer > 0f) return;
 
@@ -110,6 +113,16 @@ public sealed class UVDiscoFloor : MonoBehaviour
 
         // перезапускаем таймер
         _timer = (interval > 0f) ? interval : 0f; // 0 => каждый кадр
+    }
+    
+    private void OnBecameInvisible()
+    {
+        _isVisible = false;
+    }
+
+    private void OnBecameVisible()
+    {
+        _isVisible = true;
     }
 
     private void OnDisable()

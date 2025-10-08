@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Renderer))]
@@ -39,6 +40,8 @@ public sealed class TileSheetAnimator : MonoBehaviour
     private Vector2 _originalScale;
     private bool _lastOverrideTiling;
 
+    private bool _isVisible;
+
     void Awake()
     {
         _renderer = GetComponent<Renderer>();
@@ -63,6 +66,8 @@ public sealed class TileSheetAnimator : MonoBehaviour
 
     void Update()
     {
+        if (!_isVisible) return;
+        
         if (overrideTiling != _lastOverrideTiling)
         {
             UpdateScale();
@@ -77,6 +82,16 @@ public sealed class TileSheetAnimator : MonoBehaviour
             _accum -= _timePerFrame;
             AdvanceFrame();
         }
+    }
+
+    private void OnBecameInvisible()
+    {
+        _isVisible = false;
+    }
+
+    private void OnBecameVisible()
+    {
+        _isVisible = true;
     }
 
     private void AdvanceFrame()
