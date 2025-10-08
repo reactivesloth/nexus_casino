@@ -5,6 +5,7 @@ using Code.Network;
 using Code.Utility;
 using TMPro;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Code.InteractionSystem
 {
@@ -20,6 +21,12 @@ namespace Code.InteractionSystem
     
     public class SlotMachineInteractable : Interactable
     {
+        [Header("Slot Screen Promo Material")]
+        [SerializeField] private MeshRenderer _slotScreenPromoMeshRenderer;
+        [SerializeField] private int slotsScreenPromoMaterialIndex;
+        private Material _slotsScreenPromoMaterial;
+        [SerializeField] private Texture2D [] slotsScreenPromoSpriteSheet;
+        
         [Header("UI Settings")]
         [SerializeField] private Canvas computer3dCanvas;
         [SerializeField] private Canvas contentCanvas;
@@ -46,6 +53,32 @@ namespace Code.InteractionSystem
 
             if (networkImageStream == null)
                 networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
+        }
+
+        private void Start()
+        {
+            _slotsScreenPromoMaterial = _slotScreenPromoMeshRenderer.materials[slotsScreenPromoMaterialIndex];
+
+            switch (provider)
+            {
+                case Providers.all:
+                    _slotsScreenPromoMaterial.mainTexture = slotsScreenPromoSpriteSheet[Random.Range(0, slotsScreenPromoSpriteSheet.Length)];
+                    break;
+                case Providers.cq9:
+                    _slotsScreenPromoMaterial.mainTexture = slotsScreenPromoSpriteSheet[0];
+                    break;
+                case Providers.superomatic:
+                    _slotsScreenPromoMaterial.mainTexture = slotsScreenPromoSpriteSheet[1];
+                    break;
+                case Providers.champion:
+                    _slotsScreenPromoMaterial.mainTexture = slotsScreenPromoSpriteSheet[2];
+                    break;
+                case Providers.onlyplay:
+                    _slotsScreenPromoMaterial.mainTexture = slotsScreenPromoSpriteSheet[3];
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
         }
 
         public override void OnStartNetwork()

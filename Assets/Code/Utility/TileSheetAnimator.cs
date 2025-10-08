@@ -9,6 +9,9 @@ public sealed class TileSheetAnimator : MonoBehaviour
     public int columns = 4;
     public int rows = 4;
 
+    [Header("Material")] 
+    public int index = 0;
+    
     [Header("Frame range (0-based, inclusive)")]
     public int startIndex = 0;
     public int endIndex = 3;
@@ -39,7 +42,7 @@ public sealed class TileSheetAnimator : MonoBehaviour
     void Awake()
     {
         _renderer = GetComponent<Renderer>();
-        _material = useInstanceMaterial ? _renderer.material : _renderer.sharedMaterial;
+        _material = useInstanceMaterial ? _renderer.materials[index] : _renderer.sharedMaterials[index];
 
         if (_material == null) { Debug.LogError("TileSheetAnimator: no material."); enabled = false; return; }
 

@@ -311,6 +311,14 @@ PrefabInstance:
       propertyPath: idNumberText
       value: 
       objectReference: {fileID: 520943950641988534}
+    - target: {fileID: 8690079509221083420, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: _slotScreenPromoMeshRenderer
+      value: 
+      objectReference: {fileID: 7828402647810297779}
+    - target: {fileID: 8690079509221083420, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      propertyPath: slotsScreenPromoMaterialIndex
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 8868657392971916821, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
       propertyPath: objectId
       value: 
@@ -408,6 +416,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -7725788941522193923, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7393103137464416279}
+    - targetCorrespondingSourceObject: {fileID: -7725788941522193923, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 4597109874812765741}
     - targetCorrespondingSourceObject: {fileID: 681339942146994871, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1016129486923278222}
@@ -480,6 +491,34 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 0.015107729, y: 0.020313011, z: 0.040164873}
   m_Center: {x: 0.0000073555857, y: 0.00000030826774, z: 0.019998502}
+--- !u!114 &4597109874812765741
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6540810375628623677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 927eea2c3c04ec042a9a14d9690352e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::TileSheetAnimator
+  columns: 10
+  rows: 10
+  index: 4
+  startIndex: 0
+  endIndex: 100
+  fps: 12
+  loop: 1
+  playOnAwake: 1
+  useInstanceMaterial: 1
+  overrideTiling: 1
+  frameOrder: 1
+--- !u!23 &7828402647810297779 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 2497748738644177267, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
+  m_PrefabInstance: {fileID: 5624392877227720384}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &9104150915627746242
 PrefabInstance:
   m_ObjectHideFlags: 0
