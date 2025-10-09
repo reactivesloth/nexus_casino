@@ -1,3 +1,4 @@
+using Code.Tests;
 using Code.Utility;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,7 @@ namespace Code.UI
     public class PauseUI : MonoBehaviour
     {
         [SerializeField] private Button continueButton;
+        [SerializeField] private Button boutiqueButton;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
 
@@ -27,6 +29,7 @@ namespace Code.UI
         {
             if (continueButton != null) continueButton.onClick.AddListener(OnContinueClick);
             if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClick);
+            if (boutiqueButton != null) boutiqueButton.onClick.AddListener(OnBoutiqueClick);
             if (quitButton != null) quitButton.onClick.AddListener(OnQuitClick);
         }
 
@@ -34,6 +37,7 @@ namespace Code.UI
         {
             if (continueButton != null) continueButton.onClick.RemoveListener(OnContinueClick);
             if (settingsButton != null) settingsButton.onClick.RemoveListener(OnSettingsClick);
+            if (boutiqueButton != null) settingsButton.onClick.RemoveListener(OnBoutiqueClick);
             if (quitButton != null) quitButton.onClick.RemoveListener(OnQuitClick);
         }
 
@@ -53,6 +57,11 @@ namespace Code.UI
             }
         }
 
+        private void OnBoutiqueClick()
+        {
+            gameObject.GetComponent<SceneLoader>().Load("Character Customization");
+        }
+        
         private void OnPauseClick()
         {
             if (pausePanel != null && !pausePanel.activeSelf) pausePanel.SetActive(true);
@@ -83,11 +92,12 @@ namespace Code.UI
 
         private void OnQuitClick()
         {
-#if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false;
-#else
-            Application.Quit();
-#endif
+            gameObject.GetComponent<SceneLoader>().Load("Init");
+// #if UNITY_EDITOR
+//             UnityEditor.EditorApplication.isPlaying = false;
+// #else
+//             Application.Quit();
+// #endif
         }
     }
 }

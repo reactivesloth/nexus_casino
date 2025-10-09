@@ -16,10 +16,12 @@ namespace EOSLobby
         [SerializeField] private Button okButton;
         [SerializeField] private Button cancelButton;
         private Coroutine _popupCoroutine;
+        public bool showAtStart = false;
 
         private void Awake()
         {
-            Show ("Please wait...", "Loading...", 0);
+            if (showAtStart)
+                Show ("Please wait...", "Loading...", 0);
         }
 
         public void Show(string title, string message, int percentage = 100)
