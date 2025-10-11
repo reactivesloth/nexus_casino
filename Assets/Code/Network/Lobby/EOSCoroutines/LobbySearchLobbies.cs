@@ -29,7 +29,7 @@ namespace Code.Network.Lobby.EOSCoroutines
                 ComparisonOp = ComparisonOp.Equal,
                 Parameter = new AttributeData
                 {
-                    Key = "PRODUCT_VERSION",
+                    Key = LobbyController.ProductVersion,
                     Value = new AttributeDataValue { AsUtf8 = Application.version },
                 },
             };
@@ -40,7 +40,7 @@ namespace Code.Network.Lobby.EOSCoroutines
                 ComparisonOp = ComparisonOp.Equal,
                 Parameter = new AttributeData
                 {
-                    Key = "PRIVATE",
+                    Key = LobbyController.Private,
                     Value = new AttributeDataValue { AsUtf8 = bool.FalseString }
                 }
             };

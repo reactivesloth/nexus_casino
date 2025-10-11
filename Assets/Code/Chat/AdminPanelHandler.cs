@@ -450,7 +450,7 @@ namespace Code.Chat
                 if (!info.HasValue)
                     continue;
 
-                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, "NAME", out var nameAttr);
+                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.Name, out var nameAttr);
 
                 var lobbyId = info.Value.LobbyId;
                 var lobbyName = nameResult == Result.Success
@@ -506,7 +506,7 @@ namespace Code.Chat
 
             var lobby = lobbies.Find(l =>
             {
-                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, "NAME", out var nameAttr);
+                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, LobbyController.Name, out var nameAttr);
 
                 var findLobbyName = nameResult == Result.Success
                     ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()

@@ -26,7 +26,7 @@ namespace Code.Network.Lobby
             }
             
             var adminMembers = members
-                .Where(m => m.Attributes.TryGetValue("ROLE", out var role) && MeSchema.CheckAdmin(role))
+                .Where(m => m.Attributes.TryGetValue(LobbyController.Role, out var role) && MeSchema.CheckAdmin(role))
                 .ToList();
 
             Debug.Log($"[HostMigration] Admins {adminMembers.Count}");
@@ -35,7 +35,7 @@ namespace Code.Network.Lobby
                 return SelectWithCombinedScore(adminMembers);
 
             var goodPingMembers = members
-                .Where(m => m.Attributes.TryGetValue("PING", out var ping)
+                .Where(m => m.Attributes.TryGetValue(LobbyController.Ping, out var ping)
                             && long.TryParse(ping, out var pingValue)
                             && pingValue <= GoodPing)
                 .ToList();
@@ -50,13 +50,13 @@ namespace Code.Network.Lobby
         {
             // Собираем максимальные значения для нормализации
             var pings = members
-                .Select(m => TryGetLong(m.Attributes, "PING"))
+                .Select(m => TryGetLong(m.Attributes, LobbyController.Ping))
                 .Where(v => v.HasValue)
                 .Select(v => v.Value)
                 .ToList();
 
             var hardwares = members
-                .Select(m => TryGetLong(m.Attributes, "HARDWARE_SCORE"))
+                .Select(m => TryGetLong(m.Attributes, LobbyController.HardwareScore))
                 .Where(v => v.HasValue)
                 .Select(v => v.Value)
                 .ToList();
@@ -67,8 +67,8 @@ namespace Code.Network.Lobby
             var scoredMembers = members
                 .Select(m =>
                 {
-                    var ping = TryGetLong(m.Attributes, "PING") ?? maxPing;  // если нет — считаем худшим
-                    var hw = TryGetLong(m.Attributes, "HARDWARE_SCORE") ?? 0; // если нет — минимальное железо
+                    var ping = TryGetLong(m.Attributes, LobbyController.Ping) ?? maxPing;  // если нет — считаем худшим
+                    var hw = TryGetLong(m.Attributes, LobbyController.HardwareScore) ?? 0; // если нет — минимальное железо
 
                     // Нормализация [0..1]
                     float pingNorm = (float)ping / maxPing;
