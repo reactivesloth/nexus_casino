@@ -14,7 +14,7 @@ public sealed class UVDiscoFloor : MonoBehaviour
     private static readonly int BaseMapStId = Shader.PropertyToID("_BaseMap_ST");
     private static readonly int MainTexStId = Shader.PropertyToID("_MainTex_ST");
 
-    private static readonly float[] kRecipPow2 = { 0.5f, 0.25f, 0.125f, 0.0625f, 0.03125f }; // 1/2..1/32
+    private static readonly float[] kRecipPow2 = { 0.5f, 0.25f, 0.125f, 0.0625f, 0.03125f };
 
     private Renderer _rend;
     private MaterialPropertyBlock _mpb;
@@ -25,13 +25,14 @@ public sealed class UVDiscoFloor : MonoBehaviour
     private string _texProp;
 
     private float _timer;
-
     private bool _isVisible;
+    private bool _isActive = true; // 🔹 Новое поле — эффект включён по умолчанию
 
     private void Awake()
     {
         _rend = GetComponent<Renderer>();
         _mpb = new MaterialPropertyBlock();
+        CacheBaseUV();
     }
 
     private void OnEnable()
@@ -42,10 +43,7 @@ public sealed class UVDiscoFloor : MonoBehaviour
             return;
         }
 
-        // случайный стартовый сдвиг, чтобы «клетки» не мигали синхронно
         _timer = Random.value * interval;
-
-        // если интервал нулевой — обновляться каждый кадр (но всё равно без аллокаций)
         if (interval == 0f) _timer = 0f;
     }
 
@@ -88,54 +86,81 @@ public sealed class UVDiscoFloor : MonoBehaviour
             return false;
         }
 
+        return true;
+    }
+
+    private void CacheBaseUV()
+    {
+        // 🔹 Запоминаем исходное состояние UV
+        var mat = _rend.sharedMaterials[materialIndex];
         _baseTiling = mat.GetTextureScale(_texProp);
         _baseOffset = mat.GetTextureOffset(_texProp);
-        return true;
     }
 
     private void Update()
     {
-        if (!_isVisible) return;
+        if (!_isVisible || !_isActive)
+            return;
+
         _timer -= Time.deltaTime;
         if (_timer > 0f) return;
 
-        // выбираем случайные смещения из набора 1/2..1/32
-        // Random.Range(int,int) верхняя граница исключена, поэтому (0, kRecipPow2.Length) даёт 0..Length-1
         float ox = kRecipPow2[Random.Range(0, kRecipPow2.Length)];
         float oy = kRecipPow2[Random.Range(0, kRecipPow2.Length)];
 
         Vector2 newOffset = new Vector2(ox, oy);
-
-        // *_ST: xy = tiling, zw = offset
         var st = new Vector4(_baseTiling.x, _baseTiling.y, _baseOffset.x + newOffset.x, _baseOffset.y + newOffset.y);
+
         _mpb.SetVector(_stId, st);
         _rend.SetPropertyBlock(_mpb, materialIndex);
 
-        // перезапускаем таймер
-        _timer = (interval > 0f) ? interval : 0f; // 0 => каждый кадр
-    }
-    
-    private void OnBecameInvisible()
-    {
-        _isVisible = false;
+        _timer = (interval > 0f) ? interval : 0f;
     }
 
-    private void OnBecameVisible()
-    {
-        _isVisible = true;
-    }
+    private void OnBecameInvisible() => _isVisible = false;
+    private void OnBecameVisible() => _isVisible = true;
 
     private void OnDisable()
     {
-        if (_rend != null)
-            _rend.SetPropertyBlock(null, materialIndex); // вернуть исходные UV
+        ResetToBaseUV();
     }
 
-    // опциональные API для рантайм-настройки без аллокаций
+    private void ResetToBaseUV()
+    {
+        // 🔹 Возвращаем исходное состояние UV
+        if (_rend == null) return;
+
+        _mpb.SetVector(_stId, new Vector4(_baseTiling.x, _baseTiling.y, _baseOffset.x, _baseOffset.y));
+        _rend.SetPropertyBlock(_mpb, materialIndex);
+    }
+
+    // =========================
+    // 🔹 Публичные методы API
+    // =========================
+
+    /// <summary>Включает/выключает анимацию UV.</summary>
+    public void SetActive(bool state)
+    {
+        if (_isActive == state) return;
+
+        _isActive = state;
+        if (!_isActive)
+        {
+            ResetToBaseUV();
+        }
+        else
+        {
+            _timer = interval; // перезапуск таймера
+        }
+    }
+
+    public bool IsActive => _isActive;
+
     public void SetInterval(float newInterval) => interval = Mathf.Max(0f, newInterval);
+
     public void SetMaterialIndex(int index)
     {
         materialIndex = index;
-        if (enabled) OnEnable(); // переинициализация под другой сабмеш
+        if (enabled) OnEnable();
     }
 }
