@@ -112,11 +112,11 @@ namespace Code.Network.Lobby
         public IEnumerator PollLobbiesRoutine()
         {
             yield return LocalUser.Get(out var localUser);
-            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, true);
             // 🔹 Сохраняем результаты поиска (для UI/отладки)
             LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
         }
-        
+
         private IEnumerator PollLobbiesRoutineWithConnection()
         {
             yield return LocalUser.Get(out var localUser);
@@ -135,7 +135,7 @@ namespace Code.Network.Lobby
                         $"Searching lobby...", "", 10);
 
                     // 🔹 Запрос поиска лобби
-                    yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+                    yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, false);
 
                     // 🔹 Сохраняем результаты поиска (для UI/отладки)
                     LobbyVariables.Instance.searchResults = searchLobbies.LobbyDetailsArray;
@@ -240,6 +240,8 @@ namespace Code.Network.Lobby
             LobbyVariables.Instance.currentLobby = currentLobby;
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...", 60);
+            yield return LobbyUpdateLobby.Run(out var updateLobbyPrivate, lobbyId, "PRIVATE",
+                false.ToString());
             yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, "PRODUCT_VERSION",
                 Application.version);
             yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName.Value);
@@ -545,13 +547,14 @@ namespace Code.Network.Lobby
         private string GenerateRandomLobbyName() => $"Lobby{Random.Range(0, 1000):000}";
 
         // === Ручное создание лобби ===
-        public void CreateLobbyManual(string lobbyName, uint maxPlayers, string bucketId = null)
+        public void CreateLobbyManual(string lobbyName, uint maxPlayers, bool isPrivate, string bucketId = null)
         {
-            StartCoroutine(OnManualLobbyCreateRoutine(lobbyName, maxPlayers,
+            StartCoroutine(OnManualLobbyCreateRoutine(lobbyName, maxPlayers, isPrivate,
                 bucketId ?? LobbyVariables.Instance.bucketId));
         }
 
-        private IEnumerator OnManualLobbyCreateRoutine(string lobbyName, uint maxPlayers, string bucketId)
+        private IEnumerator OnManualLobbyCreateRoutine(string lobbyName, uint maxPlayers, bool isPrivate,
+            string bucketId)
         {
             StopPollingLobbies();
 
@@ -578,6 +581,8 @@ namespace Code.Network.Lobby
             LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
             yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, "PRODUCT_VERSION",
                 Application.version);
+            yield return LobbyUpdateLobby.Run(out var updateLobbyPrivate, lobbyId, "PRIVATE",
+                isPrivate.ToString());
             yield return LobbyUpdateLobby.Run(out var updateLobby, lobbyId, "NAME", lobbyName);
             if (updateLobby.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby name: {updateLobby.CallbackInfo?.ResultCode}");
@@ -627,13 +632,13 @@ namespace Code.Network.Lobby
         private IEnumerator OnJoinLobbyByHostIdRoutine(string id)
         {
             yield return LocalUser.Get(out var localUser);
-            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+            yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, true);
 
             var lobby = searchLobbies.LobbyDetailsArray.FirstOrDefault(l =>
-                {
-                    Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
-                    return info.HasValue && info.Value.LobbyId == id;
-                });
+            {
+                Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
+                return info.HasValue && info.Value.LobbyId == id;
+            });
 
             if (lobby != null)
                 StartCoroutine(OnJoinLobbyClickedRoutine(lobby));

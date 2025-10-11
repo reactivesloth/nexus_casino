@@ -20,7 +20,7 @@ namespace Code.Scene.SceneObjectControl
         private readonly Dictionary<string, StateMessage> _lastStates = new();
 
         public List<IControlledSceneObject> AllSceneObjects => _sceneObjects.Values.ToList();
-        
+
         private void Awake()
         {
             var components = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
@@ -46,8 +46,15 @@ namespace Code.Scene.SceneObjectControl
             SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
-        public bool IsObjectExist(string objectName) => _sceneObjects.ContainsKey(objectName);
-
+        /// <summary>
+        /// Get states by object name.
+        /// If function return null object not contains
+        /// </summary>
+        /// <param name="objectName"></param>
+        /// <returns></returns>
+        public List<string> GetStatesByName(string objectName) =>
+            !_sceneObjects.TryGetValue(objectName, out var sceneObject) ? null : sceneObject.States;
+        
         /// <summary>
         /// Local call for command
         /// </summary>
@@ -55,7 +62,7 @@ namespace Code.Scene.SceneObjectControl
         /// <param name="state"></param>
         public void MakeAction(string objectName, string state)
         {
-            if (!IsObjectExist(objectName))
+            if (GetStatesByName(objectName) == null)
                 return;
             var actionMessage = new StateMessage { ObjectName = objectName, Action = state };
             if (ServerManager.Started)

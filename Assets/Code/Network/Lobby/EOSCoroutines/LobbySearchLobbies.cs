@@ -11,13 +11,13 @@ namespace Code.Network.Lobby.EOSCoroutines
         public LobbySearchFindCallbackInfo? CallbackInfo { get; private set; }
         public LobbyDetails[] LobbyDetailsArray { get; private set; }
     
-        public static Coroutine Run(out LobbySearchLobbies lobbySearchLobbies, ProductUserId localUserId, float timeout = 30f, uint maxResults = 100)
+        public static Coroutine Run(out LobbySearchLobbies lobbySearchLobbies, ProductUserId localUserId, bool includePrivate, float timeout = 30f, uint maxResults = 100)
         {
             lobbySearchLobbies = new LobbySearchLobbies();
-            return EOS.GetManager().StartCoroutine(lobbySearchLobbies.SearchLobbiesCoroutine(localUserId, timeout, maxResults));
+            return EOS.GetManager().StartCoroutine(lobbySearchLobbies.SearchLobbiesCoroutine(localUserId, includePrivate, timeout, maxResults));
         }
     
-        private IEnumerator SearchLobbiesCoroutine(ProductUserId localUserId, float timeout, uint maxResults)
+        private IEnumerator SearchLobbiesCoroutine(ProductUserId localUserId, bool includePrivate, float timeout, uint maxResults)
         {
             var createLobbySearchOptions = new CreateLobbySearchOptions { MaxResults = maxResults };
             var lobbyInterface = EOS.GetPlatformInterface().GetLobbyInterface();
@@ -34,6 +34,18 @@ namespace Code.Network.Lobby.EOSCoroutines
                 },
             };
             lobbySearch.SetParameter(ref versionEqualParameter);
+
+            var privateParameter = new LobbySearchSetParameterOptions
+            {
+                ComparisonOp = ComparisonOp.Equal,
+                Parameter = new AttributeData
+                {
+                    Key = "PRIVATE",
+                    Value = new AttributeDataValue { AsUtf8 = bool.FalseString }
+                }
+            };
+            if(!includePrivate)
+                lobbySearch.SetParameter(ref privateParameter);
             
             lobbySearch.Find(ref lobbySearchFindOptions, null,
                 (ref LobbySearchFindCallbackInfo data) => { CallbackInfo = data; });

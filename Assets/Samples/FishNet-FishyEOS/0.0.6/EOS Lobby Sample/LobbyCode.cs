@@ -78,7 +78,7 @@ namespace EOSLobby
             yield return LocalUser.Get(out var localUser);
             while (enabled)
             {
-                yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id);
+                yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, true);
                 PopulateLobbiesList(searchLobbies.LobbyDetailsArray);
                 yield return new WaitForSeconds(LobbyVariables.Instance.pollLobbiesInterval);
             }
