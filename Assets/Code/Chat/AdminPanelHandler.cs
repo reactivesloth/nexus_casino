@@ -488,7 +488,13 @@ namespace Code.Chat
 
         public void MoveUserToRoom(string username, string roomId)
         {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                CommandCallback("You can not move users", false);
+                return;
+            }
             
+            MoveUser_ServerRpc(ClientManager.Connection, username, roomId);
         }
 
         [ServerRpc(RequireOwnership = false)]
