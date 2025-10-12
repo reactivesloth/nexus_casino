@@ -378,7 +378,7 @@ namespace Code.Chat
                     NewRoomHandle(args[0], false, null);
                     break;
                 case 2:
-                    if(args[1] == "-c")
+                    if (args[1] == "-c")
                         NewRoomHandle(args[0], true, null);
                     else
                         NewRoomHandle(args[0], false, args[1]);
@@ -411,7 +411,7 @@ namespace Code.Chat
                 CommandCallback_Rpc(sender, $"User {hostName} not found", false);
                 return;
             }
-            
+
             CreateRoom_TargetRpc(connection, roomName, isPrivate);
         }
 
@@ -425,7 +425,7 @@ namespace Code.Chat
             var lobbyController = FindAnyObjectByType<LobbyController>();
             lobbyController.CreateLobbyManual(roomName, 64, isPrivate: isPrivate);
         }
-        
+
         public void GetRooms()
         {
             if (!ClientDataStorage.UserData.IsAdminRole)
@@ -450,7 +450,8 @@ namespace Code.Chat
                 if (!info.HasValue)
                     continue;
 
-                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.Name, out var nameAttr);
+                var nameResult =
+                    Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.Name, out var nameAttr);
 
                 var lobbyId = info.Value.LobbyId;
                 var lobbyName = nameResult == Result.Success
@@ -482,11 +483,16 @@ namespace Code.Chat
                 return;
             }
 
-            MoveUserServerRpc(ClientManager.Connection, argsArray[0], argsArray[1]);
+            MoveUserByLobbyName_ServerRpc(ClientManager.Connection, argsArray[0], argsArray[1]);
+        }
+
+        public void MoveUserToRoom(string username, string roomId)
+        {
+            
         }
 
         [ServerRpc(RequireOwnership = false)]
-        private void MoveUserServerRpc(NetworkConnection sender, string username, string lobbyName)
+        private void MoveUserByLobbyName_ServerRpc(NetworkConnection sender, string username, string lobbyName)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
@@ -495,6 +501,18 @@ namespace Code.Chat
             }
 
             StartCoroutine(MoveUserToRoomCoroutine(sender, connection, username, lobbyName));
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void MoveUser_ServerRpc(NetworkConnection sender, string username, string lobbyId)
+        {
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                CommandCallback_Rpc(sender, $"User {username} not found", false);
+                return;
+            }
+
+            StartCoroutine(MoveUserToRoomByIdCoroutine(sender, connection, username, lobbyId));
         }
 
         private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username,
@@ -506,7 +524,8 @@ namespace Code.Chat
 
             var lobby = lobbies.Find(l =>
             {
-                var nameResult = Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, LobbyController.Name, out var nameAttr);
+                var nameResult =
+                    Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, LobbyController.Name, out var nameAttr);
 
                 var findLobbyName = nameResult == Result.Success
                     ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
@@ -529,6 +548,28 @@ namespace Code.Chat
             }
 
             var lobbyId = info.Value.LobbyId;
+
+            MoveUserTargetRpc(target, lobbyId);
+            CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
+        }
+        
+        private IEnumerator MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyId)
+        {
+            var lobbyController = FindAnyObjectByType<LobbyController>();
+            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
+            var lobbies = lobbyController.GetAllLobbies().ToList();
+
+            var lobby = lobbies.Find(l =>
+            {
+                Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
+                return info.HasValue && info.Value.LobbyId == lobbyId;
+            });
+
+            if (lobby == null)
+            {
+                CommandCallback_Rpc(sender, $"Lobby {lobbyId} not found", false);
+                yield break;
+            }
 
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
