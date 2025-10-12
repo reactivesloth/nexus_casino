@@ -397,7 +397,7 @@ namespace Code.Chat
                 return;
             }
 
-            if (hostName == null)
+            if (string.IsNullOrEmpty(hostName))
                 CreateRoom(roomName, isPrivate);
             else
                 CreateRoom_ServerRpc(roomName, isPrivate, hostName, ClientManager.Connection);

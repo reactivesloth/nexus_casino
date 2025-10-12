@@ -12,14 +12,14 @@ namespace Code.Scene.SceneObjectControl
 {
     public class SceneObjectController : MonoBehaviour
     {
-        private ServerManager ServerManager => InstanceFinder.ServerManager;
-        private ClientManager ClientManager => InstanceFinder.ClientManager;
-        private SceneManager SceneManager => InstanceFinder.SceneManager;
+        private static ServerManager ServerManager => InstanceFinder.ServerManager;
+        private static ClientManager ClientManager => InstanceFinder.ClientManager;
+        private static SceneManager SceneManager => InstanceFinder.SceneManager;
 
-        private readonly Dictionary<string, IControlledSceneObject> _sceneObjects = new();
-        private readonly Dictionary<string, StateMessage> _lastStates = new();
+        private static readonly Dictionary<string, IControlledSceneObject> _sceneObjects = new();
+        private static readonly Dictionary<string, StateMessage> _lastStates = new();
 
-        public List<IControlledSceneObject> AllSceneObjects => _sceneObjects.Values.ToList();
+        public static List<IControlledSceneObject> AllSceneObjects => _sceneObjects.Values.ToList();
 
         private void Awake()
         {
@@ -28,7 +28,7 @@ namespace Code.Scene.SceneObjectControl
 
             foreach (var controlledSceneObject in components)
             {
-                _sceneObjects.Add(controlledSceneObject.Name, controlledSceneObject);
+                _sceneObjects.Add(controlledSceneObject.Key, controlledSceneObject);
             }
         }
 

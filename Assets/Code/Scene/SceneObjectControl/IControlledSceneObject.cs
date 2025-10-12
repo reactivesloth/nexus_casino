@@ -4,7 +4,7 @@ namespace Code.Scene.SceneObjectControl
 {
     public interface IControlledSceneObject
     {
-        public string Name { get; }
+        public string Key { get; }
         public List<string> States { get; }
         public int CurrentStateIndex { get; }
         

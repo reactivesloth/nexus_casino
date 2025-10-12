@@ -13,7 +13,7 @@ namespace Code.Scene.SceneObjectControl
 
         private int _currentStateIndex = 0;
 
-        public string Name => objectName;
+        public string Key => objectName;
         public List<string> States => states.Select(s => s.stateName).ToList();
         public int CurrentStateIndex => _currentStateIndex;
 
