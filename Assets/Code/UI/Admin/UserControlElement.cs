@@ -26,7 +26,12 @@ namespace Code.UI.Admin
         private LobbyData.LobbyMember _lobbyMemberData;
 
         private string Username => _lobbyMemberData.displayName;
-        
+
+        private void Awake()
+        {
+            _adminPanelHandler = FindAnyObjectByType<AdminPanelHandler>(FindObjectsInactive.Include);
+        }
+
         private void OnEnable()
         {
             kickButton.onClick.AddListener(OnKickClicked);
