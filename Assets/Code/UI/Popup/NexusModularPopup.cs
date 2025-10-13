@@ -76,7 +76,7 @@ namespace Code.UI.Popup
                         AddInputField(openerInput.labelName, openerInput.contentType);
                         break;
                     case InputInfoType.Dropdown:
-                        AddDropdown(openerInput.labelName, openerInput.valueVariants);
+                        AddDropdown(openerInput.labelName, openerInput.valueVariants.ToArray());
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -93,10 +93,13 @@ namespace Code.UI.Popup
             newInputField.contentType = contentType;
 
             Inputs.Add(newInputField);
+            
+            InputsContainerChange();
         }
 
         public void AddDropdown(string label, params string[] options)
         {
+            
             var newDropdown = Instantiate(dropdownPrefab, InputGroup.transform);
             var textPlaceHolder = newDropdown.placeholder as TMP_Text;
             if (textPlaceHolder != null)
@@ -107,6 +110,19 @@ namespace Code.UI.Popup
                 newDropdown.options.Add(new TMP_Dropdown.OptionData(option));
 
             Inputs.Add(newDropdown);
+            
+            InputsContainerChange();
+        }
+
+        public void RemoveInputAt(int index)
+        {
+            if(index >= Inputs.Count || index < 0)
+                return;
+            
+            var input = Inputs[index];
+            Destroy(input.gameObject);
+            Inputs.RemoveAt(index);
+            InputsContainerChange();
         }
 
         public string GetInputValue(int index)
@@ -123,6 +139,11 @@ namespace Code.UI.Popup
                 default:
                     return null;
             }
+        }
+
+        private void InputsContainerChange()
+        {
+            InputGroup.gameObject.SetActive(Inputs.Count > 0);
         }
 
         private void SetLabel(TextMeshProUGUI label, string text)

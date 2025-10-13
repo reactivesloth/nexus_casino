@@ -65,7 +65,7 @@ namespace Code.UI.Popup
 	    
 	    public TMP_InputField.ContentType contentType;
 
-	    public string[] valueVariants;
+	    public List<string> valueVariants;
     }
 
     public enum InputInfoType

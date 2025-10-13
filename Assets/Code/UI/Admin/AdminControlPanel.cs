@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Code.Chat;
 using Code.Network.Lobby;
 using Code.Scene.SceneObjectControl;
+using Code.UI.Popup;
+using Ricimi;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -24,6 +27,7 @@ namespace Code.UI.Admin
 
         //[SerializeField] private Button slotsButton;
         [SerializeField] private Button lobbiesButton;
+        [SerializeField] private Button newLobbyButton;
 
         [Header("Prefabs")] [SerializeField] private UserControlElement userControlElementPrefab;
 
@@ -36,9 +40,11 @@ namespace Code.UI.Admin
         private readonly List<ControlElement> _controlElements = new();
 
         private AdminPanelHandler _adminPanelHandler;
+        private NexusModularPopupOpener _popupOpener;
 
         private void Awake()
         {
+            _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
             _adminPanelHandler = FindAnyObjectByType<AdminPanelHandler>(FindObjectsInactive.Include);
         }
 
@@ -52,6 +58,7 @@ namespace Code.UI.Admin
             sceneButton.onClick.AddListener(OnSceneButtonClick);
             //slotsButton.onClick.AddListener(OnSlotsButtonClick);
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
+            newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
         }
 
         private void OnDisable()
@@ -64,6 +71,7 @@ namespace Code.UI.Admin
             sceneButton.onClick.RemoveListener(OnSceneButtonClick);
             //slotsButton.onClick.RemoveListener(OnSlotsButtonClick);
             lobbiesButton.onClick.RemoveListener(OnLobbiesButtonClick);
+            newLobbyButton.onClick.RemoveListener(OnNewLobbyButtonClick);
         }
 
         #region UI Callbacks
@@ -180,6 +188,60 @@ namespace Code.UI.Admin
         {
             _controlElements.ForEach(e => Destroy(e.gameObject));
             _controlElements.Clear();
+        }
+
+        private void OnNewLobbyButtonClick()
+        {
+            _popupOpener.Title = "New Lobby";
+            _popupOpener.Subtitle = $"Choise lobby name, privateStatus and host";
+
+            var createButton = new ButtonInfo
+            {
+                Label = "Add Player",
+                OnClickedEvent = new Button.ButtonClickedEvent()
+            };
+            createButton.OnClickedEvent.AddListener(CreateLobbyClicked);
+
+            _popupOpener.Inputs.Add(new InputInfo
+            {
+                labelName = "Lobby Name",
+                type = InputInfoType.InputField,
+                contentType = TMP_InputField.ContentType.Standard
+            });
+
+            _popupOpener.Inputs.Add(new InputInfo
+            {
+                labelName = "Private",
+                type = InputInfoType.Dropdown,
+                valueVariants = new List<string> { "-", "+" }
+            });
+
+            var hostVariants = new List<string> { "me" };
+            hostVariants.AddRange(LobbyVariables.Instance.currentLobby.lobbyMembers.Select(m => m.displayName));
+
+            _popupOpener.Inputs.Add(new InputInfo
+            {
+                labelName = "Host",
+                type = InputInfoType.Dropdown,
+                valueVariants = hostVariants
+            });
+
+            _popupOpener.Buttons.Add(createButton);
+
+            _popupOpener.OpenPopup();
+        }
+
+        private void CreateLobbyClicked()
+        {
+            var roomName = _popupOpener.LastPopup.GetInputValue(0);
+            var isPrivate = _popupOpener.LastPopup.GetInputValue(1) == "+";
+            var hostName = _popupOpener.LastPopup.GetInputValue(2) == "me"
+                ? null
+                : _popupOpener.LastPopup.GetInputValue(2);
+            
+            _adminPanelHandler.NewRoomHandle(roomName, isPrivate, hostName);
+            
+            _popupOpener.ClosePopup();
         }
     }
 }
