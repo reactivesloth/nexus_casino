@@ -11,9 +11,11 @@ using Dissonance;
 using Epic.OnlineServices;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using Proyecto26;
 using TankAndHealerStudioAssets;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Code.Chat
 {
@@ -23,12 +25,32 @@ namespace Code.Chat
         [SerializeField, TextArea] private string helpText;
 
         [SerializeField] private SceneObjectController sceneObjectController;
+        
+        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
 
+        [System.Serializable]
+        public struct MuteStateSync
+        {
+            public bool muteChat;
+            public bool muteVoice;
+        }
+        
         protected override void OnValidate()
         {
             base.OnValidate();
             chatController ??= GetComponent<ChatController>();
             sceneObjectController ??= FindAnyObjectByType<SceneObjectController>();
+        }
+        
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+            if(MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
+                SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
 
         public void Help()
@@ -101,20 +123,32 @@ namespace Code.Chat
 
         public void BanUser(string usernameTime)
         {
+            var parametres = usernameTime.Split(' ');
+            var username = parametres[0];
+            var time = parametres.Length > 1 ? int.Parse(parametres[1]) : 0;
+            BanUser(username, time);
+        }
+
+        public void BanUser(string username, int time)
+        {
             if (!ClientDataStorage.UserData.IsAdminRole)
             {
                 CommandCallback($"You can't ban users", false);
                 return;
             }
 
-            var parametres = usernameTime.Split(' ');
-            var username = parametres[0];
-            var time = parametres.Length > 1 ? int.Parse(parametres[1]) : 0;
-
-            if (LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username) ==
-                null)
+            var banedUser =
+                LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username);
+            
+            if (banedUser == null)
             {
                 CommandCallback($"User not found in lobby", false);
+                return;
+            }
+
+            if (banedUser.Attributes.TryGetValue(LobbyController.Role, out var role) && MeSchema.CheckAdmin(role))
+            {
+                CommandCallback($"User can not be banned", false);
                 return;
             }
 
@@ -224,6 +258,18 @@ namespace Code.Chat
                 CommandCallback_Rpc(sender, $"User {username} cannot be muted", false);
                 return;
             }
+            
+            // Получаем текущее состояние мута или создаем новое
+            var currentMuteState = MutedDictionary.ContainsKey(username) 
+                ? MutedDictionary[username] 
+                : new MuteStateSync { muteChat = false, muteVoice = false };
+
+            // Применяем действия мута
+            if (muteChat) currentMuteState.muteChat = true;
+            if (muteVoice) currentMuteState.muteVoice = true;
+
+            // Обновляем словарь
+            MutedDictionary[username] = currentMuteState;
 
             CommandCallback_Rpc(null, $"User {username} was muted", true);
             Mute_TargetRpc(connection, muteChat, muteVoice);
@@ -272,6 +318,18 @@ namespace Code.Chat
                 CommandCallback_Rpc(sender, $"User {username} cannot be unmuted", false);
                 return;
             }
+            
+            // Получаем текущее состояние мута или создаем новое
+            var currentMuteState = MutedDictionary.ContainsKey(username) 
+                ? MutedDictionary[username] 
+                : new MuteStateSync { muteChat = false, muteVoice = false };
+
+            // Применяем действия размута
+            if (unmuteChat) currentMuteState.muteChat = false;
+            if (unmuteVoice) currentMuteState.muteVoice = false;
+
+            // Обновляем словарь
+            MutedDictionary[username] = currentMuteState;
 
             CommandCallback_Rpc(null, $"User {username} was unmuted", true);
             UnmuteCallback_Rpc(connection, unmuteChat, unmuteVoice);
@@ -284,6 +342,13 @@ namespace Code.Chat
                 chatController.IsMuted = false;
             if (unmuteVoice)
                 FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
+        }
+
+        private void SetMuteState(bool muteChatState, bool muteVoiceState)
+        {
+            chatController.IsMuted = muteChatState;
+            FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = muteVoiceState;
+            
         }
 
         #endregion
@@ -493,7 +558,7 @@ namespace Code.Chat
                 CommandCallback("You can not move users", false);
                 return;
             }
-            
+
             MoveUser_ServerRpc(ClientManager.Connection, username, roomId);
         }
 
@@ -558,8 +623,9 @@ namespace Code.Chat
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
         }
-        
-        private IEnumerator MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyId)
+
+        private IEnumerator MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target,
+            string username, string lobbyId)
         {
             var lobbyController = FindAnyObjectByType<LobbyController>();
             yield return StartCoroutine(lobbyController.PollLobbiesRoutine());

@@ -2,6 +2,7 @@ using System;
 using Code.Chat;
 using Code.Network.Lobby;
 using Code.Network.Lobby.Data;
+using FishNet.Object.Synchronizing;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -34,6 +35,8 @@ namespace Code.UI.Admin
 
         private void OnEnable()
         {
+            _adminPanelHandler.MutedDictionary.OnChange += OnMutedDictionaryChange;
+            
             kickButton.onClick.AddListener(OnKickClicked);
             banButton.onClick.AddListener(OnBanClicked);
             muteChatButton.onClick.AddListener(OnMuteChatClicked);
@@ -41,9 +44,11 @@ namespace Code.UI.Admin
             muteVoiceButton.onClick.AddListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.AddListener(OnUnmuteVoiceClicked);
         }
-
+        
         private void OnDisable()
         {
+            _adminPanelHandler.MutedDictionary.OnChange -= OnMutedDictionaryChange;
+            
             kickButton.onClick.RemoveListener(OnKickClicked);
             banButton.onClick.RemoveListener(OnBanClicked);
             muteChatButton.onClick.RemoveListener(OnMuteChatClicked);
@@ -51,6 +56,14 @@ namespace Code.UI.Admin
             muteVoiceButton.onClick.RemoveListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.RemoveListener(OnUnmuteVoiceClicked);
         }
+        
+        
+        private void OnMutedDictionaryChange(SyncDictionaryOperation operation, string key, AdminPanelHandler.MuteStateSync value, bool asServer)
+        {
+            if (key == Username)
+                SetMutedButtonsState(value.muteChat, value.muteVoice);
+        }
+
 
         public void Init(LobbyData.LobbyMember lobbyMemberData)
         {
@@ -59,17 +72,24 @@ namespace Code.UI.Admin
             titleDisplayText.text = _lobbyMemberData.displayName;
             roleText.text = _lobbyMemberData.Attributes.TryGetValue(LobbyController.Role, out var role) ? role : string.Empty;
             
+            if (_adminPanelHandler.MutedDictionary.TryGetValue(Username, out var muteState))
+                SetMutedButtonsState(muteState.muteChat, muteState.muteVoice);
+            else
+                SetMutedButtonsState(false, false);
+            
             SearchKey = lobbyMemberData.displayName;
         }
 
         private void OnKickClicked()
         {
+            // TODO: Kick Popup
             _adminPanelHandler.Kick(Username);
         }
 
         private void OnBanClicked()
         {
-            _adminPanelHandler.BanUser(Username);
+            // TODO: Ban Popup with time input
+            _adminPanelHandler.BanUser(Username, 0);
         }
 
         private void OnMuteChatClicked()
@@ -90,6 +110,15 @@ namespace Code.UI.Admin
         private void OnUnmuteVoiceClicked()
         {
             _adminPanelHandler.UnmuteVoice(Username);
+        }
+
+        private void SetMutedButtonsState(bool isMuteChat, bool isUnmuteVoice)
+        {
+            muteChatButton.gameObject.SetActive(!isMuteChat);
+            unmuteChatButton.gameObject.SetActive(isMuteChat);
+            
+            muteVoiceButton.gameObject.SetActive(!isUnmuteVoice);
+            unmuteVoiceButton.gameObject.SetActive(isUnmuteVoice);
         }
     }
 }
