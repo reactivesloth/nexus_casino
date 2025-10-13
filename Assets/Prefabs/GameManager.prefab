@@ -3051,6 +3051,68 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!1 &3299487296855610808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4852328202263957434}
+  - component: {fileID: 1442677960453756225}
+  m_Layer: 5
+  m_Name: Inputs
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &4852328202263957434
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3299487296855610808}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4757910873861331495}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 600, y: -509}
+  m_SizeDelta: {x: 1080, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1442677960453756225
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3299487296855610808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 1
+  m_Spacing: 20
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 1
+  m_ChildControlWidth: 0
+  m_ChildControlHeight: 0
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &3333546267488036283
 GameObject:
   m_ObjectHideFlags: 0
@@ -4308,7 +4370,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 600, y: -603}
+  m_AnchoredPosition: {x: 600, y: -643}
   m_SizeDelta: {x: 1080, y: 188}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &954130420764159341
@@ -5827,7 +5889,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4757910873861331495}
   - component: {fileID: 6307323494008618330}
-  - component: {fileID: 3337364945309609075}
+  - component: {fileID: 5008118883935493291}
   - component: {fileID: 4967533210617069003}
   m_Layer: 5
   m_Name: Popup Layout
@@ -5854,13 +5916,14 @@ RectTransform:
   - {fileID: 2956258667911712014}
   - {fileID: 2950467371062875237}
   - {fileID: 8599609233325318104}
+  - {fileID: 4852328202263957434}
   - {fileID: 7281107519378773578}
   m_Father: {fileID: 3960695893687436505}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -0.00013103458, y: -0.00006551729}
-  m_SizeDelta: {x: 1200, y: 757}
+  m_SizeDelta: {x: 1200, y: 797}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &6307323494008618330
 MonoBehaviour:
@@ -5888,7 +5951,7 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &3337364945309609075
+--- !u!114 &5008118883935493291
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -5897,9 +5960,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 5694136347352750414}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: eb74ecf196c3c4101a45f30a1c3b3718, type: 3}
+  m_Script: {fileID: 11500000, guid: 334a76a3ce02f1543af7547c584b2969, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.UI.Popup.NexusModularPopup
   backgroundColor: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 0.6}
   destroyTime: 0.5
   Title: {fileID: 3704270782790718831}
@@ -5911,6 +5974,10 @@ MonoBehaviour:
   Buttons:
   - {fileID: 714664434183942808}
   - {fileID: 2449176059382100895}
+  inputFieldPrefab: {fileID: 2423182116476751061, guid: f258faa5f762ac54abc58f46c84b0bf8, type: 3}
+  dropdownPrefab: {fileID: 5980134461053952307, guid: 48769dbd0840ef042b3473f85bbacfc1, type: 3}
+  InputGroup: {fileID: 3299487296855610808}
+  Inputs: []
 --- !u!114 &4967533210617069003
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8789,7 +8856,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 3337364945309609075}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: Ricimi.ModularPopup, Assembly-CSharp-firstpass
         m_MethodName: Close
         m_Mode: 1

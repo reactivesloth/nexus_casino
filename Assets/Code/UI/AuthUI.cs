@@ -3,6 +3,7 @@ using System.IO;
 using CC;
 using Code.API;
 using Code.API.Models;
+using Code.UI.Popup;
 using Code.Utility;
 using Proyecto26;
 using Ricimi;
@@ -37,7 +38,7 @@ namespace Code.UI
         public string resendButtonText = "Resend";
         public string resendButtonTextWithTimer = "Resend ({0})";
 
-        [Header("Results Handle")] public ModularPopupOpener popupPanel;
+        [Header("Results Handle")] public NexusModularPopupOpener popupPanel;
 
         private bool _isResendTimerActive;
         private float _resendTimer;
