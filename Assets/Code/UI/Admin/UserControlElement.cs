@@ -24,6 +24,8 @@ namespace Code.UI.Admin
 
         [Space, SerializeField] private Button muteVoiceButton;
         [SerializeField] private Button unmuteVoiceButton;
+        
+        [SerializeField] private Button promoteButton;
 
         private AdminPanelHandler _adminPanelHandler;
         private LobbyData.LobbyMember _lobbyMemberData;
@@ -47,6 +49,8 @@ namespace Code.UI.Admin
             unmuteChatButton.onClick.AddListener(OnUnmuteChatClicked);
             muteVoiceButton.onClick.AddListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.AddListener(OnUnmuteVoiceClicked);
+            
+            promoteButton.onClick.AddListener(OnPromoteButtonClicked);
         }
 
         private void OnDisable()
@@ -59,6 +63,8 @@ namespace Code.UI.Admin
             unmuteChatButton.onClick.RemoveListener(OnUnmuteChatClicked);
             muteVoiceButton.onClick.RemoveListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.RemoveListener(OnUnmuteVoiceClicked);
+            
+            promoteButton.onClick.RemoveListener(OnPromoteButtonClicked);
         }
 
 
@@ -177,6 +183,12 @@ namespace Code.UI.Admin
 
             muteVoiceButton.gameObject.SetActive(!isUnmuteVoice);
             unmuteVoiceButton.gameObject.SetActive(isUnmuteVoice);
+        }
+
+        private void OnPromoteButtonClicked()
+        {
+            //TODO: Popup
+            _adminPanelHandler.PromoteMember(Username);
         }
     }
 }
