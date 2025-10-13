@@ -5965,6 +5965,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Code.UI.Popup.NexusModularPopup
   backgroundColor: {r: 0.039215688, g: 0.039215688, b: 0.039215688, a: 0.6}
   destroyTime: 0.5
+  buttonClose: {fileID: 2420671707559449962}
   Title: {fileID: 3704270782790718831}
   Subtitle: {fileID: 5467200380675316677}
   Message: {fileID: 7921864412742149967}
@@ -5972,6 +5973,7 @@ MonoBehaviour:
   Caption: {fileID: 7062485343681620825}
   ButtonGroup: {fileID: 4881402658953288060}
   Buttons:
+  - {fileID: 2449176059382100895}
   - {fileID: 714664434183942808}
   - {fileID: 2449176059382100895}
   inputFieldPrefab: {fileID: 2423182116476751061, guid: f258faa5f762ac54abc58f46c84b0bf8, type: 3}
@@ -8278,6 +8280,7 @@ GameObject:
   - component: {fileID: 5093106775764544992}
   - component: {fileID: 914839690851501959}
   - component: {fileID: 4320918563526585785}
+  - component: {fileID: 2345631707290881980}
   m_Layer: 0
   m_Name: LobbyPopup Canvas
   m_TagString: Untagged
@@ -8383,6 +8386,29 @@ MonoBehaviour:
   mobileScale: 950
   desktopScale: 1400
   forceMobile: 0
+--- !u!114 &2345631707290881980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8874430954983144443}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96eee652dc3b84b498ae75be4465948b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.UI.Popup.NexusModularPopupOpener
+  popupPrefab: {fileID: 5694136347352750414}
+  Title: 
+  Subtitle: 
+  Message: 
+  Image: {fileID: 0}
+  TintColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  Caption: 
+  Buttons: []
+  Inputs: []
 --- !u!1 &8949738254024273596
 GameObject:
   m_ObjectHideFlags: 0
@@ -8855,19 +8881,7 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 4206175707155372488}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: Ricimi.ModularPopup, Assembly-CSharp-firstpass
-        m_MethodName: Close
-        m_Mode: 1
-        m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
 --- !u!1001 &475943727957760484
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -10839,6 +10853,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 224359097860930428, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224452331178162564, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224452331178162564, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 224452331178162564, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}
+      propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 224549901600871832, guid: db11844ca22a56c4c8acfe5ce99da848, type: 3}

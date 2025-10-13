@@ -29,16 +29,31 @@ namespace Code.UI.Popup
 		public List<ButtonInfo> Buttons;
 		public List<InputInfo> Inputs;
 
+		public NexusModularPopup LastPopup => m_popup.GetComponent<NexusModularPopup>();
+
         public override void OpenPopup()
         {
             base.OpenPopup();
             m_popup.GetComponent<NexusModularPopup>().Initialize(this);
+            ResetValues();
         }
 
         public override void ClosePopup()
         {
 	        base.ClosePopup();
 	        m_popup.GetComponent<NexusModularPopup>().Close();
+        }
+
+        private void ResetValues()
+        {
+	        Title = string.Empty;
+	        Subtitle = string.Empty;
+	        Message = string.Empty;
+	        Image = null;
+	        TintColor = Color.white;
+	        Caption = string.Empty;
+	        Buttons.Clear();
+	        Inputs.Clear();
         }
     }
 

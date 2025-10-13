@@ -131,6 +131,7 @@ namespace Code.Chat
 
         public void BanUser(string username, int time)
         {
+            Debug.Log($"BAN {username} for {time}");
             if (!ClientDataStorage.UserData.IsAdminRole)
             {
                 CommandCallback($"You can't ban users", false);
