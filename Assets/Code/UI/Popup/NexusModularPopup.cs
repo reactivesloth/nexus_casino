@@ -121,7 +121,7 @@ namespace Code.UI.Popup
             
             var input = Inputs[index];
             Destroy(input.gameObject);
-            Inputs.RemoveAt(index);
+            Inputs.Remove(input);
             InputsContainerChange();
         }
 

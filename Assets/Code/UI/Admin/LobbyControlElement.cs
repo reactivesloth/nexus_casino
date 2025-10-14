@@ -140,8 +140,7 @@ namespace Code.UI.Admin
 
         private void RemovePlayerFromPopup()
         {
-            if (_popupOpener.LastPopup.Inputs.Count > 0)
-                _popupOpener.LastPopup.RemoveInputAt(_popupOpener.Inputs.Count - 1);
+            _popupOpener.LastPopup.RemoveInputAt(_popupOpener.LastPopup.Inputs.Count - 1);
         }
 
         private void OnMoveClicked()
