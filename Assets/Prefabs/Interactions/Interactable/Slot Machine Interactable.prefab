@@ -847,13 +847,13 @@ MonoBehaviour:
   _networkObjectCache: {fileID: 791084595948481418}
   rawImage: {fileID: 0}
   targetImage: {fileID: 4849952405852889531}
-  sendMaxFps: 12
+  sendMaxFps: 8
   sendMaxFramePercent: 0.1
-  receiveMaxFps: 12
+  receiveMaxFps: 8
   receiveMaxFramePercent: 0.1
-  downscale: 1
+  downscale: 0.4
   useJpg: 1
-  jpgQuality: 100
+  jpgQuality: 25
   skipDuplicateFrames: 0
   lz4Compress: 0
   lz4Level: 0
@@ -1561,8 +1561,8 @@ MonoBehaviour:
   updateStoryUiOnLoad: {fileID: 872624224596379124}
   timeout: 15
   streamIndicator: {fileID: 0}
-  streamDownscale: 1
-  streamJpgQuality: 100
+  streamDownscale: 0.5
+  streamJpgQuality: 30
   slotMachineInteractable: {fileID: 8690079509221083420}
 --- !u!1 &8453526588274256824
 GameObject:
