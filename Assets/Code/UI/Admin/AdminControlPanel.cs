@@ -7,6 +7,7 @@ using Code.InteractionSystem;
 using Code.Network.Lobby;
 using Code.Scene.SceneObjectControl;
 using Code.UI.Popup;
+using Code.Utility;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -62,6 +63,12 @@ namespace Code.UI.Admin
             newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
         }
 
+        private void Update()
+        {
+            if (PlayerInput.Instance.OpenAdminPanelDown)
+                SetActive(!panel.activeSelf);
+        }
+
         private void OnDisable()
         {
             searchField.onValueChanged.RemoveListener(OnSearchInputChange);
@@ -73,6 +80,17 @@ namespace Code.UI.Admin
             slotsButton.onClick.RemoveListener(OnSlotsButtonClick);
             lobbiesButton.onClick.RemoveListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.RemoveListener(OnNewLobbyButtonClick);
+        }
+
+        private void SetActive(bool value)
+        {
+            if(!value)
+                CursorManager.Instance.HideCursor();
+            else
+                CursorManager.Instance.ShowCursor();
+            
+            panel.SetActive(value);
+            PlayerInput.Instance.IsBusy = value;
         }
 
         #region UI Callbacks

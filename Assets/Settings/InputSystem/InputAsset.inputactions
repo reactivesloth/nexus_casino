@@ -1,4 +1,5 @@
 {
+    "version": 1,
     "name": "InputAsset",
     "maps": [
         {
@@ -108,6 +109,15 @@
                     "name": "SwitсhChat",
                     "type": "Button",
                     "id": "8960909f-761b-463a-9c1d-2d54618f13a7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "OpenAdminPanel",
+                    "type": "Button",
+                    "id": "d286e7a1-b8aa-4f77-b069-41d2ce66c1c3",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -431,6 +441,17 @@
                     "processors": "",
                     "groups": "",
                     "action": "SwitсhChat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c13d142b-d5c6-4c0b-9982-b722b589da0d",
+                    "path": "<Keyboard>/i",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "OpenAdminPanel",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

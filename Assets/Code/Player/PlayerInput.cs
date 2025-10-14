@@ -1,4 +1,6 @@
-﻿using Code.UI;
+﻿using Code.API;
+using Code.Chat;
+using Code.UI;
 using UnityEngine;
 using Code.Utility;
 using NUnit.Framework;
@@ -242,4 +244,5 @@ public class PlayerInput : MonoBehaviour
     public bool IsScrollUpButton => ChatScrollUpButton.GetButtonDown();
     public bool IsScrollDownButton => ChatScrollDownButton.GetButtonDown();
     public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
+    public bool OpenAdminPanelDown => ClientDataStorage.UserData.IsAdminRole && _player.OpenAdminPanel is { triggered: true };
 }

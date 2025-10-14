@@ -199,6 +199,15 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""OpenAdminPanel"",
+                    ""type"": ""Button"",
+                    ""id"": ""d286e7a1-b8aa-4f77-b069-41d2ce66c1c3"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -520,6 +529,17 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
                     ""action"": ""SwitсhChat"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c13d142b-d5c6-4c0b-9982-b722b589da0d"",
+                    ""path"": ""<Keyboard>/i"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""OpenAdminPanel"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -588,6 +608,7 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
         m_Player_RMB = m_Player.FindAction("RMB", throwIfNotFound: true);
         m_Player_ChatOpen = m_Player.FindAction("ChatOpen", throwIfNotFound: true);
         m_Player_SwitсhChat = m_Player.FindAction("SwitсhChat", throwIfNotFound: true);
+        m_Player_OpenAdminPanel = m_Player.FindAction("OpenAdminPanel", throwIfNotFound: true);
     }
 
     ~@InputAsset()
@@ -680,6 +701,7 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_RMB;
     private readonly InputAction m_Player_ChatOpen;
     private readonly InputAction m_Player_SwitсhChat;
+    private readonly InputAction m_Player_OpenAdminPanel;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -739,6 +761,10 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/SwitсhChat".
         /// </summary>
         public InputAction @SwitсhChat => m_Wrapper.m_Player_SwitсhChat;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/OpenAdminPanel".
+        /// </summary>
+        public InputAction @OpenAdminPanel => m_Wrapper.m_Player_OpenAdminPanel;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -801,6 +827,9 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
             @SwitсhChat.started += instance.OnSwitсhChat;
             @SwitсhChat.performed += instance.OnSwitсhChat;
             @SwitсhChat.canceled += instance.OnSwitсhChat;
+            @OpenAdminPanel.started += instance.OnOpenAdminPanel;
+            @OpenAdminPanel.performed += instance.OnOpenAdminPanel;
+            @OpenAdminPanel.canceled += instance.OnOpenAdminPanel;
         }
 
         /// <summary>
@@ -848,6 +877,9 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
             @SwitсhChat.started -= instance.OnSwitсhChat;
             @SwitсhChat.performed -= instance.OnSwitсhChat;
             @SwitсhChat.canceled -= instance.OnSwitсhChat;
+            @OpenAdminPanel.started -= instance.OnOpenAdminPanel;
+            @OpenAdminPanel.performed -= instance.OnOpenAdminPanel;
+            @OpenAdminPanel.canceled -= instance.OnOpenAdminPanel;
         }
 
         /// <summary>
@@ -1024,5 +1056,12 @@ public partial class @InputAsset: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnSwitсhChat(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "OpenAdminPanel" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnOpenAdminPanel(InputAction.CallbackContext context);
     }
 }
