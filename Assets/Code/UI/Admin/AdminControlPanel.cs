@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.Chat;
+using Code.InteractionSystem;
 using Code.Network.Lobby;
 using Code.Scene.SceneObjectControl;
 using Code.UI.Popup;
@@ -25,7 +26,7 @@ namespace Code.UI.Admin
 
         [SerializeField] private Button sceneButton;
 
-        //[SerializeField] private Button slotsButton;
+        [SerializeField] private Button slotsButton;
         [SerializeField] private Button lobbiesButton;
         [SerializeField] private Button newLobbyButton;
 
@@ -33,7 +34,7 @@ namespace Code.UI.Admin
 
         [SerializeField] private SceneControlElement sceneControlElementPrefab;
 
-        //[SerializeField] private SlotControlElement slotControlElementPrefab;
+        [SerializeField] private SlotControlElement slotControlElementPrefab;
         [SerializeField] private LobbyControlElement lobbyControlElementPrefab;
 
         private ControlElement _currentControlPrefab;
@@ -56,7 +57,7 @@ namespace Code.UI.Admin
 
             usersButton.onClick.AddListener(OnUsersButtonClick);
             sceneButton.onClick.AddListener(OnSceneButtonClick);
-            //slotsButton.onClick.AddListener(OnSlotsButtonClick);
+            slotsButton.onClick.AddListener(OnSlotsButtonClick);
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
         }
@@ -69,7 +70,7 @@ namespace Code.UI.Admin
 
             usersButton.onClick.RemoveListener(OnUsersButtonClick);
             sceneButton.onClick.RemoveListener(OnSceneButtonClick);
-            //slotsButton.onClick.RemoveListener(OnSlotsButtonClick);
+            slotsButton.onClick.RemoveListener(OnSlotsButtonClick);
             lobbiesButton.onClick.RemoveListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.RemoveListener(OnNewLobbyButtonClick);
         }
@@ -114,12 +115,12 @@ namespace Code.UI.Admin
             UpdateScene();
         }
 
-        /*private void OnSlotsButtonClick()
+        private void OnSlotsButtonClick()
         {
             OnStartNewTab();
 
             UpdateSlots();
-        }*/
+        }
 
         private void OnLobbiesButtonClick()
         {
@@ -160,10 +161,17 @@ namespace Code.UI.Admin
             }
         }
 
-        /*private void UpdateSlots()
+        private void UpdateSlots()
         {
-
-        }*/
+            ClearContent();
+            var slots = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var slot in slots)
+            {
+                var controlElement = Instantiate(slotControlElementPrefab, contentContainer);
+                controlElement.Init(slot);
+                _controlElements.Add(controlElement);
+            }
+        }
 
         private void UpdateLobbies()
         {
