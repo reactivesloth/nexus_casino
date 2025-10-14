@@ -164,7 +164,8 @@ namespace Code.UI.Admin
         private void UpdateSlots()
         {
             ClearContent();
-            var slots = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            var slots = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include,
+                FindObjectsSortMode.None).OrderBy(s => s.IDNumber);
             foreach (var slot in slots)
             {
                 var controlElement = Instantiate(slotControlElementPrefab, contentContainer);
@@ -246,9 +247,9 @@ namespace Code.UI.Admin
             var hostName = _popupOpener.LastPopup.GetInputValue(2) == "me"
                 ? null
                 : _popupOpener.LastPopup.GetInputValue(2);
-            
+
             _adminPanelHandler.NewRoomHandle(roomName, isPrivate, hostName);
-            
+
             _popupOpener.ClosePopup();
         }
     }
