@@ -108,9 +108,9 @@ namespace Code.UI.Admin
                 case SceneControlElement:
                     UpdateScene();
                     break;
-                /*case SlotControlElement:
+                case SlotControlElement:
                     UpdateSlots();
-                    break;*/
+                    break;
                 case LobbyControlElement:
                     UpdateLobbies();
                     break;

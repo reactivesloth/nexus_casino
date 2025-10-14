@@ -1,6 +1,6 @@
 ﻿// Copyright (C) 2023 ricimi. All rights reserved.
 // This code can only be used under the standard Unity Asset Store EULA,
-// a copy of which is available at https://unity.com/legal/as-terms.
+// a copy of which is available at [https://unity.com/legal/as-terms](https://unity.com/legal/as-terms).
 
 using System;
 using System.Collections.Generic;
@@ -99,7 +99,6 @@ namespace Code.UI.Popup
 
         public void AddDropdown(string label, params string[] options)
         {
-            
             var newDropdown = Instantiate(dropdownPrefab, InputGroup.transform);
             var textPlaceHolder = newDropdown.placeholder as TMP_Text;
             if (textPlaceHolder != null)
@@ -112,6 +111,77 @@ namespace Code.UI.Popup
             Inputs.Add(newDropdown);
             
             InputsContainerChange();
+        }
+
+        public void UpdateDropdown(int index, List<string> newOptions)
+        {
+            var selectable = Inputs[index];
+            if (selectable is not TMP_Dropdown dropdown)
+                return;
+            
+            dropdown.ClearOptions();
+            dropdown.AddOptions(newOptions);
+        }
+
+        // Безопасное обновление опций дропдауна без вызова событий
+        public void SetDropdownOptions(int index, List<string> newOptions, string preferredValue = null)
+        {
+            if (index < 0 || index >= Inputs.Count)
+                return;
+            
+            var selectable = Inputs[index];
+            if (selectable is not TMP_Dropdown dropdown)
+                return;
+
+            // Сохраняем текущее значение, если preferredValue не указано
+            var currentValue = preferredValue;
+            if (string.IsNullOrEmpty(currentValue) && dropdown.options.Count > 0)
+            {
+                currentValue = dropdown.options[dropdown.value].text;
+            }
+
+            // Сохраняем текущие обработчики событий
+            var tempHandlers = new UnityEvent<int>();
+            for (int i = 0; i < dropdown.onValueChanged.GetPersistentEventCount(); i++)
+            {
+                // Копируем обработчики
+            }
+            var originalEvent = dropdown.onValueChanged;
+
+            // Временно отключаем обработчики событий
+            dropdown.onValueChanged = new TMP_Dropdown.DropdownEvent();
+
+            try
+            {
+                // Обновляем опции
+                dropdown.ClearOptions();
+                dropdown.AddOptions(newOptions);
+
+                // Пытаемся восстановить выбранное значение
+                if (!string.IsNullOrEmpty(currentValue))
+                {
+                    var foundIndex = newOptions.FindIndex(option => option == currentValue);
+                    if (foundIndex >= 0)
+                    {
+                        dropdown.value = foundIndex;
+                    }
+                    else
+                    {
+                        dropdown.value = 0; // Если значение не найдено, выбираем первое
+                    }
+                }
+                else
+                {
+                    dropdown.value = 0;
+                }
+
+                dropdown.RefreshShownValue();
+            }
+            finally
+            {
+                // Восстанавливаем обработчики событий
+                dropdown.onValueChanged = originalEvent;
+            }
         }
 
         public void RemoveInputAt(int index)
@@ -135,7 +205,7 @@ namespace Code.UI.Popup
                 case TMP_InputField inputField:
                     return inputField.text;
                 case TMP_Dropdown dropdown:
-                    return dropdown.options[dropdown.value].text;
+                    return dropdown.options.Count > 0 ? dropdown.options[dropdown.value].text : null;
                 default:
                     return null;
             }
