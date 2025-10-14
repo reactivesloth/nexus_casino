@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Code.API;
 using Code.Player;
+using Code.Utility;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
@@ -148,10 +149,10 @@ namespace CC
 
                 if (j == i)
                 {
-                    if (character.GetComponentInChildren<CharacterRoleFilter>() != null)
+                    if (character.GetComponentInChildren<RoleFilter>() != null)
                     {
                         if (ClientDataStorage.UserData.IsAdminRole !=
-                            character.GetComponentInChildren<CharacterRoleFilter>().IsAdminRole)
+                            character.GetComponentInChildren<RoleFilter>().IsAdminRole)
                         {
                             character.SetActive(false);
                             if (prevIndex > currentCharacter || currentCharacter == 0)

@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 
-namespace Code.Player
+namespace Code.Utility
 {
-    public class CharacterRoleFilter : MonoBehaviour
+    public class RoleFilter : MonoBehaviour
     {
         public bool IsAdmin;
         public bool IsHost;

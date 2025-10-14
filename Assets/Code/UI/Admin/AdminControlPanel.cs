@@ -30,6 +30,7 @@ namespace Code.UI.Admin
         [SerializeField] private Button slotsButton;
         [SerializeField] private Button lobbiesButton;
         [SerializeField] private Button newLobbyButton;
+        [SerializeField] private Button closePanelButton;
 
         [Header("Prefabs")] [SerializeField] private UserControlElement userControlElementPrefab;
 
@@ -61,6 +62,7 @@ namespace Code.UI.Admin
             slotsButton.onClick.AddListener(OnSlotsButtonClick);
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
+            closePanelButton.onClick.AddListener(OnClosePanelButtonClick);
         }
 
         private void Update()
@@ -80,15 +82,21 @@ namespace Code.UI.Admin
             slotsButton.onClick.RemoveListener(OnSlotsButtonClick);
             lobbiesButton.onClick.RemoveListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.RemoveListener(OnNewLobbyButtonClick);
+            closePanelButton.onClick.RemoveListener(OnClosePanelButtonClick);
         }
 
-        private void SetActive(bool value)
+        public void SetActive(bool value)
         {
-            if(!value)
+            if (!value)
+            {
                 CursorManager.Instance.HideCursor();
+                OnUsersButtonClick();
+            }
             else
+            {
                 CursorManager.Instance.ShowCursor();
-            
+            }
+
             panel.SetActive(value);
             PlayerInput.Instance.IsBusy = value;
         }
@@ -256,6 +264,11 @@ namespace Code.UI.Admin
             _popupOpener.Buttons.Add(createButton);
 
             _popupOpener.OpenPopup();
+        }
+
+        private void OnClosePanelButtonClick()
+        {
+            SetActive(false);
         }
 
         private void CreateLobbyClicked()

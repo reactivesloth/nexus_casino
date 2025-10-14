@@ -1,4 +1,5 @@
 using Code.Tests;
+using Code.UI.Admin;
 using Code.Utility;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,6 +9,7 @@ namespace Code.UI
     public class PauseUI : MonoBehaviour
     {
         [SerializeField] private Button continueButton;
+        [SerializeField] private Button adminButton;
         [SerializeField] private Button boutiqueButton;
         [SerializeField] private Button settingsButton;
         [SerializeField] private Button quitButton;
@@ -28,6 +30,7 @@ namespace Code.UI
         private void OnEnable()
         {
             if (continueButton != null) continueButton.onClick.AddListener(OnContinueClick);
+            if (adminButton != null) adminButton.onClick.AddListener(OnAdminButtonClick);
             if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClick);
             if (boutiqueButton != null) boutiqueButton.onClick.AddListener(OnBoutiqueClick);
             if (quitButton != null) quitButton.onClick.AddListener(OnQuitClick);
@@ -36,6 +39,7 @@ namespace Code.UI
         private void OnDisable()
         {
             if (continueButton != null) continueButton.onClick.RemoveListener(OnContinueClick);
+            if (adminButton != null) adminButton.onClick.RemoveListener(OnAdminButtonClick);
             if (settingsButton != null) settingsButton.onClick.RemoveListener(OnSettingsClick);
             if (boutiqueButton != null) settingsButton.onClick.RemoveListener(OnBoutiqueClick);
             if (quitButton != null) quitButton.onClick.RemoveListener(OnQuitClick);
@@ -57,6 +61,12 @@ namespace Code.UI
             }
         }
 
+        private void OnAdminButtonClick()
+        {
+            AdminControlPanel panel = FindAnyObjectByType<AdminControlPanel>();
+            panel.SetActive(true);
+        }
+        
         private void OnBoutiqueClick()
         {
             gameObject.GetComponent<SceneLoader>().Load("Character Customization");
