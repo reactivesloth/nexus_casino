@@ -187,8 +187,22 @@ namespace Code.UI.Admin
 
         private void OnPromoteButtonClicked()
         {
-            //TODO: Popup
-            _adminPanelHandler.PromoteMember(Username);
+            _popupOpener.Title = "Promote";
+            _popupOpener.Subtitle = $"Do You want promote {Username}?";
+
+            var promoteButtonInfo = new ButtonInfo
+            {
+                Label = "Promote",
+                ClosePopupWhenClicked = true,
+                OnClickedEvent = new Button.ButtonClickedEvent()
+            };
+            promoteButtonInfo.OnClickedEvent.AddListener(Promote);
+            
+            _popupOpener.Buttons.Add(promoteButtonInfo);
+            
+            _popupOpener.OpenPopup();
         }
+        
+        private void Promote() => _adminPanelHandler.PromoteMember(Username);
     }
 }
