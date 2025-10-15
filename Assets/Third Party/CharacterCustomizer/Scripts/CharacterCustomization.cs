@@ -216,6 +216,11 @@ namespace CC
 
         public void SaveToJSON(string name = null)
         {
+            var bodyTypeProp =
+                StoredCharacterData.Blendshapes.Find(c => c.propertyName == "BodyCustomization_Weight");
+            if(bodyTypeProp != null)
+                StoredCharacterData.Blendshapes.Remove(bodyTypeProp);
+            
             //Create save file
             if (!File.Exists(SavePath)) createSaveFile();
 
