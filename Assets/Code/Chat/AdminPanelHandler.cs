@@ -697,7 +697,7 @@ namespace Code.Chat
                 return;
             }
 
-            sceneObjectController.MakeAction(objectName, newState);
+            sceneObjectController.SetState(objectName, newState);
         }
 
         #endregion

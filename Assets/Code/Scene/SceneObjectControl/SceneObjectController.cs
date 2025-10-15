@@ -34,15 +34,15 @@ namespace Code.Scene.SceneObjectControl
 
         private void OnEnable()
         {
-            ClientManager.RegisterBroadcast<StateMessage>(MakeAction);
-            ServerManager.RegisterBroadcast<StateMessage>(ServerReceiveAction);
+            ClientManager.RegisterBroadcast<StateMessage>(ClientReceiveState);
+            ServerManager.RegisterBroadcast<StateMessage>(ServerReceiveState);
             SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
         private void OnDisable()
         {
-            ClientManager.UnregisterBroadcast<StateMessage>(MakeAction);
-            ServerManager.UnregisterBroadcast<StateMessage>(ServerReceiveAction);
+            ClientManager.UnregisterBroadcast<StateMessage>(ClientReceiveState);
+            ServerManager.UnregisterBroadcast<StateMessage>(ServerReceiveState);
             SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
 
@@ -60,37 +60,44 @@ namespace Code.Scene.SceneObjectControl
         /// </summary>
         /// <param name="objectName"></param>
         /// <param name="state"></param>
-        public void MakeAction(string objectName, string state)
+        public void SetState(string objectName, string state)
         {
             if (GetStatesByName(objectName) == null)
                 return;
+            
             var actionMessage = new StateMessage { ObjectName = objectName, Action = state };
-            if (ServerManager.Started)
-                ServerManager.Broadcast(actionMessage);
-            else if (ClientManager.Started)
-                ClientManager.Broadcast(actionMessage);
+            Debug.Log($"[SceneControl] {objectName} is making action {state}");
+            
+            ClientManager.Broadcast(actionMessage);
         }
 
         private void OnClientConnectionState(NetworkConnection conn, bool asServer)
         {
-            if (!asServer) return;
+            if (!asServer) 
+                return;
+            
             foreach (var action in _lastStates.Values)
             {
                 ServerManager.Broadcast(conn, action);
             }
         }
 
-        private void ServerReceiveAction(NetworkConnection conn, StateMessage message,
+        private void ServerReceiveState(NetworkConnection conn, StateMessage message,
             Channel channel = Channel.Reliable)
         {
+            Debug.Log($"[SceneControl.Server] {message.ObjectName} is making action {message.Action}");
+            
             _lastStates[message.ObjectName] = message;
             ServerManager.Broadcast(message);
         }
 
-        private void MakeAction(StateMessage message, Channel channel = Channel.Reliable)
+        private void ClientReceiveState(StateMessage message, Channel channel = Channel.Reliable)
         {
             if (!_sceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
                 return;
+            
+            Debug.Log($"[SceneControl.Client] {message.ObjectName} is making action {message.Action}");
+            
             _lastStates[message.ObjectName] = message;
             sceneObject.SetState(message.Action);
         }

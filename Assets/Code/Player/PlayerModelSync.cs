@@ -1,5 +1,4 @@
 using System.Collections;
-using System.IO;
 using CC;
 using FishNet.Component.Animating;
 using FishNet.Connection;
@@ -89,7 +88,7 @@ namespace Code.Player
         private IEnumerator UpdateLoop()
         {
             var wait = new WaitForSeconds(updateAvatarInterval);
-            for (var i = 0; i < 50; i++)
+            while (true)
             {
                 TransmitLocalCharacter();
                 yield return wait;

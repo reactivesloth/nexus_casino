@@ -443,8 +443,6 @@ namespace Code.Network.Lobby
                 currentLobby.attributeValues[i] = attributes[i]?.Data?.Value.AsUtf8;
             }
 
-            Debug.Log(attrKeys);
-
             var newHostId = currentLobby.Attributes.TryGetValue(HostID, out var newHostIdValue)
                 ? newHostIdValue
                 : string.Empty;
