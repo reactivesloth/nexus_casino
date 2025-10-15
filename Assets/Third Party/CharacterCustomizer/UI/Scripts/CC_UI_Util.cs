@@ -10,14 +10,28 @@ namespace CC
         public void Initialize(CharacterCustomization customizerScript)
         {
             customizer = customizerScript;
-
+            
             var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
 
             foreach (var element in interfaces)
             {
-                element?.InitializeUIElement(customizerScript, this);
+                element?.InitializeUIElement(customizer, this);
+            }
+            
+            //Invoke(nameof(InitDelay), 1f);
+        }
+
+        private void InitDelay()
+        {
+            var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
+
+            foreach (var element in interfaces)
+            {
+                element?.InitializeUIElement(customizer, this);
             }
         }
+        
+        private void OnLoad() => customizer.LoadFromJSON();
 
         //Refresh UI elements, for example after loading a different preset
         public void refreshUI()
@@ -32,13 +46,13 @@ namespace CC
 
         public void characterNext()
         {
-            saveToJSON();
+            // saveToJSON();
             if (CC_UI_Manager.instance != null) CC_UI_Manager.instance.characterNext();
         }
 
         public void characterPrev()
         {
-            saveToJSON();
+            // saveToJSON();
             if (CC_UI_Manager.instance != null) CC_UI_Manager.instance.characterPrev();
         }
 

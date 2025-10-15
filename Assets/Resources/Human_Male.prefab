@@ -2022,6 +2022,7 @@ MonoBehaviour:
     TextureProperties: []
     ColorProperties: []
   initializeOnStartInsteadOfAwake: 0
+  initDelay: 0
 --- !u!95 &1327933454218635796
 Animator:
   serializedVersion: 7
@@ -2844,7 +2845,7 @@ MonoBehaviour:
       previewDisplayMode: 0
       collectionExpand: 0
     trigger: 0.80999994
-  configReady: 1
+  configReady: 0
   configNotReadyNotified: 0
   warnOnNullRefs: 1
   isDebug: 0
@@ -2997,10 +2998,10 @@ MonoBehaviour:
   - {fileID: 8802292562543951320}
   - {fileID: -2449723682706565964}
   - {fileID: 5620196158516784120}
-  - {fileID: 0}
   - {fileID: -626117860274373281}
   - {fileID: 7121388327242976003}
   - {fileID: 7525513152038220126}
+  - {fileID: -2258626244629959312}
   - {fileID: 8144962258630108305}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -3130,7 +3131,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a055d70f678732b448d01e01e69c387c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 4
+  _componentIndexCache: 3
   _addedNetworkObject: {fileID: 92631491164151932}
   _networkObjectCache: {fileID: 92631491164151932}
   updateAvatarInterval: 10
@@ -3161,7 +3162,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f3277981fb055640bbf275ba1c84357, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 5
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 92631491164151932}
   _networkObjectCache: {fileID: 92631491164151932}
   playerName: {fileID: 1423232093092712731}
@@ -3277,7 +3278,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85e6eb3dc92b4b0ab56eb14daf51d04a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 6
+  _componentIndexCache: 5
   _addedNetworkObject: {fileID: 6120315999404777701, guid: 4145ad3fa7f2f45458091f01dc142cc6, type: 3}
   _networkObjectCache: {fileID: 92631491164151932}
   trackingTransform: {fileID: 0}
@@ -3308,9 +3309,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58b08fc907cb0bb42b83809ca16ca024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerInteractionMigrator
-  _componentIndexCache: 255
+  _componentIndexCache: 6
   _addedNetworkObject: {fileID: 92631491164151932}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 92631491164151932}
   playerInteraction: {fileID: -2968260864419366097}
 --- !u!1 &1148177878228989410 stripped
 GameObject:
@@ -4747,7 +4748,7 @@ MonoBehaviour:
   Type: 21
   Inverted: 0
   currentValue: 1
-  alpha: 1
+  alpha: 0.957
   updates: 0
   ragdolling: 0
   constraintRoot: {fileID: 0}

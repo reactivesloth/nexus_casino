@@ -2123,6 +2123,7 @@ MonoBehaviour:
     TextureProperties: []
     ColorProperties: []
   initializeOnStartInsteadOfAwake: 0
+  initDelay: 0
 --- !u!205 &4959506577429846591
 LODGroup:
   m_ObjectHideFlags: 0
@@ -2981,7 +2982,7 @@ MonoBehaviour:
       previewDisplayMode: 0
       collectionExpand: 0
     trigger: 0.80999994
-  configReady: 1
+  configReady: 0
   configNotReadyNotified: 0
   warnOnNullRefs: 1
   isDebug: 0
@@ -3134,10 +3135,10 @@ MonoBehaviour:
   - {fileID: 3849972420961721490}
   - {fileID: 1343710114766049718}
   - {fileID: -3019385570368759620}
-  - {fileID: 0}
   - {fileID: -6820189403691583383}
   - {fileID: 7756601534163858182}
   - {fileID: -9218759975078214841}
+  - {fileID: -2233349092041925620}
   - {fileID: 4964559403302773656}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -3163,7 +3164,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 6
+  <PrefabId>k__BackingField: 5
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 9170617792454009809
   <SceneId>k__BackingField: 0
@@ -3267,7 +3268,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a055d70f678732b448d01e01e69c387c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 4
+  _componentIndexCache: 3
   _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   updateAvatarInterval: 10
@@ -3298,7 +3299,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f3277981fb055640bbf275ba1c84357, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 5
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 4352281537206514680}
   _networkObjectCache: {fileID: 4352281537206514680}
   playerName: {fileID: 8129302933125826643}
@@ -3414,7 +3415,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85e6eb3dc92b4b0ab56eb14daf51d04a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 6
+  _componentIndexCache: 5
   _addedNetworkObject: {fileID: 6120315999404777701, guid: 4145ad3fa7f2f45458091f01dc142cc6, type: 3}
   _networkObjectCache: {fileID: 4352281537206514680}
   trackingTransform: {fileID: 0}
@@ -3445,9 +3446,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58b08fc907cb0bb42b83809ca16ca024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerInteractionMigrator
-  _componentIndexCache: 255
+  _componentIndexCache: 6
   _addedNetworkObject: {fileID: 4352281537206514680}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 4352281537206514680}
   playerInteraction: {fileID: 858145957491498471}
 --- !u!1 &1292025462828639847 stripped
 GameObject:

@@ -58,6 +58,7 @@ namespace CC
         //Async loading
         private Coroutine activeCoroutine;
         [SerializeField] private bool initializeOnStartInsteadOfAwake;
+        [SerializeField] private float initDelay = 1f;
 
         //Store character LOD size for hair/apparel bounds
         private float mainLODSize;
@@ -67,13 +68,13 @@ namespace CC
         private void Awake()
         {
             if (!initializeOnStartInsteadOfAwake)
-                InitializeScript();
+                Invoke(nameof(InitializeScript), initDelay);
         }
 
         private void Start()
         {
             if (initializeOnStartInsteadOfAwake)
-                InitializeScript();
+                Invoke(nameof(InitializeScript), initDelay);
         }
 
         private void InitializeScript()
