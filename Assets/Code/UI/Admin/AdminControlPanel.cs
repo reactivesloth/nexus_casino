@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,6 +62,8 @@ namespace Code.UI.Admin
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
             closePanelButton.onClick.AddListener(OnClosePanelButtonClick);
+
+            OnUsersButtonClick();
         }
 
         private void Update()
@@ -165,8 +166,9 @@ namespace Code.UI.Admin
         private void UpdateUsers()
         {
             ClearContent();
-            // состояние для отображения: имя, роль, муты
+            
             var lobbyMembers = LobbyVariables.Instance.currentLobby.lobbyMembers;
+            
             foreach (var lobbyMember in lobbyMembers)
             {
                 var controlElement = Instantiate(userControlElementPrefab, contentContainer);

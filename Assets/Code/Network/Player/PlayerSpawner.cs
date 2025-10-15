@@ -157,8 +157,13 @@ namespace Code.Network.Player
         private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
         {
             if (args.ConnectionState == RemoteConnectionState.Stopped && conn != null)
-            {
+            {   
                 _playerTypes.Remove(conn);
+                
+                var disconnectedUsername = SpawnedPlayerData_Server.TryGetValue(conn, out var usedData) ? usedData.username : null;
+                if (disconnectedUsername != null) 
+                    NameConnectionsData_Server.Remove(disconnectedUsername);
+                
                 SpawnedPlayerData_Server.Remove(conn);
                 for (int i = _dontSpawn.Count - 1; i >= 0; i--)
                     if (_dontSpawn[i] == conn)
