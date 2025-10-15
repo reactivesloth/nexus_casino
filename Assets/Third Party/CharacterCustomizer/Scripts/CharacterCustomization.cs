@@ -68,13 +68,21 @@ namespace CC
         private void Awake()
         {
             if (!initializeOnStartInsteadOfAwake)
-                Invoke(nameof(InitializeScript), initDelay);
+                InternalInitCall();
         }
 
         private void Start()
         {
             if (initializeOnStartInsteadOfAwake)
+                InternalInitCall();
+        }
+
+        private void InternalInitCall()
+        {
+            if (initDelay > 0)
                 Invoke(nameof(InitializeScript), initDelay);
+            else
+                InitializeScript();
         }
 
         private void InitializeScript()
