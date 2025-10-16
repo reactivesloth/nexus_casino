@@ -4040,7 +4040,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 230219267}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.000000007450581, y: 0.7071068, z: 0.000000022351742, w: 0.70710677}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -10470,7 +10470,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 466140099}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 0.7071068, z: 0, w: 0.7071068}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -10479,7 +10479,7 @@ Transform:
   - {fileID: 2762800339405743489}
   - {fileID: 4974724441661562304}
   m_Father: {fileID: 6151901425959616043}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!64 &468305720
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -12777,11 +12777,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6011594845780862086, guid: 09f765b02088b3b4a87ea04b93f6a185, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -754.7555
+      value: -754.75555
       objectReference: {fileID: 0}
     - target: {fileID: 6011594845780862086, guid: 09f765b02088b3b4a87ea04b93f6a185, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 933.22546
+      value: 933.2256
       objectReference: {fileID: 0}
     - target: {fileID: 6011594845780862086, guid: 09f765b02088b3b4a87ea04b93f6a185, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
@@ -21520,6 +21520,157 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: -3961159799443682896, guid: efb4101d4450de544bdaedf929245ac5, type: 3}
+--- !u!1 &1047757601
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1047757602}
+  - component: {fileID: 1047757603}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1047757602
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1047757601}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 709193603186962659}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!120 &1047757603
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1047757601}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21cd96ec19888a9478b5bb515ba1c43e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.49999934
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0.18449755
+        outSlope: 0.18449755
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.19496858
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!64 &1057176439
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -31799,6 +31950,157 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8043451613573980121, guid: 1f499c4571f06d648840a79b64d99e8a, type: 3}
   m_PrefabInstance: {fileID: 883689121}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1301954357
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1301954358}
+  - component: {fileID: 1301954359}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1301954358
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1301954357}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8753348625568217524}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!120 &1301954359
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1301954357}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21cd96ec19888a9478b5bb515ba1c43e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.49999934
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0.18449755
+        outSlope: 0.18449755
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.19496858
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1001 &1303307114
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -33822,6 +34124,157 @@ MonoBehaviour:
   IsAdmin: 1
   IsHost: 1
   IsModerator: 1
+--- !u!1 &1394141673
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1394141674}
+  - component: {fileID: 1394141675}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1394141674
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1394141673}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8362694537495114532}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!120 &1394141675
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1394141673}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21cd96ec19888a9478b5bb515ba1c43e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.49999934
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0.18449755
+        outSlope: 0.18449755
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.19496858
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1 &1396534160
 GameObject:
   m_ObjectHideFlags: 0
@@ -35242,6 +35695,126 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+        - m_Target: {fileID: 8274069338482787876}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7244793200480974531}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 9185360728065785407}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7244793200480974531}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 5706743219621572453}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7575534558901183565}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 5385592144011718969}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7743526109003652734}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 8385709703338824537}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 8503533232696111554}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
   - stateName: enable
     stateAction:
       m_PersistentCalls:
@@ -35306,7 +35879,127 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 1
           m_CallState: 2
-  - stateName: enable_with_rotate
+        - m_Target: {fileID: 8274069338482787876}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7244793200480974531}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 9185360728065785407}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7244793200480974531}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 5706743219621572453}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7575534558901183565}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 5385592144011718969}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 7743526109003652734}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 8385709703338824537}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+        - m_Target: {fileID: 8503533232696111554}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 0
+          m_CallState: 2
+  - stateName: enable_with_rotation
     stateAction:
       m_PersistentCalls:
         m_Calls:
@@ -35361,6 +36054,126 @@ MonoBehaviour:
         - m_Target: {fileID: 3366381807448763253}
           m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
           m_MethodName: SetActive
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 8274069338482787876}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 7244793200480974531}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 9185360728065785407}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 7244793200480974531}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 5706743219621572453}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 7575534558901183565}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 5385592144011718969}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 7743526109003652734}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 8385709703338824537}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
+          m_Mode: 6
+          m_Arguments:
+            m_ObjectArgument: {fileID: 0}
+            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+            m_IntArgument: 0
+            m_FloatArgument: 0
+            m_StringArgument: 
+            m_BoolArgument: 1
+          m_CallState: 2
+        - m_Target: {fileID: 8503533232696111554}
+          m_TargetAssemblyTypeName: Code.Scene.PingPongRotator, Assembly-CSharp
+          m_MethodName: set_enabled
           m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
@@ -38567,6 +39380,157 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: 2762472744948416827, guid: 4526c2f8a26c6e0438c76968884ffff0, type: 3}
+--- !u!1 &1772843191
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1772843192}
+  - component: {fileID: 1772843193}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1772843192
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772843191}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2762800339405743489}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!120 &1772843193
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1772843191}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21cd96ec19888a9478b5bb515ba1c43e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.49999934
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0.18449755
+        outSlope: 0.18449755
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.19496858
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1001 &1778345471
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -41046,6 +42010,157 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 8043451613573980121, guid: 1f499c4571f06d648840a79b64d99e8a, type: 3}
   m_PrefabInstance: {fileID: 2115858928}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1968478911
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1968478912}
+  - component: {fileID: 1968478913}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1968478912
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1968478911}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4974724441661562304}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!120 &1968478913
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1968478911}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21cd96ec19888a9478b5bb515ba1c43e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.49999934
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0.18449755
+        outSlope: 0.18449755
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.19496858
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!64 &1970285544
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -45180,6 +46295,157 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1864641424}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2112392138
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2112392139}
+  - component: {fileID: 2112392140}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2112392139
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2112392138}
+  serializedVersion: 2
+  m_LocalRotation: {x: 1, y: 0, z: 0, w: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2285440617210654936}
+  m_LocalEulerAnglesHint: {x: 180, y: 0, z: 0}
+--- !u!120 &2112392140
+LineRenderer:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2112392138}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 0
+  m_LightProbeUsage: 0
+  m_ReflectionProbeUsage: 0
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 21cd96ec19888a9478b5bb515ba1c43e, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_Positions:
+  - {x: 0, y: 0, z: 0}
+  - {x: 0, y: 0, z: 1}
+  m_Parameters:
+    serializedVersion: 3
+    widthMultiplier: 0.1
+    widthCurve:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0.49999934
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 0
+        inSlope: 0.18449755
+        outSlope: 0.18449755
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.19496858
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    colorGradient:
+      serializedVersion: 2
+      key0: {r: 1, g: 1, b: 1, a: 1}
+      key1: {r: 1, g: 1, b: 1, a: 1}
+      key2: {r: 0, g: 0, b: 0, a: 0}
+      key3: {r: 0, g: 0, b: 0, a: 0}
+      key4: {r: 0, g: 0, b: 0, a: 0}
+      key5: {r: 0, g: 0, b: 0, a: 0}
+      key6: {r: 0, g: 0, b: 0, a: 0}
+      key7: {r: 0, g: 0, b: 0, a: 0}
+      ctime0: 0
+      ctime1: 65535
+      ctime2: 0
+      ctime3: 0
+      ctime4: 0
+      ctime5: 0
+      ctime6: 0
+      ctime7: 0
+      atime0: 0
+      atime1: 65535
+      atime2: 0
+      atime3: 0
+      atime4: 0
+      atime5: 0
+      atime6: 0
+      atime7: 0
+      m_Mode: 0
+      m_ColorSpace: -1
+      m_NumColorKeys: 2
+      m_NumAlphaKeys: 2
+    numCornerVertices: 0
+    numCapVertices: 0
+    alignment: 0
+    textureMode: 0
+    textureScale: {x: 1, y: 1}
+    shadowBias: 0.5
+    generateLightingData: 0
+  m_MaskInteraction: 0
+  m_UseWorldSpace: 0
+  m_Loop: 0
+  m_ApplyActiveColorSpace: 1
 --- !u!1001 &2115858928
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -45491,6 +46757,7 @@ GameObject:
   - component: {fileID: 4310595815047592880}
   - component: {fileID: 346887507147867912}
   - component: {fileID: 7575534558901183564}
+  - component: {fileID: 7575534558901183565}
   m_Layer: 0
   m_Name: SpotForScene.003
   m_TagString: Untagged
@@ -45814,6 +47081,7 @@ GameObject:
   - component: {fileID: 5332871060053561590}
   - component: {fileID: 7244793200480974530}
   - component: {fileID: 1377657956733597788}
+  - component: {fileID: 7244793200480974531}
   m_Layer: 0
   m_Name: SpotForScene.001
   m_TagString: Untagged
@@ -46395,6 +47663,7 @@ GameObject:
   - component: {fileID: 2285440617210654936}
   - component: {fileID: 8373687746167323720}
   - component: {fileID: 8034400350531862895}
+  - component: {fileID: 8373687746167323721}
   m_Layer: 0
   m_Name: LaserForScene.001
   m_TagString: Untagged
@@ -46434,11 +47703,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7993144860425897250}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.000000007450581, y: 0.7071068, z: 0.000000022351742, w: 0.70710677}
-  m_LocalPosition: {x: 0, y: -0.001320006, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: -0.0013200202, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1047757602}
   m_Father: {fileID: 230219268}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &815933999779772869
@@ -46492,6 +47762,7 @@ GameObject:
   - component: {fileID: 3469620290211507398}
   - component: {fileID: 5706743219621572452}
   - component: {fileID: 1597820236905789214}
+  - component: {fileID: 5706743219621572453}
   m_Layer: 0
   m_Name: SpotForScene_holder.002
   m_TagString: Untagged
@@ -46790,7 +48061,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6142278872659586172}
   serializedVersion: 2
-  m_LocalRotation: {x: -2.379549e-10, y: -0.113879, z: -0.0000000024824192, w: 0.99349463}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.000000028610229, y: 0.0000000011903466, z: -0.000000014305114}
   m_LocalScale: {x: 0.9999998, y: 1.0000001, z: 0.99999994}
   m_ConstrainProportionsScale: 0
@@ -47314,6 +48585,7 @@ GameObject:
   - component: {fileID: 3203687465919304851}
   - component: {fileID: 8503533232696111553}
   - component: {fileID: 5759034597617741511}
+  - component: {fileID: 8503533232696111554}
   m_Layer: 0
   m_Name: SpotForScene.008
   m_TagString: Untagged
@@ -47640,6 +48912,7 @@ GameObject:
   - component: {fileID: 8274069338482787875}
   - component: {fileID: 688336883186047531}
   - component: {fileID: 3828603247024795939}
+  - component: {fileID: 8274069338482787876}
   m_Layer: 0
   m_Name: SpotForScene_holder
   m_TagString: Untagged
@@ -47856,11 +49129,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 601995267541692323}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0000000074505797, y: 0.7071068, z: 0.00000002235174, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: -0.001332995, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.00000005055599, w: 1}
+  m_LocalPosition: {x: 0, y: -0.0013329844, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 2112392139}
   m_Father: {fileID: 466140100}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &2299125988000650055
@@ -48006,7 +49280,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: c9d333fe9f86fd34da05ae6c32c580b1, type: 2}
   - {fileID: 2100000, guid: b394bc74d7f2bb1478eb113cfa75aefd, type: 2}
-  - {fileID: 2100000, guid: 6d3dac69439fda744851c161b824a4e6, type: 2}
+  - {fileID: 2100000, guid: cdcdd1d700a60a542a0eeada88a5e784, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -48110,11 +49384,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7235701857042502386}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0000000074505797, y: 0.7071068, z: 0.00000002235174, w: 0.7071068}
+  m_LocalRotation: {x: -0, y: -0, z: 0.00000005055599, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1772843192}
   m_Father: {fileID: 466140100}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &2807171500641747803
@@ -48233,6 +49508,7 @@ GameObject:
   - component: {fileID: 4974724441661562304}
   - component: {fileID: 858689385692373131}
   - component: {fileID: 4616069155115949119}
+  - component: {fileID: 4974724441661562305}
   m_Layer: 0
   m_Name: LaserForScene.003
   m_TagString: Untagged
@@ -48454,7 +49730,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: c9d333fe9f86fd34da05ae6c32c580b1, type: 2}
   - {fileID: 2100000, guid: b394bc74d7f2bb1478eb113cfa75aefd, type: 2}
-  - {fileID: 2100000, guid: 6d3dac69439fda744851c161b824a4e6, type: 2}
+  - {fileID: 2100000, guid: cdcdd1d700a60a542a0eeada88a5e784, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -48488,6 +49764,7 @@ GameObject:
   - component: {fileID: 8753348625568217524}
   - component: {fileID: 8986872569399085725}
   - component: {fileID: 5381908113259506899}
+  - component: {fileID: 8986872569399085726}
   m_Layer: 0
   m_Name: LaserForScene.010
   m_TagString: Untagged
@@ -48867,6 +50144,7 @@ GameObject:
   - component: {fileID: 6759186483970093142}
   - component: {fileID: 8385709703338824536}
   - component: {fileID: 5229789163993916313}
+  - component: {fileID: 8385709703338824537}
   m_Layer: 0
   m_Name: SpotForScene_holder.004
   m_TagString: Untagged
@@ -48901,7 +50179,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: c9d333fe9f86fd34da05ae6c32c580b1, type: 2}
   - {fileID: 2100000, guid: b394bc74d7f2bb1478eb113cfa75aefd, type: 2}
-  - {fileID: 2100000, guid: 6d3dac69439fda744851c161b824a4e6, type: 2}
+  - {fileID: 2100000, guid: cdcdd1d700a60a542a0eeada88a5e784, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -49390,7 +50668,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3719642256257241814, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 633.83997
+      value: 633.84
       objectReference: {fileID: 0}
     - target: {fileID: 3719642256257241814, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -49414,7 +50692,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4026884115377247438, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 633.83997
+      value: 633.84
       objectReference: {fileID: 0}
     - target: {fileID: 4026884115377247438, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -49470,11 +50748,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5201678720774996508, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 633.83997
+      value: 633.84
       objectReference: {fileID: 0}
     - target: {fileID: 5201678720774996508, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 690.66003
+      value: 690.66
       objectReference: {fileID: 0}
     - target: {fileID: 5202409958849756402, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_SizeDelta.x
@@ -49518,7 +50796,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6138498058857551029, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 1695.4102
+      value: 1695.41
       objectReference: {fileID: 0}
     - target: {fileID: 6138498058857551029, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -49634,7 +50912,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7253825517543122544, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 77.31836
+      value: 77.31842
       objectReference: {fileID: 0}
     - target: {fileID: 7253825517543122544, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -49650,7 +50928,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7996634514674596427, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 1857.9001
+      value: 1857.9
       objectReference: {fileID: 0}
     - target: {fileID: 7996634514674596427, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -49722,11 +51000,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8998874593209318349, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 1857.9001
+      value: 1857.9
       objectReference: {fileID: 0}
     - target: {fileID: 8998874593209318349, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 875.1938
+      value: 875.1937
       objectReference: {fileID: 0}
     - target: {fileID: 9133097808982035976, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
       propertyPath: m_Name
@@ -49818,7 +51096,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: c9d333fe9f86fd34da05ae6c32c580b1, type: 2}
   - {fileID: 2100000, guid: b394bc74d7f2bb1478eb113cfa75aefd, type: 2}
-  - {fileID: 2100000, guid: 6d3dac69439fda744851c161b824a4e6, type: 2}
+  - {fileID: 2100000, guid: cdcdd1d700a60a542a0eeada88a5e784, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -50160,13 +51438,40 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2993588073696943346}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0000000074505797, y: 0.7071068, z: 0.00000002235174, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.001358005, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: 0.00000005055599, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0013580157, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1968478912}
   m_Father: {fileID: 466140100}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!114 &4974724441661562305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2993588073696943346}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: 0
+  maxAngleX: 0
+  minAngleY: -20
+  maxAngleY: 15
+  minAngleZ: 0
+  maxAngleZ: 0
+  speedX: 8
+  speedY: 8
+  speedZ: 8
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &4996947130605923054
 GameObject:
   m_ObjectHideFlags: 0
@@ -50646,7 +51951,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: c9d333fe9f86fd34da05ae6c32c580b1, type: 2}
   - {fileID: 2100000, guid: b394bc74d7f2bb1478eb113cfa75aefd, type: 2}
-  - {fileID: 2100000, guid: 6d3dac69439fda744851c161b824a4e6, type: 2}
+  - {fileID: 2100000, guid: cdcdd1d700a60a542a0eeada88a5e784, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -50680,6 +51985,7 @@ GameObject:
   - component: {fileID: 4677376272619200958}
   - component: {fileID: 877088295969966762}
   - component: {fileID: 2461677624713174094}
+  - component: {fileID: 5385592144011718969}
   m_Layer: 0
   m_Name: SpotForScene_holder.003
   m_TagString: Untagged
@@ -50687,6 +51993,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &5385592144011718969
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5385592144011718968}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 0
+  rotateZ: 1
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -60
+  maxAngleY: 60
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: 5
+  speedZ: 5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &5420155638723932278
 GameObject:
   m_ObjectHideFlags: 0
@@ -50979,6 +52311,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 873749499030595575}
   m_Mesh: {fileID: 2293392160618027257, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &5706743219621572453
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 873749499030595575}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 0
+  rotateZ: 1
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -60
+  maxAngleY: 60
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: -5
+  speedZ: -5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!33 &5739261545613007217
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -51214,6 +52572,7 @@ GameObject:
   - component: {fileID: 9185360728065785406}
   - component: {fileID: 1123462432654928230}
   - component: {fileID: 275051704556736714}
+  - component: {fileID: 9185360728065785407}
   m_Layer: 0
   m_Name: SpotForScene_holder.001
   m_TagString: Untagged
@@ -51454,6 +52813,7 @@ GameObject:
   - component: {fileID: 1278533747606283440}
   - component: {fileID: 5739261545613007217}
   - component: {fileID: 4350404030187889049}
+  - component: {fileID: 6142278872659586173}
   m_Layer: 0
   m_Name: SpotForScene
   m_TagString: Untagged
@@ -51461,6 +52821,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &6142278872659586173
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6142278872659586172}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -15
+  maxAngleY: 15
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: 5
+  speedZ: 5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!4 &6151901425959616043
 Transform:
   m_ObjectHideFlags: 0
@@ -51988,6 +53374,7 @@ GameObject:
   - component: {fileID: 2762800339405743489}
   - component: {fileID: 7689345351892589043}
   - component: {fileID: 4125114341604818227}
+  - component: {fileID: 7689345351892589044}
   m_Layer: 0
   m_Name: LaserForScene.002
   m_TagString: Untagged
@@ -52019,6 +53406,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 361542894387176269}
   m_Mesh: {fileID: 3790213349434252153, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &7244793200480974531
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 361542894387176269}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -15
+  maxAngleY: 15
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: -5
+  speedZ: -5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!4 &7249516321373708431
 Transform:
   m_ObjectHideFlags: 0
@@ -52330,6 +53743,32 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7575534558901183565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 89649970790411063}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -15
+  maxAngleY: 15
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: 5
+  speedZ: 5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!4 &7638043865223043598
 Transform:
   m_ObjectHideFlags: 0
@@ -52420,6 +53859,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7235701857042502386}
   m_Mesh: {fileID: 643804371652783583, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &7689345351892589044
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7235701857042502386}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: 0
+  maxAngleX: 0
+  minAngleY: -20
+  maxAngleY: 15
+  minAngleZ: 0
+  maxAngleZ: 0
+  speedX: 9
+  speedY: 9
+  speedZ: 9
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &7697365607982063558
 GameObject:
   m_ObjectHideFlags: 0
@@ -52562,6 +54027,7 @@ GameObject:
   - component: {fileID: 4656871905456258208}
   - component: {fileID: 1332281632335039938}
   - component: {fileID: 967631349799582654}
+  - component: {fileID: 7743526109003652734}
   m_Layer: 0
   m_Name: SpotForScene.006
   m_TagString: Untagged
@@ -52569,6 +54035,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &7743526109003652734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7743526109003652733}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -15
+  maxAngleY: 15
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: 5
+  speedZ: 5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &7771103454637732371
 GameObject:
   m_ObjectHideFlags: 0
@@ -52958,6 +54450,7 @@ GameObject:
   - component: {fileID: 709193603186962659}
   - component: {fileID: 370209150780741985}
   - component: {fileID: 3218059669826853144}
+  - component: {fileID: 7993144860425897251}
   m_Layer: 0
   m_Name: LaserForScene.004
   m_TagString: Untagged
@@ -52965,6 +54458,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &7993144860425897251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7993144860425897250}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: 0
+  maxAngleX: 0
+  minAngleY: -20
+  maxAngleY: 15
+  minAngleZ: 0
+  maxAngleZ: 0
+  speedX: 10
+  speedY: 10
+  speedZ: 10
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &8018575854957722413
 GameObject:
   m_ObjectHideFlags: 0
@@ -53008,7 +54527,7 @@ MeshRenderer:
   m_Materials:
   - {fileID: 2100000, guid: c9d333fe9f86fd34da05ae6c32c580b1, type: 2}
   - {fileID: 2100000, guid: b394bc74d7f2bb1478eb113cfa75aefd, type: 2}
-  - {fileID: 2100000, guid: 6d3dac69439fda744851c161b824a4e6, type: 2}
+  - {fileID: 2100000, guid: cdcdd1d700a60a542a0eeada88a5e784, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -53339,6 +54858,32 @@ Transform:
   - {fileID: 1278533747606283440}
   m_Father: {fileID: 2213414564604560946}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8274069338482787876
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2074066224565776389}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 0
+  rotateZ: 1
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -60
+  maxAngleY: 60
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: -5
+  speedZ: -5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!4 &8362694537495114532
 Transform:
   m_ObjectHideFlags: 0
@@ -53347,11 +54892,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9060226124214211834}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.000000007450581, y: 0.7071068, z: 0.000000022351742, w: 0.70710677}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1394141674}
   m_Father: {fileID: 230219268}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!33 &8373687746167323720
@@ -53362,6 +54908,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 601995267541692323}
   m_Mesh: {fileID: 643804371652783583, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &8373687746167323721
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 601995267541692323}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: 0
+  maxAngleX: 0
+  minAngleY: -20
+  maxAngleY: 15
+  minAngleZ: 0
+  maxAngleZ: 0
+  speedX: 10
+  speedY: 10
+  speedZ: 10
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!33 &8385709703338824536
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -53370,6 +54942,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4110288978895998523}
   m_Mesh: {fileID: 2293392160618027257, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &8385709703338824537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4110288978895998523}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 0
+  rotateZ: 1
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -60
+  maxAngleY: 60
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: -5
+  speedZ: -5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!4 &8415601629943641907
 Transform:
   m_ObjectHideFlags: 0
@@ -53971,6 +55569,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1997234852697793690}
   m_Mesh: {fileID: -588458883981310107, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &8503533232696111554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1997234852697793690}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -15
+  maxAngleY: 15
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: -5
+  speedZ: -5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &8651956991428255302
 GameObject:
   m_ObjectHideFlags: 0
@@ -54158,11 +55782,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3278552013503851576}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.000000007450581, y: 0.7071068, z: 0.000000022351742, w: 0.70710677}
-  m_LocalPosition: {x: 0, y: 0.001329992, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.0013299813, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 1301954358}
   m_Father: {fileID: 230219268}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &8803416434802897549
@@ -54386,6 +56011,32 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3278552013503851576}
   m_Mesh: {fileID: 643804371652783583, guid: db9d2572946ed5648b79fa5016502ad3, type: 3}
+--- !u!114 &8986872569399085726
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3278552013503851576}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: 0
+  maxAngleX: 0
+  minAngleY: -20
+  maxAngleY: 15
+  minAngleZ: 0
+  maxAngleZ: 0
+  speedX: 8
+  speedY: 8
+  speedZ: 8
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &9008801931900064661
 GameObject:
   m_ObjectHideFlags: 0
@@ -54477,6 +56128,7 @@ GameObject:
   - component: {fileID: 8362694537495114532}
   - component: {fileID: 2637316526110866525}
   - component: {fileID: 2517333178430130009}
+  - component: {fileID: 9060226124214211835}
   m_Layer: 0
   m_Name: LaserForScene.005
   m_TagString: Untagged
@@ -54484,6 +56136,32 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &9060226124214211835
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9060226124214211834}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 1
+  rotateZ: 0
+  minAngleX: 0
+  maxAngleX: 0
+  minAngleY: -20
+  maxAngleY: 15
+  minAngleZ: 0
+  maxAngleZ: 0
+  speedX: 9
+  speedY: 9
+  speedZ: 9
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1 &9078400875513772290
 GameObject:
   m_ObjectHideFlags: 0
@@ -54591,6 +56269,32 @@ Transform:
   - {fileID: 5332871060053561590}
   m_Father: {fileID: 5835153526657382514}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9185360728065785407
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6014413612722425634}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3c45fdaa5156144ba28c1741e39880b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Scene.PingPongRotator
+  rotateX: 0
+  rotateY: 0
+  rotateZ: 1
+  minAngleX: -45
+  maxAngleX: 45
+  minAngleY: -60
+  maxAngleY: 60
+  minAngleZ: -30
+  maxAngleZ: 30
+  speedX: 5
+  speedY: 5
+  speedZ: 5
+  useLocalRotation: 1
+  smoothness: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

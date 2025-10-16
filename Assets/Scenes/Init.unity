@@ -7169,6 +7169,8 @@ GameObject:
   m_Component:
   - component: {fileID: 2872953090639261575}
   - component: {fileID: 2872953090639261572}
+  - component: {fileID: 2872953090639261577}
+  - component: {fileID: 2872953090639261576}
   m_Layer: 5
   m_Name: Button_Start
   m_TagString: Untagged
@@ -7200,6 +7202,31 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 600, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2872953090639261576
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2872953090639261574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c8e271000d5e0b94289979c9b83103a4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.UI.CanvasGroupFadePingPong
+  speed: 0.25
+--- !u!225 &2872953090639261577
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2872953090639261574}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!114 &2872953090668196212
 MonoBehaviour:
   m_ObjectHideFlags: 0

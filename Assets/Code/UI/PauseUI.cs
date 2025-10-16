@@ -53,7 +53,6 @@ namespace Code.UI
 
             if (PlayerInput.Instance.IsPausedDown)
             {
-                Debug.LogError("Pause Click");
                 if (!_isPaused) 
                     OnPauseClick();
                 else 

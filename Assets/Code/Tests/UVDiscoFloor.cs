@@ -32,7 +32,6 @@ public sealed class UVDiscoFloor : MonoBehaviour
     {
         _rend = GetComponent<Renderer>();
         _mpb = new MaterialPropertyBlock();
-        CacheBaseUV();
     }
 
     private void OnEnable()
@@ -42,6 +41,7 @@ public sealed class UVDiscoFloor : MonoBehaviour
             enabled = false;
             return;
         }
+        CacheBaseUV();
 
         _timer = Random.value * interval;
         if (interval == 0f) _timer = 0f;

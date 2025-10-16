@@ -103,11 +103,11 @@ namespace Code.Scene
             // Устанавливаем финальное вращение
             if (useLocalRotation)
             {
-                transform.localEulerAngles = targetRotation;
+                transform.localRotation = Quaternion.Euler(targetRotation);
             }
             else
             {
-                transform.eulerAngles = targetRotation;
+                transform.rotation = Quaternion.Euler(targetRotation);
             }
         }
     

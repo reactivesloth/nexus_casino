@@ -62,8 +62,6 @@ namespace Code.UI.Admin
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
             newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
             closePanelButton.onClick.AddListener(OnClosePanelButtonClick);
-
-            OnUsersButtonClick();
         }
 
         private void Update()
@@ -91,7 +89,6 @@ namespace Code.UI.Admin
             if (!value)
             {
                 CursorManager.Instance.HideCursor();
-                OnUsersButtonClick();
             }
             else
             {
@@ -99,6 +96,9 @@ namespace Code.UI.Admin
             }
 
             panel.SetActive(value);
+            if (panel.activeSelf)
+                OnUsersButtonClick();
+            
             PlayerInput.Instance.IsBusy = value;
         }
 
