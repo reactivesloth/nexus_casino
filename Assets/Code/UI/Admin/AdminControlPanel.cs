@@ -180,7 +180,7 @@ namespace Code.UI.Admin
         private void UpdateScene()
         {
             ClearContent();
-            var sceneObjects = SceneObjectController.AllSceneObjects;
+            var sceneObjects = SceneObjectsController.AllSceneObjects;
             foreach (var sceneObject in sceneObjects)
             {
                 var controlElement = Instantiate(sceneControlElementPrefab, contentContainer);

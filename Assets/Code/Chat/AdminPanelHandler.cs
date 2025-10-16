@@ -24,7 +24,7 @@ namespace Code.Chat
         [SerializeField] private ChatController chatController;
         [SerializeField, TextArea] private string helpText;
 
-        [SerializeField] private SceneObjectController sceneObjectController;
+        [FormerlySerializedAs("sceneObjectController")] [SerializeField] private SceneObjectsController sceneObjectsController;
         
         public readonly SyncDictionary<string, MuteStateSync> MutedDictionary = new(new SyncTypeSettings
         {
@@ -43,7 +43,7 @@ namespace Code.Chat
         {
             base.OnValidate();
             chatController ??= GetComponent<ChatController>();
-            sceneObjectController ??= FindAnyObjectByType<SceneObjectController>();
+            sceneObjectsController ??= FindAnyObjectByType<SceneObjectsController>();
         }
         
         public override void OnStartClient()
@@ -683,7 +683,7 @@ namespace Code.Chat
                 return;
             }
 
-            var states = sceneObjectController.GetStatesByName(objectName);
+            var states = sceneObjectsController.GetStatesByName(objectName);
 
             if (states == null)
             {
@@ -697,7 +697,7 @@ namespace Code.Chat
                 return;
             }
 
-            sceneObjectController.SetState(objectName, newState);
+            sceneObjectsController.SetState(objectName, newState);
         }
 
         #endregion
