@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Code.API;
 using Code.API.Models;
 using Code.Network.Lobby;
+using Code.Player;
 using FishNet;
 using FishNet.Broadcast;
 using FishNet.Connection;
@@ -16,6 +18,7 @@ namespace Code.Network.Player
 {
     public struct PlayerTypeBroadcast : IBroadcast
     {
+        public MeSchema PlayerData;
         public string PlayerType;
     }
 
@@ -23,7 +26,7 @@ namespace Code.Network.Player
     {
         public string Reason;
     }
-    
+
     [Serializable]
     public class PlayerSpawnableModelKeyValuePair
     {
@@ -85,8 +88,8 @@ namespace Code.Network.Player
             {
                 InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived,
                     true);
-                InstanceFinder.ServerManager.RegisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived, true);
-                InstanceFinder.ClientManager.RegisterBroadcast<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived);
+                InstanceFinder.ClientManager.RegisterBroadcast<DisconnectBroadcast>(
+                    OnClientDisconnectBroadcastReceived);
 
                 _networkManager.SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
@@ -106,8 +109,8 @@ namespace Code.Network.Player
             if (InstanceFinder.ServerManager != null)
             {
                 InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived);
-                InstanceFinder.ServerManager.UnregisterBroadcast<MeSchema>(OnPlayerDataBroadcastReceived);
-                InstanceFinder.ClientManager.UnregisterBroadcast<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived);
+                InstanceFinder.ClientManager.UnregisterBroadcast<DisconnectBroadcast>(
+                    OnClientDisconnectBroadcastReceived);
 
                 _networkManager.SceneManager.OnClientLoadedStartScenes -= OnClientLoadedStartScenes_Server;
                 _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
@@ -121,26 +124,29 @@ namespace Code.Network.Player
         // === сервер: получили от клиента тип модели ===
         private void OnPlayerTypeBroadcastReceived(NetworkConnection conn, PlayerTypeBroadcast msg, Channel _)
         {
-            if (conn == null) return;
+            if (conn == null)
+                return;
+
             _playerTypes[conn] = msg.PlayerType;
+            if (!NameConnectionsData_Server.TryAdd(msg.PlayerData.username, conn))
+                NameConnectionsData_Server[msg.PlayerData.username] = conn;
+            if (!SpawnedPlayerData_Server.TryAdd(conn, msg.PlayerData))
+                SpawnedPlayerData_Server[conn] = msg.PlayerData;
+
             Debug.Log($"[Server] Получен тип модели '{msg.PlayerType}' от клиента {conn.ClientId}");
-        }
-
-        private void OnPlayerDataBroadcastReceived(NetworkConnection conn, MeSchema data, Channel _)
-        {
-            if (conn == null) return;
-
-            if (!NameConnectionsData_Server.TryAdd(data.username, conn))
-                NameConnectionsData_Server[data.username] = conn;
-            if (!SpawnedPlayerData_Server.TryAdd(conn, data))
-                SpawnedPlayerData_Server[conn] = data;
         }
 
         private void OnClientDisconnectBroadcastReceived(DisconnectBroadcast data, Channel _)
         {
-            LobbyDisconnector.Disconnect(true, data.Reason);
+            DisconnectLocalPlayer(data);
         }
 
+        private async void DisconnectLocalPlayer(DisconnectBroadcast data)
+        {
+            await Task.Delay(3_500);
+            LobbyDisconnector.Disconnect(true, data.Reason);
+        }
+        
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===
         private void OnServerConnectionState(ServerConnectionStateArgs args)
         {
@@ -157,13 +163,15 @@ namespace Code.Network.Player
         private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
         {
             if (args.ConnectionState == RemoteConnectionState.Stopped && conn != null)
-            {   
+            {
                 _playerTypes.Remove(conn);
-                
-                var disconnectedUsername = SpawnedPlayerData_Server.TryGetValue(conn, out var usedData) ? usedData.username : null;
-                if (disconnectedUsername != null) 
+
+                var disconnectedUsername = SpawnedPlayerData_Server.TryGetValue(conn, out var usedData)
+                    ? usedData.username
+                    : null;
+                if (disconnectedUsername != null)
                     NameConnectionsData_Server.Remove(disconnectedUsername);
-                
+
                 SpawnedPlayerData_Server.Remove(conn);
                 for (int i = _dontSpawn.Count - 1; i >= 0; i--)
                     if (_dontSpawn[i] == conn)
@@ -205,7 +213,8 @@ namespace Code.Network.Player
             if (_addToDefaultScene)
                 _networkManager.SceneManager.AddOwnerToDefaultScene(nob);
 
-            Invoke(nameof(ClearDoubleConnections), 5f);
+            //Invoke(nameof(ClearDoubleConnections), 2f);
+            ClearDoubleConnections();
 
             OnSpawned?.Invoke(nob);
         }
@@ -216,8 +225,11 @@ namespace Code.Network.Player
                          !NameConnectionsData_Server.ContainsValue(networkConnection)))
             {
                 // networkConnection.Disconnect(true);
-                InstanceFinder.ServerManager.Broadcast(networkConnection, new DisconnectBroadcast{Reason = "You connect twice"});
-                
+                var player = networkConnection.Objects.FirstOrDefault(o => o.GetComponent<PlayerMovementController>());
+                if(player != null)
+                    _networkManager.ServerManager.Despawn(player);
+                InstanceFinder.ServerManager.Broadcast(networkConnection,
+                    new DisconnectBroadcast { Reason = "You connect twice" });
             }
         }
 
@@ -268,12 +280,15 @@ namespace Code.Network.Player
                 return;
 
             string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
-            var msg = new PlayerTypeBroadcast { PlayerType = playerModelType };
+            var msg = new PlayerTypeBroadcast
+            {
+                PlayerType = playerModelType, 
+                PlayerData = ClientDataStorage.UserData
+            };
 
             if (InstanceFinder.ClientManager != null)
             {
                 InstanceFinder.ClientManager.Broadcast(msg);
-                InstanceFinder.ClientManager.Broadcast(ClientDataStorage.UserData);
             }
 
             Debug.Log($"[Client] Отправил Broadcast с моделью игрока '{playerModelType}'");
