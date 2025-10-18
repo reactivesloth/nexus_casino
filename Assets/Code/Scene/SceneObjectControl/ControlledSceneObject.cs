@@ -46,7 +46,7 @@ namespace Code.Scene.SceneObjectControl
     }
 
     [Serializable]
-    public struct StateInfo
+    public class StateInfo
     {
         public string stateName;
         public UnityEvent stateAction;
