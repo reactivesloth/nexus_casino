@@ -28,7 +28,10 @@ namespace Code.Scene.SceneObjectControl
         public void SetState(string stateName)
         {
             if (!_statesDictionary.TryGetValue(stateName, out var stateInfo))
+            {
+                Debug.LogWarning($"[SceneControl] Object not contains state {stateName}");
                 return;
+            }
             
             _currentStateIndex = States.IndexOf(stateName);
             stateInfo.stateAction?.Invoke();
