@@ -39,6 +39,8 @@ namespace Code.Scene.SceneObjectControl
                 Debug.LogWarning($"[SceneControl] State action not set for {stateName}");
                 return;
             }
+            
+            Debug.Log($"[SceneControl] State action set for {stateName}");
             stateInfo.stateAction.Invoke();
         }
     }
