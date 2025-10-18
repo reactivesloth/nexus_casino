@@ -37,6 +37,7 @@ namespace Code.UI.Admin
             _slot = slot;
 
             titleDisplayText.text = $"Slot №{_slot.IDNumber}";
+            SearchKey = titleDisplayText.text;
         }
 
         private void OnResetSlotButtonClick()

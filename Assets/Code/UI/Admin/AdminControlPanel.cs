@@ -20,16 +20,17 @@ namespace Code.UI.Admin
 
         [Header("Common")] [SerializeField] private Transform contentContainer;
         [SerializeField] private TMP_InputField searchField;
-        [SerializeField] private Button refreshButton;
 
-        [Header("Tabs")] [SerializeField] private Button usersButton;
-
-        [SerializeField] private Button sceneButton;
-
-        [SerializeField] private Button slotsButton;
-        [SerializeField] private Button lobbiesButton;
+        [Header("Buttons")]
         [SerializeField] private Button newLobbyButton;
         [SerializeField] private Button closePanelButton;
+        [SerializeField] private Button refreshButton;
+        
+        [Header("Tabs")] 
+        [SerializeField] private Button usersButton;
+        [SerializeField] private Button sceneButton;
+        [SerializeField] private Button slotsButton;
+        [SerializeField] private Button lobbiesButton;
 
         [Header("Prefabs")] [SerializeField] private UserControlElement userControlElementPrefab;
 
@@ -55,13 +56,14 @@ namespace Code.UI.Admin
             searchField.onValueChanged.AddListener(OnSearchInputChange);
 
             refreshButton.onClick.AddListener(OnRefreshButtonClick);
+            newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
+            closePanelButton.onClick.AddListener(OnClosePanelButtonClick);
 
             usersButton.onClick.AddListener(OnUsersButtonClick);
             sceneButton.onClick.AddListener(OnSceneButtonClick);
             slotsButton.onClick.AddListener(OnSlotsButtonClick);
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
-            newLobbyButton.onClick.AddListener(OnNewLobbyButtonClick);
-            closePanelButton.onClick.AddListener(OnClosePanelButtonClick);
+            
         }
 
         private void Update()
@@ -75,13 +77,13 @@ namespace Code.UI.Admin
             searchField.onValueChanged.RemoveListener(OnSearchInputChange);
 
             refreshButton.onClick.RemoveListener(OnRefreshButtonClick);
+            newLobbyButton.onClick.RemoveListener(OnNewLobbyButtonClick);
+            closePanelButton.onClick.RemoveListener(OnClosePanelButtonClick);
 
             usersButton.onClick.RemoveListener(OnUsersButtonClick);
             sceneButton.onClick.RemoveListener(OnSceneButtonClick);
             slotsButton.onClick.RemoveListener(OnSlotsButtonClick);
             lobbiesButton.onClick.RemoveListener(OnLobbiesButtonClick);
-            newLobbyButton.onClick.RemoveListener(OnNewLobbyButtonClick);
-            closePanelButton.onClick.RemoveListener(OnClosePanelButtonClick);
         }
 
         public void SetActive(bool value)
@@ -132,12 +134,16 @@ namespace Code.UI.Admin
         {
             OnStartNewTab();
 
+            SetTabsOutline(usersButton);
+            
             UpdateUsers();
         }
 
         private void OnSceneButtonClick()
         {
             OnStartNewTab();
+            
+            SetTabsOutline(sceneButton);
 
             UpdateScene();
         }
@@ -146,16 +152,28 @@ namespace Code.UI.Admin
         {
             OnStartNewTab();
 
+            SetTabsOutline(slotsButton);
+            
             UpdateSlots();
         }
 
         private void OnLobbiesButtonClick()
         {
             OnStartNewTab();
+            
+            SetTabsOutline(lobbiesButton);
 
             UpdateLobbies();
         }
 
+        private void SetTabsOutline(Button currentTabButton)
+        {
+            usersButton.GetComponent<Outline>().enabled = usersButton == currentTabButton;
+            sceneButton.GetComponent<Outline>().enabled = sceneButton == currentTabButton;
+            lobbiesButton.GetComponent<Outline>().enabled = lobbiesButton == currentTabButton;
+            slotsButton.GetComponent<Outline>().enabled = slotsButton == currentTabButton;
+        }
+        
         #endregion
 
         private void OnStartNewTab()
