@@ -34,7 +34,12 @@ namespace Code.Scene.SceneObjectControl
             }
             
             _currentStateIndex = States.IndexOf(stateName);
-            stateInfo.stateAction?.Invoke();
+            if (stateInfo.stateAction == null)
+            {
+                Debug.LogWarning($"[SceneControl] State action not set for {stateName}");
+                return;
+            }
+            stateInfo.stateAction.Invoke();
         }
     }
 
