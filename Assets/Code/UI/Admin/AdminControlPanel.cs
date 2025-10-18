@@ -21,13 +21,11 @@ namespace Code.UI.Admin
         [Header("Common")] [SerializeField] private Transform contentContainer;
         [SerializeField] private TMP_InputField searchField;
 
-        [Header("Buttons")]
-        [SerializeField] private Button newLobbyButton;
+        [Header("Buttons")] [SerializeField] private Button newLobbyButton;
         [SerializeField] private Button closePanelButton;
         [SerializeField] private Button refreshButton;
-        
-        [Header("Tabs")] 
-        [SerializeField] private Button usersButton;
+
+        [Header("Tabs")] [SerializeField] private Button usersButton;
         [SerializeField] private Button sceneButton;
         [SerializeField] private Button slotsButton;
         [SerializeField] private Button lobbiesButton;
@@ -44,6 +42,8 @@ namespace Code.UI.Admin
 
         private AdminPanelHandler _adminPanelHandler;
         private NexusModularPopupOpener _popupOpener;
+
+        private Coroutine _updateLobbiesRoutine;
 
         private void Awake()
         {
@@ -63,7 +63,6 @@ namespace Code.UI.Admin
             sceneButton.onClick.AddListener(OnSceneButtonClick);
             slotsButton.onClick.AddListener(OnSlotsButtonClick);
             lobbiesButton.onClick.AddListener(OnLobbiesButtonClick);
-            
         }
 
         private void Update()
@@ -100,7 +99,7 @@ namespace Code.UI.Admin
             panel.SetActive(value);
             if (panel.activeSelf)
                 OnUsersButtonClick();
-            
+
             PlayerInput.Instance.IsBusy = value;
         }
 
@@ -132,37 +131,33 @@ namespace Code.UI.Admin
 
         private void OnUsersButtonClick()
         {
+            _currentControlPrefab = userControlElementPrefab;
             OnStartNewTab();
-
             SetTabsOutline(usersButton);
-            
             UpdateUsers();
         }
 
         private void OnSceneButtonClick()
         {
+            _currentControlPrefab = sceneControlElementPrefab;
             OnStartNewTab();
-            
             SetTabsOutline(sceneButton);
-
             UpdateScene();
         }
 
         private void OnSlotsButtonClick()
         {
+            _currentControlPrefab = slotControlElementPrefab;
             OnStartNewTab();
-
             SetTabsOutline(slotsButton);
-            
             UpdateSlots();
         }
 
         private void OnLobbiesButtonClick()
         {
+            _currentControlPrefab = lobbyControlElementPrefab;
             OnStartNewTab();
-            
             SetTabsOutline(lobbiesButton);
-
             UpdateLobbies();
         }
 
@@ -173,20 +168,22 @@ namespace Code.UI.Admin
             lobbiesButton.GetComponent<Outline>().enabled = lobbiesButton == currentTabButton;
             slotsButton.GetComponent<Outline>().enabled = slotsButton == currentTabButton;
         }
-        
+
         #endregion
 
         private void OnStartNewTab()
         {
             searchField.text = string.Empty;
+            if (_updateLobbiesRoutine != null)
+                StopCoroutine(_updateLobbiesRoutine);
         }
 
         private void UpdateUsers()
         {
             ClearContent();
-            
+
             var lobbyMembers = LobbyVariables.Instance.currentLobby.lobbyMembers;
-            
+
             foreach (var lobbyMember in lobbyMembers)
             {
                 var controlElement = Instantiate(userControlElementPrefab, contentContainer);
@@ -223,7 +220,7 @@ namespace Code.UI.Admin
         private void UpdateLobbies()
         {
             ClearContent();
-            StartCoroutine(UpdateLobbiesListRoutine());
+            _updateLobbiesRoutine = StartCoroutine(UpdateLobbiesListRoutine());
         }
 
         private IEnumerator UpdateLobbiesListRoutine()
@@ -268,7 +265,7 @@ namespace Code.UI.Admin
             {
                 labelName = "Private",
                 type = InputInfoType.Dropdown,
-                valueVariants = new List<string> { "-", "+" }
+                valueVariants = new List<string> { "open", "close" }
             });
 
             var hostVariants = new List<string> { "me" };
@@ -294,7 +291,7 @@ namespace Code.UI.Admin
         private void CreateLobbyClicked()
         {
             var roomName = _popupOpener.LastPopup.GetInputValue(0);
-            var isPrivate = _popupOpener.LastPopup.GetInputValue(1) == "+";
+            var isPrivate = _popupOpener.LastPopup.GetInputValue(1) == "close";
             var hostName = _popupOpener.LastPopup.GetInputValue(2) == "me"
                 ? null
                 : _popupOpener.LastPopup.GetInputValue(2);

@@ -24,7 +24,7 @@ namespace Code.Scene.SceneObjectControl
         private void Awake()
         {
             _sceneObjects.Clear();
-            
+
             var components = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
                 .OfType<IControlledSceneObject>();
 
@@ -41,10 +41,10 @@ namespace Code.Scene.SceneObjectControl
         {
             if (ClientManager != null)
                 ClientManager.RegisterBroadcast<StateMessage>(ClientReceiveState);
-            
+
             if (ServerManager != null)
                 ServerManager.RegisterBroadcast<StateMessage>(ServerReceiveState);
-            
+
             if (SceneManager != null)
                 SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
         }
@@ -53,10 +53,10 @@ namespace Code.Scene.SceneObjectControl
         {
             if (ClientManager != null)
                 ClientManager.UnregisterBroadcast<StateMessage>(ClientReceiveState);
-            
+
             if (ServerManager != null)
                 ServerManager.UnregisterBroadcast<StateMessage>(ServerReceiveState);
-            
+
             if (SceneManager != null)
                 SceneManager.OnClientLoadedStartScenes -= OnClientConnectionState;
         }
@@ -69,7 +69,7 @@ namespace Code.Scene.SceneObjectControl
         /// <returns></returns>
         public List<string> GetStatesByName(string objectName) =>
             !_sceneObjects.TryGetValue(objectName, out var sceneObject) ? null : sceneObject.States;
-        
+
         /// <summary>
         /// Local call for command
         /// </summary>
@@ -79,25 +79,25 @@ namespace Code.Scene.SceneObjectControl
         {
             if (GetStatesByName(objectName) == null)
                 return;
-            
+
             if (ClientManager == null || !ClientManager.Started)
             {
                 Debug.LogWarning("[SceneControl] Client not connected");
                 return;
             }
-            
+
             var actionMessage = new StateMessage { ObjectName = objectName, Action = state };
             Debug.Log($"[SceneControl] {objectName} is making action {state}");
-            
+
             //Broadcast TO Server
             ClientManager.Broadcast(actionMessage);
         }
 
         private void OnClientConnectionState(NetworkConnection conn, bool asServer)
         {
-            if (!asServer) 
+            if (!asServer)
                 return;
-            
+
             foreach (var action in _lastStates.Values)
             {
                 ServerManager.Broadcast(conn, action);
@@ -108,7 +108,7 @@ namespace Code.Scene.SceneObjectControl
             Channel channel = Channel.Reliable)
         {
             Debug.Log($"[SceneControl.Server] {message.ObjectName} is making action {message.Action}");
-            
+
             _lastStates[message.ObjectName] = message;
             ServerManager.Broadcast(message);
         }
@@ -120,9 +120,9 @@ namespace Code.Scene.SceneObjectControl
                 Debug.LogWarning($"[SceneControl.Client] Object not found: {message.ObjectName}");
                 return;
             }
-            
+
             Debug.Log($"[SceneControl.Client] {message.ObjectName} is making action {message.Action}");
-            
+
             _lastStates[message.ObjectName] = message;
             sceneObject.SetState(message.Action);
         }

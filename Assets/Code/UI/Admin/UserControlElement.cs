@@ -1,4 +1,5 @@
 using System;
+using Code.API;
 using Code.Chat;
 using Code.Network.Lobby;
 using Code.Network.Lobby.Data;
@@ -24,7 +25,7 @@ namespace Code.UI.Admin
 
         [Space, SerializeField] private Button muteVoiceButton;
         [SerializeField] private Button unmuteVoiceButton;
-        
+
         [SerializeField] private Button promoteButton;
 
         private AdminPanelHandler _adminPanelHandler;
@@ -49,7 +50,7 @@ namespace Code.UI.Admin
             unmuteChatButton.onClick.AddListener(OnUnmuteChatClicked);
             muteVoiceButton.onClick.AddListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.AddListener(OnUnmuteVoiceClicked);
-            
+
             promoteButton.onClick.AddListener(OnPromoteButtonClicked);
         }
 
@@ -63,7 +64,7 @@ namespace Code.UI.Admin
             unmuteChatButton.onClick.RemoveListener(OnUnmuteChatClicked);
             muteVoiceButton.onClick.RemoveListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.RemoveListener(OnUnmuteVoiceClicked);
-            
+
             promoteButton.onClick.RemoveListener(OnPromoteButtonClicked);
         }
 
@@ -91,6 +92,10 @@ namespace Code.UI.Admin
                 SetMutedButtonsState(false, false);
 
             SearchKey = lobbyMemberData.displayName;
+
+            kickButton.interactable = banButton.interactable = muteChatButton.interactable =
+                unmuteChatButton.interactable = muteVoiceButton.interactable =
+                    unmuteVoiceButton.interactable = Username != ClientDataStorage.UserData.username;
         }
 
         private void OnKickClicked()
@@ -197,12 +202,12 @@ namespace Code.UI.Admin
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             promoteButtonInfo.OnClickedEvent.AddListener(Promote);
-            
+
             _popupOpener.Buttons.Add(promoteButtonInfo);
-            
+
             _popupOpener.OpenPopup();
         }
-        
+
         private void Promote() => _adminPanelHandler.PromoteMember(Username);
     }
 }

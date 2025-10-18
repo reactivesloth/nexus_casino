@@ -28,7 +28,7 @@ namespace Code.UI.Admin
         
         // Кеш для логики исключения дубликатов
         private List<string> _allAvailablePlayers = new List<string>();
-        private const string EMPTY_SELECTION = "(не выбрано)";
+        private const string EMPTY_SELECTION = "-";
         
         // Флаг для предотвращения рекурсии
         private bool _isUpdatingDropdowns = false;
@@ -104,6 +104,7 @@ namespace Code.UI.Admin
             var moderText = moderIn ? "Moderator\n" : string.Empty;
             adminsStatusText.text = $"{adminText}{hostText}{moderText}";
 
+            moveToButton.interactable = _lobbyId != LobbyVariables.Instance.currentLobby.lobbyId;
             SearchKey = lobbyName;
         }
 

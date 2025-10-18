@@ -560,7 +560,7 @@ namespace Code.Network.Lobby
         // === Ручное создание лобби ===
         public void CreateLobbyManual(string lobbyName, uint maxPlayers, bool isPrivate, string bucketId = null)
         {
-            StartCoroutine(OnManualLobbyCreateRoutine(lobbyName, maxPlayers, isPrivate,
+            StartCoroutine(OnManualLobbyCreateRoutine(!string.IsNullOrEmpty(lobbyName) ? lobbyName : GenerateRandomLobbyName(), maxPlayers, isPrivate,
                 bucketId ?? LobbyVariables.Instance.bucketId));
         }
 
