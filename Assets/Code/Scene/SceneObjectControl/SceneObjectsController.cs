@@ -23,6 +23,8 @@ namespace Code.Scene.SceneObjectControl
 
         private void Awake()
         {
+            _sceneObjects.Clear();
+            
             var components = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
                 .OfType<IControlledSceneObject>();
 
