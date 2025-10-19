@@ -33,7 +33,11 @@ namespace Code.UI
             titleText.text = title;
             messageText.text = message;
             percentageSlider.value = percentage;
-            percentageText.text = percentage.ToString("F0") + "%";;
+            percentageText.text = percentage.ToString("F0") + "%";
+            if (percentage < 1 || percentage >= 100)
+                percentageSlider.gameObject.SetActive(false);
+            else
+                percentageSlider.gameObject.SetActive(true);
         }
         
         public void LoadScene(string sceneName, string title = "Please wait...", string message = "Loading...")
@@ -44,6 +48,7 @@ namespace Code.UI
         IEnumerator LoadRoutine(string sceneName, string title, string message)
         {
             loadingScreenUI.SetActive(true);
+            //percentageSlider.gameObject.SetActive(false);
             yield return null;
 
             AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(sceneName);
@@ -66,6 +71,7 @@ namespace Code.UI
                         {
                             //loadingScreenUI.SetActive(false);
                             asyncOperation.allowSceneActivation = true;
+                            //percentageSlider.gameObject.SetActive(false);
                         }
                     }
 

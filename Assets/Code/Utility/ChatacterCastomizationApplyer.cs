@@ -40,7 +40,7 @@ namespace Code.Utility
 
         private void TryLoadSpawnPondAndPlay()
         {
-            LoadingScreenUI.Instance.Show("Apply settings", "Load settings", 50);
+            LoadingScreenUI.Instance.Show("Apply settings", "Load settings", 0);
             var getSpawnRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
@@ -71,7 +71,7 @@ namespace Code.Utility
                 PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
                 PlayerPrefs.SetInt("SavedSpawnPosition", 1);
                 PlayerPrefs.Save();
-                LoadingScreenUI.Instance.Show("Apply settings", string.Empty, 99);
+                LoadingScreenUI.Instance.Show("Apply settings", string.Empty, 100);
             }).Finally(() => LoadingScreenUI.Instance.LoadScene("Main"));
         }
     }

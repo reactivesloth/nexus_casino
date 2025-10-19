@@ -82,7 +82,6 @@ namespace Code.Network.Player
                     $"PlayerSpawner on {gameObject.name} cannot work as NetworkManager wasn't found on this object or within parent objects.");
                 return;
             }
-
             // серверная подписка: принимаем тип игрока + спавн по загрузке стартовых сцен
             if (InstanceFinder.ServerManager != null)
             {

@@ -145,7 +145,7 @@ namespace EOSLobby
             if (setId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Hide();
+            //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             var attributes = Lobby.GetAttributes(lobbyDetails);
             currentLobby.attributeKeys = attributes.Select(x => x?.Data?.Key).Select(x => (string)x).ToArray();
@@ -247,7 +247,7 @@ namespace EOSLobby
             }
 
             ReleaseSearchResults();
-            LobbyVariables.Instance.lobbyPopupUI.Hide();
+            //LobbyVariables.Instance.lobbyPopupUI.Hide();
             LobbyVariables.Instance.hostStartGameButton.SetActive(false);
             LobbyVariables.Instance.selfReadyToggle.gameObject.SetActive(true);
             LobbyVariables.Instance.lobbyBrowserUI.SetActive(false);
@@ -262,7 +262,7 @@ namespace EOSLobby
 
             LobbyVariables.Instance.lobbyPopupUI.Show("Leaving Lobby...", "Please wait...", 100);
             yield return LobbyLeaveLobby.Run(out var leaveLobby, lobbyId, localUserId);
-            LobbyVariables.Instance.lobbyPopupUI.Hide();
+            //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             LobbyEvents.Instance.LobbyMemberStatusReceived.RemovePersistentListener(OnLobbyMemberStatusReceived);
             LobbyEvents.Instance.LobbyMemberUpdateReceived.RemovePersistentListener(OnLobbyMemberUpdateReceived);

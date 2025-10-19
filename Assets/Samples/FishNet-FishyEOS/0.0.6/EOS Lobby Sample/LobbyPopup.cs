@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Threading.Tasks;
 using Code.UI;
+using Sirenix.OdinInspector;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,12 +16,18 @@ namespace EOSLobby
         [SerializeField] private Button okButton;
         [SerializeField] private Button cancelButton;
         private Coroutine _popupCoroutine;
-        public bool showAtStart = false;
+        public bool ShowAtStartUntilHide = false;
+        public int HideAtStartAt = 0;
 
         private void Awake()
         {
-            if (showAtStart)
+            if (ShowAtStartUntilHide)
                 Show ("Please wait...", "Loading...", 0);
+            else if (HideAtStartAt > 0)
+            {
+                Show ("Please wait...", "Loading...", 0);
+                Invoke ("Hide", HideAtStartAt);
+            }
         }
 
         public void Show(string title, string message, int percentage = 100)

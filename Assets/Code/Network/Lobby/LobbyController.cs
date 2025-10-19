@@ -300,7 +300,7 @@ namespace Code.Network.Lobby
             if (setId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Hide();
+            //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             SetLobbyAttributes(currentLobby, lobbyDetails);
 
@@ -381,7 +381,7 @@ namespace Code.Network.Lobby
             LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...", 100);
             SetLobbyAttributes(currentLobby, lobbyDetails);
 
-            LobbyVariables.Instance.lobbyPopupUI.Hide();
+            //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             OnClientConnectionReady();
 
@@ -626,7 +626,7 @@ namespace Code.Network.Lobby
             if (setId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Hide();
+            //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             SetLobbyAttributes(currentLobby, lobbyDetails);
             lobbyDetails.Release();

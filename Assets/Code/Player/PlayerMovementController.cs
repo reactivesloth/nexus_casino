@@ -3,6 +3,7 @@ using System.Text;
 using Unity.Cinemachine;
 using Code.API;
 using Code.Network.HostMigration;
+using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Utility;
 using FishNet.Connection;
@@ -211,6 +212,8 @@ namespace Code.Player
                     LoadSpawnPosition();
                 jumpTimeoutDelta = jumpTimeout;
                 fallTimeoutDelta = fallTimeout;
+                
+                LobbyVariables.Instance.lobbyPopupUI.Hide();
             }
         }
 
