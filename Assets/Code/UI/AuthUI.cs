@@ -103,14 +103,14 @@ namespace Code.UI
         {
             UpdateResendTimer();
         }
-        
+
         private void OnNickNameChanged(string newNickName)
         {
             if (_isRegistered)
                 return;
 
             nicknameResultText.text = string.Empty;
-            
+
             var checkNicknameRequest = new RequestHelper
             {
                 Uri = ApiRoutes.CheckNickNameUrl,
@@ -129,14 +129,14 @@ namespace Code.UI
                     OnUsernameInvalid("Nickname check error");
                     return;
                 }
-                
+
                 var result = JsonUtility.FromJson<SuccessResponse<Empty>>(response.Text);
                 if (!result.success)
                 {
                     OnUsernameInvalid(result.detail);
                     return;
                 }
-                
+
                 OnUsernameValid();
             }).Catch(ex => { OnUsernameInvalid("Username check error"); });
         }
@@ -175,6 +175,7 @@ namespace Code.UI
                 getConfirmCodeButton.gameObject.SetActive(true);
                 getConfirmCodeButton.interactable = true;
             }
+
             if (authButton != null) authButton.interactable = false;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(false);
             if (resendCodeButton != null) resendCodeButton.gameObject.SetActive(false);
@@ -500,25 +501,36 @@ namespace Code.UI
         private void OnUserCanStartGame()
         {
             var savePath = CharacterCustomization.SavePath;
-
             var meData = ClientDataStorage.UserData;
 
             var getAvatarRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetFileUrl($"Avatar_{meData.id}.json"),
-                Headers = ClientDataStorage.GetJwtHeader()
+                Headers = ClientDataStorage.GetJwtHeader(),
+                Timeout = 5
             };
 
+            var getModelTypeRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetFileUrl($"PlayerModelType_{ClientDataStorage.UserData.id}.txt"),
+                Headers = ClientDataStorage.GetJwtHeader(), 
+                Timeout = 5
+            };
+            
+            var getSpawnRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
+                Headers = ClientDataStorage.GetJwtHeader(), 
+                Timeout = 5
+            };
+
+            LoadingScreenUI.Instance.Show("Loading...", "Loading character", 0);
             var isAvatarLoaded = false;
             var isModelTypeLoaded = false;
             RestClient.Get(getAvatarRequest).Then(getAvatarResponse =>
             {
-                var getModelTypeRequest = new RequestHelper
-                {
-                    Uri = ApiRoutes.GetFileUrl($"PlayerModelType_{ClientDataStorage.UserData.id}.txt"),
-                    Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5
-                };
-
+                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 40);
+                
                 if (getAvatarResponse.StatusCode != 200)
                     return RestClient.Get(getModelTypeRequest);
 
@@ -532,16 +544,11 @@ namespace Code.UI
                     Debug.LogError($"Ошибка при записи аватара в файл: {ex}");
                     isAvatarLoaded = false;
                 }
-
+                
                 return RestClient.Get(getModelTypeRequest);
             }).Then(getModelTypeResponse =>
             {
-                var getSpawnRequest = new RequestHelper
-                {
-                    Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
-                    Headers = ClientDataStorage.GetJwtHeader(), Timeout = 5
-                };
-
+                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 70);
                 if (getModelTypeResponse.StatusCode != 200)
                     return RestClient.Get(getSpawnRequest);
 
@@ -551,6 +558,7 @@ namespace Code.UI
                 return RestClient.Get(getSpawnRequest);
             }).Then(getSpawnResponse =>
             {
+                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 99);
                 if (getSpawnResponse.StatusCode != 200)
                     return;
 
@@ -575,6 +583,7 @@ namespace Code.UI
                 PlayerPrefs.Save();
             }).Finally(() =>
             {
+                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 100);
                 var isLoadGame = isAvatarLoaded && isModelTypeLoaded;
                 if (LoadingScreenUI.Instance != null)
                     LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization",

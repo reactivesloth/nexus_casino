@@ -68,7 +68,7 @@ namespace Code.UI
         
         private void OnBoutiqueClick()
         {
-            gameObject.GetComponent<SceneLoader>().Load("Character Customization");
+            LoadingScreenUI.Instance.LoadScene("Character Customization");
         }
         
         private void OnPauseClick()
@@ -101,7 +101,7 @@ namespace Code.UI
 
         private void OnQuitClick()
         {
-            gameObject.GetComponent<SceneLoader>().Load("Init");
+            LoadingScreenUI.Instance.LoadScene("Init");
 // #if UNITY_EDITOR
 //             UnityEditor.EditorApplication.isPlaying = false;
 // #else

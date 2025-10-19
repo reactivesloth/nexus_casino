@@ -36,7 +36,7 @@ namespace Code.UI
             percentageText.text = percentage.ToString("F0") + "%";;
         }
         
-        public void LoadScene (string sceneName, string title = "Please wait...", string message = "Loading...")
+        public void LoadScene(string sceneName, string title = "Please wait...", string message = "Loading...")
         {
             StartCoroutine(LoadRoutine(sceneName, title, message));
         }

@@ -1,5 +1,8 @@
+using System;
 using System.Text;
+using CC;
 using Code.API;
+using Code.UI;
 using FishNet.Managing.Scened;
 using Proyecto26;
 using UnityEngine;
@@ -9,8 +12,18 @@ namespace Code.Utility
 {
     public class ChatacterCastomizationApplyer : MonoBehaviour
     {
+        [SerializeField] private CC_UI_Util uiUtil;
+
+        private void OnValidate()
+        {
+            uiUtil ??= GetComponent<CC_UI_Util>();
+        }
+
         public void ApplyChatacterCastomization()
         {
+            LoadingScreenUI.Instance.Show("Apply settings", "", 0);
+            uiUtil.saveToJSON();
+
             var loadForm = new WWWForm();
             loadForm.AddBinaryData("file", Encoding.UTF8.GetBytes(PlayerPrefs.GetString("PlayerModelType")),
                 $"PlayerModelType_{ClientDataStorage.UserData.id}.txt");
@@ -27,6 +40,7 @@ namespace Code.Utility
 
         private void TryLoadSpawnPondAndPlay()
         {
+            LoadingScreenUI.Instance.Show("Apply settings", "Load settings", 50);
             var getSpawnRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
@@ -57,8 +71,8 @@ namespace Code.Utility
                 PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
                 PlayerPrefs.SetInt("SavedSpawnPosition", 1);
                 PlayerPrefs.Save();
-
-            }).Finally(() => SceneManager.LoadSceneAsync("Main"));
+                LoadingScreenUI.Instance.Show("Apply settings", string.Empty, 99);
+            }).Finally(() => LoadingScreenUI.Instance.LoadScene("Main"));
         }
     }
 }
