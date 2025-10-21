@@ -15,10 +15,55 @@ AudioMixerGroupController:
   m_Send: 00000000000000000000000000000000
   m_Effects:
   - {fileID: -4557445302500958473}
+  - {fileID: -7492549618069953653}
   m_UserColorIndex: 0
   m_Mute: 0
   m_Solo: 0
   m_BypassEffects: 0
+--- !u!244 &-7842046616022252589
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: a82f577ebd7136f4cade25502e90f5b7
+  m_EffectName: Lowpass Simple
+  m_MixLevel: f8a47de2758539c419c9fa9eb401cef2
+  m_Parameters:
+  - m_ParameterName: Cutoff freq
+    m_GUID: 762fd92a3d63f5546912524fc9ee16c5
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &-7492549618069953653
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 7f86d9b01b939c44280e1dfcae2fb25d
+  m_EffectName: Dissonance Echo Cancellation
+  m_MixLevel: a6e2ef28ab2d8804d9f168aef8952438
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &-7145725044658673901
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 672bd1c4e09d1b04a9ec37d047d3966b
+  m_EffectName: Dissonance Echo Cancellation
+  m_MixLevel: eaa270bdf52d01546b3799b0ddb1d9ad
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
 --- !u!243 &-6946079312312443798
 AudioMixerGroupController:
   m_ObjectHideFlags: 0
@@ -35,10 +80,44 @@ AudioMixerGroupController:
   m_Effects:
   - {fileID: -2488349592544940717}
   - {fileID: -4463580758215550186}
+  - {fileID: -5325759604929048960}
+  - {fileID: -5698601483946156739}
   m_UserColorIndex: 0
   m_Mute: 0
   m_Solo: 0
   m_BypassEffects: 0
+--- !u!244 &-5698601483946156739
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: a029935601f719b4495fd2641aadf91f
+  m_EffectName: Highpass Simple
+  m_MixLevel: 0eba9fa404c950b4883cd62f9a26c780
+  m_Parameters:
+  - m_ParameterName: Cutoff freq
+    m_GUID: cc7764b2c0a3acf488541f4c3d5a6939
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &-5325759604929048960
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: ed91ce6c60dea1440a58445d6c11d9be
+  m_EffectName: Lowpass Simple
+  m_MixLevel: ac5dd23d341920e4abd9d980427755a6
+  m_Parameters:
+  - m_ParameterName: Cutoff freq
+    m_GUID: 1d70322779a9cf74dbc006b5f577a32e
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
 --- !u!244 &-4557445302500958473
 AudioMixerEffectController:
   m_ObjectHideFlags: 3
@@ -82,6 +161,7 @@ AudioMixerGroupController:
   m_Send: 00000000000000000000000000000000
   m_Effects:
   - {fileID: 1423050063433365954}
+  - {fileID: 8260678951048309497}
   m_UserColorIndex: 0
   m_Mute: 0
   m_Solo: 0
@@ -153,6 +233,9 @@ AudioMixerGroupController:
   m_Send: 00000000000000000000000000000000
   m_Effects:
   - {fileID: 24400004}
+  - {fileID: 6025188791039565690}
+  - {fileID: -7842046616022252589}
+  - {fileID: 7346210236639082748}
   m_UserColorIndex: 0
   m_Mute: 0
   m_Solo: 0
@@ -210,6 +293,50 @@ AudioMixerEffectController:
   m_SendTarget: {fileID: 0}
   m_EnableWetMix: 0
   m_Bypass: 0
+--- !u!244 &6025188791039565690
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 831513257186fb848a63580ddb70ba57
+  m_EffectName: Dissonance Echo Cancellation
+  m_MixLevel: 5d896e377d0f0e04094154a07581f5ff
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &7346210236639082748
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: a513b023eaa48dc4bab4ed5e61c9dab3
+  m_EffectName: Highpass Simple
+  m_MixLevel: 03039869ad42f4e4cb87cd42fa136df9
+  m_Parameters:
+  - m_ParameterName: Cutoff freq
+    m_GUID: a597a1c9a288d4f419059aaf33f9cdf8
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
+--- !u!244 &8260678951048309497
+AudioMixerEffectController:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_EffectID: 5f81055553e809741b2a2b9d34a48711
+  m_EffectName: Dissonance Echo Cancellation
+  m_MixLevel: 222eab8e28e8e8041b0cb012a3679069
+  m_Parameters: []
+  m_SendTarget: {fileID: 0}
+  m_EnableWetMix: 0
+  m_Bypass: 0
 --- !u!243 &8421326544241301816
 AudioMixerGroupController:
   m_ObjectHideFlags: 0
@@ -225,6 +352,7 @@ AudioMixerGroupController:
   m_Send: 00000000000000000000000000000000
   m_Effects:
   - {fileID: 2399835774635299876}
+  - {fileID: -7145725044658673901}
   m_UserColorIndex: 0
   m_Mute: 0
   m_Solo: 0
