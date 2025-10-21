@@ -25,10 +25,13 @@ namespace Code.UI
         public Button resendCodeButton;
         public Button exit;
         public Button logoutButton;
+        public Button settingsButton;
+        public Button boutiqueButton;
         public TMP_Text nicknameResultText;
 
         public Button startGameButton;
         public GameObject loginPopup;
+        public GameObject settingsPanel;
 
         [Header("Texts")] public TMP_Text authButtonText;
         public TMP_Text titleText;
@@ -59,7 +62,8 @@ namespace Code.UI
             if (exit != null) exit.onClick.AddListener(OnExitClicked);
             if (startGameButton != null) startGameButton.onClick.AddListener(OnUserCanStartGame);
             if (logoutButton != null) logoutButton.onClick.AddListener(OnLogoutClicked);
-
+            if (boutiqueButton != null) boutiqueButton.onClick.AddListener(OnBoutiqueClicked);
+            if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClicked);
             if (nicknameInput != null) nicknameInput.onValueChanged.AddListener(OnNickNameChanged);
         }
 
@@ -71,7 +75,8 @@ namespace Code.UI
             if (exit != null) exit.onClick.RemoveListener(OnExitClicked);
             if (startGameButton != null) startGameButton.onClick.RemoveListener(OnUserCanStartGame);
             if (logoutButton != null) logoutButton.onClick.RemoveListener(OnLogoutClicked);
-
+            if (boutiqueButton != null) boutiqueButton.onClick.RemoveListener(OnBoutiqueClicked);
+            if (settingsButton != null) settingsButton.onClick.RemoveListener(OnSettingsClicked);
             if (nicknameInput != null) nicknameInput.onValueChanged.RemoveListener(OnNickNameChanged);
         }
 
@@ -185,6 +190,8 @@ namespace Code.UI
                 startGameButton.gameObject.SetActive(_isAuthorized);
             if (logoutButton != null)
                 logoutButton.gameObject.SetActive(_isAuthorized);
+            if (boutiqueButton != null)
+                boutiqueButton.gameObject.SetActive(_isAuthorized);
             if (loginPopup != null)
                 loginPopup.SetActive(!_isAuthorized);
         }
@@ -486,7 +493,8 @@ namespace Code.UI
 #endif
         }
 
-        private void OnUserCanStartGame()
+        private void OnUserCanStartGame() => OnUserCanStartGame(false);
+        private void OnUserCanStartGame(bool forceBoutique)
         {
             var savePath = CharacterCustomization.SavePath;
             var meData = ClientDataStorage.UserData;
@@ -572,7 +580,7 @@ namespace Code.UI
             }).Finally(() =>
             {
                 LoadingScreenUI.Instance.Show("loading", "loading.character", 100);
-                var isLoadGame = isAvatarLoaded && isModelTypeLoaded;
+                var isLoadGame = !forceBoutique && (isAvatarLoaded && isModelTypeLoaded);
                 if (LoadingScreenUI.Instance != null)
                     LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization",
                         "loading.please_wait",
@@ -580,6 +588,16 @@ namespace Code.UI
                 else
                     SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization");
             });
+        }
+
+        private void OnBoutiqueClicked()
+        {
+            OnUserCanStartGame(true);
+        }
+
+        private void OnSettingsClicked()
+        {
+            settingsPanel.SetActive(!settingsPanel.activeSelf);
         }
 
         private void HandleError(string title, string errorMessage)

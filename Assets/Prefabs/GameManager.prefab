@@ -16460,23 +16460,23 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5967030131875799574, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
-      value: 1
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 5967030131875799574, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 0}
+      objectReference: {fileID: 5180502100763656243}
     - target: {fileID: 5967030131875799574, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 5967030131875799574, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: CloseSettings
+      value: SetActive
       objectReference: {fileID: 0}
     - target: {fileID: 5967030131875799574, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: Code.UI.PauseUI, Assembly-CSharp
+      value: UnityEngine.GameObject, UnityEngine
       objectReference: {fileID: 0}
     - target: {fileID: 5967030131875799574, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
@@ -16754,6 +16754,11 @@ PrefabInstance:
 --- !u!224 &5180502100763656242 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 108411813601370608, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
+  m_PrefabInstance: {fileID: 5072725326162076098}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5180502100763656243 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 108411813601370609, guid: a75ead152839e4b0b943778bf3918c10, type: 3}
   m_PrefabInstance: {fileID: 5072725326162076098}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5417301686646787938
