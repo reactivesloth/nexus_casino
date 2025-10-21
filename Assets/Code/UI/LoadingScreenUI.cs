@@ -1,8 +1,10 @@
 ﻿using System.Collections;
+using Code.Utility;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Localization;
 
 namespace Code.UI
 {
@@ -15,66 +17,61 @@ namespace Code.UI
         [SerializeField] private TextMeshProUGUI messageText;
         [SerializeField] private TextMeshProUGUI percentageText;
         [SerializeField] private Slider percentageSlider;
-        
+
         private void Awake()
         {
             if (Instance == null || Instance != this)
                 Instance = this;
         }
-        
+
         public void Hide()
         {
             loadingScreenUI.SetActive(false);
         }
-        
-        public void Show(string title, string message, int percentage = 100)
+
+        // titleKey и messageKey — именно ключи в таблице локализации!
+        public void Show(string titleKey, string messageKey, int percentage = 100)
         {
             loadingScreenUI.SetActive(true);
-            titleText.text = title;
-            messageText.text = message;
+            LocalizationHelper.SetLocalizedTextAsync(titleText, titleKey);
+            LocalizationHelper.SetLocalizedTextAsync(messageText, messageKey);
+
             percentageSlider.value = percentage;
             percentageText.text = percentage.ToString("F0") + "%";
-            if (percentage < 1 || percentage >= 100)
-                percentageSlider.gameObject.SetActive(false);
-            else
-                percentageSlider.gameObject.SetActive(true);
-        }
-        
-        public void LoadScene(string sceneName, string title = "Please wait...", string message = "Loading...")
-        {
-            StartCoroutine(LoadRoutine(sceneName, title, message));
+            percentageSlider.gameObject.SetActive(percentage > 1 && percentage < 100);
         }
 
-        IEnumerator LoadRoutine(string sceneName, string title, string message)
+        public void LoadScene(string sceneName, string titleKey = "loading.please_wait", string messageKey = "loading")
+        {
+            StartCoroutine(LoadRoutine(sceneName, titleKey, messageKey));
+        }
+
+        IEnumerator LoadRoutine(string sceneName, string titleKey, string messageKey)
         {
             loadingScreenUI.SetActive(true);
-            //percentageSlider.gameObject.SetActive(false);
             yield return null;
 
             AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(sceneName);
             if (asyncOperation != null)
             {
                 asyncOperation.allowSceneActivation = false;
-                Debug.Log("Pro :" + asyncOperation.progress);
                 while (!asyncOperation.isDone)
                 {
                     percentageSlider.value = asyncOperation.progress * 100;
                     percentageText.text = (asyncOperation.progress * 100).ToString("F0") + "%";
-                    titleText.text = title;
-                    messageText.text = message;
+                    LocalizationHelper.SetLocalizedTextAsync(titleText, titleKey);
+                    LocalizationHelper.SetLocalizedTextAsync(messageText, messageKey);
+
                     if (asyncOperation.progress >= 0.9f)
                     {
                         percentageSlider.value = 100;
-                        percentageText.text = 100 + "%";
-                        messageText.text = "Starting scene...";
+                        percentageText.text = "100%";
+                        LocalizationHelper.SetLocalizedTextAsync(messageText, "loading.start_scene"); // Ключ для "Starting scene..."
                         if (!asyncOperation.allowSceneActivation)
                         {
-                            //loadingScreenUI.SetActive(false);
                             asyncOperation.allowSceneActivation = true;
-                            //percentageSlider.gameObject.SetActive(false);
                         }
                     }
-
                     yield return null;
                 }
             }

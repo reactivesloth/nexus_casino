@@ -21,7 +21,7 @@ namespace Code.Utility
 
         public void ApplyChatacterCastomization()
         {
-            LoadingScreenUI.Instance.Show("Apply settings", "", 0);
+            LoadingScreenUI.Instance.Show("loading.apply_settings", string.Empty, 0);
             uiUtil.saveToJSON();
 
             var loadForm = new WWWForm();
@@ -40,7 +40,7 @@ namespace Code.Utility
 
         private void TryLoadSpawnPondAndPlay()
         {
-            LoadingScreenUI.Instance.Show("Apply settings", "Load settings", 0);
+            LoadingScreenUI.Instance.Show("loading.apply_settings", string.Empty, 0);
             var getSpawnRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
@@ -71,7 +71,7 @@ namespace Code.Utility
                 PlayerPrefs.SetFloat("SavedSpawnRotationZ", r.z);
                 PlayerPrefs.SetInt("SavedSpawnPosition", 1);
                 PlayerPrefs.Save();
-                LoadingScreenUI.Instance.Show("Apply settings", string.Empty, 100);
+                LoadingScreenUI.Instance.Show("loading.apply_settings", string.Empty, 100);
             }).Finally(() => LoadingScreenUI.Instance.LoadScene("Main"));
         }
     }

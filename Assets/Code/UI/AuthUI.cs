@@ -6,7 +6,6 @@ using Code.API.Models;
 using Code.UI.Popup;
 using Code.Utility;
 using Proyecto26;
-using Ricimi;
 using RSG;
 using TMPro;
 using UnityEditor;
@@ -35,8 +34,6 @@ namespace Code.UI
         public TMP_Text titleText;
 
         [Header("Resend Settings")] public int resendCooldownSeconds = 60;
-        public string resendButtonText = "Resend";
-        public string resendButtonTextWithTimer = "Resend ({0})";
 
         [Header("Results Handle")] public NexusModularPopupOpener popupPanel;
 
@@ -181,17 +178,8 @@ namespace Code.UI
             if (resendCodeButton != null) resendCodeButton.gameObject.SetActive(false);
             _isResendTimerActive = false;
 
-
-            if (titleText != null)
-                titleText.text =
-                    _isAuthorized
-                        ? $"Welcome back, {ClientDataStorage.UserData.username}"
-                        : "Welcome to the Nexus Meta Club";
-
-
-            if (authButtonText != null)
-                authButtonText.text = _isRegistered ? "Login" : "Sign up";
-
+            SetTitleText();
+            SetAuthButtonText();
 
             if (startGameButton != null)
                 startGameButton.gameObject.SetActive(_isAuthorized);
@@ -306,12 +294,10 @@ namespace Code.UI
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
             if (authButton != null) authButton.interactable = true;
             if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
-            if (titleText != null)
-                titleText.text =
-                    _isAuthorized
-                        ? $"Welcome back, {ClientDataStorage.UserData.username}"
-                        : "Welcome to the Nexus Meta Club";
-            if (authButtonText != null) authButtonText.text = _isRegistered ? "Login" : "Sign up";
+
+            SetTitleText();
+            SetAuthButtonText();
+
             if (!_isRegistered) OnNickNameChanged(nicknameInput.text);
         }
 
@@ -393,7 +379,8 @@ namespace Code.UI
             if (resendCodeButton == null) return;
             resendCodeButton.gameObject.SetActive(false);
             resendCodeButton.interactable = false;
-            if (_resendText != null) _resendText.text = resendButtonText;
+            if (_resendText != null) 
+                LocalizationHelper.SetLocalizedTextAsync(_resendText, "init.resend");
         }
 
         private void StartResendTimer()
@@ -424,16 +411,17 @@ namespace Code.UI
 
         private void UpdateResendButtonText()
         {
-            if (_resendText == null) return;
+            if (_resendText == null) 
+                return;
 
             if (_isResendTimerActive && _resendTimer > 0f)
             {
-                int remainingSeconds = Mathf.CeilToInt(_resendTimer);
-                _resendText.text = string.Format(resendButtonTextWithTimer, remainingSeconds);
+                var remainingSeconds = Mathf.CeilToInt(_resendTimer);
+                LocalizationHelper.SetLocalizedTextAsync(_resendText, "init.resend_timer", "time", remainingSeconds);
             }
             else
             {
-                _resendText.text = resendButtonText;
+                LocalizationHelper.SetLocalizedTextAsync(_resendText, "init.resend");
             }
         }
 
@@ -513,24 +501,24 @@ namespace Code.UI
             var getModelTypeRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetFileUrl($"PlayerModelType_{ClientDataStorage.UserData.id}.txt"),
-                Headers = ClientDataStorage.GetJwtHeader(), 
-                Timeout = 5
-            };
-            
-            var getSpawnRequest = new RequestHelper
-            {
-                Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
-                Headers = ClientDataStorage.GetJwtHeader(), 
+                Headers = ClientDataStorage.GetJwtHeader(),
                 Timeout = 5
             };
 
-            LoadingScreenUI.Instance.Show("Loading...", "Loading character", 0);
+            var getSpawnRequest = new RequestHelper
+            {
+                Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
+                Headers = ClientDataStorage.GetJwtHeader(),
+                Timeout = 5
+            };
+
+            LoadingScreenUI.Instance.Show("loading", "loading.character", 0);
             var isAvatarLoaded = false;
             var isModelTypeLoaded = false;
             RestClient.Get(getAvatarRequest).Then(getAvatarResponse =>
             {
-                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 40);
-                
+                LoadingScreenUI.Instance.Show("loading", "loading.character", 40);
+
                 if (getAvatarResponse.StatusCode != 200)
                     return RestClient.Get(getModelTypeRequest);
 
@@ -544,11 +532,11 @@ namespace Code.UI
                     Debug.LogError($"Ошибка при записи аватара в файл: {ex}");
                     isAvatarLoaded = false;
                 }
-                
+
                 return RestClient.Get(getModelTypeRequest);
             }).Then(getModelTypeResponse =>
             {
-                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 70);
+                LoadingScreenUI.Instance.Show("loading", "loading.character", 70);
                 if (getModelTypeResponse.StatusCode != 200)
                     return RestClient.Get(getSpawnRequest);
 
@@ -558,7 +546,7 @@ namespace Code.UI
                 return RestClient.Get(getSpawnRequest);
             }).Then(getSpawnResponse =>
             {
-                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 99);
+                LoadingScreenUI.Instance.Show("loading", "loading.character", 99);
                 if (getSpawnResponse.StatusCode != 200)
                     return;
 
@@ -583,12 +571,12 @@ namespace Code.UI
                 PlayerPrefs.Save();
             }).Finally(() =>
             {
-                LoadingScreenUI.Instance.Show("Loading...", "Loading character", 100);
+                LoadingScreenUI.Instance.Show("loading", "loading.character", 100);
                 var isLoadGame = isAvatarLoaded && isModelTypeLoaded;
                 if (LoadingScreenUI.Instance != null)
                     LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization",
-                        "Please wait...",
-                        "Loading...");
+                        "loading.please_wait",
+                        "loading");
                 else
                     SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization");
             });
@@ -616,6 +604,22 @@ namespace Code.UI
             ClientDataStorage.UserData = default;
             _isAuthorized = false;
             ToStartState();
+        }
+
+        private void SetAuthButtonText()
+        {
+            if (authButtonText != null)
+                LocalizationHelper.SetLocalizedTextAsync(authButtonText, _isRegistered ? "init.login" : "init.sign_up");
+        }
+
+        private void SetTitleText()
+        {
+            if (titleText == null)
+                return;
+            if(_isAuthorized)
+                LocalizationHelper.SetLocalizedTextAsync(titleText, "init.welcome_back_username", "nickname", ClientDataStorage.UserData.username);
+            else
+                LocalizationHelper.SetLocalizedTextAsync(titleText, "init.welcome");
         }
     }
 }

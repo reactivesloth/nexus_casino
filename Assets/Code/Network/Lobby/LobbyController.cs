@@ -146,7 +146,7 @@ namespace Code.Network.Lobby
                 for (int attempt = 0; attempt < maxSearchAttempts; attempt++)
                 {
                     LobbyVariables.Instance.lobbyPopupUI.Show(
-                        $"Searching lobby...", "", 10);
+                        $"loading.search_lobby", string.Empty, 10);
 
                     // 🔹 Запрос поиска лобби
                     yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, false);
@@ -171,7 +171,7 @@ namespace Code.Network.Lobby
                 if (!lobbyFound)
                 {
                     // ❗ За N попыток не найдено ни одного лобби → создаем свое
-                    LobbyVariables.Instance.lobbyPopupUI.Show("Creating lobby...", "", 10);
+                    LobbyVariables.Instance.lobbyPopupUI.Show("loading.create_lobby", string.Empty, 10);
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
                 }
 
@@ -234,11 +234,11 @@ namespace Code.Network.Lobby
             var maxLobbyUsers = LobbyVariables.Instance.maxLobbyUsers;
             var bucketId = LobbyVariables.Instance.bucketId;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Logging in...", 20);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.login", 20);
             yield return LocalUser.Get(out var localUser);
             var localUserId = localUser.Id;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Creating Lobby...", 40);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.creating", 40);
             yield return LobbyCreateLobby.Run(out var createLobby, localUserId, maxLobbyUsers, bucketId);
             if (createLobby.CallbackInfo?.ResultCode != Result.Success)
             {
@@ -253,7 +253,7 @@ namespace Code.Network.Lobby
             var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxLobbyUsers };
             LobbyVariables.Instance.currentLobby = currentLobby;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...", 60);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings", 60);
             yield return LobbyUpdateLobby.Run(out var updateLobbyPrivate, lobbyId, Private,
                 false.ToString());
             yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, ProductVersion,
@@ -270,7 +270,7 @@ namespace Code.Network.Lobby
                 Debug.LogWarning($"[LobbyCode] Failed to get lobby details: {result}");
             }
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...", 80);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings", 80);
             yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, Name,
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
@@ -287,7 +287,7 @@ namespace Code.Network.Lobby
                 Debug.LogWarning(
                     $"[LobbyCode] Failed to update lobby member score: {setHardScore.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...", 99);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings", 99);
             yield return LobbyUpdateLobby.Run(out var setId, lobbyId, HostID,
                 localUserId.ToString());
 
@@ -295,7 +295,7 @@ namespace Code.Network.Lobby
                 Application.version);
 
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...", 100);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings", 100);
 
             if (setId.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member host id: {setId.CallbackInfo?.ResultCode}");
@@ -327,7 +327,7 @@ namespace Code.Network.Lobby
                 yield break;
             }
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Please wait...", 20);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.join_lobby", "loading.please_wait", 20);
             yield return LobbyJoinLobby.Run(out var joinLobby, localUserId, lobbyDetails);
             if (joinLobby.CallbackInfo?.ResultCode != Result.Success)
             {
@@ -337,7 +337,7 @@ namespace Code.Network.Lobby
                 yield break;
             }
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Info...", 40);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.join_lobby", "loading.join_lobby.getting", 40);
             var getLobbyInfoResult =
                 global::Code.Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobbyDetails, out var lobbyInfo);
             if (getLobbyInfoResult != Result.Success)
@@ -350,7 +350,7 @@ namespace Code.Network.Lobby
 
             var lobbyId = lobbyInfo?.LobbyId;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Lobby Name...", 60);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.join_lobby", "loading.join_lobby.getting", 60);
             var getAttributeResult =
                 global::Code.Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobbyDetails, Name,
                     out var lobbyNameAttribute);
@@ -361,7 +361,7 @@ namespace Code.Network.Lobby
             var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyNameAttribute?.Data?.Value.AsUtf8, };
             LobbyVariables.Instance.currentLobby = currentLobby;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Setting Local User Display Name...", 99);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.join_lobby", "loading.join_lobby.settings", 99);
             yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, Name,
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
@@ -378,7 +378,7 @@ namespace Code.Network.Lobby
                 Debug.LogWarning(
                     $"[LobbyCode] Failed to update lobby member score: {setHardScore.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Joining Lobby...", "Getting Attributes...", 100);
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.join_lobby", "loading.join_lobby.settings", 100);
             SetLobbyAttributes(currentLobby, lobbyDetails);
 
             //LobbyVariables.Instance.lobbyPopupUI.Hide();
@@ -574,11 +574,11 @@ namespace Code.Network.Lobby
 
             LobbyVariables.Instance.AuthData.displayName = LobbyVariables.Instance.displayName;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Logging in...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.login");
             yield return LocalUser.Get(out var localUser);
             var localUserId = localUser.Id;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Creating Lobby...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings");
             yield return LobbyCreateLobby.Run(out var createLobby, localUserId, maxPlayers, bucketId);
             if (createLobby.CallbackInfo?.ResultCode != Result.Success)
             {
@@ -589,7 +589,7 @@ namespace Code.Network.Lobby
             }
 
             var lobbyId = createLobby.CallbackInfo?.LobbyId;
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Lobby Name...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings");
             yield return LobbyUpdateLobby.Run(out var updateLobbyVersion, lobbyId, ProductVersion,
                 Application.version);
             yield return LobbyUpdateLobby.Run(out var updateLobbyPrivate, lobbyId, Private,
@@ -608,19 +608,19 @@ namespace Code.Network.Lobby
             var currentLobby = new LobbyData { lobbyId = lobbyId, lobbyName = lobbyName, maxPlayers = maxPlayers };
             LobbyVariables.Instance.currentLobby = currentLobby;
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Display Name...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings");
             yield return LobbySetMemberAttribute.Run(out var setName, lobbyId, localUserId, Name,
                 LobbyVariables.Instance.displayName);
             if (setName.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to update lobby member name: {setName.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Ready...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings");
             yield return LobbySetMemberAttribute.Run(out var setReady, lobbyId, localUserId, Ready,
                 "Ready");
             if (setReady.CallbackInfo?.ResultCode != Result.Success)
                 Debug.LogWarning($"[LobbyCode] Failed to set lobby member ready: {setReady.CallbackInfo?.ResultCode}");
 
-            LobbyVariables.Instance.lobbyPopupUI.Show("Hosting Lobby...", "Setting Host Id...");
+            LobbyVariables.Instance.lobbyPopupUI.Show("loading.host_lobby", "loading.host_lobby.settings");
             yield return LobbyUpdateLobby.Run(out var setId, lobbyId, HostID,
                 localUserId.ToString());
             if (setId.CallbackInfo?.ResultCode != Result.Success)

@@ -22,10 +22,10 @@ namespace EOSLobby
         private void Awake()
         {
             if (ShowAtStartUntilHide)
-                Show ("Please wait...", "Loading...", 0);
+                Show ("loading.please_wait", "loading", 0);
             else if (HideAtStartAt > 0)
             {
-                Show ("Please wait...", "Loading...", 0);
+                Show ("loading.please_wait", "loading", 0);
                 Invoke ("Hide", HideAtStartAt);
             }
         }
