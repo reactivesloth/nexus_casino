@@ -1,7 +1,7 @@
-using System;
 using Code.Chat;
 using Code.InteractionSystem;
 using Code.UI.Popup;
+using Code.Utility;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
@@ -42,11 +42,11 @@ namespace Code.UI.Admin
 
         private void OnResetSlotButtonClick()
         {
-            _popupOpener.Title = $"Reset Slot №{_slot.IDNumber}";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.slots.reset.answer", "number", _slot.IDNumber);//$"Reset Slot №{_slot.IDNumber}";
 
             var resetButtonInfo = new ButtonInfo
             {
-                Label = "Reset",
+                Label = LocalizationHelper.GetLocalizedString("admin.slots.reset"),//"Reset",
                 ClosePopupWhenClicked = true,
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };

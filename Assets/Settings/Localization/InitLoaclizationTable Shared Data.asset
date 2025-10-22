@@ -15,6 +15,38 @@ MonoBehaviour:
   m_TableCollectionName: LocalizationTable
   m_TableCollectionNameGuidString: 12dda9d3c319e9549a856848c9e26a44
   m_Entries:
+  - m_Id: 10024205148160
+    m_Key: init.authorization
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10121219399680
+    m_Key: init.code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10188575727616
+    m_Key: init.get_code
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10287104122880
+    m_Key: init.login
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10117272559616
+    m_Key: init.phone_number
+    m_Metadata:
+      m_Items: []
+  - m_Id: 329007231918080
+    m_Key: init.resend
+    m_Metadata:
+      m_Items: []
+  - m_Id: 329350128852992
+    m_Key: init.resend_timer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 10225577877504
+    m_Key: init.sign_up
+    m_Metadata:
+      m_Items: []
   - m_Id: 185206824960
     m_Key: init.start_tap
     m_Metadata:
@@ -27,52 +59,16 @@ MonoBehaviour:
     m_Key: init.welcome_back_username
     m_Metadata:
       m_Items: []
-  - m_Id: 10024205148160
-    m_Key: init.authorization
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10117272559616
-    m_Key: init.phone_number
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10121219399680
-    m_Key: init.code
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10188575727616
-    m_Key: init.get_code
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10225577877504
-    m_Key: init.sign_up
-    m_Metadata:
-      m_Items: []
-  - m_Id: 10287104122880
-    m_Key: init.login
-    m_Metadata:
-      m_Items: []
   - m_Id: 75690073382912
     m_Key: loading
-    m_Metadata:
-      m_Items: []
-  - m_Id: 29970226208768
-    m_Key: loading.please_wait
-    m_Metadata:
-      m_Items: []
-  - m_Id: 75756687319040
-    m_Key: loading.start_scene
-    m_Metadata:
-      m_Items: []
-  - m_Id: 76000149889024
-    m_Key: loading.character
     m_Metadata:
       m_Items: []
   - m_Id: 76198074900480
     m_Key: loading.apply_settings
     m_Metadata:
       m_Items: []
-  - m_Id: 76722601975808
-    m_Key: loading.search_lobby
+  - m_Id: 76000149889024
+    m_Key: loading.character
     m_Metadata:
       m_Items: []
   - m_Id: 76790478397440
@@ -83,20 +79,32 @@ MonoBehaviour:
     m_Key: loading.host_lobby
     m_Metadata:
       m_Items: []
-  - m_Id: 77408261627904
-    m_Key: loading.host_lobby.login
+  - m_Id: 77117160153088
+    m_Key: loading.join_lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 29970226208768
+    m_Key: loading.please_wait
+    m_Metadata:
+      m_Items: []
+  - m_Id: 76722601975808
+    m_Key: loading.search_lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 75756687319040
+    m_Key: loading.start_scene
     m_Metadata:
       m_Items: []
   - m_Id: 77500028805120
     m_Key: loading.host_lobby.creating
     m_Metadata:
       m_Items: []
-  - m_Id: 77503136784384
-    m_Key: loading.host_lobby.settings
+  - m_Id: 77408261627904
+    m_Key: loading.host_lobby.login
     m_Metadata:
       m_Items: []
-  - m_Id: 77117160153088
-    m_Key: loading.join_lobby
+  - m_Id: 77503136784384
+    m_Key: loading.host_lobby.settings
     m_Metadata:
       m_Items: []
   - m_Id: 78347710226432
@@ -107,28 +115,16 @@ MonoBehaviour:
     m_Key: loading.join_lobby.settings
     m_Metadata:
       m_Items: []
-  - m_Id: 329007231918080
-    m_Key: init.resend
-    m_Metadata:
-      m_Items: []
-  - m_Id: 329350128852992
-    m_Key: init.resend_timer
-    m_Metadata:
-      m_Items: []
   - m_Id: 360539808063488
     m_Key: pause
-    m_Metadata:
-      m_Items: []
-  - m_Id: 361212058525696
-    m_Key: pause.continue
     m_Metadata:
       m_Items: []
   - m_Id: 361815300104192
     m_Key: pause.admin
     m_Metadata:
       m_Items: []
-  - m_Id: 361247793995776
-    m_Key: pause.settings
+  - m_Id: 361212058525696
+    m_Key: pause.continue
     m_Metadata:
       m_Items: []
   - m_Id: 361290869497856
@@ -139,8 +135,26 @@ MonoBehaviour:
     m_Key: pause.exit
     m_Metadata:
       m_Items: []
+  - m_Id: 361247793995776
+    m_Key: pause.settings
+    m_Metadata:
+      m_Items: []
   - m_Id: 374049392812032
     m_Key: admin
+    m_Metadata:
+      m_Items: []
+  - m_Id: 374158889312256
+    m_Key: admin.lobbies
+    m_Metadata:
+      m_Items: []
+  - m_Id: 374299633377280
+    m_Key: admin.new_lobby
+    m_Metadata:
+      m_Items: []
+  - m_Id: 718163917398016
+    m_Key: 'admin.new_lobby
+
+'
     m_Metadata:
       m_Items: []
   - m_Id: 374086080389120
@@ -151,36 +165,36 @@ MonoBehaviour:
     m_Key: admin.scene
     m_Metadata:
       m_Items: []
-  - m_Id: 374132016406528
-    m_Key: admin.slots
-    m_Metadata:
-      m_Items: []
-  - m_Id: 374158889312256
-    m_Key: admin.lobbies
-    m_Metadata:
-      m_Items: []
   - m_Id: 374255173754880
     m_Key: admin.search
     m_Metadata:
       m_Items: []
-  - m_Id: 374299633377280
-    m_Key: admin.new_lobby
+  - m_Id: 374132016406528
+    m_Key: admin.slots
     m_Metadata:
       m_Items: []
-  - m_Id: 374359997800448
-    m_Key: admin.players.mutechat
+  - m_Id: 374832175767552
+    m_Key: admin.lobbies.moveto
     m_Metadata:
       m_Items: []
-  - m_Id: 374433725276160
-    m_Key: admin.players.unmutechat
+  - m_Id: 718031205425152
+    m_Key: admin.lobby.host
     m_Metadata:
       m_Items: []
-  - m_Id: 374470916169728
-    m_Key: admin.players.mutevoice
+  - m_Id: 717834115080192
+    m_Key: admin.lobby.private
     m_Metadata:
       m_Items: []
-  - m_Id: 374493544439808
-    m_Key: admin.players.unmutevoice
+  - m_Id: 718274873516032
+    m_Key: admin.new_lobby.create
+    m_Metadata:
+      m_Items: []
+  - m_Id: 718462493122560
+    m_Key: admin.new_lobby.name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 718190190518272
+    m_Key: admin.new_lobby.sub
     m_Metadata:
       m_Items: []
   - m_Id: 374541338533888
@@ -191,20 +205,80 @@ MonoBehaviour:
     m_Key: admin.players.kick
     m_Metadata:
       m_Items: []
+  - m_Id: 374359997800448
+    m_Key: admin.players.mutechat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 374470916169728
+    m_Key: admin.players.mutevoice
+    m_Metadata:
+      m_Items: []
   - m_Id: 374614256508928
     m_Key: admin.players.promote
     m_Metadata:
       m_Items: []
-  - m_Id: 374832175767552
-    m_Key: admin.lobbies.moveto
+  - m_Id: 374433725276160
+    m_Key: admin.players.unmutechat
+    m_Metadata:
+      m_Items: []
+  - m_Id: 374493544439808
+    m_Key: admin.players.unmutevoice
     m_Metadata:
       m_Items: []
   - m_Id: 661421602889728
     m_Key: admin.slots.reset
     m_Metadata:
       m_Items: []
+  - m_Id: 720291973029888
+    m_Key: admin.lobbies.moveto.add_player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 720435963486208
+    m_Key: admin.lobbies.moveto.move
+    m_Metadata:
+      m_Items: []
+  - m_Id: 720381756301312
+    m_Key: admin.lobbies.moveto.remove_player
+    m_Metadata:
+      m_Items: []
+  - m_Id: 719776631480320
+    m_Key: admin.lobbies.moveto.title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 716940409561088
+    m_Key: admin.lobby.private.close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 716938027196416
+    m_Key: admin.lobby.private.open
+    m_Metadata:
+      m_Items: []
+  - m_Id: 733395750477824
+    m_Key: admin.players.ban.answer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 733393338753024
+    m_Key: admin.players.kick.answer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 733397545639936
+    m_Key: admin.players.promote.answer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 729135860146176
+    m_Key: admin.slots.reset.answer
+    m_Metadata:
+      m_Items: []
   - m_Id: 666409158828032
     m_Key: settings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 666509973118976
+    m_Key: settings.audio
+    m_Metadata:
+      m_Items: []
+  - m_Id: 666716433539072
+    m_Key: settings.cancel
     m_Metadata:
       m_Items: []
   - m_Id: 666443736670208
@@ -215,44 +289,16 @@ MonoBehaviour:
     m_Key: settings.graphics
     m_Metadata:
       m_Items: []
-  - m_Id: 666509973118976
-    m_Key: settings.audio
-    m_Metadata:
-      m_Items: []
   - m_Id: 666686888861696
     m_Key: settings.reset
-    m_Metadata:
-      m_Items: []
-  - m_Id: 666716433539072
-    m_Key: settings.cancel
     m_Metadata:
       m_Items: []
   - m_Id: 666752324198400
     m_Key: settings.save
     m_Metadata:
       m_Items: []
-  - m_Id: 668392091541504
-    m_Key: settings.game.language
-    m_Metadata:
-      m_Items: []
-  - m_Id: 668472345354240
-    m_Key: settings.game.invert_camera
-    m_Metadata:
-      m_Items: []
-  - m_Id: 668651882536960
-    m_Key: settings.game.camera_sens
-    m_Metadata:
-      m_Items: []
-  - m_Id: 668815049351168
-    m_Key: on
-    m_Metadata:
-      m_Items: []
-  - m_Id: 668860167479296
-    m_Key: off
-    m_Metadata:
-      m_Items: []
-  - m_Id: 669733845196800
-    m_Key: settings.audio.voice
+  - m_Id: 669896844238848
+    m_Key: settings.audio.effects
     m_Metadata:
       m_Items: []
   - m_Id: 669801700646912
@@ -263,8 +309,28 @@ MonoBehaviour:
     m_Key: settings.audio.slots
     m_Metadata:
       m_Items: []
-  - m_Id: 669896844238848
-    m_Key: settings.audio.effects
+  - m_Id: 669733845196800
+    m_Key: settings.audio.voice
+    m_Metadata:
+      m_Items: []
+  - m_Id: 668651882536960
+    m_Key: settings.game.camera_sens
+    m_Metadata:
+      m_Items: []
+  - m_Id: 668472345354240
+    m_Key: settings.game.invert_camera
+    m_Metadata:
+      m_Items: []
+  - m_Id: 668392091541504
+    m_Key: settings.game.language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 668815049351168
+    m_Key: on
+    m_Metadata:
+      m_Items: []
+  - m_Id: 668860167479296
+    m_Key: off
     m_Metadata:
       m_Items: []
   m_Metadata:

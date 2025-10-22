@@ -12,24 +12,18 @@ namespace Code.UI.Popup
     // Utility component to open a modular popup. See the associated ModularPopup script.
     public class NexusModularPopupOpener : PopupOpener
     {
-		[Header("Text")]
-		public string Title;
-		public string Subtitle;
-		[TextArea(minLines: 3, maxLines: 3)]
-		public string Message;
+        [Header("Text")] public string Title;
+        public string Subtitle;
+        [TextArea(minLines: 3, maxLines: 3)] public string Message;
 
-		[Space]
-		[Header("Image")]
-		public Sprite Image;
-		public Color32 TintColor = Color.white;
-		public string Caption;
+        [Space] [Header("Image")] public Sprite Image;
+        public Color32 TintColor = Color.white;
+        public string Caption;
 
-		[Space]
-		[Header("Buttons")]
-		public List<ButtonInfo> Buttons;
-		public List<InputInfo> Inputs;
+        [Space] [Header("Buttons")] public List<ButtonInfo> Buttons;
+        public List<InputInfo> Inputs;
 
-		public NexusModularPopup LastPopup => m_popup.GetComponent<NexusModularPopup>();
+        public NexusModularPopup LastPopup => m_popup.GetComponent<NexusModularPopup>();
 
         public override void OpenPopup()
         {
@@ -40,37 +34,35 @@ namespace Code.UI.Popup
 
         public override void ClosePopup()
         {
-	        base.ClosePopup();
-	        m_popup.GetComponent<NexusModularPopup>().Close();
+            base.ClosePopup();
+            m_popup.GetComponent<NexusModularPopup>().Close();
         }
 
         private void ResetValues()
         {
-	        Title = string.Empty;
-	        Subtitle = string.Empty;
-	        Message = string.Empty;
-	        Image = null;
-	        TintColor = Color.white;
-	        Caption = string.Empty;
-	        Buttons.Clear();
-	        Inputs.Clear();
+            Title = string.Empty;
+            Subtitle = string.Empty;
+            Message = string.Empty;
+            Image = null;
+            TintColor = Color.white;
+            Caption = string.Empty;
+            Buttons.Clear();
+            Inputs.Clear();
         }
     }
 
     [System.Serializable]
     public class InputInfo
     {
-	    public InputInfoType type;
-	    public string labelName;
-	    
-	    public TMP_InputField.ContentType contentType;
-
-	    public List<string> valueVariants;
+        public InputInfoType type;
+        public string labelName;
+        public TMP_InputField.ContentType contentType;
+        public List<string> valueVariants;
     }
 
     public enum InputInfoType
     {
-	    InputField,
-	    Dropdown,
+        InputField,
+        Dropdown
     }
 }

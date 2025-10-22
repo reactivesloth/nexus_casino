@@ -4,6 +4,7 @@ using System.Linq;
 using Code.Chat;
 using Code.Network.Lobby;
 using Code.UI.Popup;
+using Code.Utility;
 using Epic.OnlineServices;
 using Epic.OnlineServices.Lobby;
 using Ricimi;
@@ -97,7 +98,8 @@ namespace Code.UI.Admin
             titleDisplayText.text = lobbyName;
             idText.text = lobbyId;
             playersCountText.text = $"{currentPlayersCount}/{maxPlayersCount}";
-            privateText.text = isPrivate ? "Private" : "Public";
+            var privateKey= isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";
+            LocalizationHelper.SetLocalizedTextAsync(privateText, privateKey);
 
             var adminText = adminIn ? "Admin\n" : string.Empty;
             var hostText = hostIn ? "Host\n" : string.Empty;
@@ -110,26 +112,25 @@ namespace Code.UI.Admin
 
         private void OnMoveToButtonClick()
         {
-            _popupOpener.Title = "Move To Lobby";
-            _popupOpener.Subtitle = $"Lobby {_lobbyId}";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.lobbies.moveto.title");
 
             var addPlayerButton = new ButtonInfo
             {
-                Label = "Add Player",
+                Label = LocalizationHelper.GetLocalizedString("admin.lobbies.moveto.add_player"),
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             addPlayerButton.OnClickedEvent.AddListener(AddPlayerToPopup);
 
             var removePlayerButton = new ButtonInfo
             {
-                Label = "Remove Player",
+                Label = LocalizationHelper.GetLocalizedString("admin.lobbies.moveto.remove_player"),
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             removePlayerButton.OnClickedEvent.AddListener(RemovePlayerFromPopup);
 
             var movePlayersButton = new ButtonInfo
             {
-                Label = "Move Players",
+                Label = LocalizationHelper.GetLocalizedString("admin.lobbies.moveto.move"),
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             movePlayersButton.OnClickedEvent.AddListener(OnMoveClicked);

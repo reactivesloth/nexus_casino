@@ -131,7 +131,141 @@ namespace Code.Utility
             };
         }
 
-        // Публичные методы (интерфейс остаётся прежним)
+        // ========== СИНХРОННЫЕ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ СТРОК ==========
+
+        /// <summary>
+        /// Синхронно получает локализованную строку по ключу
+        /// </summary>
+        public static string GetLocalizedString(string tableKey)
+        {
+            if (string.IsNullOrEmpty(tableKey))
+            {
+                Debug.LogWarning("[LocalizationHelper] Table key is null or empty!");
+                return string.Empty;
+            }
+
+            var localizedString = new LocalizedString(LocalizationTableName, tableKey);
+            string result = localizedString.GetLocalizedString();
+
+            return result ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Синхронно получает локализованную строку с одним параметром
+        /// </summary>
+        public static string GetLocalizedString(string tableKey, string paramName, object paramValue)
+        {
+            if (string.IsNullOrEmpty(tableKey))
+            {
+                Debug.LogWarning("[LocalizationHelper] Table key is null or empty!");
+                return string.Empty;
+            }
+
+            var localizedString = new LocalizedString(LocalizationTableName, tableKey);
+            localizedString.Add(paramName, new StringVariable { Value = paramValue.ToString() });
+
+            string result = localizedString.GetLocalizedString();
+
+            return result ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Синхронно получает локализованную строку с несколькими параметрами
+        /// </summary>
+        public static string GetLocalizedString(string tableKey, params (string name, object value)[] parameters)
+        {
+            if (string.IsNullOrEmpty(tableKey))
+            {
+                Debug.LogWarning("[LocalizationHelper] Table key is null or empty!");
+                return string.Empty;
+            }
+
+            var localizedString = new LocalizedString(LocalizationTableName, tableKey);
+
+            if (parameters != null)
+            {
+                foreach (var (name, value) in parameters)
+                {
+                    localizedString.Add(name, new StringVariable { Value = value.ToString() });
+                }
+            }
+
+            string result = localizedString.GetLocalizedString();
+
+            return result ?? string.Empty;
+        }
+
+        // ========== АСИНХРОННЫЕ МЕТОДЫ ДЛЯ ПОЛУЧЕНИЯ СТРОК ==========
+
+        /// <summary>
+        /// Асинхронно получает локализованную строку по ключу
+        /// </summary>
+        public static async Task<string> GetLocalizedStringAsync(string tableKey)
+        {
+            if (string.IsNullOrEmpty(tableKey))
+            {
+                Debug.LogWarning("[LocalizationHelper] Table key is null or empty!");
+                return string.Empty;
+            }
+
+            await EnsureInitializedAsync();
+
+            var localizedString = new LocalizedString(LocalizationTableName, tableKey);
+            string result = await localizedString.GetLocalizedStringAsync().Task;
+
+            return result ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Асинхронно получает локализованную строку с одним параметром
+        /// </summary>
+        public static async Task<string> GetLocalizedStringAsync(string tableKey, string paramName, object paramValue)
+        {
+            if (string.IsNullOrEmpty(tableKey))
+            {
+                Debug.LogWarning("[LocalizationHelper] Table key is null or empty!");
+                return string.Empty;
+            }
+
+            await EnsureInitializedAsync();
+
+            var localizedString = new LocalizedString(LocalizationTableName, tableKey);
+            localizedString.Add(paramName, new StringVariable { Value = paramValue.ToString() });
+
+            string result = await localizedString.GetLocalizedStringAsync().Task;
+
+            return result ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Асинхронно получает локализованную строку с несколькими параметрами
+        /// </summary>
+        public static async Task<string> GetLocalizedStringAsync(string tableKey, params (string name, object value)[] parameters)
+        {
+            if (string.IsNullOrEmpty(tableKey))
+            {
+                Debug.LogWarning("[LocalizationHelper] Table key is null or empty!");
+                return string.Empty;
+            }
+
+            await EnsureInitializedAsync();
+
+            var localizedString = new LocalizedString(LocalizationTableName, tableKey);
+
+            if (parameters != null)
+            {
+                foreach (var (name, value) in parameters)
+                {
+                    localizedString.Add(name, new StringVariable { Value = value.ToString() });
+                }
+            }
+
+            string result = await localizedString.GetLocalizedStringAsync().Task;
+
+            return result ?? string.Empty;
+        }
+
+        // ========== ОРИГИНАЛЬНЫЕ МЕТОДЫ ДЛЯ УСТАНОВКИ ТЕКСТА ==========
 
         public static async void SetLocalizedTextAsync(TMP_Text textComponent, string tableKey, Action onComplete = null)
         {
@@ -233,7 +367,7 @@ namespace Code.Utility
             }
         }
 
-        // Дополнительные утилиты
+        // ========== УТИЛИТЫ ==========
 
         /// <summary>
         /// Отменяет автоматическое обновление для конкретного текстового компонента

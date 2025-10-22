@@ -4,6 +4,7 @@ using Code.Chat;
 using Code.Network.Lobby;
 using Code.Network.Lobby.Data;
 using Code.UI.Popup;
+using Code.Utility;
 using FishNet.Object.Synchronizing;
 using Ricimi;
 using TMPro;
@@ -100,25 +101,17 @@ namespace Code.UI.Admin
 
         private void OnKickClicked()
         {
-            _popupOpener.Title = "Kick";
-            _popupOpener.Subtitle = $"Do You want kick {Username}?";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.kick");//"Kick";
+            _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.kick.answer", "username", Username);//$"Do You want kick {Username}?";
 
             var yesButtonInfo = new ButtonInfo
             {
                 ClosePopupWhenClicked = true,
-                Label = "Yes",
+                Label = LocalizationHelper.GetLocalizedString("admin.players.kick"),//"Kick",
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             yesButtonInfo.OnClickedEvent.AddListener(KickAction);
             _popupOpener.Buttons.Add(yesButtonInfo);
-
-            var cancelButtonInfo = new ButtonInfo
-            {
-                ClosePopupWhenClicked = true,
-                IgnoreButtonClickedEvent = true,
-                Label = "Cancel"
-            };
-            _popupOpener.Buttons.Add(cancelButtonInfo);
 
             _popupOpener.OpenPopup();
         }
@@ -127,31 +120,23 @@ namespace Code.UI.Admin
 
         private void OnBanClicked()
         {
-            _popupOpener.Title = "Ban";
-            _popupOpener.Subtitle = $"Do You want ban {Username}?";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.ban");//"Ban";
+                _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.ban.answer", "username", Username);//$"Do You want ban {Username}?";
 
             _popupOpener.Inputs.Add(new InputInfo
             {
                 type = InputInfoType.InputField,
-                labelName = "Time in minutes",
+                labelName = LocalizationHelper.GetLocalizedString("admin.players.ban.time"), //"Time in minutes",
                 contentType = TMP_InputField.ContentType.IntegerNumber
             });
 
             var yesButtonInfo = new ButtonInfo
             {
                 ClosePopupWhenClicked = true,
-                Label = "Yes",
+                Label = LocalizationHelper.GetLocalizedString("admin.players.ban"), //"Ban",
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             _popupOpener.Buttons.Add(yesButtonInfo);
-
-            var cancelButtonInfo = new ButtonInfo
-            {
-                ClosePopupWhenClicked = true,
-                IgnoreButtonClickedEvent = true,
-                Label = "Cancel"
-            };
-            _popupOpener.Buttons.Add(cancelButtonInfo);
 
             _popupOpener.OpenPopup();
 
@@ -192,12 +177,12 @@ namespace Code.UI.Admin
 
         private void OnPromoteButtonClicked()
         {
-            _popupOpener.Title = "Promote";
-            _popupOpener.Subtitle = $"Do You want promote {Username}?";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.promote");//"Set as host";
+            _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.promote.answer", "username", Username);//$"Do You want promote {Username}?";
 
             var promoteButtonInfo = new ButtonInfo
             {
-                Label = "Promote",
+                Label = LocalizationHelper.GetLocalizedString("admin.players.promote"),//  "Promote",
                 ClosePopupWhenClicked = true,
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };

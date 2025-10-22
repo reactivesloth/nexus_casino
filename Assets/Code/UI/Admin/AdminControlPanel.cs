@@ -244,28 +244,34 @@ namespace Code.UI.Admin
 
         private void OnNewLobbyButtonClick()
         {
-            _popupOpener.Title = "New Lobby";
-            _popupOpener.Subtitle = $"Choise lobby name, privateStatus and host";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.new_lobby"); // "New Lobby";
+            _popupOpener.Subtitle =
+                LocalizationHelper
+                    .GetLocalizedString("admin.new_lobby.sub"); // $"Choise lobby name, privateStatus and host";
 
             var createButton = new ButtonInfo
             {
-                Label = "Add Player",
+                Label = LocalizationHelper.GetLocalizedString("admin.new_lobby.create"), //"Add Player",
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
             createButton.OnClickedEvent.AddListener(CreateLobbyClicked);
 
             _popupOpener.Inputs.Add(new InputInfo
             {
-                labelName = "Lobby Name",
+                labelName = LocalizationHelper.GetLocalizedString("admin.new_lobby.name"), //"Lobby Name",
                 type = InputInfoType.InputField,
                 contentType = TMP_InputField.ContentType.Standard
             });
 
             _popupOpener.Inputs.Add(new InputInfo
             {
-                labelName = "Private",
+                labelName = LocalizationHelper.GetLocalizedString("admin.lobby.private"),
                 type = InputInfoType.Dropdown,
-                valueVariants = new List<string> { "open", "close" }
+                valueVariants = new List<string>
+                {
+                    LocalizationHelper.GetLocalizedString("admin.lobby.private.open"),
+                    LocalizationHelper.GetLocalizedString("admin.lobby.private.close")
+                }
             });
 
             var hostVariants = new List<string> { "me" };
@@ -273,7 +279,7 @@ namespace Code.UI.Admin
 
             _popupOpener.Inputs.Add(new InputInfo
             {
-                labelName = "Host",
+                labelName = LocalizationHelper.GetLocalizedString("admin.lobby.host"),
                 type = InputInfoType.Dropdown,
                 valueVariants = hostVariants
             });
@@ -291,8 +297,8 @@ namespace Code.UI.Admin
         private void CreateLobbyClicked()
         {
             var roomName = _popupOpener.LastPopup.GetInputValue(0);
-            var isPrivate = _popupOpener.LastPopup.GetInputValue(1) == "close";
-            var hostName = _popupOpener.LastPopup.GetInputValue(2) == "me"
+            var isPrivate = _popupOpener.LastPopup.GetCurrentDropdownElementIndex(1) != 0;
+            var hostName = _popupOpener.LastPopup.GetCurrentDropdownElementIndex(2) == 0
                 ? null
                 : _popupOpener.LastPopup.GetInputValue(2);
 

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using Code.Utility;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -34,7 +35,7 @@ namespace Code.UI.Popup
 
         public GameObject InputGroup;
         public List<Selectable> Inputs;
-        
+
         public void Initialize(NexusModularPopupOpener opener)
         {
             buttonClose.onClick.AddListener(Close);
@@ -90,14 +91,15 @@ namespace Code.UI.Popup
             var textPlaceHolder = newInputField.placeholder as TMP_Text;
             if (textPlaceHolder != null)
                 textPlaceHolder.text = label;
+
             newInputField.contentType = contentType;
 
             Inputs.Add(newInputField);
-            
+
             InputsContainerChange();
         }
 
-        public void AddDropdown(string label, params string[] options)
+        public void AddDropdown(string label, string[] options)
         {
             var newDropdown = Instantiate(dropdownPrefab, InputGroup.transform);
             var textPlaceHolder = newDropdown.placeholder as TMP_Text;
@@ -109,7 +111,7 @@ namespace Code.UI.Popup
                 newDropdown.options.Add(new TMP_Dropdown.OptionData(option));
 
             Inputs.Add(newDropdown);
-            
+
             InputsContainerChange();
         }
 
@@ -118,7 +120,7 @@ namespace Code.UI.Popup
             var selectable = Inputs[index];
             if (selectable is not TMP_Dropdown dropdown)
                 return;
-            
+
             dropdown.ClearOptions();
             dropdown.AddOptions(newOptions);
         }
@@ -128,7 +130,7 @@ namespace Code.UI.Popup
         {
             if (index < 0 || index >= Inputs.Count)
                 return;
-            
+
             var selectable = Inputs[index];
             if (selectable is not TMP_Dropdown dropdown)
                 return;
@@ -146,6 +148,7 @@ namespace Code.UI.Popup
             {
                 // Копируем обработчики
             }
+
             var originalEvent = dropdown.onValueChanged;
 
             // Временно отключаем обработчики событий
@@ -186,9 +189,9 @@ namespace Code.UI.Popup
 
         public void RemoveInputAt(int index)
         {
-            if(index >= Inputs.Count || index < 0)
+            if (index >= Inputs.Count || index < 0)
                 return;
-            
+
             var input = Inputs[index];
             Destroy(input.gameObject);
             Inputs.Remove(input);
@@ -209,6 +212,14 @@ namespace Code.UI.Popup
                 default:
                     return null;
             }
+        }
+
+        public int GetCurrentDropdownElementIndex(int inputIndex)
+        {
+            if (inputIndex < 0 || inputIndex >= Inputs.Count || Inputs[inputIndex] is not TMP_Dropdown dropdown)
+                return -1;
+
+            return dropdown.value;
         }
 
         private void InputsContainerChange()
