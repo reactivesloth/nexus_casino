@@ -50,6 +50,7 @@ namespace Code.UI
         {
             loadingScreenUI.SetActive(true);
             yield return null;
+            PlayerPrefs.SetString("PreviousScene", SceneManager.GetActiveScene().name);
 
             AsyncOperation asyncOperation = SceneManager.LoadSceneAsync(sceneName);
             if (asyncOperation != null)

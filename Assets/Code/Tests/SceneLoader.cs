@@ -1,3 +1,4 @@
+using Code.UI;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -8,7 +9,7 @@ namespace Code.Tests
         public string sceneName = "Main";
         public KeyCode key = KeyCode.None;
         public bool isDisconnect;
-
+        
         private void Update()
         {
             if (key == KeyCode.None) return;
@@ -19,21 +20,17 @@ namespace Code.Tests
         public async void Load(string nameOrPath)
         {
             if (string.IsNullOrEmpty(nameOrPath)) return;
+            LoadingScreenUI.Instance.LoadScene(nameOrPath);
+        }
 
-            var op = SceneManager.LoadSceneAsync(nameOrPath);
-            if (op != null)
-            {
-                op.allowSceneActivation = true;
-                while (!op.isDone) await System.Threading.Tasks.Task.Yield();
-            }
-
-            if (isDisconnect)
-                Code.Network.Lobby.LobbyDisconnector.Disconnect();
+        public void LoadPreviousScene()
+        {
+            LoadingScreenUI.Instance.LoadScene(PlayerPrefs.GetString("PreviousScene"));
         }
 
         public void Load(int buildIndex)
         {
-            SceneManager.LoadScene(buildIndex);
+            LoadingScreenUI.Instance.LoadScene(SceneManager.GetSceneByBuildIndex(buildIndex).name);
             if (isDisconnect)
                 Code.Network.Lobby.LobbyDisconnector.Disconnect();
         }
