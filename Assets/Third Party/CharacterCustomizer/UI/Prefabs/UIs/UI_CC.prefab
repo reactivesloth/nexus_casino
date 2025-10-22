@@ -282,7 +282,6 @@ GameObject:
   - component: {fileID: 7465396236783605826}
   - component: {fileID: 5733565265521739004}
   - component: {fileID: 7378173874975335864}
-  - component: {fileID: -7663034267908521155}
   - component: {fileID: 5606002303517019210}
   m_Layer: 0
   m_Name: UI_CC
@@ -356,9 +355,9 @@ MonoBehaviour:
   m_UiScaleMode: 1
   m_ReferencePixelsPerUnit: 100
   m_ScaleFactor: 1
-  m_ReferenceResolution: {x: 1280, y: 850}
+  m_ReferenceResolution: {x: 1280, y: 650}
   m_ScreenMatchMode: 0
-  m_MatchWidthOrHeight: 0
+  m_MatchWidthOrHeight: 1
   m_PhysicalUnit: 3
   m_FallbackScreenDPI: 96
   m_DefaultSpriteDPI: 96
@@ -408,21 +407,6 @@ MonoBehaviour:
   sceneName: Main
   key: 0
   isDisconnect: 0
---- !u!114 &-7663034267908521155
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2396302900887007917}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8110ca87dbd7f4972922ff80c87c4ed0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.UI.UICanvasPlatformScaler
-  mobileScale: 600
-  desktopScale: 850
-  forceMobile: 0
 --- !u!114 &5606002303517019210
 MonoBehaviour:
   m_ObjectHideFlags: 0
