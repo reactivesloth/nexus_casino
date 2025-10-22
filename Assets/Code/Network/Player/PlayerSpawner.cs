@@ -258,8 +258,12 @@ namespace Code.Network.Player
 
         private static void SetSpawnUsingPrefab(Transform prefab, out Vector3 pos, out Quaternion rot)
         {
-            pos = prefab != null ? prefab.position : Vector3.zero;
-            rot = prefab != null ? prefab.rotation : Quaternion.identity;
+            // pos = prefab != null ? prefab.position : Vector3.zero;
+            // rot = prefab != null ? prefab.rotation : Quaternion.identity;
+
+            var point = GameObject.FindGameObjectWithTag("Respawn").transform;
+            pos = point.position;
+            rot = point.rotation;
         }
 
         /// <summary>Запретить спавн для соединения на ближайшее событие OnClientLoadedStartScenes.</summary>
