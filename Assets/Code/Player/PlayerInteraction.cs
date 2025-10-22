@@ -159,11 +159,11 @@ namespace Code.Player
             if (InteractionUIHint.Instance == null) return;
 
             var interactText = PlayerInput.Instance.IsUsingMobileFallback
-                ? "Press Interact button to use"
-                : "Press E to use";
+                ? "scene.interactable.mobile.start"
+                : "scene.interactable.pc.start";
             var endInteractText = PlayerInput.Instance.IsUsingMobileFallback
                 ? string.Empty
-                : "Press E to stand up";
+                : "scene.interactable.pc.stop";
             
             if (Active != null) InteractionUIHint.Instance.ShowPrompt(endInteractText);
             else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(interactText);

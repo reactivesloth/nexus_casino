@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using Code.Utility;
+using TMPro;
 using UnityEngine;
 
 namespace Code.UI
@@ -39,8 +40,9 @@ namespace Code.UI
         {
             EnsureInit();
             if (_promptUI != null) _promptUI.SetActive(true);
-            if (_promptText != null) _promptText.text = message ?? string.Empty;
-            if (message == string.Empty)
+            if (_promptText != null) 
+                LocalizationHelper.SetLocalizedTextAsync(_promptText, message);
+            if (string.IsNullOrEmpty(message))
                 HidePrompt();
         }
 
