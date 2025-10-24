@@ -214,6 +214,7 @@ namespace Code.Player
                 fallTimeoutDelta = fallTimeout;
                 
                 LobbyVariables.Instance.lobbyPopupUI.Hide();
+                CursorManager.Instance.HideCursor();
             }
         }
 
