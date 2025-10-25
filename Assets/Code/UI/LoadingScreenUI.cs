@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using Code.Utility;
 using TMPro;
 using UnityEngine;
@@ -18,6 +19,8 @@ namespace Code.UI
         [SerializeField] private TextMeshProUGUI percentageText;
         [SerializeField] private Slider percentageSlider;
 
+        private float sliderValue;
+        
         private void Awake()
         {
             if (Instance == null || Instance != this)
@@ -29,6 +32,19 @@ namespace Code.UI
             loadingScreenUI.SetActive(false);
         }
 
+        private void Update()
+        {
+            if (percentageSlider.gameObject.activeSelf)
+            {
+                percentageSlider.value = Mathf.Lerp(percentageSlider.value, sliderValue, Time.deltaTime);
+                percentageText.text = percentageSlider.value.ToString("F0") + "%";
+            }
+            else
+            {
+                percentageSlider.value = 0;
+            }
+        }
+
         // titleKey и messageKey — именно ключи в таблице локализации!
         public void Show(string titleKey, string messageKey, int percentage = 100)
         {
@@ -36,8 +52,7 @@ namespace Code.UI
             LocalizationHelper.SetLocalizedTextAsync(titleText, titleKey);
             LocalizationHelper.SetLocalizedTextAsync(messageText, messageKey);
 
-            percentageSlider.value = percentage;
-            percentageText.text = percentage.ToString("F0") + "%";
+            sliderValue = percentage;
             percentageSlider.gameObject.SetActive(percentage > 1 && percentage < 100);
         }
 
@@ -58,17 +73,15 @@ namespace Code.UI
                 asyncOperation.allowSceneActivation = false;
                 while (!asyncOperation.isDone)
                 {
-                    percentageSlider.value = asyncOperation.progress * 100;
-                    percentageText.text = (asyncOperation.progress * 100).ToString("F0") + "%";
+                    sliderValue = asyncOperation.progress * 100;
                     LocalizationHelper.SetLocalizedTextAsync(titleText, titleKey);
                     LocalizationHelper.SetLocalizedTextAsync(messageText, messageKey);
 
                     if (asyncOperation.progress >= 0.9f)
                     {
-                        percentageSlider.value = 100;
-                        percentageText.text = "100%";
+                        sliderValue = 100;
                         LocalizationHelper.SetLocalizedTextAsync(messageText, "loading.start_scene"); // Ключ для "Starting scene..."
-                        if (!asyncOperation.allowSceneActivation)
+                        if (!asyncOperation.allowSceneActivation) 
                         {
                             asyncOperation.allowSceneActivation = true;
                         }

@@ -145,8 +145,7 @@ namespace Code.Network.Lobby
 
                 for (int attempt = 0; attempt < maxSearchAttempts; attempt++)
                 {
-                    LobbyVariables.Instance.lobbyPopupUI.Show(
-                        $"loading.search_lobby", string.Empty, 10);
+                    LobbyVariables.Instance.lobbyPopupUI.Show($"loading.search_lobby", string.Empty, 10 * (attempt + 1));
 
                     // 🔹 Запрос поиска лобби
                     yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, false);
@@ -171,7 +170,7 @@ namespace Code.Network.Lobby
                 if (!lobbyFound)
                 {
                     // ❗ За N попыток не найдено ни одного лобби → создаем свое
-                    LobbyVariables.Instance.lobbyPopupUI.Show("loading.create_lobby", string.Empty, 10);
+                    //LobbyVariables.Instance.lobbyPopupUI.Show("loading.create_lobby", string.Empty, 10);
                     StartCoroutine(OnHobbyLobbyClickedRoutine());
                 }
 
