@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Ricimi;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Localization.Settings;
@@ -7,11 +8,11 @@ namespace Code.UI
 {
     public class LocalizeDropdown : MonoBehaviour
     {
-        [SerializeField] private TMP_Dropdown dropdown;
+        [SerializeField] private TextSelectionSlider dropdown;
         
         private void OnValidate()
         {
-            dropdown ??= GetComponent<TMP_Dropdown>();
+            dropdown ??= GetComponent<TextSelectionSlider>();
         }
 
         private async void Start()
@@ -34,9 +35,10 @@ namespace Code.UI
                 localeNames.Add(locale.LocaleName);
             }
 
-            // Добавляем опции в dropdown
+            if (dropdown == null) return;
+            dropdown.ClearOptions();
             dropdown.AddOptions(localeNames);
-
+            
             // Устанавливаем текущую локаль как выбранную
             var currentLocale = LocalizationSettings.SelectedLocale;
             int currentIndex = locales.IndexOf(currentLocale);
@@ -62,10 +64,10 @@ namespace Code.UI
             
             if (index >= 0)
             {
-                dropdown.SetValueWithoutNotify(index);
+                dropdown.value = index;
             }
         }
-
+        
         private void OnDestroy()
         {
             if (dropdown != null)
