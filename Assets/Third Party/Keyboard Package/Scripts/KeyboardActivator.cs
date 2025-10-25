@@ -7,17 +7,20 @@ public class KeyboardActivator : MonoBehaviour
 {
     public void OpenKeyboardFull(TMP_InputField field)
     {
-        KeyboardManager.Instance.Show(field, KeyboardType.Full);
+        if (!Input.touchSupported) return;
+            KeyboardManager.Instance.Show(field, KeyboardType.Full);
     }
 
     public void OpenKeyboardOnlyNumbers(TMP_InputField field)
     {
-        KeyboardManager.Instance.Show(field, KeyboardType.OnlyNumbers);
+        if (!Input.touchSupported) return;
+            KeyboardManager.Instance.Show(field, KeyboardType.OnlyNumbers);
     }
 
     public void OpenKeyboardOnlyLetters(TMP_InputField field)
     {
-        KeyboardManager.Instance.Show(field, KeyboardType.OnlyLetters);
+        if (!Input.touchSupported) return;
+            KeyboardManager.Instance.Show(field, KeyboardType.OnlyLetters);
     }
 
     public void CloseKeyboard()
@@ -27,7 +30,8 @@ public class KeyboardActivator : MonoBehaviour
 
     public void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (!Input.touchSupported) return;
+        if (Input.GetMouseButtonDown(0) || Input.touches.Length > 0)
         {
             CloseKeyboard();
         }

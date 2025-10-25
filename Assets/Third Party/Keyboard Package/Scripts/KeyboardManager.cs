@@ -39,6 +39,9 @@ public class KeyboardManager : MonoBehaviour
 
     public void Close()
     {
+        if (!KeyboardObject.activeSelf)
+            return;
+     
         Vector2 pos = Vector2.zero;
         if (Input.touches.Length > 0)
             pos = Input.touches.Last().position;

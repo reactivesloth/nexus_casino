@@ -22,6 +22,7 @@ namespace Code.UI
         public TMP_InputField codeInput;
         public Button getConfirmCodeButton;
         public Button authButton;
+        public Button nextButton;
         public Button resendCodeButton;
         public Button exit;
         public Button logoutButton;
@@ -198,8 +199,47 @@ namespace Code.UI
                 boutiqueButton.gameObject.SetActive(_isAuthorized);
             if (loginPopup != null)
                 loginPopup.SetActive(!_isAuthorized);
+
+            if (!_isAuthorized)
+            {
+                ToPhoneState();
+            }
         }
 
+        private void ToPhoneState()
+        {
+            loginPopup.gameObject.SetActive(true);
+            phoneInput.gameObject.SetActive(true);
+            codeInput.gameObject.SetActive(false);
+            nicknameInput.gameObject.SetActive(false);
+            authButton.gameObject.SetActive(false);
+            nextButton.gameObject.SetActive(true);
+            nextButton.onClick.RemoveAllListeners();
+            nextButton.onClick.AddListener(ToCodeState);
+        }
+
+        private void ToCodeState()
+        {
+            loginPopup.gameObject.SetActive(true);
+            phoneInput.gameObject.SetActive(false);
+            codeInput.gameObject.SetActive(true);
+            nicknameInput.gameObject.SetActive(false);
+            authButton.gameObject.SetActive(true);
+            nextButton.onClick.RemoveAllListeners();
+            nextButton.gameObject.SetActive(false);
+        }
+
+        private void ToEnterNicknameState()
+        {
+            loginPopup.gameObject.SetActive(true);
+            phoneInput.gameObject.SetActive(false);
+            codeInput.gameObject.SetActive(false);
+            nicknameInput.gameObject.SetActive(true);   
+            authButton.gameObject.SetActive(true);
+            nextButton.onClick.RemoveAllListeners();
+            nextButton.gameObject.SetActive(false);
+        }        
+        
         private void ValidateSavedToken()
         {
             var userDataRequest = new RequestHelper
@@ -267,6 +307,7 @@ namespace Code.UI
                 if (phoneInput.text.Length > 0 && phoneInput.text[0] == '0')
                 {
                     OnGetCodeSuccess();
+                    StartResendTimer();
                     return;
                 }
 
@@ -309,12 +350,21 @@ namespace Code.UI
             SetTitleText();
             SetAuthButtonText();
 
-            if (!_isRegistered) OnNickNameChanged(nicknameInput.text);
+            if (!_isRegistered)
+            {
+                OnNickNameChanged(nicknameInput.text);
+            }
         }
 
         private void OnAuthClicked()
         {
             if (authButton != null) authButton.interactable = false;
+
+            if (!codeInput.gameObject.activeSelf)
+            {
+                ToCodeState();
+            }
+            
             if (_isRegistered) PerformLogin();
             else PerformRegister();
         }
@@ -642,6 +692,8 @@ namespace Code.UI
                 LocalizationHelper.SetLocalizedTextAsync(titleText, "init.welcome_back_username", "nickname", ClientDataStorage.UserData.username);
             else
                 LocalizationHelper.SetLocalizedTextAsync(titleText, "init.welcome");
+            
+            titleText.gameObject.SetActive(_isAuthorized);
         }
     }
 }
