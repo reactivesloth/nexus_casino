@@ -5,12 +5,19 @@ using UnityEngine.EventSystems;
 
 public class KeyboardActivator : MonoBehaviour
 {
-    public void OpenKeyboard(TMP_InputField field)
+    public void OpenKeyboardFull(TMP_InputField field)
     {
-        if (!Input.touchSupported)
-            return;
-        
-        KeyboardManager.Instance.Show(field);
+        KeyboardManager.Instance.Show(field, KeyboardType.Full);
+    }
+
+    public void OpenKeyboardOnlyNumbers(TMP_InputField field)
+    {
+        KeyboardManager.Instance.Show(field, KeyboardType.OnlyNumbers);
+    }
+
+    public void OpenKeyboardOnlyLetters(TMP_InputField field)
+    {
+        KeyboardManager.Instance.Show(field, KeyboardType.OnlyLetters);
     }
 
     public void CloseKeyboard()
@@ -20,9 +27,6 @@ public class KeyboardActivator : MonoBehaviour
 
     public void Update()
     {
-        if (!Input.touchSupported)
-            return;
-        
         if (Input.GetMouseButtonDown(0))
         {
             CloseKeyboard();

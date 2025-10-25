@@ -1,6 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
+public enum KeyboardType
+{
+    Full,
+    OnlyLetters,
+    OnlyNumbers
+}
 
 public class KeyboardController : MonoBehaviour
 {
@@ -21,7 +29,10 @@ public class KeyboardController : MonoBehaviour
     [SerializeField] GameObject actionNumbers;
     [SerializeField] GameObject actionCapitalLetters;
     [SerializeField] GameObject actionSmallLetters;
-
+    [SerializeField] GameObject actionEnter;
+    [SerializeField] GameObject actionSpace;
+    [SerializeField] GameObject actionDelete;
+    
     private bool isSmallLettersShown = true;
 
     public void ShowCapitalLetters() {
@@ -44,6 +55,9 @@ public class KeyboardController : MonoBehaviour
         splCharsNum2.SetActive(false);
         splChars1.SetActive(false);
         splChars2.SetActive(false);
+        actionEnter.SetActive(true);
+        actionSpace.SetActive(true);
+        actionDelete.SetActive(false);
     }
     
     public void ShowSmallLetters() {
@@ -66,6 +80,9 @@ public class KeyboardController : MonoBehaviour
         splCharsNum2.SetActive(false);
         splChars1.SetActive(false);
         splChars2.SetActive(false);
+        actionEnter.SetActive(true);
+        actionSpace.SetActive(true);
+        actionDelete.SetActive(false);
     }
 
     public void ShowSpecialCharsNum() {
@@ -93,6 +110,9 @@ public class KeyboardController : MonoBehaviour
 
         splChars1.SetActive(false);
         splChars2.SetActive(false);
+        actionEnter.SetActive(true);
+        actionSpace.SetActive(true);
+        actionDelete.SetActive(false);
     }
 
     public void ShowSpecialChars() {
@@ -120,5 +140,58 @@ public class KeyboardController : MonoBehaviour
 
         splChars1.SetActive(true);
         splChars2.SetActive(true);
+        actionEnter.SetActive(true);
+        actionSpace.SetActive(true);
+        actionDelete.SetActive(false);
+    }
+
+    public void SetType(KeyboardType type)
+    {
+        switch (type)
+        {
+            case KeyboardType.Full:
+                ShowSmallLetters();
+                break;
+            case KeyboardType.OnlyLetters:
+                actionNumbers.SetActive(false);
+                actionSmallLetters.SetActive(false);
+                actionCapitalLetters.SetActive(false);
+                smallAlphaRow1.SetActive(true);
+                smallAlphaRow2.SetActive(true);
+                smallAlphaRow3.SetActive(true);
+                capitalAlphaRow1.SetActive(false);
+                capitalAlphaRow2.SetActive(false);
+                capitalAlphaRow3.SetActive(false);
+                numbers.SetActive(false);
+                splCharsNum1.SetActive(false);
+                splCharsNum2.SetActive(false);
+                splChars1.SetActive(false);
+                splChars2.SetActive(false);
+                actionEnter.SetActive(false);
+                actionSpace.SetActive(false);
+                actionDelete.SetActive(false);
+                break;
+            case KeyboardType.OnlyNumbers:
+                actionNumbers.SetActive(false);
+                actionSmallLetters.SetActive(false);
+                actionCapitalLetters.SetActive(false);
+                smallAlphaRow1.SetActive(false);
+                smallAlphaRow2.SetActive(false);
+                smallAlphaRow3.SetActive(false);
+                capitalAlphaRow1.SetActive(false);
+                capitalAlphaRow2.SetActive(false);
+                capitalAlphaRow3.SetActive(false);
+                numbers.SetActive(true);
+                splCharsNum1.SetActive(false);
+                splCharsNum2.SetActive(false);
+                splChars1.SetActive(false);
+                splChars2.SetActive(false);
+                actionEnter.SetActive(false);
+                actionSpace.SetActive(false);
+                actionDelete.SetActive(true);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(type), type, null);
+        }
     }
 }

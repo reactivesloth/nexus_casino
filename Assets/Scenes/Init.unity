@@ -5834,6 +5834,10 @@ PrefabInstance:
       propertyPath: m_CharacterValidation
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 928589791358947598, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OpenKeyboardOnlyLetters
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -7082,7 +7086,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 928589791358947598, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
   m_PrefabInstance: {fileID: 1612381082}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1612381083}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
@@ -8918,6 +8922,10 @@ PrefabInstance:
       propertyPath: m_ContentType
       value: 7
       objectReference: {fileID: 0}
+    - target: {fileID: 928589791358947598, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OpenKeyboardOnlyNumbers
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -8931,30 +8939,10 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1081700432}
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 928589791358947592, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1612381084}
     - targetCorrespondingSourceObject: {fileID: 928589791317625641, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1915531346}
   m_SourcePrefab: {fileID: 100100000, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
---- !u!1 &1612381083 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 928589791358947592, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
-  m_PrefabInstance: {fileID: 1612381082}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1612381084
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1612381083}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c73287f2cf9145f4591e68042339d597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::KeyboardActivator
 --- !u!1001 &1662649007
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9111,6 +9099,10 @@ PrefabInstance:
       propertyPath: m_CharacterValidation
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 928589791358947598, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
+      propertyPath: m_OnSelect.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: OpenKeyboardOnlyNumbers
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -9118,18 +9110,10 @@ PrefabInstance:
       insertIndex: 0
       addedObject: {fileID: 1042203763}
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 928589791358947592, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2058591444}
     - targetCorrespondingSourceObject: {fileID: 928589791317625641, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 389078852}
   m_SourcePrefab: {fileID: 100100000, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
---- !u!1 &1662649008 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 928589791358947592, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
-  m_PrefabInstance: {fileID: 1662649007}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1696430574
 GameObject:
   m_ObjectHideFlags: 0
@@ -10132,24 +10116,12 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 928589791358947598, guid: 02bda67cffaca469d808a722b471d34e, type: 3}
   m_PrefabInstance: {fileID: 1662649007}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1662649008}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &2058591444
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1662649008}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c73287f2cf9145f4591e68042339d597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::KeyboardActivator
 --- !u!1 &2119614077
 GameObject:
   m_ObjectHideFlags: 0

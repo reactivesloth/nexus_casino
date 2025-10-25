@@ -1,9 +1,11 @@
+using System.Linq;
 using UnityEngine;
 using TMPro;
 using UnityEngine.UI;
 
 public class KeyboardManager : MonoBehaviour
 {
+    
     public static KeyboardManager Instance;
     public GameObject KeyboardObject;
     private TMP_InputField _currentInputField;
@@ -37,18 +39,24 @@ public class KeyboardManager : MonoBehaviour
 
     public void Close()
     {
-        Vector2 localMousePosition = _currentInputField.GetComponent<RectTransform>().InverseTransformPoint(Input.mousePosition);
-        Vector2 localMousePosition2 = KeyboardObject.GetComponent<RectTransform>().InverseTransformPoint(Input.mousePosition);
+        Vector2 pos = Vector2.zero;
+        if (Input.touches.Length > 0)
+            pos = Input.touches.Last().position;
+        else
+            pos = Input.mousePosition;
+    
+        Vector2 localMousePosition = _currentInputField.GetComponent<RectTransform>().InverseTransformPoint(pos);
+        Vector2 localMousePosition2 = KeyboardObject.GetComponent<RectTransform>().InverseTransformPoint(pos);
         if (!_currentInputField.GetComponent<RectTransform>().rect.Contains(localMousePosition) && !KeyboardObject.GetComponent<RectTransform>().rect.Contains(localMousePosition2))
         {
             KeyboardObject.SetActive(false);
         }
     }
 
-    public void Show(TMP_InputField inputField)
+    public void Show(TMP_InputField inputField, KeyboardType type = KeyboardType.Full)
     {
-        if (!Input.touchSupported)
-            return;
+        KeyboardController controller = KeyboardObject.GetComponentInChildren<KeyboardController>();
+        controller.SetType(type);
         
         KeyboardObject.SetActive(true);
         _currentInputField = inputField;
