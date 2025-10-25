@@ -323,15 +323,15 @@ namespace Code.Player
 
         private void Update()
         {
-            if (!IsOwner) return;
-            if (!_initedPlayer) EnsureInit();
-
             if (transform.position.y < -10)
             {
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
                 transform.position = point.position;
                 transform.rotation = point.rotation;
             }
+            
+            if (!IsOwner) return;
+            if (!_initedPlayer) EnsureInit();
             
             if (_mainCamera == null) _mainCamera = Camera.main;
             if (virtualCamera == null) virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
