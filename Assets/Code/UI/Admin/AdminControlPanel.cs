@@ -134,6 +134,7 @@ namespace Code.UI.Admin
             _currentControlPrefab = userControlElementPrefab;
             OnStartNewTab();
             SetTabsOutline(usersButton);
+            SetTabsInteractable(usersButton);
             UpdateUsers();
         }
 
@@ -142,6 +143,7 @@ namespace Code.UI.Admin
             _currentControlPrefab = sceneControlElementPrefab;
             OnStartNewTab();
             SetTabsOutline(sceneButton);
+            SetTabsInteractable(sceneButton);
             UpdateScene();
         }
 
@@ -150,6 +152,7 @@ namespace Code.UI.Admin
             _currentControlPrefab = slotControlElementPrefab;
             OnStartNewTab();
             SetTabsOutline(slotsButton);
+            SetTabsInteractable(slotsButton);
             UpdateSlots();
         }
 
@@ -158,6 +161,7 @@ namespace Code.UI.Admin
             _currentControlPrefab = lobbyControlElementPrefab;
             OnStartNewTab();
             SetTabsOutline(lobbiesButton);
+            SetTabsInteractable(lobbiesButton);
             UpdateLobbies();
         }
 
@@ -167,6 +171,13 @@ namespace Code.UI.Admin
             sceneButton.GetComponent<Outline>().enabled = sceneButton == currentTabButton;
             lobbiesButton.GetComponent<Outline>().enabled = lobbiesButton == currentTabButton;
             slotsButton.GetComponent<Outline>().enabled = slotsButton == currentTabButton;
+        }
+        private void SetTabsInteractable(Button currentTabButton)
+        {
+            usersButton.interactable = usersButton != currentTabButton;
+            sceneButton.interactable = sceneButton != currentTabButton;
+            lobbiesButton.interactable = lobbiesButton != currentTabButton;
+            slotsButton.interactable = slotsButton != currentTabButton;
         }
 
         #endregion
