@@ -8,6 +8,7 @@ using Code.Utility;
 using Proyecto26;
 using RSG;
 using TMPro;
+using Unity.Android.Gradle;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -164,7 +165,7 @@ namespace Code.UI
             if (phoneInput != null)
             {
                 phoneInput.interactable = true;
-                phoneInput.text = PlayerPrefs.GetString("auth_phoneInput", string.Empty);
+                phoneInput.text = PlayerPrefs.GetString("auth_phoneInput", CountryCode.GetCodeByLocale(Application.systemLanguage).ToString());
             }
 
 
@@ -235,9 +236,10 @@ namespace Code.UI
             phoneInput.gameObject.SetActive(false);
             codeInput.gameObject.SetActive(false);
             nicknameInput.gameObject.SetActive(true);   
-            authButton.gameObject.SetActive(true);
+            authButton.gameObject.SetActive(false);
             nextButton.onClick.RemoveAllListeners();
-            nextButton.gameObject.SetActive(false);
+            nextButton.gameObject.SetActive(true);
+            nextButton.onClick.AddListener(PerformRegister);
         }        
         
         private void ValidateSavedToken()
@@ -345,28 +347,17 @@ namespace Code.UI
             if (codeInput != null) codeInput.gameObject.SetActive(true);
             if (getConfirmCodeButton != null) getConfirmCodeButton.gameObject.SetActive(false);
             if (authButton != null) authButton.interactable = true;
-            if (nicknameInput != null) nicknameInput.gameObject.SetActive(!_isRegistered);
 
             SetTitleText();
             SetAuthButtonText();
-
-            if (!_isRegistered)
-            {
-                OnNickNameChanged(nicknameInput.text);
-            }
         }
 
         private void OnAuthClicked()
         {
             if (authButton != null) authButton.interactable = false;
-
-            if (!codeInput.gameObject.activeSelf)
-            {
-                ToCodeState();
-            }
             
             if (_isRegistered) PerformLogin();
-            else PerformRegister();
+            else ToEnterNicknameState();
         }
 
         private void PerformLogin()

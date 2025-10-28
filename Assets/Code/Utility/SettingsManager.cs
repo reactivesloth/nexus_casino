@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 
 namespace Code.Utility
 {
@@ -68,7 +69,7 @@ namespace Code.Utility
             CameraSensitivity = PlayerPrefs.GetFloat("CameraSensitivity", DefaultCameraSensitivity);
             InvertCamera      = PlayerPrefs.GetInt("InvertCamera", DefaultInvertCamera ? 1 : 0) == 1;
 
-            LanguageCode      = PlayerPrefs.GetString("Language", DefaultLanguageCode);
+            LanguageCode      = PlayerPrefs.GetString("Language", Application.systemLanguage.ToString());
 
             ApplyAllSettings();
         }
@@ -134,7 +135,7 @@ namespace Code.Utility
             // Graphics
             QualitySettings.SetQualityLevel(QualityLevel);
             Application.targetFrameRate = FPSLimit;
-            QualitySettings.antiAliasing = Mathf.Max(0, AntiAliasingLevel);
+            QualitySettings.antiAliasing = Mathf.Max(0, AntiAliasingLevel);;
 
             // PostFX
             var pp = PostProcessingManager.Instance;
@@ -160,7 +161,7 @@ namespace Code.Utility
         public void SetCameraSensitivity(float sens) { CameraSensitivity = sens; PlayerPrefs.SetFloat("CameraSensitivity", sens); }
         public void SetInvertCamera(bool invert)     { InvertCamera      = invert; PlayerPrefs.SetInt("InvertCamera", invert ? 1 : 0); }
 
-        public void SetLanguage(string code)         { LanguageCode = string.IsNullOrEmpty(code) ? DefaultLanguageCode : code; PlayerPrefs.SetString("Language", LanguageCode); }
+        public void SetLanguage(string code)         { LanguageCode = string.IsNullOrEmpty(code) ? Application.systemLanguage.ToString() : code; PlayerPrefs.SetString("Language", LanguageCode); }
 
         #endregion
     }
