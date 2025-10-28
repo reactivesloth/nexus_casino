@@ -29,18 +29,21 @@ namespace Code.UI
 
         public void Hide()
         {
+            sliderValue = 0;
+            percentageSlider.value = 0;
             loadingScreenUI.SetActive(false);
         }
 
         private void Update()
         {
-            if (percentageSlider.gameObject.activeSelf)
+            if (loadingScreenUI.gameObject.activeSelf)
             {
                 percentageSlider.value = Mathf.Lerp(percentageSlider.value, sliderValue, Time.deltaTime);
                 percentageText.text = percentageSlider.value.ToString("F0") + "%";
             }
             else
             {
+                sliderValue = 0;
                 percentageSlider.value = 0;
             }
         }
