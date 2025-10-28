@@ -55,7 +55,7 @@ namespace Code.Chat
 
         public void Help()
         {
-            if (chatController == null || chatController.CurrentChatBox == null) return;
+            /*if (chatController == null || chatController.CurrentChatBox == null) return;
 
             var sb = new StringBuilder();
             if (!string.IsNullOrEmpty(helpText))
@@ -73,7 +73,7 @@ namespace Code.Chat
                 }
             }
 
-            chatController.CurrentChatBox.RegisterChat(chatController.SystemName, sb.ToString());
+            chatController.CurrentChatBox.RegisterChat(chatController.SystemName, sb.ToString());*/
         }
 
         #region Kick
@@ -710,8 +710,8 @@ namespace Code.Chat
 
         private void CommandCallback(string message, bool success)
         {
-            chatController.SendSystemMessage(message,
-                !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);
+            /*chatController.SendSystemMessage(message,
+                !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);*/
         }
 
         #endregion
