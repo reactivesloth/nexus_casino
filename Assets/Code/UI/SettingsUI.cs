@@ -2,6 +2,7 @@
 using Code.Utility;
 using Ricimi;
 using UnityEngine;
+using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
 namespace Code.UI
@@ -21,13 +22,11 @@ namespace Code.UI
         public Slider slotsSlider;
         public Slider sfxSlider;
 
-        [Header("Graphics")]
+        [Header("Game")]
+        public TextSelectionSlider localizationDropdown;
+        public TextSelectionSlider invertCameraDropdown;
         public TextSelectionSlider qualityDropdown;
-
-        [Header("Camera & Controls")]
         public Slider cameraSensitivitySlider;
-        public Toggle invertCameraToggleOn;   // true  = invert on
-        public Toggle invertCameraToggleOff;  // false = invert off
 
         [Header("Buttons")]
         public Button applyButton;
@@ -87,8 +86,10 @@ namespace Code.UI
         private SettingsSnapshot _draft;   // то, что редактирует пользователь в UI
         private bool _suppressUiEvents;    // чтобы не ловить колбеки, когда программно выставляем значения
 
-        private void Start()
+        private async void Start()
         {
+            await LocalizationSettings.InitializationOperation.Task;
+            
             if (SettingsManager.Instance == null)
             {
                 Debug.LogError("SettingsManager.Instance == null. SettingsUI init aborted.");
@@ -97,6 +98,8 @@ namespace Code.UI
             }
 
             PopulateQualityDropdown();
+            PopulateLocalizationDropdown();
+            PopulateInvertCameraYDropdown();
             HookUiEvents();
 
             // загрузить текущие активные настройки в черновик и в UI
@@ -117,6 +120,13 @@ namespace Code.UI
         {
             if (SettingsManager.Instance != null)
                 SettingsManager.Instance.OnSettingsApplied -= OnSettingsApplied;
+            
+            if (localizationDropdown != null)
+            {
+                localizationDropdown.onValueChanged.RemoveListener(OnLocalizationValueChanged);
+            }
+
+            LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
         }
 
         private void OnSettingsApplied()
@@ -124,6 +134,14 @@ namespace Code.UI
             // Если в другом месте применили — подтянем актуальные значения в наш черновик и UI
             _draft.LoadFromManager(SettingsManager.Instance);
             PushDraftToUI();
+        }
+
+        private void PopulateInvertCameraYDropdown()
+        {
+            if (invertCameraDropdown == null) return;
+            invertCameraDropdown.ClearOptions();
+            var names = new List<string>{"On", "Off"};
+            invertCameraDropdown.AddOptions(names);
         }
 
         private void PopulateQualityDropdown()
@@ -134,6 +152,46 @@ namespace Code.UI
             qualityDropdown.AddOptions(names);
         }
 
+        private void PopulateLocalizationDropdown()
+        {
+            localizationDropdown.ClearOptions();
+
+            var locales = LocalizationSettings.AvailableLocales.Locales;
+            var localeNames = new List<string>();
+
+            foreach (var locale in locales)
+            {
+                localeNames.Add(locale.LocaleName);
+            }
+
+            if (localizationDropdown == null) return;
+            localizationDropdown.ClearOptions();
+            localizationDropdown.AddOptions(localeNames);
+            
+            var currentLocale = LocalizationSettings.SelectedLocale;
+            int currentIndex = locales.IndexOf(currentLocale);
+            localizationDropdown.value = currentIndex >= 0 ? currentIndex : 0;
+            localizationDropdown.onValueChanged.AddListener(OnLocalizationValueChanged);
+            LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
+        }
+
+        private void OnLocalizationValueChanged(int index)
+        {
+            var locale = LocalizationSettings.AvailableLocales.Locales[index];
+            LocalizationSettings.SelectedLocale = locale;
+        }
+
+        private void OnLocaleChanged(UnityEngine.Localization.Locale locale)
+        {
+            var locales = LocalizationSettings.AvailableLocales.Locales;
+            int index = locales.IndexOf(locale);
+            
+            if (index >= 0)
+            {
+                localizationDropdown.value = index;
+            }
+        }
+        
         private void HookUiEvents()
         {
             if (voiceChatSlider != null) voiceChatSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Voice = v; });
@@ -144,25 +202,7 @@ namespace Code.UI
             if (qualityDropdown != null) qualityDropdown.onValueChanged.AddListener(i => { if (!_suppressUiEvents) _draft.QualityLevel = i; });
 
             if (cameraSensitivitySlider != null) cameraSensitivitySlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.CameraSensitivity = v; });
-
-            if (invertCameraToggleOn != null)  invertCameraToggleOn.onValueChanged.AddListener(v =>
-            {
-                if (_suppressUiEvents) return;
-                if (v)
-                {
-                    _draft.InvertCamera = true;
-                    if (invertCameraToggleOff != null) { _suppressUiEvents = true; invertCameraToggleOff.isOn = false; _suppressUiEvents = false; }
-                }
-            });
-            if (invertCameraToggleOff != null) invertCameraToggleOff.onValueChanged.AddListener(v =>
-            {
-                if (_suppressUiEvents) return;
-                if (v)
-                {
-                    _draft.InvertCamera = false;
-                    if (invertCameraToggleOn != null) { _suppressUiEvents = true; invertCameraToggleOn.isOn = false; _suppressUiEvents = false; }
-                }
-            });
+            if (invertCameraDropdown != null) invertCameraDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.InvertCamera = v != 0; });
         }
 
         private void PushDraftToUI()
@@ -181,11 +221,14 @@ namespace Code.UI
                 qualityDropdown.RefreshShownValue();
             }
 
+            if (invertCameraDropdown != null)
+            {
+                _draft.InvertCamera = invertCameraDropdown.value != 0;
+                invertCameraDropdown.RefreshShownValue();
+            }
+
             if (cameraSensitivitySlider != null) cameraSensitivitySlider.value = _draft.CameraSensitivity;
-
-            if (invertCameraToggleOn != null)  invertCameraToggleOn.isOn  = _draft.InvertCamera;
-            if (invertCameraToggleOff != null) invertCameraToggleOff.isOn = !_draft.InvertCamera;
-
+            
             _suppressUiEvents = false;
         }
 
