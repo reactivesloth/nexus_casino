@@ -9,6 +9,7 @@ namespace Code.InteractionSystem
 {
     public class Interactable : NetworkBehaviour
     {
+        [SerializeField] private string interactableKey;
         [SerializeField] private float _interactionDistance = 3f;
         [SerializeField] private bool _interactableEnabled = true;
         [SerializeField] private bool _manualRelease = false;
@@ -17,6 +18,7 @@ namespace Code.InteractionSystem
         
         private int _occupiedConnectionId = -1;
         private NetworkConnection OccupierConnection => ServerManager.Clients.TryGetValue(_occupiedConnectionId, out var conn) ? conn : null;
+        public string Key => interactableKey;
 
         protected readonly SyncVar<bool> _isOccupied = new(new SyncTypeSettings
         {

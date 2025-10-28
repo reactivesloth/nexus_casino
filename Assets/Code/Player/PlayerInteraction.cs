@@ -165,9 +165,21 @@ namespace Code.Player
                 ? string.Empty
                 : "scene.interactable.pc.stop";
             
-            if (Active != null) InteractionUIHint.Instance.ShowPrompt(endInteractText);
-            else if (_hovered != null) InteractionUIHint.Instance.ShowPrompt(interactText);
-            else InteractionUIHint.Instance.HidePrompt();
+            if (Active != null)
+            {
+                InteractionUIHint.Instance.ShowPrompt(endInteractText);
+                InteractionUIHint.Instance.HideSocial();
+            }
+            else if (_hovered != null)
+            {
+                InteractionUIHint.Instance.ShowPrompt(interactText);
+                InteractionUIHint.Instance.ShowSocial(_hovered);
+            }
+            else
+            {
+                InteractionUIHint.Instance.HidePrompt();
+                InteractionUIHint.Instance.HideSocial();
+            }
         }
 
         private void OnStartInteractCallbackClient(bool success)

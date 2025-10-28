@@ -102,4 +102,16 @@ namespace Code.API.Models
     {
         public string username;
     }
+
+    [Serializable]
+    public class InteractableSocialData
+    {
+        public string object_id;
+        
+        public int likes_count;
+        public bool is_liked_by_me;
+        
+        public int views_count;
+        public bool is_viewed_by_me;
+    }
 }
