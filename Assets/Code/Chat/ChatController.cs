@@ -1,102 +1,146 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.Network.Lobby;
 using NativeWebSocket;
 using Proyecto26;
 using System.Threading.Tasks;
-using Code.Utility;
-using TankAndHealerStudioAssets;
 using UnityEngine;
 
 namespace Code.Chat
 {
     public class ChatController : MonoBehaviour
     {
-        [SerializeField] private float socketReconnectTimeout = 10f;
-        [SerializeField] private string systemName = "[SYSTEM]";
-        [SerializeField] private UltimateChatBox lobbyChatBox;
-        [SerializeField] private UltimateChatBox globalChatBox;
+        #region Serialized Fields
+
+        [Header("Chat System")] [SerializeField]
+        private ChatSystemUI chatSystemUI;
+
+        [Header("Network")] [SerializeField] private float socketReconnectTimeout = 10f;
+
+        [Header("Settings")] [SerializeField] private string systemName = "[SYSTEM]";
         [SerializeField] private List<CommandData> commands;
+        [SerializeField] private int pageSize = 50;
+        [SerializeField] private bool devLog = false;
 
-        [Header("ChatPosition settings")] [SerializeField]
-        private Vector2 desktopPosition;
+        #endregion
 
-        [SerializeField] private Vector2 mobilePosition;
+        #region Public Properties
 
         public readonly Dictionary<string, CommandData> CommandsDictionary = new();
+        public string SystemName => systemName;
+        public bool IsMuted { get; set; }
+        public ChatType CurrentChatType => chatSystemUI?.CurrentChatType ?? ChatType.Lobby;
+
+        #endregion
+
+        #region Private Fields
 
         private WebSocket _ws;
         private float _pingInterval = 5f;
         private float _pingTimer;
-        private bool _isGlobalChatActive;
-
-        public UltimateChatBox CurrentChatBox;
-        public string SystemName => systemName;
-        public bool IsMuted { get; set; }
-
-        // ===== История =====
-        [Header("History")] [SerializeField] private int pageSize = 50;
         private bool _historyLoading;
-        [SerializeField] private bool devLog; // в инспекторе поставь галочку, чтобы включить логи
+
+        #endregion
+
+        #region Unity Lifecycle
 
         private void Awake()
         {
-            if (devLog) Debug.Log("[CHAT] Awake");
-            if (PlayerInput.Instance.IsUsingMobileFallback)
-            {
-                lobbyChatBox.useExtraImage = false;
-                lobbyChatBox.useExtraImage = false;
-                globalChatBox.useExtraImage = false;
-                globalChatBox.useExtraImage = false;
-            }
+            if (devLog) Debug.Log("[ChatController] Awake");
+            InitializeCommands();
         }
 
         private void Start()
         {
-            if (devLog) Debug.Log("[CHAT] Start");
+            if (devLog) Debug.Log("[ChatController] Start");
 
-            CommandsDictionary.Clear();
-            if (commands != null)
+            if (chatSystemUI == null)
             {
-                for (int i = 0; i < commands.Count; i++)
-                {
-                    var c = commands[i];
-                    if (c == null || string.IsNullOrEmpty(c.commandValue)) continue;
-                    if (!CommandsDictionary.ContainsKey(c.commandValue))
-                        CommandsDictionary.Add(c.commandValue, c);
-                }
+                Debug.LogError("[ChatController] ChatSystemUI не назначен!");
+                enabled = false;
+                return;
             }
 
-            var isMobile = PlayerInput.Instance != null && PlayerInput.Instance.IsUsingMobileFallback;
-            var pos = isMobile ? mobilePosition : desktopPosition;
-
-            if (lobbyChatBox != null)
-            {
-                lobbyChatBox.chatBoxPosition = pos;
-                lobbyChatBox.UpdatePositioning();
-            }
-
-            if (globalChatBox != null)
-            {
-                globalChatBox.chatBoxPosition = pos;
-                globalChatBox.UpdatePositioning();
-            }
+            SubscribeToUIEvents();
         }
 
         private void OnEnable()
         {
-            if (lobbyChatBox == null || globalChatBox == null) return;
-            if (devLog) Debug.Log($"[CHAT] OnEnable (goActive={gameObject.activeInHierarchy}, compEnabled={enabled})");
+            if (chatSystemUI == null) return;
 
-            SetCurrentChat(lobbyChatBox);
-            CurrentChatBox.Disable();
-            CurrentChatBox.DisableInputField();
+            if (devLog) Debug.Log($"[ChatController] OnEnable");
+            InitializeWebSocket();
+        }
 
+        private void OnDisable()
+        {
+            UnsubscribeFromUIEvents();
+            CloseWebSocket();
+        }
+
+        private void Update()
+        {
+            HandleInput();
+            HandleWebSocket();
+        }
+
+        #endregion
+
+        #region Initialization
+
+        private void InitializeCommands()
+        {
+            CommandsDictionary.Clear();
+            if (commands != null)
+            {
+                foreach (var command in commands)
+                {
+                    if (command != null && !string.IsNullOrEmpty(command.commandValue))
+                    {
+                        if (!CommandsDictionary.ContainsKey(command.commandValue))
+                            CommandsDictionary.Add(command.commandValue, command);
+                    }
+                }
+            }
+
+            if (devLog) Debug.Log($"[ChatController] Initialized {CommandsDictionary.Count} commands");
+        }
+
+        private void SubscribeToUIEvents()
+        {
+            if (chatSystemUI == null) return;
+
+            chatSystemUI.OnMessageSent += OnMessageSent;
+            chatSystemUI.OnCommandSent += OnCommandSent;
+            chatSystemUI.OnChatTypeChanged += OnChatTypeChanged;
+            chatSystemUI.OnInputFieldEnabled += OnInputFieldEnabled;
+            chatSystemUI.OnInputFieldDisabled += OnInputFieldDisabled;
+            chatSystemUI.OnReachedTop += OnReachedTop;
+
+            if (devLog) Debug.Log("[ChatController] Subscribed to UI events");
+        }
+
+        private void UnsubscribeFromUIEvents()
+        {
+            if (chatSystemUI == null) return;
+
+            chatSystemUI.OnMessageSent -= OnMessageSent;
+            chatSystemUI.OnCommandSent -= OnCommandSent;
+            chatSystemUI.OnChatTypeChanged -= OnChatTypeChanged;
+            chatSystemUI.OnInputFieldEnabled -= OnInputFieldEnabled;
+            chatSystemUI.OnInputFieldDisabled -= OnInputFieldDisabled;
+            chatSystemUI.OnReachedTop -= OnReachedTop;
+
+            if (devLog) Debug.Log("[ChatController] Unsubscribed from UI events");
+        }
+
+        private void InitializeWebSocket()
+        {
             string jwt = ClientDataStorage.AccessToken ?? string.Empty;
-            string url = $"wss://back.nexusmetaclub.com/api/client/ws/lobby?jwt={jwt}&lobby_id=main";
+            string url = $"wss://back.nexusmetaclub.com/api/client/lobby/chat/ws?jwt={jwt}&lobby_id=main";
 
             _ws = new WebSocket(url);
             _ws.OnOpen += OnWsOpen;
@@ -105,10 +149,10 @@ namespace Code.Chat
             _ws.OnClose += OnWsClose;
             _ws.Connect();
 
-            SetActiveMobileInput(false);
+            if (devLog) Debug.Log("[ChatController] WebSocket connecting...");
         }
 
-        private void OnDisable()
+        private void CloseWebSocket()
         {
             if (_ws != null)
             {
@@ -116,82 +160,101 @@ namespace Code.Chat
                 _ws.OnMessage -= OnWsMessage;
                 _ws.OnError -= OnWsError;
                 _ws.OnClose -= OnWsClose;
+
                 try
                 {
                     _ws.Close();
                 }
-                catch
+                catch (Exception ex)
                 {
+                    if (devLog) Debug.LogWarning($"[ChatController] WebSocket close error: {ex.Message}");
                 }
-
-                _ws = null;
+                finally
+                {
+                    _ws = null;
+                }
             }
 
-            if (CurrentChatBox != null)
+            if (devLog) Debug.Log("[ChatController] WebSocket closed");
+        }
+
+        #endregion
+
+        #region Input Handling
+
+        private void HandleInput()
+        {
+            var input = PlayerInput.Instance;
+            if (input == null) return;
+
+            // Открытие/закрытие чата
+            if (input.IsOpenChatDown)
+                ToggleChat();
+
+            // Переключение между типами чата
+            if (input.IsSwitchChatDown && chatSystemUI.IsVisible)
+                chatSystemUI.SwitchChatType();
+
+            // Закрытие чата по Escape
+            if (input.IsPausedDown && chatSystemUI.IsVisible)
+                chatSystemUI.Hide();
+
+            // Скроллинг
+            if (input.IsScrollUpButton && chatSystemUI.IsVisible)
+                chatSystemUI.ScrollUp();
+
+            if (input.IsScrollDownButton && chatSystemUI.IsVisible)
+                chatSystemUI.ScrollDown();
+
+            // Отправка сообщения (мобильные устройства)
+            if (input.SendChatMessageButtonDown)
+                SendCurrentMessage();
+
+            // Синхронизация состояния
+            PlayerInput.Instance.IsChatOpened = chatSystemUI.InputFieldActive;
+        }
+
+        private void ToggleChat()
+        {
+            if (chatSystemUI.IsVisible)
             {
-                CurrentChatBox.OnExtraImageInteract -= SendMessage;
-                CurrentChatBox.OnInputFieldEnabled -= OnInputFieldEnabled;
-                CurrentChatBox.OnInputFieldDisabled -= OnInputFieldDisabled;
-                CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
-                CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
-                CurrentChatBox.OnInputFieldUpdated -= CurrentChatBoxOnOnInputFieldUpdated;
-                // отписка от события верха
-                try
-                {
-                    CurrentChatBox.ReachedTop -= OnReachedTopLoadHistory;
-                }
-                catch
-                {
-                }
+                chatSystemUI.Hide();
+            }
+            else
+            {
+                chatSystemUI.Show();
+                StartCoroutine(ActivateInputWithDelay());
+                LoadHistoryIfNeeded();
             }
         }
 
-        private void Update()
+        private IEnumerator ActivateInputWithDelay()
         {
-            var input = PlayerInput.Instance;
-            if (input != null)
-            {
-                if (input.IsOpenChatDown) OpenChat();
-                if (input.IsSwitchChatDown && CurrentChatBox != null && CurrentChatBox.IsEnabled) ChangeChat();
-                if (input.IsPausedDown && CurrentChatBox != null)
-                {
-                    CurrentChatBox.Disable();
-                }
-                if (input.IsScrollUpButton) MoveUp();
-                if (input.IsScrollDownButton) MoveDown();
-                if(input.SendChatMessageButtonDown) SendMessage();
-            }
+            yield return null; // дождаться конца текущего кадра, когда UI точно активирован
+            chatSystemUI.EnableInputField();
+        }
 
+        private void SendCurrentMessage()
+        {
+            if (!string.IsNullOrEmpty(chatSystemUI.InputText))
+            {
+                OnMessageSent(chatSystemUI.InputText);
+                chatSystemUI.InputText = "";
+            }
+        }
+
+        #endregion
+
+        #region WebSocket Handling
+
+        private void HandleWebSocket()
+        {
 #if !UNITY_WEBGL || UNITY_EDITOR
             _ws?.DispatchMessageQueue();
 #endif
+
             if (_ws != null && _ws.State == WebSocketState.Open)
                 Ping();
-
-            if (CurrentChatBox != null)
-            {
-                if (CurrentChatBox.InputFieldEnabled != PlayerInput.Instance.IsChatOpened)
-                {
-                    if (CurrentChatBox.InputFieldEnabled)
-                    {
-                        PlayerInput.Instance.IsChatOpened = true;
-                    }
-                    else
-                    {
-                        PlayerInput.Instance.IsChatOpened = false;
-                    }
-                }
-            }
-        }
-
-        public void MoveUp()
-        {
-            CurrentChatBox.ScrollUp();
-        }
-
-        public void MoveDown()
-        {
-            CurrentChatBox.ScrollDown();
         }
 
         private void Ping()
@@ -204,21 +267,24 @@ namespace Code.Chat
                 {
                     _ws.SendText("{\"event\":\"ping\",\"data\":{}}");
                 }
-                catch
+                catch (Exception ex)
                 {
+                    if (devLog) Debug.LogWarning($"[ChatController] Ping error: {ex.Message}");
                 }
             }
         }
 
-        // === WebSocket events ===
         private void OnWsOpen()
         {
-            SendSystemMessage("Chat connection open.", UltimateChatBoxStyles.noticeMessage);
+            SendSystemMessage("Connected to chat server", ChatStyles.Notice);
+            if (devLog) Debug.Log("[ChatController] WebSocket opened");
         }
 
         private void OnWsClose(WebSocketCloseCode code)
         {
-            SendSystemMessage($"Chat connection close, code {(int)code} {code}", UltimateChatBoxStyles.noticeMessage);
+            SendSystemMessage($"Disconnected from chat (code: {(int)code})", ChatStyles.Warning);
+            if (devLog) Debug.Log($"[ChatController] WebSocket closed: {code}");
+
             if (code != WebSocketCloseCode.Normal)
                 Invoke(nameof(TryReconnect), socketReconnectTimeout);
         }
@@ -227,17 +293,19 @@ namespace Code.Chat
         {
             try
             {
-                SendSystemMessage("Try reconnect...", UltimateChatBoxStyles.noticeMessage);
+                SendSystemMessage("Reconnecting to chat...", ChatStyles.Notice);
                 _ws?.Connect();
             }
-            catch
+            catch (Exception ex)
             {
+                if (devLog) Debug.LogError($"[ChatController] Reconnect failed: {ex.Message}");
             }
         }
 
         private void OnWsError(string err)
         {
-            SendSystemMessage(err ?? "Chat socket error", UltimateChatBoxStyles.errorMessage);
+            SendSystemMessage(err ?? "Chat connection error", ChatStyles.Error);
+            if (devLog) Debug.LogError($"[ChatController] WebSocket error: {err}");
         }
 
         private void OnWsMessage(byte[] data)
@@ -254,389 +322,329 @@ namespace Code.Chat
                 return;
             }
 
-            var envelope = JsonUtility.FromJson<ChatModel<Empty>>(text);
+            var envelope = JsonUtility.FromJson<ChatModel<object>>(text);
             if (envelope == null || string.IsNullOrEmpty(envelope.@event)) return;
 
             if (envelope.@event == ChatSocketEvents.NewMessage ||
                 envelope.@event == ChatSocketEvents.NewImportantMessage)
             {
-                var msg = JsonUtility.FromJson<ChatModel<NewMessageData>>(text);
-                if (msg?.data?.message != null)
-                {
-                    var m = msg.data.message;
-
-                    var lobby = LobbyVariables.Instance != null ? LobbyVariables.Instance.currentLobby : null;
-
-                    if (lobby != null && m.lobby_id == lobby.lobbyId)
-                        HandleLobbyMassage(m);
-
-                    HandleGlobalMassage(m);
-                }
+                HandleNewMessage(text);
             }
             else if (envelope.@event == ChatSocketEvents.Error)
             {
-                var err = JsonUtility.FromJson<ChatModel<Error>>(text);
-                if (err != null && err.data != null)
-                    SendSystemMessage(err.data.message, UltimateChatBoxStyles.errorMessage);
+                HandleErrorMessage(text);
             }
         }
 
-        private void OpenChat()
+        private void HandleNewMessage(string text)
         {
-            if (CurrentChatBox == null) return;
-            bool open = !CurrentChatBox.IsEnabled;
-            Debug.Log(open);
+            Debug.Log(text);
+            var msg = JsonUtility.FromJson<ChatModel<NewMessageData>>(text);
+            if (msg?.data?.message == null) return;
+
+            var message = msg.data.message;
+            var lobby = LobbyVariables.Instance?.currentLobby;
+
+            // Определяем тип чата для сообщения
+            bool isLobbyMessage = lobby != null && message.lobby_id == lobby.lobbyId;
+            bool isGlobalMessage = message.lobby_id == "main" || !isLobbyMessage;
+
+            var messageStyle = message.type == "important" ? ChatStyles.Important : ChatStyles.Default;
             
-            if (open)
+            // ВСЕГДА добавляем сообщение в глобальный чат
+            var lobbyId = message.lobby_id ?? "main";
+            var prefix = GetLobbyPrefix(lobbyId);
+
+            chatSystemUI.AddMessage(
+                $"{prefix}{message.user.username}",
+                message.message,
+                ChatType.Global,
+                messageStyle,
+                message.id
+            );
+
+            // Если сообщение из текущего лобби, добавляем его также в чат лобби
+            if (isLobbyMessage)
             {
-                CurrentChatBox.Enable();
-                CurrentChatBox.EnableInputField();
+                chatSystemUI.AddMessage(
+                    message.user.username,
+                    message.message,
+                    ChatType.Lobby,
+                    messageStyle,
+                    message.id
+                );
             }
-            else
-            {
-                if(!PlayerInput.Instance.IsUsingMobileFallback)
-                    CurrentChatBox.DisableInputField();
-                CurrentChatBox.Disable();
-            }
         }
 
-        private void ChangeChat()
+        private void HandleErrorMessage(string text)
         {
-            if (CurrentChatBox == null || lobbyChatBox == null || globalChatBox == null) return;
-            SetCurrentChat(CurrentChatBox == lobbyChatBox ? globalChatBox : lobbyChatBox);
+            var err = JsonUtility.FromJson<ChatModel<Error>>(text);
+            if (err?.data != null)
+                SendSystemMessage(err.data.message, ChatStyles.Error);
         }
 
-        private void SetCurrentChat(UltimateChatBox chatBox)
+        private string GetLobbyPrefix(string lobbyId)
         {
-            if (chatBox == null) return;
-            if (devLog)
-                Debug.Log(
-                    $"[CHAT] SetCurrentChat called; chatBox={(chatBox ? chatBox.name : "")}, Inited={chatBox?.WasInitLoad}");
+            if (lobbyId == "main") return "";
 
-            if (CurrentChatBox != null)
-            {
-                CurrentChatBox.OnExtraImageInteract -= SendMessage;
-                CurrentChatBox.OnInputFieldEnabled -= OnInputFieldEnabled;
-                CurrentChatBox.OnInputFieldDisabled -= OnInputFieldDisabled;
-                CurrentChatBox.OnInputFieldSubmitted -= OnInputFieldSubmittedCurrentBox;
-                CurrentChatBox.OnInputFieldCommandSubmitted -= ChatBoxOnOnInputFieldCommandSubmitted;
-                CurrentChatBox.OnInputFieldUpdated -= CurrentChatBoxOnOnInputFieldUpdated;
-                CurrentChatBox.InputField.onTouchScreenKeyboardStatusChanged.RemoveListener(OnKeyboardStatusChanged);
-
-                try
-                {
-                    CurrentChatBox.ReachedTop -= OnReachedTopLoadHistory;
-                }
-                catch
-                {
-                }
-
-                CurrentChatBox.Disable();
-            }
-
-            CurrentChatBox = chatBox;
-            _isGlobalChatActive = (CurrentChatBox == globalChatBox);
-
-            if (globalChatBox != null) globalChatBox.gameObject.SetActive(CurrentChatBox == globalChatBox);
-            if (lobbyChatBox != null) lobbyChatBox.gameObject.SetActive(CurrentChatBox == lobbyChatBox);
-
-            CurrentChatBox.OnExtraImageInteract += SendMessage;
-            CurrentChatBox.OnInputFieldEnabled += OnInputFieldEnabled;
-            CurrentChatBox.OnInputFieldDisabled += OnInputFieldDisabled;
-            CurrentChatBox.OnInputFieldSubmitted += OnInputFieldSubmittedCurrentBox;
-            CurrentChatBox.OnInputFieldCommandSubmitted += ChatBoxOnOnInputFieldCommandSubmitted;
-            CurrentChatBox.OnInputFieldUpdated += CurrentChatBoxOnOnInputFieldUpdated;
-            CurrentChatBox.InputField.onTouchScreenKeyboardStatusChanged.AddListener(OnKeyboardStatusChanged);
-
-            try
-            {
-                CurrentChatBox.ReachedTop += OnReachedTopLoadHistory;
-            }
-            catch
-            {
-            }
-
-            CurrentChatBox.NoMoreHistory = false;
-
-            CurrentChatBox.EnableInputField();
-            CurrentChatBox.Enable();
-
-            if (!CurrentChatBox.WasInitLoad)
-                _ = LoadHistoryPageAsync(true, _isGlobalChatActive);
+            var suffix = lobbyId.Length > 4 ? "..." : "";
+            return $"[{suffix}{lobbyId.Substring(Mathf.Max(0, lobbyId.Length - 4))}]";
         }
 
-        private void OnKeyboardStatusChanged(TouchScreenKeyboard.Status newStatus)
+        #endregion
+
+        #region UI Event Handlers
+
+        private void OnMessageSent(string message)
         {
-            /*if( newStatus is TouchScreenKeyboard.Status.Done or TouchScreenKeyboard.Status.Canceled)
-                SendMessage();*/
-        }
-
-        [ContextMenu("Dev Load History Now")]
-        public void Dev_LoadHistoryNow()
-        {
-            if (devLog) Debug.Log("[CHAT] Dev_LoadHistoryNow()");
-            _ = LoadHistoryPageAsync(false, _isGlobalChatActive);
-        }
-
-        private void CurrentChatBoxOnOnInputFieldUpdated(string _)
-        {
-        }
-
-        private void SendMessage()
-        {
-            Debug.Log($"[CHAT] Send Message");
-            CurrentChatBox.DisableInputField();
-            CurrentChatBox.Disable();
-        }
-
-        private void OnInputFieldEnabled()
-        {
-            SetActiveMobileInput(true);
-        }
-
-        private void OnInputFieldDisabled()
-        {
-            SetActiveMobileInput(false);
-        }
-
-        private void ChatBoxOnOnInputFieldCommandSubmitted(string command, string message)
-        {
-            if (string.IsNullOrEmpty(command))
-            {
-                SendSystemMessage("command is empty", UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            if (!CommandsDictionary.TryGetValue(command, out var cd) || cd == null)
-            {
-                SendSystemMessage("command not found", UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            if (cd.requireMessageValue && string.IsNullOrEmpty(message))
-            {
-                SendSystemMessage("command need value", UltimateChatBoxStyles.errorMessage);
-                return;
-            }
-
-            cd.unityEvent?.Invoke(message);
-        }
-
-        private void OnInputFieldSubmittedCurrentBox(string text)
-        {
-            if (CurrentChatBox == null || CurrentChatBox.InputFieldContainsCommand) return;
             if (IsMuted)
             {
-                SendSystemMessage("You are muted in chat", UltimateChatBoxStyles.errorMessage);
+                SendSystemMessage("You are muted in chat", ChatStyles.Error);
                 return;
             }
 
-            var lobby = LobbyVariables.Instance != null ? LobbyVariables.Instance.currentLobby : null;
-            string lobbyId = _isGlobalChatActive ? "main" : (lobby != null ? lobby.lobbyId : "main");
+            var lobby = LobbyVariables.Instance?.currentLobby;
+            string lobbyId = CurrentChatType == ChatType.Global ? "main" : (lobby?.lobbyId ?? "main");
 
             var payload = new ChatModel<SendMassage>
             {
                 @event = ChatSocketEvents.SendMessage,
-                data = new SendMassage { lobby_id = lobbyId, message = text, type = "message" }
+                data = new SendMassage
+                {
+                    lobby_id = lobbyId,
+                    message = message,
+                    type = "message"
+                }
             };
 
             var json = JsonUtility.ToJson(payload);
             try
             {
                 _ws?.SendText(json);
+                if (devLog) Debug.Log($"[ChatController] Message sent to {CurrentChatType}: {message}");
             }
-            catch
+            catch (Exception ex)
             {
+                SendSystemMessage("Failed to send message", ChatStyles.Error);
+                if (devLog) Debug.LogError($"[ChatController] Send error: {ex.Message}");
             }
+
+            chatSystemUI.DisableInputField();
+            chatSystemUI.Hide();
         }
 
-        public void HandleGlobalMassage(MessageData m)
+        private void OnCommandSent(string command, string message)
         {
-            if (globalChatBox == null || m == null || string.IsNullOrEmpty(m.user.username)) return;
+            if (string.IsNullOrEmpty(command))
+            {
+                SendSystemMessage("Command is empty", ChatStyles.Error);
+                return;
+            }
 
-            string lobbyId = m.lobby_id ?? "main";
-            string suffix = lobbyId.Length > 4 ? "..." : "";
-            string prefix = lobbyId == "main" ? "" : $"[{suffix}{lobbyId.Substring(Mathf.Max(0, lobbyId.Length - 4))}]";
-            globalChatBox.RegisterChat($"{prefix}{m.user.username}", m.message);
-            SetLastChatInfo(m);
+            if (!CommandsDictionary.TryGetValue(command, out var commandData) || commandData == null)
+            {
+                SendSystemMessage($"Unknown command: /{command}", ChatStyles.Error);
+                return;
+            }
+
+            if (commandData.requireMessageValue && string.IsNullOrEmpty(message))
+            {
+                SendSystemMessage($"Command /{command} requires a value", ChatStyles.Error);
+                return;
+            }
+
+            commandData.unityEvent?.Invoke(message);
+            if (devLog) Debug.Log($"[ChatController] Command executed: /{command} {message}");
         }
 
-        public void HandleLobbyMassage(MessageData m)
+        private void OnChatTypeChanged(ChatType newChatType)
         {
-            if (lobbyChatBox == null || m == null || string.IsNullOrEmpty(m.user.username)) return;
-            lobbyChatBox.RegisterChat(m.user.username, m.message);
-            SetLastChatInfo(m);
+            if (devLog) Debug.Log($"[ChatController] Chat type changed to: {newChatType}");
+            LoadHistoryIfNeeded();
         }
 
-        private void SetLastChatInfo(MessageData m)
+        private void OnInputFieldEnabled()
         {
-            var chatInfo = lobbyChatBox.ChatInformations.LastOrDefault();
-            if (chatInfo != null)
-                chatInfo.MessageId = m.id;
+            SetActiveMobileInput(true);
+            if (devLog) Debug.Log("[ChatController] Input field enabled");
         }
 
-        public void SendSystemMessage(string msg, UltimateChatBox.ChatStyle style)
+        private void OnInputFieldDisabled()
         {
-            if (lobbyChatBox != null) lobbyChatBox.RegisterChat(systemName, msg, style);
-            if (globalChatBox != null) globalChatBox.RegisterChat(systemName, msg, style);
+            SetActiveMobileInput(false);
+            if (devLog) Debug.Log("[ChatController] Input field disabled");
         }
 
-        // ==== История: дотягивание вверх ====
-        private void OnReachedTopLoadHistory()
+        private void OnReachedTop(ChatType chatType)
         {
             if (!_historyLoading)
             {
-                var _ = LoadHistoryPageAsync(false, _isGlobalChatActive);
+                _ = LoadHistoryPageAsync(false, chatType);
             }
         }
 
-        private async Task LoadHistoryPageAsync(bool reset, bool isGlobalChatActive)
+        #endregion
+
+        #region History Loading
+
+        private void LoadHistoryIfNeeded()
         {
-            var updatedChat = isGlobalChatActive ? globalChatBox : lobbyChatBox;
-            if (_historyLoading || updatedChat.NoMoreHistory) return;
+            var currentType = CurrentChatType;
+            if (!chatSystemUI.NoMoreHistory)
+            {
+                _ = LoadHistoryPageAsync(true, currentType);
+            }
+        }
+
+        private async Task LoadHistoryPageAsync(bool reset, ChatType chatType)
+        {
+            if (_historyLoading || chatSystemUI.NoMoreHistory) return;
+
             _historyLoading = true;
 
             try
             {
-                async Task<(MessageData[] items, bool hasMore, long minId)> FetchAsync(
-                    long? beforeId)
+                var isGlobal = chatType == ChatType.Global;
+                var beforeId = reset ? null : chatSystemUI.OldestMessageId;
+
+                var (items, hasMore) = await FetchHistoryAsync(beforeId, isGlobal);
+
+                if (items == null || items.Length == 0)
                 {
-                    var url = ApiRoutes.DOMAIN.TrimEnd('/') +
-                              "/api/client/lobby-messages";
-
-                    var reqParams = new Dictionary<string, string> { { "limit", pageSize.ToString() } };
-
-                    if (!isGlobalChatActive)
-                        reqParams.Add("lobby_id", LobbyVariables.Instance.currentLobby.lobbyId);
-
-                    if (beforeId.HasValue)
-                        reqParams.Add("before_id", beforeId.Value.ToString());
-
-                    var req = new RequestHelper
-                    {
-                        Uri = url,
-                        Method = "GET",
-                        Headers = ClientDataStorage.GetJwtHeader(),
-                        Params = reqParams
-                    };
-
-                    var b_id_text = beforeId.HasValue ? beforeId.Value.ToString() : "null";
-                    Debug.Log($"[CHAT] GET {req.Uri}, before_id={b_id_text}");
-
-                    ResponseHelper resp;
-                    try
-                    {
-                        resp = await RestClient.Request(req).ToTask();
-                    }
-                    catch
-                    {
-                        req.Headers = new Dictionary<string, string>
-                        {
-                            { "Authorization", "Bearer " + (ClientDataStorage.AccessToken ?? string.Empty) }
-                        };
-                        resp = await RestClient.Request(req).ToTask();
-                    }
-
-                    if (resp.StatusCode >= 400)
-                    {
-                        Debug.LogWarning($"[CHAT] History HTTP {resp.StatusCode}");
-                        return (null, false, long.MaxValue);
-                    }
-
-                    var text = resp.Text ?? string.Empty;
-                    var env = JsonUtility.FromJson<SuccessResponse<HistoryEnvelopeData>>(text);
-                    if (env?.success != true || env.data?.messages == null)
-                    {
-                        Debug.LogWarning($"[CHAT] History parse fail or no data. Raw: {text}");
-                        return (null, false, long.MaxValue);
-                    }
-
-                    var arr = env.data.messages;
-                    var more = env.data.has_more;
-                    var min = long.MaxValue;
-                    for (var i = 0; i < arr.Length; i++)
-                        if (arr[i].id > 0 && arr[i].id < min)
-                            min = arr[i].id;
-
-                    Debug.Log($"[CHAT] History items: {arr.Length}, has_more={more}, minId={min}");
-                    return (arr, more, min);
-                }
-
-                Debug.Log($"[CHAT] Oldest message id is {updatedChat.OldestMessageId}");
-                var beforeA =
-                    (reset || !updatedChat.OldestMessageId.HasValue) ? null : updatedChat.OldestMessageId;
-
-                var (itemsA, hasMoreA, minIdA) = await FetchAsync(beforeA);
-
-
-                var pageItems = itemsA;
-                var hasMore = hasMoreA;
-                var minId = minIdA;
-
-                if (pageItems == null || pageItems.Length == 0)
-                {
-                    if (!hasMore) updatedChat.NoMoreHistory = true;
+                    if (!hasMore) chatSystemUI.NoMoreHistory = true;
                     return;
                 }
 
-                Array.Reverse(pageItems);
+                var messages = new List<(string username, string message, ChatMessageStyle style, long id)>();
 
-                var batch =
-                    new List<(string username, string message, UltimateChatBox.ChatStyle, long id)>(pageItems.Length);
-                for (var i = 0; i < pageItems.Length; i++)
+                foreach (var item in items)
                 {
-                    var m = pageItems[i];
+                    var username = !string.IsNullOrEmpty(item.user.username)
+                        ? item.user.username
+                        : (item.user_id != 0 ? "User#" + item.user_id : "User");
 
-                    Debug.Log(JsonUtility.ToJson(m));
+                    var style = item.type == "important" ? ChatStyles.Important : ChatStyles.Default;
 
-                    var username = !string.IsNullOrEmpty(m.user.username) ? m.user.username :
-                        m.user_id != 0 ? "User#" + m.user_id : "User";
+                    if (isGlobal)
+                    {
+                        var prefix = GetLobbyPrefix(item.lobby_id ?? "main");
+                        username = $"{prefix}{username}";
+                    }
 
-                    var style = (m.type == "important")
-                        ? UltimateChatBoxStyles.warningMessage
-                        : UltimateChatBoxStyles.none;
-
-                    var lobbyId = m.lobby_id ?? "main";
-                    var suffix = lobbyId.Length > 4 ? "..." : "";
-                    var prefix = lobbyId == "main"
-                        ? ""
-                        : $"[{suffix}{lobbyId.Substring(Mathf.Max(0, lobbyId.Length - 4))}] ";
-                    prefix = isGlobalChatActive ? prefix : string.Empty;
-                    batch.Add(($"{prefix}{username}", m.message ?? string.Empty, style, m.id));
+                    messages.Add((username, item.message ?? string.Empty, style, item.id));
                 }
 
-                if (!updatedChat.IsEnabled)
-                    return;
+                chatSystemUI.PrependMessages(messages, chatType);
 
-                try
-                {
-                    updatedChat.PrependChats(batch);
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[CHAT] PrependChats error: {ex.Message}");
-                }
+                if (!hasMore)
+                    chatSystemUI.NoMoreHistory = true;
 
-                if (!hasMore) updatedChat.NoMoreHistory = true;
-                updatedChat.WasInitLoad = true;
+                if (devLog) Debug.Log($"[ChatController] Loaded {messages.Count} history messages for {chatType}");
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[ChatController] History loading error: {ex.Message}");
             }
             finally
             {
-                Debug.Log("[CHAT] Loading end");
                 _historyLoading = false;
             }
+        }
+
+        private async Task<(MessageData[] items, bool hasMore)> FetchHistoryAsync(long? beforeId, bool isGlobal)
+        {
+            var url = ApiRoutes.DOMAIN.TrimEnd('/') + "/api/client/lobby/chat/messages";
+            var reqParams = new Dictionary<string, string> { { "limit", pageSize.ToString() } };
+
+            if (!isGlobal)
+            {
+                var lobby = LobbyVariables.Instance?.currentLobby;
+                if (lobby != null)
+                    reqParams.Add("lobby_id", lobby.lobbyId);
+            }
+
+            if (beforeId.HasValue)
+                reqParams.Add("before_id", beforeId.Value.ToString());
+
+            var req = new RequestHelper
+            {
+                Uri = url,
+                Method = "GET",
+                Headers = ClientDataStorage.GetJwtHeader(),
+                Params = reqParams
+            };
+
+            try
+            {
+                var resp = await RestClient.Request(req).ToTask();
+
+                if (resp.StatusCode >= 400)
+                {
+                    Debug.LogWarning($"[ChatController] History HTTP {resp.StatusCode}");
+                    return (null, false);
+                }
+
+                var text = resp.Text ?? string.Empty;
+                var env = JsonUtility.FromJson<SuccessResponse<HistoryEnvelopeData>>(text);
+
+                if (env?.success != true || env.data?.messages == null)
+                {
+                    Debug.LogWarning($"[ChatController] History parse fail");
+                    return (null, false);
+                }
+
+                Array.Reverse(env.data.messages);
+                return (env.data.messages, env.data.has_more);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[ChatController] History fetch error: {ex.Message}");
+                return (null, false);
+            }
+        }
+
+        #endregion
+
+        #region Utility Methods
+
+        public void SendSystemMessage(string message, ChatMessageStyle style)
+        {
+            chatSystemUI.AddMessage(systemName, message, ChatType.Lobby, style);
+            chatSystemUI.AddMessage(systemName, message, ChatType.Global, style);
         }
 
         private void SetActiveMobileInput(bool value)
         {
             var playerInput = PlayerInput.Instance;
-            if (playerInput == null)
-                return;
+            if (playerInput == null) return;
 
-            playerInput.SwitchChatButton.gameObject.SetActive(value);
-            playerInput.ChatScrollUpButton.gameObject.SetActive(value);
-            playerInput.ChatScrollDownButton.gameObject.SetActive(value);
-            playerInput.SendChatMessageButton.gameObject.SetActive(value);
+            if (playerInput.SwitchChatButton != null)
+                playerInput.SwitchChatButton.gameObject.SetActive(value);
+
+            if (playerInput.ChatScrollUpButton != null)
+                playerInput.ChatScrollUpButton.gameObject.SetActive(value);
+
+            if (playerInput.ChatScrollDownButton != null)
+                playerInput.ChatScrollDownButton.gameObject.SetActive(value);
+
+            if (playerInput.SendChatMessageButton != null)
+                playerInput.SendChatMessageButton.gameObject.SetActive(value);
         }
+
+        #endregion
+
+        #region Public API
+
+        public void MoveUp() => chatSystemUI?.ScrollUp();
+        public void MoveDown() => chatSystemUI?.ScrollDown();
+
+        [ContextMenu("Dev: Load History")]
+        public void Dev_LoadHistoryNow()
+        {
+            if (devLog) Debug.Log("[ChatController] Manual history load");
+            _ = LoadHistoryPageAsync(false, CurrentChatType);
+        }
+
+        #endregion
     }
 }
