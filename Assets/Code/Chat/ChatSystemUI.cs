@@ -167,7 +167,10 @@ namespace Code.Chat
 
         [Header("Send Button")] [SerializeField]
         private Button sendButton;
-
+        
+        [Header("Close Button")] [SerializeField]
+        private Button closeButton;
+        
         [Header("Prefabs")] [SerializeField] private GameObject messagePrefab;
 
         [Header("Settings")] [SerializeField] private int maxMessagesPerChat = 500;
@@ -315,6 +318,11 @@ namespace Code.Chat
                 sendButton.onClick.AddListener(SendMessage);
             }
 
+            if (closeButton != null)
+            {
+                closeButton.onClick.AddListener(Hide);
+            }
+            
             if (scrollRect != null)
             {
                 scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
@@ -342,7 +350,12 @@ namespace Code.Chat
             {
                 sendButton.onClick.RemoveAllListeners();
             }
-
+            
+            if (closeButton != null)
+            {
+                closeButton.onClick.RemoveAllListeners();
+            }
+            
             if (scrollRect != null)
             {
                 scrollRect.onValueChanged.RemoveListener(OnScrollValueChanged);

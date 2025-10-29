@@ -7,6 +7,7 @@ using Code.Network.Lobby;
 using NativeWebSocket;
 using Proyecto26;
 using System.Threading.Tasks;
+using Code.UI;
 using UnityEngine;
 
 namespace Code.Chat
@@ -187,8 +188,12 @@ namespace Code.Chat
             var input = PlayerInput.Instance;
             if (input == null) return;
 
+            var paused = false;
+            if (PauseUI.Instance != null)
+                paused = PauseUI.Instance.IsPaused;
+
             // Открытие/закрытие чата
-            if (input.IsOpenChatDown)
+            if (input.IsOpenChatDown && !paused)
                 ToggleChat();
 
             // Переключение между типами чата
@@ -212,6 +217,11 @@ namespace Code.Chat
 
             // Синхронизация состояния
             PlayerInput.Instance.IsChatOpened = chatSystemUI.InputFieldActive;
+
+            if (paused && chatSystemUI.IsVisible)
+            {
+                chatSystemUI.Hide();
+            }
         }
 
         private void ToggleChat()
