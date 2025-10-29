@@ -1,6 +1,8 @@
 ﻿using System;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
+using UnityEngine.SocialPlatforms;
 
 namespace Code.Utility
 {
@@ -19,7 +21,6 @@ namespace Code.Utility
         private const int   DefaultAntiAliasing    = 2;
         private const float DefaultCameraSensitivity = 40f;
         private const bool  DefaultInvertCamera    = false;
-        private const string DefaultLanguageCode   = "en";
 
         [Header("Audio (0..100)")]
         public float VoiceChatVolume { get; private set; }
@@ -38,7 +39,7 @@ namespace Code.Utility
         public bool  InvertCamera      { get; private set; }
 
         [Header("Localization")]
-        public string LanguageCode { get; private set; }
+        public Locale Localization { get; private set; }
 
         public event Action OnSettingsApplied;
 
@@ -69,7 +70,7 @@ namespace Code.Utility
             CameraSensitivity = PlayerPrefs.GetFloat("CameraSensitivity", DefaultCameraSensitivity);
             InvertCamera      = PlayerPrefs.GetInt("InvertCamera", DefaultInvertCamera ? 1 : 0) == 1;
 
-            LanguageCode      = PlayerPrefs.GetString("Language", Application.systemLanguage.ToString());
+            Localization      = LocalizationSettings.AvailableLocales.GetLocale(new LocaleIdentifier(PlayerPrefs.GetString("Language", LocalizationSettings.SelectedLocale.Identifier.Code)));
 
             ApplyAllSettings();
         }
@@ -89,7 +90,7 @@ namespace Code.Utility
             PlayerPrefs.SetFloat("CameraSensitivity", CameraSensitivity);
             PlayerPrefs.SetInt("InvertCamera",       InvertCamera ? 1 : 0);
 
-            PlayerPrefs.SetString("Language", LanguageCode);
+            PlayerPrefs.SetString("Language", LocalizationSettings.SelectedLocale.Identifier.Code);
             PlayerPrefs.Save();
         }
 
@@ -108,7 +109,7 @@ namespace Code.Utility
             CameraSensitivity = DefaultCameraSensitivity;
             InvertCamera      = DefaultInvertCamera;
 
-            LanguageCode      = DefaultLanguageCode;
+            Localization      = LocalizationSettings.AvailableLocales.GetLocale(LocalizationSettings.SelectedLocale.LocaleName);
 
             SaveAllSettings();
             ApplyAllSettings();
@@ -132,6 +133,8 @@ namespace Code.Utility
                 am.SetVolume("SFX",       PercentTo01(SFXVolume));
             }
 
+            LocalizationSettings.SelectedLocale = Localization;
+            
             // Graphics
             QualitySettings.SetQualityLevel(QualityLevel);
             Application.targetFrameRate = FPSLimit;
@@ -161,7 +164,7 @@ namespace Code.Utility
         public void SetCameraSensitivity(float sens) { CameraSensitivity = sens; PlayerPrefs.SetFloat("CameraSensitivity", sens); }
         public void SetInvertCamera(bool invert)     { InvertCamera      = invert; PlayerPrefs.SetInt("InvertCamera", invert ? 1 : 0); }
 
-        public void SetLanguage(string code)         { LanguageCode = string.IsNullOrEmpty(code) ? Application.systemLanguage.ToString() : code; PlayerPrefs.SetString("Language", LanguageCode); }
+        public void SetLanguage(Locale locale)         { Localization = locale; PlayerPrefs.SetString("Language", LocalizationSettings.SelectedLocale.Identifier.Code);}
 
         #endregion
     }

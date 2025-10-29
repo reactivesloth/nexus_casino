@@ -38,7 +38,10 @@ namespace Code.UI
         {
             if (loadingScreenUI.gameObject.activeSelf)
             {
-                percentageSlider.value = Mathf.Lerp(percentageSlider.value, sliderValue, Time.deltaTime);
+                if (percentageSlider.value < sliderValue)
+                    percentageSlider.value = Mathf.Lerp(percentageSlider.value, sliderValue, Time.deltaTime);
+                else
+                    percentageSlider.value = sliderValue;
                 percentageText.text = percentageSlider.value.ToString("F0") + "%";
             }
             else

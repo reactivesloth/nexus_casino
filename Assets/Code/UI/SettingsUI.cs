@@ -2,6 +2,7 @@
 using Code.Utility;
 using Ricimi;
 using UnityEngine;
+using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
 using UnityEngine.UI;
 
@@ -39,6 +40,7 @@ namespace Code.UI
             public int QualityLevel;
             public float CameraSensitivity;
             public bool InvertCamera;
+            public Locale Localization;
 
             public void LoadFromManager(SettingsManager sm)
             {
@@ -49,6 +51,7 @@ namespace Code.UI
                 QualityLevel     = sm.QualityLevel;
                 CameraSensitivity= sm.CameraSensitivity;
                 InvertCamera     = sm.InvertCamera;
+                Localization     = sm.Localization;
             }
 
             public void LoadDefaults()
@@ -68,6 +71,7 @@ namespace Code.UI
                 QualityLevel      = QualitySettings.GetQualityLevel();
                 CameraSensitivity = 40f;
                 InvertCamera      = false;
+                Localization      = LocalizationSettings.ProjectLocale;
             }
 
             public void ApplyToManager(SettingsManager sm)
@@ -80,6 +84,7 @@ namespace Code.UI
                 sm.SetGraphicsQuality(QualityLevel);
                 sm.SetCameraSensitivity(CameraSensitivity);
                 sm.SetInvertCamera(InvertCamera);
+                sm.SetLanguage(Localization);
             }
         }
 
@@ -121,11 +126,6 @@ namespace Code.UI
             if (SettingsManager.Instance != null)
                 SettingsManager.Instance.OnSettingsApplied -= OnSettingsApplied;
             
-            if (localizationDropdown != null)
-            {
-                localizationDropdown.onValueChanged.RemoveListener(OnLocalizationValueChanged);
-            }
-
             LocalizationSettings.SelectedLocaleChanged -= OnLocaleChanged;
         }
 
@@ -168,20 +168,12 @@ namespace Code.UI
             localizationDropdown.ClearOptions();
             localizationDropdown.AddOptions(localeNames);
             
-            var currentLocale = LocalizationSettings.SelectedLocale;
-            int currentIndex = locales.IndexOf(currentLocale);
-            localizationDropdown.value = currentIndex >= 0 ? currentIndex : 0;
-            localizationDropdown.onValueChanged.AddListener(OnLocalizationValueChanged);
+            OnLocaleChanged(SettingsManager.Instance.Localization);
+            
             LocalizationSettings.SelectedLocaleChanged += OnLocaleChanged;
         }
 
-        private void OnLocalizationValueChanged(int index)
-        {
-            var locale = LocalizationSettings.AvailableLocales.Locales[index];
-            LocalizationSettings.SelectedLocale = locale;
-        }
-
-        private void OnLocaleChanged(UnityEngine.Localization.Locale locale)
+        private void OnLocaleChanged(Locale locale)
         {
             var locales = LocalizationSettings.AvailableLocales.Locales;
             int index = locales.IndexOf(locale);
@@ -198,9 +190,8 @@ namespace Code.UI
             if (musicSlider != null)     musicSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Music = v; });
             if (slotsSlider != null)     slotsSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Slots = v; });
             if (sfxSlider != null)       sfxSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Sfx = v; });
-
-            if (qualityDropdown != null) qualityDropdown.onValueChanged.AddListener(i => { if (!_suppressUiEvents) _draft.QualityLevel = i; });
-
+            if (qualityDropdown != null) qualityDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.QualityLevel = v; });
+            if (localizationDropdown != null) localizationDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Localization = LocalizationSettings.AvailableLocales.Locales[v]; LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[v];});
             if (cameraSensitivitySlider != null) cameraSensitivitySlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.CameraSensitivity = v; });
             if (invertCameraDropdown != null) invertCameraDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.InvertCamera = v != 0; });
         }
@@ -223,11 +214,17 @@ namespace Code.UI
 
             if (invertCameraDropdown != null)
             {
-                _draft.InvertCamera = invertCameraDropdown.value != 0;
+                invertCameraDropdown.value = _draft.InvertCamera ? 1 : 0;
                 invertCameraDropdown.RefreshShownValue();
             }
 
             if (cameraSensitivitySlider != null) cameraSensitivitySlider.value = _draft.CameraSensitivity;
+
+            if (localizationDropdown != null)
+            {
+                OnLocaleChanged(_draft.Localization);
+                localizationDropdown.RefreshShownValue();
+            }
             
             _suppressUiEvents = false;
         }

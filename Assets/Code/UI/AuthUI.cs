@@ -189,12 +189,8 @@ namespace Code.UI
 
             if (startGameButton != null)
                 startGameButton.gameObject.SetActive(_isAuthorized);
-            #if UNITY_EDITOR
             if (logoutButton != null)
                  logoutButton.gameObject.SetActive(_isAuthorized);
-            #else
-                logoutButton.gameObject.SetActive(false);
-            #endif
             if (boutiqueButton != null)
                 boutiqueButton.gameObject.SetActive(_isAuthorized);
             if (loginPopup != null)
