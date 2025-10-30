@@ -227,13 +227,13 @@ namespace Code.Chat
         {
             if (chatSystemUI.IsVisible)
             {
-                chatSystemUI.Hide();
+                // chatSystemUI.Hide();
             }
             else
             {
                 chatSystemUI.Show();
                 chatSystemUI.EnableInputField();
-                LoadHistoryIfNeeded();
+                // LoadHistoryIfNeeded();
             }
         }
 
@@ -495,7 +495,7 @@ namespace Code.Chat
         private void OnChatTypeChanged(ChatType newChatType)
         {
             if (devLog) Debug.Log($"[ChatController] Chat type changed to: {newChatType}");
-            LoadHistoryIfNeeded();
+            // LoadHistoryIfNeeded();
         }
 
         private void OnInputFieldEnabled()

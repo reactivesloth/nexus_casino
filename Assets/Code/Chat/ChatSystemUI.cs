@@ -165,6 +165,7 @@ namespace Code.Chat
         [Header("Prefabs")] [SerializeField] private MessageComponent messagePrefab;
 
         [Header("Settings")] [SerializeField] private int maxMessagesPerChat = 500;
+        [SerializeField] private float timeToHoldAtTop = 1f;
         [SerializeField] private bool devLog = false;
 
         #endregion
@@ -190,6 +191,9 @@ namespace Code.Chat
 
         // Запоминаем, была ли прокрутка в самом низу для каждого типа чата
         private readonly Dictionary<ChatType, bool> _wasAtBottom = new();
+        
+        private float _timeAtTop = 0f;
+        private bool _hasTriggeredOnReachedTop = false;
 
         #endregion
 
@@ -773,20 +777,34 @@ namespace Code.Chat
 
         private void CheckScrollPosition()
         {
-            if (scrollRect == null || !_isVisible) return;
+            if (scrollRect == null || !_isVisible)
+                return;
 
-            // Проверяем достижение верха
             if (scrollRect.verticalNormalizedPosition >= 0.95f)
             {
-                if (!_historyLoading[_currentChatType] && !_noMoreHistory[_currentChatType])
+                // Скролл у верха, накапливаем время
+                _timeAtTop += Time.deltaTime;
+
+                if (_timeAtTop >= timeToHoldAtTop && !_hasTriggeredOnReachedTop)
                 {
-                    _historyLoading[_currentChatType] = true;
+                    // Время достигнуто, вызываем событие
                     OnReachedTop?.Invoke(_currentChatType);
+                    _hasTriggeredOnReachedTop = true;
                 }
             }
             else
             {
-                _historyLoading[_currentChatType] = false;
+                // Скролл не у верха, сбрасываем время и флаг
+                _timeAtTop = 0f;
+                _hasTriggeredOnReachedTop = false;
+            }
+
+            // Далее ваша старая логика загрузки истории, если нужна, можно дополнить
+            // Например, если хотите, чтобы загрузка продолжалась как раньше:
+            if (!_historyLoading[_currentChatType] && !_noMoreHistory[_currentChatType])
+            {
+                _historyLoading[_currentChatType] = true;
+                // Загрузка истории
             }
         }
 
