@@ -173,6 +173,7 @@ namespace Code.Chat
 
         // Хранение сообщений для каждого типа чата
         private readonly Dictionary<ChatType, List<ChatMessage>> _chatMessages = new();
+        private readonly List<ChatMessage> _allMessages = new();
 
         private List<MessageComponent> _activeMessageObjects = new();
         private readonly Dictionary<long, MessageComponent> _activeUsersMessageObjects = new();
@@ -466,11 +467,14 @@ namespace Code.Chat
                 _chatMessages[message.chatType] = new List<ChatMessage>();
 
             _chatMessages[message.chatType].Add(message);
+            _allMessages.Add(message);
 
             // Ограничиваем количество сообщений
             if (_chatMessages[message.chatType].Count > maxMessagesPerChat)
             {
-                _chatMessages[message.chatType].RemoveAt(0);
+                var messageForDelete = _chatMessages[message.chatType][0];
+                _allMessages.Remove(messageForDelete);
+                _chatMessages[message.chatType].Remove(messageForDelete);
             }
 
             // Обновляем UI только если это текущий активный чат
@@ -498,16 +502,28 @@ namespace Code.Chat
         {
             if (_activeUsersMessageObjects.TryGetValue(likeUpdatedData.message_id, out var messagesComponent))
                 messagesComponent.UpdateLikesStatus(likeUpdatedData.likes_count, likeUpdatedData.is_liked_by_me);
-            else
-                Debug.LogWarning($"message {likeUpdatedData.message_id} was not found");
+            foreach (var messageForUpdate in _allMessages.Where(
+                         m => m.chatMessageData?.id == likeUpdatedData.message_id))
+            {
+                if(messageForUpdate.chatMessageData == null)
+                    continue;
+                messageForUpdate.chatMessageData.likes_count = likeUpdatedData.likes_count;
+                messageForUpdate.chatMessageData.is_liked_by_me = likeUpdatedData.is_liked_by_me;
+            }
         }
 
         public void OnViewUpdated(ViewUpdatedModel viewUpdatedData)
         {
             if (_activeUsersMessageObjects.TryGetValue(viewUpdatedData.message_id, out var messagesComponent))
                 messagesComponent.UpdateViewsStatus(viewUpdatedData.views_count, viewUpdatedData.is_viewed_by_me);
-            else
-                Debug.LogWarning($"message {viewUpdatedData.message_id} was not found");
+            foreach (var messageForUpdate in _allMessages.Where(
+                         m => m.chatMessageData?.id == viewUpdatedData.message_id))
+            {
+                if(messageForUpdate.chatMessageData == null)
+                    continue;
+                messageForUpdate.chatMessageData.views_count = viewUpdatedData.views_count;
+                messageForUpdate.chatMessageData.is_viewed_by_me = viewUpdatedData.is_viewed_by_me;
+            }
         }
 
         /// <summary>
@@ -527,12 +543,18 @@ namespace Code.Chat
 
             // Вставляем в начало списка
             _chatMessages[chatType].InsertRange(0, chatMessageList);
+            _allMessages.InsertRange(0, chatMessageList);
 
             // Ограничиваем количество сообщений
             if (_chatMessages[chatType].Count > maxMessagesPerChat)
             {
                 var excess = _chatMessages[chatType].Count - maxMessagesPerChat;
-                _chatMessages[chatType].RemoveRange(maxMessagesPerChat, excess);
+                var messagesForRemove = _chatMessages[chatType].GetRange(maxMessagesPerChat, excess);
+                messagesForRemove.ForEach(m =>
+                {
+                    _chatMessages[chatType].Remove(m);
+                    _allMessages.Remove(m);
+                });
             }
 
             // Обновляем UI только если это текущий активный чат
@@ -603,6 +625,8 @@ namespace Code.Chat
                 _chatMessages[chatType].Clear();
             }
 
+            _allMessages.Clear();
+
             if (chatType == _currentChatType && _isVisible)
             {
                 RefreshCurrentChat();
@@ -647,7 +671,7 @@ namespace Code.Chat
             messageComponent.Init(message);
 
             _activeMessageObjects.Add(messageComponent);
-            if(message.chatMessageData != null)
+            if (message.chatMessageData != null)
                 _activeUsersMessageObjects.TryAdd(message.chatMessageData.id, messageComponent);
         }
 
