@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Code.API.Models;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,9 +18,6 @@ namespace Code.Chat
         Global
     }
 
-    /// <summary>
-    /// Стиль отображения сообщения чата
-    /// </summary>
     [Serializable]
     public class ChatMessageStyle
     {
@@ -28,34 +26,47 @@ namespace Code.Chat
         public bool usernameItalic = false;
         public bool usernameUnderlined = false;
         public Color usernameColor = Color.white;
-        
+
         // Стили для сообщения
         public bool messageBold = false;
         public bool messageItalic = false;
         public bool messageUnderlined = false;
         public Color messageColor = Color.white;
-        
+
         // Дополнительные параметры
         public bool hideUsername = false;
         public bool noUsernameFollowup = false;
 
         /// <summary>
-        /// Форматирует сообщение согласно стилю
+        /// Строит весь форматированный текст сообщения
         /// </summary>
         public string FormatMessage(string username, string message)
         {
             if (hideUsername)
-            {
-                return FormatText(message, messageBold, messageItalic, messageUnderlined, messageColor);
-            }
+                return FormatMessageText(message);
 
-            var formattedUsername =
-                FormatText(username, usernameBold, usernameItalic, usernameUnderlined, usernameColor);
-            var formattedMessage = FormatText(message, messageBold, messageItalic, messageUnderlined, messageColor);
+            var formattedUsername = FormatUsername(username);
+            var formattedMessage = FormatMessageText(message);
             var followup = noUsernameFollowup ? " " : ": ";
             return string.IsNullOrEmpty(username)
                 ? formattedMessage
                 : $"{formattedUsername}{followup}{formattedMessage}";
+        }
+
+        /// <summary>
+        /// Форматирует только никнейм
+        /// </summary>
+        public string FormatUsername(string username)
+        {
+            return FormatText(username, usernameBold, usernameItalic, usernameUnderlined, usernameColor);
+        }
+
+        /// <summary>
+        /// Форматирует только текст сообщения
+        /// </summary>
+        public string FormatMessageText(string message)
+        {
+            return FormatText(message, messageBold, messageItalic, messageUnderlined, messageColor);
         }
 
         private string FormatText(string text, bool bold, bool italic, bool underlined, Color color)
@@ -69,6 +80,7 @@ namespace Code.Chat
             return text;
         }
     }
+
 
     /// <summary>
     /// Предустановленные стили сообщений
@@ -125,26 +137,6 @@ namespace Code.Chat
     }
 
     /// <summary>
-    /// Структура сообщения в чате
-    /// </summary>
-    [Serializable]
-    public class ChatMessage
-    {
-        public string username;
-        public string message;
-        public long? messageId;
-        public ChatType chatType;
-        public DateTime timestamp;
-        public ChatMessageStyle style;
-
-        public ChatMessage()
-        {
-            timestamp = DateTime.Now;
-            style = ChatStyles.Default;
-        }
-    }
-
-    /// <summary>
     /// Главный UI компонент системы чата
     /// </summary>
     public class ChatSystemUI : MonoBehaviour
@@ -152,13 +144,12 @@ namespace Code.Chat
         #region Serialized Fields
 
         [SerializeField] private GameObject chatPanel;
-        
+
         [Header("UI References")] [SerializeField]
         private ScrollRect scrollRect;
 
         [SerializeField] private RectTransform contentParent;
         [SerializeField] private TMP_InputField inputField;
-        [SerializeField] private TextMeshProUGUI chatTypeIndicator;
 
         [Header("Chat Type Buttons")] [SerializeField]
         private Button localChatButton;
@@ -167,11 +158,11 @@ namespace Code.Chat
 
         [Header("Send Button")] [SerializeField]
         private Button sendButton;
-        
+
         [Header("Close Button")] [SerializeField]
         private Button closeButton;
-        
-        [Header("Prefabs")] [SerializeField] private GameObject messagePrefab;
+
+        [Header("Prefabs")] [SerializeField] private MessageComponent messagePrefab;
 
         [Header("Settings")] [SerializeField] private int maxMessagesPerChat = 500;
         [SerializeField] private bool devLog = false;
@@ -181,23 +172,23 @@ namespace Code.Chat
         #region Private Fields
 
         // Хранение сообщений для каждого типа чата
-        private Dictionary<ChatType, List<ChatMessage>> chatMessages =
-            new Dictionary<ChatType, List<ChatMessage>>();
+        private readonly Dictionary<ChatType, List<ChatMessage>> _chatMessages = new();
 
-        private List<GameObject> activeMessageObjects = new List<GameObject>();
-        private Queue<GameObject> messagePool = new Queue<GameObject>();
+        private List<MessageComponent> _activeMessageObjects = new();
+        private readonly Dictionary<long, MessageComponent> _activeUsersMessageObjects = new();
+        private readonly Queue<MessageComponent> _messagePool = new();
 
         // Состояние
-        private ChatType currentChatType = ChatType.Lobby;
-        private bool isVisible = false;
-        private bool inputFieldActive = false;
+        private ChatType _currentChatType = ChatType.Lobby;
+        private bool _isVisible = false;
+        private bool _inputFieldActive = false;
 
         // История загрузки
-        private Dictionary<ChatType, bool> historyLoading = new();
-        private Dictionary<ChatType, bool> noMoreHistory = new();
+        private readonly Dictionary<ChatType, bool> _historyLoading = new();
+        private readonly Dictionary<ChatType, bool> _noMoreHistory = new();
 
         // Запоминаем, была ли прокрутка в самом низу для каждого типа чата
-        private Dictionary<ChatType, bool> wasAtBottom = new();
+        private readonly Dictionary<ChatType, bool> _wasAtBottom = new();
 
         #endregion
 
@@ -212,11 +203,11 @@ namespace Code.Chat
 
         #endregion
 
-        #region Properties
+        #region Propertiesй
 
-        public ChatType CurrentChatType => currentChatType;
-        public bool IsVisible => isVisible;
-        public bool InputFieldActive => inputFieldActive;
+        public ChatType CurrentChatType => _currentChatType;
+        public bool IsVisible => _isVisible;
+        public bool InputFieldActive => _inputFieldActive;
 
         public string InputText
         {
@@ -231,16 +222,17 @@ namespace Code.Chat
         {
             get
             {
-                if (!chatMessages.ContainsKey(currentChatType) || chatMessages[currentChatType].Count == 0)
+                if (!_chatMessages.ContainsKey(_currentChatType) || _chatMessages[_currentChatType].Count == 0)
                     return null;
-                return chatMessages[currentChatType].FirstOrDefault(m => m.messageId.HasValue)?.messageId;
+                return _chatMessages[_currentChatType].FirstOrDefault(m => m.chatMessageData != null)?.chatMessageData
+                    ?.id;
             }
         }
 
         public bool NoMoreHistory
         {
-            get => noMoreHistory.ContainsKey(currentChatType) && noMoreHistory[currentChatType];
-            set => noMoreHistory[currentChatType] = value;
+            get => _noMoreHistory.ContainsKey(_currentChatType) && _noMoreHistory[_currentChatType];
+            set => _noMoreHistory[_currentChatType] = value;
         }
 
         public bool IsAtBottom => scrollRect != null && scrollRect.verticalNormalizedPosition <= 0.02f;
@@ -271,14 +263,14 @@ namespace Code.Chat
 
         private void InitializeChatData()
         {
-            chatMessages[ChatType.Lobby] = new List<ChatMessage>();
-            chatMessages[ChatType.Global] = new List<ChatMessage>();
-            historyLoading[ChatType.Lobby] = false;
-            historyLoading[ChatType.Global] = false;
-            noMoreHistory[ChatType.Lobby] = false;
-            noMoreHistory[ChatType.Global] = false;
-            wasAtBottom[ChatType.Lobby] = true;
-            wasAtBottom[ChatType.Global] = true;
+            _chatMessages[ChatType.Lobby] = new List<ChatMessage>();
+            _chatMessages[ChatType.Global] = new List<ChatMessage>();
+            _historyLoading[ChatType.Lobby] = false;
+            _historyLoading[ChatType.Global] = false;
+            _noMoreHistory[ChatType.Lobby] = false;
+            _noMoreHistory[ChatType.Global] = false;
+            _wasAtBottom[ChatType.Lobby] = true;
+            _wasAtBottom[ChatType.Global] = true;
 
             if (devLog) Debug.Log("[ChatSystemUI] Chat data initialized");
         }
@@ -287,7 +279,6 @@ namespace Code.Chat
         {
             // Подписка на события
             SubscribeToUIEvents();
-            UpdateChatTypeIndicator();
             UpdateChatTypeButtons();
             Hide();
 
@@ -322,7 +313,7 @@ namespace Code.Chat
             {
                 closeButton.onClick.AddListener(Hide);
             }
-            
+
             if (scrollRect != null)
             {
                 scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
@@ -350,12 +341,12 @@ namespace Code.Chat
             {
                 sendButton.onClick.RemoveAllListeners();
             }
-            
+
             if (closeButton != null)
             {
                 closeButton.onClick.RemoveAllListeners();
             }
-            
+
             if (scrollRect != null)
             {
                 scrollRect.onValueChanged.RemoveListener(OnScrollValueChanged);
@@ -371,8 +362,8 @@ namespace Code.Chat
         /// </summary>
         public void Show()
         {
-            if (isVisible) return;
-            isVisible = true;
+            if (_isVisible) return;
+            _isVisible = true;
             chatPanel.SetActive(true);
             RefreshCurrentChat();
             StartCoroutine(EnableInputNextFrame());
@@ -389,8 +380,8 @@ namespace Code.Chat
         /// </summary>
         public void Hide()
         {
-            if (!isVisible) return;
-            isVisible = false;
+            if (!_isVisible) return;
+            _isVisible = false;
             DisableInputField();
             chatPanel.SetActive(false);
 
@@ -402,8 +393,8 @@ namespace Code.Chat
         /// </summary>
         public void EnableInputField()
         {
-            if (inputFieldActive || inputField == null) return;
-            inputFieldActive = true;
+            if (_inputFieldActive || inputField == null) return;
+            _inputFieldActive = true;
             inputField.interactable = true;
             inputField.Select();
             inputField.ActivateInputField();
@@ -416,8 +407,8 @@ namespace Code.Chat
         /// </summary>
         public void DisableInputField()
         {
-            if (!inputFieldActive || inputField == null) return;
-            inputFieldActive = false;
+            if (!_inputFieldActive || inputField == null) return;
+            _inputFieldActive = false;
             inputField.interactable = false;
             inputField.text = "";
             inputField.DeactivateInputField();
@@ -430,7 +421,7 @@ namespace Code.Chat
         /// </summary>
         public void SwitchChatType()
         {
-            var newType = currentChatType == ChatType.Lobby ? ChatType.Global : ChatType.Lobby;
+            var newType = _currentChatType == ChatType.Lobby ? ChatType.Global : ChatType.Lobby;
             SetChatType(newType);
         }
 
@@ -439,18 +430,17 @@ namespace Code.Chat
         /// </summary>
         public void SetChatType(ChatType chatType)
         {
-            if (currentChatType == chatType) return;
+            if (_currentChatType == chatType) return;
 
             // Сохраняем текущее состояние скролла перед переключением
             SaveScrollState();
 
-            currentChatType = chatType;
-            OnChatTypeChanged?.Invoke(currentChatType);
-            UpdateChatTypeIndicator();
+            _currentChatType = chatType;
+            OnChatTypeChanged?.Invoke(_currentChatType);
             UpdateChatTypeButtons();
             RefreshCurrentChat();
 
-            if (devLog) Debug.Log($"[ChatSystemUI] Chat type changed to: {currentChatType}");
+            if (devLog) Debug.Log($"[ChatSystemUI] Chat type changed to: {_currentChatType}");
         }
 
         /// <summary>
@@ -469,40 +459,29 @@ namespace Code.Chat
         /// <summary>
         /// Добавить сообщение в чат
         /// </summary>
-        public void AddMessage(string username, string message, ChatType chatType, ChatMessageStyle style = null,
-            long? messageId = null)
+        public void AddMessage(ChatMessage message)
         {
-            var chatMessage = new ChatMessage
-            {
-                username = username,
-                message = message,
-                messageId = messageId,
-                chatType = chatType,
-                timestamp = DateTime.Now,
-                style = style ?? ChatStyles.Default
-            };
-
             // Добавляем сообщение в соответствующий чат
-            if (!chatMessages.ContainsKey(chatType))
-                chatMessages[chatType] = new List<ChatMessage>();
+            if (!_chatMessages.ContainsKey(message.chatType))
+                _chatMessages[message.chatType] = new List<ChatMessage>();
 
-            chatMessages[chatType].Add(chatMessage);
+            _chatMessages[message.chatType].Add(message);
 
             // Ограничиваем количество сообщений
-            if (chatMessages[chatType].Count > maxMessagesPerChat)
+            if (_chatMessages[message.chatType].Count > maxMessagesPerChat)
             {
-                chatMessages[chatType].RemoveAt(0);
+                _chatMessages[message.chatType].RemoveAt(0);
             }
 
             // Обновляем UI только если это текущий активный чат
-            if (chatType == currentChatType && isVisible)
+            if (message.chatType == _currentChatType && _isVisible)
             {
                 // Проверяем, был ли пользователь внизу перед добавлением сообщения
                 bool shouldScrollToBottom = IsAtBottom;
-                
-                CreateMessageUI(chatMessage);
+
+                CreateMessageUI(message);
                 Canvas.ForceUpdateCanvases();
-                
+
                 // Прокручиваем вниз только если пользователь был внизу
                 if (shouldScrollToBottom)
                 {
@@ -510,45 +489,54 @@ namespace Code.Chat
                 }
             }
 
-            if (devLog) Debug.Log($"[ChatSystemUI] Message added to {chatType}: {username}: {message}");
+            if (devLog)
+                Debug.Log(
+                    $"[ChatSystemUI] Message added to {message.chatType}: {message.displayUsername}: {message.displayMessage}");
+        }
+
+        public void OnLikeUpdated(LikeUpdatedModel likeUpdatedData)
+        {
+            if (_activeUsersMessageObjects.TryGetValue(likeUpdatedData.message_id, out var messagesComponent))
+                messagesComponent.UpdateLikesStatus(likeUpdatedData.likes_count, likeUpdatedData.is_liked_by_me);
+            else
+                Debug.LogWarning($"message {likeUpdatedData.message_id} was not found");
+        }
+
+        public void OnViewUpdated(ViewUpdatedModel viewUpdatedData)
+        {
+            if (_activeUsersMessageObjects.TryGetValue(viewUpdatedData.message_id, out var messagesComponent))
+                messagesComponent.UpdateViewsStatus(viewUpdatedData.views_count, viewUpdatedData.is_viewed_by_me);
+            else
+                Debug.LogWarning($"message {viewUpdatedData.message_id} was not found");
         }
 
         /// <summary>
         /// Добавить сообщения в начало истории
         /// </summary>
-        public void PrependMessages(List<(string username, string message, ChatMessageStyle style, long id)> messages,
-            ChatType chatType)
+        public void PrependMessages(List<ChatMessage> messages, ChatType chatType)
         {
             if (messages == null || messages.Count == 0) return;
-            if (!chatMessages.ContainsKey(chatType))
-                chatMessages[chatType] = new List<ChatMessage>();
+            if (!_chatMessages.ContainsKey(chatType))
+                _chatMessages[chatType] = new List<ChatMessage>();
 
             var chatMessageList = new List<ChatMessage>();
-            foreach (var (username, message, style, id) in messages)
+            foreach (var message in messages)
             {
-                chatMessageList.Add(new ChatMessage
-                {
-                    username = username,
-                    message = message,
-                    messageId = id,
-                    chatType = chatType,
-                    timestamp = DateTime.Now,
-                    style = style ?? ChatStyles.Default
-                });
+                chatMessageList.Add(message);
             }
 
             // Вставляем в начало списка
-            chatMessages[chatType].InsertRange(0, chatMessageList);
+            _chatMessages[chatType].InsertRange(0, chatMessageList);
 
             // Ограничиваем количество сообщений
-            if (chatMessages[chatType].Count > maxMessagesPerChat)
+            if (_chatMessages[chatType].Count > maxMessagesPerChat)
             {
-                var excess = chatMessages[chatType].Count - maxMessagesPerChat;
-                chatMessages[chatType].RemoveRange(maxMessagesPerChat, excess);
+                var excess = _chatMessages[chatType].Count - maxMessagesPerChat;
+                _chatMessages[chatType].RemoveRange(maxMessagesPerChat, excess);
             }
 
             // Обновляем UI только если это текущий активный чат
-            if (chatType == currentChatType && isVisible)
+            if (chatType == _currentChatType && _isVisible)
             {
                 var scrollPosBefore = scrollRect.verticalNormalizedPosition;
                 RefreshCurrentChat();
@@ -566,7 +554,7 @@ namespace Code.Chat
             if (scrollRect == null) return;
             var scrollValue = scrollRect.verticalNormalizedPosition + (lines * 0.1f);
             scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollValue);
-            
+
             // Обновляем состояние
             SaveScrollState();
         }
@@ -579,7 +567,7 @@ namespace Code.Chat
             if (scrollRect == null) return;
             var scrollValue = scrollRect.verticalNormalizedPosition - (lines * 0.1f);
             scrollRect.verticalNormalizedPosition = Mathf.Clamp01(scrollValue);
-            
+
             // Обновляем состояние
             SaveScrollState();
         }
@@ -610,12 +598,12 @@ namespace Code.Chat
         /// </summary>
         public void ClearChat(ChatType chatType)
         {
-            if (chatMessages.ContainsKey(chatType))
+            if (_chatMessages.ContainsKey(chatType))
             {
-                chatMessages[chatType].Clear();
+                _chatMessages[chatType].Clear();
             }
 
-            if (chatType == currentChatType && isVisible)
+            if (chatType == _currentChatType && _isVisible)
             {
                 RefreshCurrentChat();
             }
@@ -631,45 +619,43 @@ namespace Code.Chat
         {
             ClearActiveMessages();
 
-            if (!chatMessages.ContainsKey(currentChatType))
+            if (!_chatMessages.ContainsKey(_currentChatType))
                 return;
 
-            var messages = chatMessages[currentChatType];
+            var messages = _chatMessages[_currentChatType];
             foreach (var message in messages)
             {
                 CreateMessageUI(message);
             }
 
             Canvas.ForceUpdateCanvases();
-            
+
             // Восстанавливаем позицию скролла
             RestoreScrollState();
+            Debug.Log(_activeUsersMessageObjects.Count);
         }
 
         private void CreateMessageUI(ChatMessage message)
         {
-            var messageObj = GetMessageObject();
-            if (messageObj == null) return;
+            var messageComponent = GetMessageObject();
+            if (messageComponent == null) return;
 
-            messageObj.transform.SetParent(contentParent, false);
-            messageObj.SetActive(true);
+            messageComponent.transform.SetParent(contentParent, false);
+            messageComponent.gameObject.SetActive(true);
 
             // Настройка текста сообщения
-            var textComponent = messageObj.GetComponentInChildren<TextMeshProUGUI>();
-            if (textComponent != null)
-            {
-                var formattedMessage = message.style.FormatMessage(message.username, message.message);
-                textComponent.text = formattedMessage;
-            }
+            messageComponent.Init(message);
 
-            activeMessageObjects.Add(messageObj);
+            _activeMessageObjects.Add(messageComponent);
+            if(message.chatMessageData != null)
+                _activeUsersMessageObjects.TryAdd(message.chatMessageData.id, messageComponent);
         }
 
-        private GameObject GetMessageObject()
+        private MessageComponent GetMessageObject()
         {
-            if (messagePool.Count > 0)
+            if (_messagePool.Count > 0)
             {
-                return messagePool.Dequeue();
+                return _messagePool.Dequeue();
             }
 
             if (messagePrefab != null)
@@ -681,58 +667,45 @@ namespace Code.Chat
             return null;
         }
 
-        private void ReturnMessageObject(GameObject messageObj)
+        private void ReturnMessageObject(MessageComponent messageObj)
         {
             if (messageObj == null) return;
-            messageObj.SetActive(false);
+            messageObj.gameObject.SetActive(false);
             messageObj.transform.SetParent(transform, false);
-            messagePool.Enqueue(messageObj);
+            _messagePool.Enqueue(messageObj);
         }
 
         private void ClearActiveMessages()
         {
-            foreach (var messageObj in activeMessageObjects)
+            foreach (var messageObj in _activeMessageObjects)
             {
                 ReturnMessageObject(messageObj);
             }
 
-            activeMessageObjects.Clear();
-        }
-
-        private void UpdateChatTypeIndicator()
-        {
-            if (chatTypeIndicator != null)
-            {
-                 //chatTypeIndicator.text = currentChatType == ChatType.Lobby ? "LOBBY" : "GLOBAL";
-            }
+            _activeMessageObjects.Clear();
+            _activeUsersMessageObjects.Clear();
         }
 
         private void UpdateChatTypeButtons()
         {
-            // Подсвечиваем активную кнопку типа чата
             if (localChatButton != null)
-            {
-                localChatButton.GetComponent<Outline>().enabled = currentChatType == ChatType.Lobby;
-            }
-
+                localChatButton.GetComponent<Outline>().enabled = _currentChatType == ChatType.Lobby;
             if (globalChatButton != null)
-            {
-                globalChatButton.GetComponent<Outline>().enabled = currentChatType == ChatType.Global;
-            }
+                globalChatButton.GetComponent<Outline>().enabled = _currentChatType == ChatType.Global;
         }
 
         private void SaveScrollState()
         {
             if (scrollRect == null) return;
-            wasAtBottom[currentChatType] = IsAtBottom;
+            _wasAtBottom[_currentChatType] = IsAtBottom;
         }
 
         private void RestoreScrollState()
         {
             if (scrollRect == null) return;
-            
+
             // Если пользователь был внизу, прокручиваем вниз
-            if (wasAtBottom.ContainsKey(currentChatType) && wasAtBottom[currentChatType])
+            if (_wasAtBottom.ContainsKey(_currentChatType) && _wasAtBottom[_currentChatType])
             {
                 StartCoroutine(ScrollToBottomNextFrame());
             }
@@ -768,7 +741,7 @@ namespace Code.Chat
 
         private void ParseCommand(string text)
         {
-            var parts = text.Split(new[] {' '}, 2);
+            var parts = text.Split(new[] { ' ' }, 2);
             var command = parts[0].Substring(1); // Убираем '/'
             var message = parts.Length > 1 ? parts[1] : "";
             OnCommandSent?.Invoke(command, message);
@@ -776,20 +749,20 @@ namespace Code.Chat
 
         private void CheckScrollPosition()
         {
-            if (scrollRect == null || !isVisible) return;
+            if (scrollRect == null || !_isVisible) return;
 
             // Проверяем достижение верха
             if (scrollRect.verticalNormalizedPosition >= 0.95f)
             {
-                if (!historyLoading[currentChatType] && !noMoreHistory[currentChatType])
+                if (!_historyLoading[_currentChatType] && !_noMoreHistory[_currentChatType])
                 {
-                    historyLoading[currentChatType] = true;
-                    OnReachedTop?.Invoke(currentChatType);
+                    _historyLoading[_currentChatType] = true;
+                    OnReachedTop?.Invoke(_currentChatType);
                 }
             }
             else
             {
-                historyLoading[currentChatType] = false;
+                _historyLoading[_currentChatType] = false;
             }
         }
 

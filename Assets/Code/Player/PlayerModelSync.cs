@@ -53,7 +53,7 @@ namespace Code.Player
         
         private void OnCharacterJsonChanged(string prev, string next, bool asServer)
         {
-            Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
+            //Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
 
             _characterCustomization.Autoload = false;
             _characterCustomization.Initialize();
@@ -70,7 +70,7 @@ namespace Code.Player
         [ServerRpc(RequireOwnership = false)]
         public void SendCharacterJsonServerRpc(string json)
         {
-            Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
+            //Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
             _characterJson.Value = json ?? string.Empty;
         }
 
@@ -98,7 +98,7 @@ namespace Code.Player
         public void TransmitLocalCharacter()
         {
             if (!IsOwner) return;
-            Debug.Log("[Client] TransmitLocalCharacter");
+            //Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);
         }

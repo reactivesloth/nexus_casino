@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Code.API;
 using Code.API.Models;
@@ -233,15 +232,9 @@ namespace Code.Chat
             else
             {
                 chatSystemUI.Show();
-                StartCoroutine(ActivateInputWithDelay());
+                chatSystemUI.EnableInputField();
                 LoadHistoryIfNeeded();
             }
-        }
-
-        private IEnumerator ActivateInputWithDelay()
-        {
-            yield return null; // дождаться конца текущего кадра, когда UI точно активирован
-            chatSystemUI.EnableInputField();
         }
 
         private void SendCurrentMessage()
@@ -335,14 +328,23 @@ namespace Code.Chat
             var envelope = JsonUtility.FromJson<ChatModel<object>>(text);
             if (envelope == null || string.IsNullOrEmpty(envelope.@event)) return;
 
-            if (envelope.@event == ChatSocketEvents.NewMessage ||
-                envelope.@event == ChatSocketEvents.NewImportantMessage)
+            switch (envelope.@event)
             {
-                HandleNewMessage(text);
-            }
-            else if (envelope.@event == ChatSocketEvents.Error)
-            {
-                HandleErrorMessage(text);
+                case ChatSocketEvents.NewMessage:
+                case ChatSocketEvents.NewImportantMessage:
+                    HandleNewMessage(text);
+                    break;
+                case ChatSocketEvents.Error:
+                    HandleErrorMessage(text);
+                    break;
+                case ChatSocketEvents.LikeToggled:
+                case ChatSocketEvents.MessageLikeUpdated:
+                    HandleLikeChanges(text);
+                    break;
+                case ChatSocketEvents.ViewMarked:
+                case ChatSocketEvents.MessageViewsUpdated:
+                    HandleViewChange(text); 
+                    break;
             }
         }
 
@@ -365,24 +367,36 @@ namespace Code.Chat
             var lobbyId = message.lobby_id ?? "main";
             var prefix = GetLobbyPrefix(lobbyId);
 
-            chatSystemUI.AddMessage(
+            /*chatSystemUI.AddMessage(
                 $"{prefix}{message.user.username}",
                 message.message,
                 ChatType.Global,
                 messageStyle,
                 message.id
-            );
+            );*/
+            
+            chatSystemUI.AddMessage(new ChatMessage
+            {
+                displayUsername = $"{prefix}{message.user.username}",
+                displayMessage = message.message,
+                chatType = ChatType.Global,
+                timestamp = DateTime.Parse(message.created_at, null, System.Globalization.DateTimeStyles.RoundtripKind),
+                style = messageStyle,
+                chatMessageData = message
+            });
 
             // Если сообщение из текущего лобби, добавляем его также в чат лобби
             if (isLobbyMessage)
             {
-                chatSystemUI.AddMessage(
-                    message.user.username,
-                    message.message,
-                    ChatType.Lobby,
-                    messageStyle,
-                    message.id
-                );
+                chatSystemUI.AddMessage(new ChatMessage
+                {
+                    displayUsername = message.user.username,
+                    displayMessage = message.message,
+                    chatType = ChatType.Lobby,
+                    timestamp = DateTime.Parse(message.created_at, null, System.Globalization.DateTimeStyles.RoundtripKind),
+                    style = messageStyle,
+                    chatMessageData = message
+                });
             }
         }
 
@@ -399,6 +413,20 @@ namespace Code.Chat
 
             var suffix = lobbyId.Length > 4 ? "..." : "";
             return $"[{suffix}{lobbyId.Substring(Mathf.Max(0, lobbyId.Length - 4))}]";
+        }
+
+        private void HandleViewChange(string text)
+        {
+            var data = JsonUtility.FromJson<ChatModel<ViewUpdatedModel>>(text);
+            if(data != null)
+                chatSystemUI.OnViewUpdated(data.data);
+        }
+
+        private void HandleLikeChanges(string text)
+        {
+            var data = JsonUtility.FromJson<ChatModel<LikeUpdatedModel>>(text);
+            if(data != null)
+                chatSystemUI.OnLikeUpdated(data.data);
         }
 
         #endregion
@@ -438,9 +466,6 @@ namespace Code.Chat
                 SendSystemMessage("Failed to send message", ChatStyles.Error);
                 if (devLog) Debug.LogError($"[ChatController] Send error: {ex.Message}");
             }
-
-            chatSystemUI.DisableInputField();
-            chatSystemUI.Hide();
         }
 
         private void OnCommandSent(string command, string message)
@@ -525,7 +550,7 @@ namespace Code.Chat
                     return;
                 }
 
-                var messages = new List<(string username, string message, ChatMessageStyle style, long id)>();
+                var messages = new List<ChatMessage>();
 
                 foreach (var item in items)
                 {
@@ -541,7 +566,15 @@ namespace Code.Chat
                         username = $"{prefix}{username}";
                     }
 
-                    messages.Add((username, item.message ?? string.Empty, style, item.id));
+                    messages.Add(new ChatMessage
+                    {
+                        displayUsername = username,
+                        displayMessage = item.message ?? string.Empty,
+                        style = style,
+                        timestamp = DateTime.Parse(item.created_at, null, System.Globalization.DateTimeStyles.RoundtripKind),
+                        chatType = chatType,
+                        chatMessageData = item
+                    });
                 }
 
                 chatSystemUI.PrependMessages(messages, chatType);
@@ -619,8 +652,20 @@ namespace Code.Chat
 
         public void SendSystemMessage(string message, ChatMessageStyle style)
         {
-            chatSystemUI.AddMessage(systemName, message, ChatType.Lobby, style);
-            chatSystemUI.AddMessage(systemName, message, ChatType.Global, style);
+            chatSystemUI.AddMessage(new ChatMessage
+            {
+                displayUsername = systemName,
+                displayMessage = message,
+                chatType = ChatType.Lobby,
+                style = style
+            });
+            chatSystemUI.AddMessage(new ChatMessage
+            {
+                displayUsername = systemName,
+                displayMessage = message,
+                chatType = ChatType.Global,
+                style = style
+            });
         }
 
         private void SetActiveMobileInput(bool value)
@@ -653,6 +698,35 @@ namespace Code.Chat
         {
             if (devLog) Debug.Log("[ChatController] Manual history load");
             _ = LoadHistoryPageAsync(false, CurrentChatType);
+        }
+
+        public void OnViewMessage(long id)
+        {
+            var dataForSend = new ChatModel<ReactBaseModel>
+            {
+                @event = ChatSocketEvents.MarkViewed,
+                data = new ReactBaseModel
+                {
+                    message_id = id
+                }
+            };
+            
+            _ws?.SendText(JsonUtility.ToJson(dataForSend));
+        }
+
+        public void OnLikeMessage(long id, bool like)
+        {
+            var dataForSend = new ChatModel<LikeSendModel>
+            {
+                @event = ChatSocketEvents.ToggleLike,
+                data = new LikeSendModel
+                {
+                    message_id = id,
+                    like = like
+                }
+            };
+            
+            _ws?.SendText(JsonUtility.ToJson(dataForSend));
         }
 
         #endregion
