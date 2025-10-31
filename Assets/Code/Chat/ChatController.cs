@@ -383,7 +383,7 @@ namespace Code.Chat
                 timestamp = DateTime.Parse(message.created_at, null, System.Globalization.DateTimeStyles.RoundtripKind),
                 style = messageStyle,
                 chatMessageData = message
-            });
+            }, ClientDataStorage.UserData.id == message.user_id);
 
             // Если сообщение из текущего лобби, добавляем его также в чат лобби
             if (isLobbyMessage)
@@ -396,7 +396,7 @@ namespace Code.Chat
                     timestamp = DateTime.Parse(message.created_at, null, System.Globalization.DateTimeStyles.RoundtripKind),
                     style = messageStyle,
                     chatMessageData = message
-                });
+                }, ClientDataStorage.UserData.id == message.user_id);
             }
         }
 
