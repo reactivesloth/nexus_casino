@@ -273,6 +273,7 @@ namespace Code.Chat
             InitializeChatData();
             SetupUI();
             InitializeEmojiSystem();
+            //SetPivotDown();
         }
 
         private void Update()
@@ -719,21 +720,28 @@ namespace Code.Chat
             // Обновляем UI только если это текущий активный чат
             if (message.chatType == _currentChatType && _isVisible)
             {
-                // Проверяем, был ли пользователь внизу перед добавлением сообщения
-                bool shouldScrollToBottom = IsAtBottom;
-
-                CreateMessageUI(message);
-                Canvas.ForceUpdateCanvases();
-
-                // Прокручиваем вниз только если пользователь был внизу
-                if (shouldScrollToBottom)
-                {
-                    StartCoroutine(ScrollToBottomNextFrame());
-                }
+                StartCoroutine(CreateMessageUIWithFrameDelay(message));
             }
 
             if (devLog)
                 Debug.Log($"[ChatSystemUI] Message added to {message.chatType}: {message.displayUsername}: {message.displayMessage}");
+        }
+
+        private IEnumerator CreateMessageUIWithFrameDelay(ChatMessage message)
+        {
+            // SetPivotUp();
+            // Canvas.ForceUpdateCanvases();
+            yield return null;
+            CreateMessageUI(message);
+            yield return null;
+            Canvas.ForceUpdateCanvases();
+            StartCoroutine(ScrollToBottomNextFrame());
+            
+            // Прокручиваем вниз только если пользователь был внизу
+            /*if (IsAtBottom)
+            {
+                StartCoroutine(ScrollToBottomNextFrame());
+            }*/
         }
 
         public void OnLikeUpdated(LikeUpdatedModel likeUpdatedData)
@@ -778,8 +786,7 @@ namespace Code.Chat
 
             var messagesToAddToUI = new List<ChatMessage>(messages);
             messagesToAddToUI.Reverse();
-            foreach (var message in messagesToAddToUI)
-                CreateMessageUI(message, true);
+            StartCoroutine(AddHistoryMessagesWithFrameDelay(messagesToAddToUI));
 
             // Вставляем в начало списка
             _chatMessages[chatType].InsertRange(0, messages);
@@ -799,6 +806,19 @@ namespace Code.Chat
             }
             
             if (devLog) Debug.Log($"[ChatSystemUI] Prepended {messages.Count} messages to {chatType}");
+        }
+
+        private IEnumerator AddHistoryMessagesWithFrameDelay(List<ChatMessage> messages)
+        {
+            //SetPivotDown();
+            //Canvas.ForceUpdateCanvases();
+            yield return null;
+            foreach (var message in messages)
+            {
+                CreateMessageUI(message, true);
+            }
+            yield return null;
+            //Canvas.ForceUpdateCanvases();
         }
 
         /// <summary>
@@ -902,7 +922,10 @@ namespace Code.Chat
 
             messageComponent.transform.SetParent(contentParent, false);
             if(inEnd)
+            {
                 messageComponent.transform.SetAsFirstSibling();
+            }
+            
             messageComponent.gameObject.SetActive(true);
 
             // Настройка текста сообщения
@@ -1053,6 +1076,22 @@ namespace Code.Chat
             SaveScrollState();
         }
 
+        /*
+        private void SetPivotDown()
+        {
+            Debug.Log("[ChatSystemUI] Set Pivot Down");
+            scrollRect.content.pivot.Set(scrollRect.content.pivot.x, 0);
+            Canvas.ForceUpdateCanvases();
+        }
+
+        private void SetPivotUp()
+        {
+            Debug.Log("[ChatSystemUI] Set Pivot Up");
+            scrollRect.content.pivot.Set(scrollRect.content.pivot.x, 1);
+            Canvas.ForceUpdateCanvases();
+        }
+        */
+        
         #endregion
     }
 }
