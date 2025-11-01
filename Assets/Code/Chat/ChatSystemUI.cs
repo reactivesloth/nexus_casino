@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API.Models;
+using Code.Utility;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -273,7 +274,7 @@ namespace Code.Chat
             InitializeChatData();
             SetupUI();
             InitializeEmojiSystem();
-            //SetPivotDown();
+            SetPivotDown();
         }
 
         private void Update()
@@ -720,28 +721,24 @@ namespace Code.Chat
             // Обновляем UI только если это текущий активный чат
             if (message.chatType == _currentChatType && _isVisible)
             {
-                StartCoroutine(CreateMessageUIWithFrameDelay(message));
+                StartCoroutine(CreateMessageUIWithFrameDelay(message, addByMe));
             }
 
             if (devLog)
                 Debug.Log($"[ChatSystemUI] Message added to {message.chatType}: {message.displayUsername}: {message.displayMessage}");
         }
 
-        private IEnumerator CreateMessageUIWithFrameDelay(ChatMessage message)
+        private IEnumerator CreateMessageUIWithFrameDelay(ChatMessage message, bool addByMe = false)
         {
-            // SetPivotUp();
-            // Canvas.ForceUpdateCanvases();
+            SetPivotUp();
             yield return null;
             CreateMessageUI(message);
             yield return null;
-            Canvas.ForceUpdateCanvases();
-            StartCoroutine(ScrollToBottomNextFrame());
-            
-            // Прокручиваем вниз только если пользователь был внизу
-            /*if (IsAtBottom)
+
+            if (IsAtBottom || addByMe)
             {
                 StartCoroutine(ScrollToBottomNextFrame());
-            }*/
+            }
         }
 
         public void OnLikeUpdated(LikeUpdatedModel likeUpdatedData)
@@ -810,15 +807,13 @@ namespace Code.Chat
 
         private IEnumerator AddHistoryMessagesWithFrameDelay(List<ChatMessage> messages)
         {
-            //SetPivotDown();
-            //Canvas.ForceUpdateCanvases();
+            SetPivotDown();
             yield return null;
             foreach (var message in messages)
             {
                 CreateMessageUI(message, true);
             }
             yield return null;
-            //Canvas.ForceUpdateCanvases();
         }
 
         /// <summary>
@@ -1075,22 +1070,28 @@ namespace Code.Chat
             // Сохраняем состояние при изменении скролла
             SaveScrollState();
         }
-
-        /*
+        
         private void SetPivotDown()
         {
-            Debug.Log("[ChatSystemUI] Set Pivot Down");
-            scrollRect.content.pivot.Set(scrollRect.content.pivot.x, 0);
-            Canvas.ForceUpdateCanvases();
+            RectTransformUtil.DoWithoutAffectingScroll(scrollRect, () =>
+            {
+                RectTransformUtil.SetPivotKeepingPosition(
+                    contentParent,
+                    new Vector2(contentParent.pivot.x, 0f)
+                );
+            });
         }
 
         private void SetPivotUp()
         {
-            Debug.Log("[ChatSystemUI] Set Pivot Up");
-            scrollRect.content.pivot.Set(scrollRect.content.pivot.x, 1);
-            Canvas.ForceUpdateCanvases();
+            RectTransformUtil.DoWithoutAffectingScroll(scrollRect, () =>
+            {
+                RectTransformUtil.SetPivotKeepingPosition(
+                    contentParent,
+                    new Vector2(contentParent.pivot.x, 1f)
+                );
+            });
         }
-        */
         
         #endregion
     }
