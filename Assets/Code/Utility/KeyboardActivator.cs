@@ -1,14 +1,17 @@
 using UnityEngine;
 
-public class KeyboardActivator : MonoBehaviour
+namespace Code.Utility
 {
-    public GameObject keyboardOpener;
-    
-    private void Update()
+    public class KeyboardActivator : MonoBehaviour
     {
-        if (keyboardOpener.activeSelf != TouchScreenKeyboard.visible)
+        public GameObject keyboardOpener;
+    
+        private void Update()
         {
-            keyboardOpener.SetActive(TouchScreenKeyboard.visible);
+            if (keyboardOpener.activeSelf != TouchScreenKeyboard.visible)
+            {
+                keyboardOpener.SetActive(TouchScreenKeyboard.visible);
+            }
         }
     }
 }

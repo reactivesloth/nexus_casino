@@ -495,7 +495,8 @@ namespace Code.Chat
         private void OnChatTypeChanged(ChatType newChatType)
         {
             if (devLog) Debug.Log($"[ChatController] Chat type changed to: {newChatType}");
-            // LoadHistoryIfNeeded();
+            if(chatSystemUI.CurrentChatMessagesCount < pageSize)
+                LoadHistoryIfNeeded();
         }
 
         private void OnInputFieldEnabled()

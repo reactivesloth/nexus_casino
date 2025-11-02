@@ -193,7 +193,7 @@ namespace Code.Chat
         #region Private Fields
 
         // Хранение сообщений для каждого типа чата
-        private readonly Dictionary<ChatType, List<ChatMessage>> _chatMessages = new();
+        public readonly Dictionary<ChatType, List<ChatMessage>> _chatMessages = new();
         private readonly List<ChatMessage> _allMessages = new();
         private List<MessageComponent> _activeMessageObjects = new();
         private readonly Dictionary<long, MessageComponent> _activeUsersMessageObjects = new();
@@ -241,6 +241,7 @@ namespace Code.Chat
         public bool IsVisible => _isVisible;
         public bool InputFieldActive => _inputFieldActive;
         public bool EmojiWindowEnabled => _emojiWindowEnabled;
+        public int CurrentChatMessagesCount => _chatMessages[_currentChatType].Count;
 
         public string InputText
         {
