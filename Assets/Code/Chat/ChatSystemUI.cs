@@ -27,13 +27,13 @@ namespace Code.Chat
         public bool usernameItalic = false;
         public bool usernameUnderlined = false;
         public Color usernameColor = Color.white;
-        
+
         // Стили для сообщения
         public bool messageBold = false;
         public bool messageItalic = false;
         public bool messageUnderlined = false;
         public Color messageColor = Color.white;
-        
+
         // Дополнительные параметры
         public bool hideUsername = false;
         public bool noUsernameFollowup = false;
@@ -49,7 +49,7 @@ namespace Code.Chat
             var formattedUsername = FormatUsername(username);
             var formattedMessage = FormatMessageText(message);
             var followup = noUsernameFollowup ? " " : ": ";
-            
+
             return string.IsNullOrEmpty(username)
                 ? formattedMessage
                 : $"{formattedUsername}{followup}{formattedMessage}";
@@ -74,13 +74,13 @@ namespace Code.Chat
         private string FormatText(string text, bool bold, bool italic, bool underlined, Color color)
         {
             if (string.IsNullOrEmpty(text)) return text;
-            
+
             if (bold) text = $"<b>{text}</b>";
             if (italic) text = $"<i>{text}</i>";
             if (underlined) text = $"<u>{text}</u>";
             if (color != Color.clear && color != Color.white)
                 text = $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{text}</color>";
-            
+
             return text;
         }
     }
@@ -148,38 +148,43 @@ namespace Code.Chat
 
         [SerializeField] private GameObject chatPanel;
 
-        [Header("UI References")]
-        [SerializeField] private ScrollRect scrollRect;
+        [Header("UI References")] [SerializeField]
+        private ScrollRect scrollRect;
+
         [SerializeField] private RectTransform contentParent;
         [SerializeField] private TMP_InputField inputField;
 
-        [Header("Chat Type Buttons")]
-        [SerializeField] private Button localChatButton;
+        [Header("Chat Type Buttons")] [SerializeField]
+        private Button localChatButton;
+
         [SerializeField] private Button globalChatButton;
 
-        [Header("Send Button")]
-        [SerializeField] private Button sendButton;
+        [Header("Chat Buttons")] [SerializeField]
+        private Button sendButton;
 
-        [Header("Emoji System")]
-        [SerializeField] private bool useEmojiWindow = false;
-        [SerializeField] private TMP_SpriteAsset emojiAsset;
+        [SerializeField] private Button attachPhotoButton;
+        [SerializeField] private Button recordVoiceButton;
         [SerializeField] private Button openEmojiButton;
+
+        [Header("Emoji System")] [SerializeField]
+        private bool useEmojiWindow = false;
+
+        [SerializeField] private TMP_SpriteAsset emojiAsset;
         [SerializeField] private GameObject emojiPanel;
         [SerializeField] private Image emojiPanelImage;
         [SerializeField] private TextMeshProUGUI emojiText;
-        
-        [Header("Emoji Settings")]
-        [SerializeField] private int emojiPerRow = 5;
+
+        [Header("Emoji Settings")] [SerializeField]
+        private int emojiPerRow = 5;
+
         [SerializeField] private float emojiTextEdgePadding = 0.05f;
 
-        [Header("Close Button")]
-        [SerializeField] private Button closeButton;
+        [Header("Close Button")] [SerializeField]
+        private Button closeButton;
 
-        [Header("Prefabs")]
-        [SerializeField] private MessageComponent messagePrefab;
+        [Header("Prefabs")] [SerializeField] private MessageComponent messagePrefab;
 
-        [Header("Settings")]
-        [SerializeField] private int maxMessagesPerChat = 500;
+        [Header("Settings")] [SerializeField] private int maxMessagesPerChat = 500;
         [SerializeField] private float timeToHoldAtTop = 1f;
         [SerializeField] private bool devLog = false;
 
@@ -253,7 +258,8 @@ namespace Code.Chat
                 if (!_chatMessages.ContainsKey(_currentChatType) || _chatMessages[_currentChatType].Count == 0)
                     return null;
 
-                return _chatMessages[_currentChatType].FirstOrDefault(m => m.chatMessageData != null)?.chatMessageData?.id;
+                return _chatMessages[_currentChatType].FirstOrDefault(m => m.chatMessageData != null)?.chatMessageData
+                    ?.id;
             }
         }
 
@@ -296,13 +302,13 @@ namespace Code.Chat
         {
             _chatMessages[ChatType.Lobby] = new List<ChatMessage>();
             _chatMessages[ChatType.Global] = new List<ChatMessage>();
-            
+
             _historyLoading[ChatType.Lobby] = false;
             _historyLoading[ChatType.Global] = false;
-            
+
             _noMoreHistory[ChatType.Lobby] = false;
             _noMoreHistory[ChatType.Global] = false;
-            
+
             _wasAtBottom[ChatType.Lobby] = true;
             _wasAtBottom[ChatType.Global] = true;
 
@@ -341,7 +347,7 @@ namespace Code.Chat
             {
                 emojiText.spriteAsset = emojiAsset;
                 GenerateEmojiText();
-                
+
                 // Применяем спрайт ассет к input field
                 if (inputField != null && inputField.textComponent != null)
                 {
@@ -357,7 +363,7 @@ namespace Code.Chat
             if (emojiAsset == null || emojiText == null) return;
 
             emojiText.text = "";
-            
+
             for (int i = 0; i < emojiAsset.spriteCharacterTable.Count; i++)
             {
                 // Добавляем перенос строки после каждых emojiPerRow эмодзи
@@ -365,7 +371,7 @@ namespace Code.Chat
                 {
                     emojiText.text += "\n";
                 }
-                
+
                 // Добавляем эмодзи
                 emojiText.text += $"<sprite={i}>";
             }
@@ -464,13 +470,11 @@ namespace Code.Chat
             {
                 // Сохраняем текущую позицию каретки
                 if (inputField != null)
-                {
                     _inputFieldStringPosition = inputField.stringPosition;
-                }
 
                 // Обновляем рассчеты для кликабельных областей эмодзи
                 StartCoroutine(UpdateEmojiRectsNextFrame());
-                
+
                 // Активируем input field
                 EnableInputField();
             }
@@ -481,12 +485,12 @@ namespace Code.Chat
         private IEnumerator UpdateEmojiRectsNextFrame()
         {
             yield return null; // Ждем кадр для обновления layout
-            
+
             if (emojiText != null && emojiPanel != null && emojiPanel.activeSelf)
             {
                 // Обновляем mesh
                 emojiText.ForceMeshUpdate();
-                
+
                 // Очищаем список
                 _emojiRects.Clear();
 
@@ -500,10 +504,10 @@ namespace Code.Chat
                     // Создаем Rect для эмодзи
                     Vector3 bottomLeft = emojiText.textInfo.characterInfo[i].bottomLeft;
                     Vector3 topRight = emojiText.textInfo.characterInfo[i].topRight;
-                    
+
                     Vector3 worldBottomLeft = emojiText.rectTransform.TransformPoint(bottomLeft);
                     Vector2 size = (topRight - bottomLeft) * (Vector2)_parentCanvasScale;
-                    
+
                     _emojiRects.Add(new Rect(worldBottomLeft, size));
                 }
 
@@ -523,23 +527,23 @@ namespace Code.Chat
                 return;
 
             // Проверяем клик мыши
-            if (!Input.GetMouseButtonDown(0)) 
+            if (!Input.GetMouseButtonDown(0))
                 return;
-            
+
             Vector2 mousePosition = Input.mousePosition;
 
             // Проверяем клик по эмодзи
             for (var i = 0; i < _emojiRects.Count; i++)
             {
-                if (!_emojiRects[i].Contains(mousePosition)) 
+                if (!_emojiRects[i].Contains(mousePosition))
                     continue;
                 InsertEmojiAtCaret(i);
                 return;
             }
 
             // Проверяем клик вне панели - закрываем панель
-            if (!_emojiPanelRect.Contains(mousePosition) && 
-                openEmojiButton != null && 
+            if (!_emojiPanelRect.Contains(mousePosition) &&
+                openEmojiButton != null &&
                 !CalculateRect(openEmojiButton.GetComponent<RectTransform>()).Contains(mousePosition))
             {
                 ToggleEmojiPanel();
@@ -553,12 +557,12 @@ namespace Code.Chat
             // Вставляем эмодзи в текущую позицию каретки
             string emojiTag = $"<sprite={emojiIndex}>";
             int caretPosition = inputField.stringPosition;
-            
+
             inputField.text = inputField.text.Insert(caretPosition, emojiTag);
-            
+
             // Активируем input field для продолжения ввода
             inputField.ActivateInputField();
-            
+
             // Смещаем каретку за эмодзи
             inputField.stringPosition = caretPosition + emojiTag.Length;
             inputField.caretPosition++;
@@ -573,7 +577,7 @@ namespace Code.Chat
             Vector3 position = rectTransform.position;
             Vector2 size = rectTransform.sizeDelta * _parentCanvasScale;
             Vector2 pivot = rectTransform.pivot;
-            
+
             Vector2 bottomLeft = new Vector2(
                 position.x - size.x * pivot.x,
                 position.y - size.y * pivot.y
@@ -614,16 +618,16 @@ namespace Code.Chat
 
             _isVisible = false;
             DisableInputField();
-            
+
             // Закрываем панель эмодзи
             if (_emojiWindowEnabled)
             {
                 _emojiWindowEnabled = false;
                 if (emojiPanel != null) emojiPanel.SetActive(false);
             }
-            
+
             chatPanel.SetActive(false);
-            
+
             if (devLog) Debug.Log("[ChatSystemUI] Hide");
         }
 
@@ -725,7 +729,8 @@ namespace Code.Chat
             }
 
             if (devLog)
-                Debug.Log($"[ChatSystemUI] Message added to {message.chatType}: {message.displayUsername}: {message.displayMessage}");
+                Debug.Log(
+                    $"[ChatSystemUI] Message added to {message.chatType}: {message.displayUsername}: {message.displayMessage}");
         }
 
         private IEnumerator CreateMessageUIWithFrameDelay(ChatMessage message, bool addByMe = false)
@@ -745,12 +750,13 @@ namespace Code.Chat
         {
             if (_activeUsersMessageObjects.TryGetValue(likeUpdatedData.message_id, out var messagesComponent))
                 messagesComponent.UpdateLikesStatus(likeUpdatedData.likes_count, likeUpdatedData.is_liked_by_me);
-            
-            foreach (var messageForUpdate in _allMessages.Where(m => m.chatMessageData?.id == likeUpdatedData.message_id))
+
+            foreach (var messageForUpdate in _allMessages.Where(
+                         m => m.chatMessageData?.id == likeUpdatedData.message_id))
             {
                 if (messageForUpdate.chatMessageData == null)
                     continue;
-                
+
                 messageForUpdate.chatMessageData.likes_count = likeUpdatedData.likes_count;
                 messageForUpdate.chatMessageData.is_liked_by_me = likeUpdatedData.is_liked_by_me;
             }
@@ -760,12 +766,13 @@ namespace Code.Chat
         {
             if (_activeUsersMessageObjects.TryGetValue(viewUpdatedData.message_id, out var messagesComponent))
                 messagesComponent.UpdateViewsStatus(viewUpdatedData.views_count, viewUpdatedData.is_viewed_by_me);
-            
-            foreach (var messageForUpdate in _allMessages.Where(m => m.chatMessageData?.id == viewUpdatedData.message_id))
+
+            foreach (var messageForUpdate in _allMessages.Where(
+                         m => m.chatMessageData?.id == viewUpdatedData.message_id))
             {
                 if (messageForUpdate.chatMessageData == null)
                     continue;
-                
+
                 messageForUpdate.chatMessageData.views_count = viewUpdatedData.views_count;
                 messageForUpdate.chatMessageData.is_viewed_by_me = viewUpdatedData.is_viewed_by_me;
             }
@@ -777,7 +784,7 @@ namespace Code.Chat
         public void PrependMessages(List<ChatMessage> messages, ChatType chatType)
         {
             if (messages == null || messages.Count == 0) return;
-            
+
             if (!_chatMessages.ContainsKey(chatType))
                 _chatMessages[chatType] = new List<ChatMessage>();
 
@@ -794,14 +801,14 @@ namespace Code.Chat
             {
                 var excess = _chatMessages[chatType].Count - maxMessagesPerChat;
                 var messagesForRemove = _chatMessages[chatType].GetRange(maxMessagesPerChat, excess);
-                
+
                 messagesForRemove.ForEach(m =>
                 {
                     _chatMessages[chatType].Remove(m);
                     _allMessages.Remove(m);
                 });
             }
-            
+
             if (devLog) Debug.Log($"[ChatSystemUI] Prepended {messages.Count} messages to {chatType}");
         }
 
@@ -813,6 +820,7 @@ namespace Code.Chat
             {
                 CreateMessageUI(message, true);
             }
+
             yield return null;
         }
 
@@ -916,18 +924,18 @@ namespace Code.Chat
             if (messageComponent == null) return;
 
             messageComponent.transform.SetParent(contentParent, false);
-            if(inEnd)
+            if (inEnd)
             {
                 messageComponent.transform.SetAsFirstSibling();
             }
-            
+
             messageComponent.gameObject.SetActive(true);
 
             // Настройка текста сообщения
             messageComponent.Init(message);
 
             _activeMessageObjects.Add(messageComponent);
-            
+
             if (message.chatMessageData != null)
                 _activeUsersMessageObjects.TryAdd(message.chatMessageData.id, messageComponent);
         }
@@ -972,7 +980,7 @@ namespace Code.Chat
         {
             if (localChatButton != null)
                 localChatButton.GetComponent<Outline>().enabled = _currentChatType == ChatType.Lobby;
-            
+
             if (globalChatButton != null)
                 globalChatButton.GetComponent<Outline>().enabled = _currentChatType == ChatType.Global;
         }
@@ -999,7 +1007,7 @@ namespace Code.Chat
         {
             yield return null; // Ждем один кадр
             Canvas.ForceUpdateCanvases();
-            
+
             if (scrollRect != null)
             {
                 scrollRect.verticalNormalizedPosition = 0f;
@@ -1042,7 +1050,7 @@ namespace Code.Chat
             {
                 // Скролл у верха, накапливаем время
                 _timeAtTop += Time.deltaTime;
-                
+
                 if (_timeAtTop >= timeToHoldAtTop && !_hasTriggeredOnReachedTop)
                 {
                     // Время достигнуто, вызываем событие
@@ -1070,7 +1078,7 @@ namespace Code.Chat
             // Сохраняем состояние при изменении скролла
             SaveScrollState();
         }
-        
+
         private void SetPivotDown()
         {
             RectTransformUtil.DoWithoutAffectingScroll(scrollRect, () =>
@@ -1092,7 +1100,7 @@ namespace Code.Chat
                 );
             });
         }
-        
+
         #endregion
     }
 }
