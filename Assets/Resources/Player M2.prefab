@@ -638,7 +638,7 @@ MonoBehaviour:
   CanMove: 1
   LockCameraPosition: 0
   sitYawRange: 45
-  sitMinPitch: -30
+  sitMinPitch: -50
   sitMaxPitch: 30
   ikTransitionSpeed: 5
   lookAtSmoothSpeed: 5
@@ -673,9 +673,9 @@ MonoBehaviour:
   - {fileID: 6472889869485083012}
   - {fileID: 3089256175066004713}
   - {fileID: 8013488042586796887}
-  - {fileID: 0}
   - {fileID: 2267133584672632614}
   - {fileID: -6419089301180924083}
+  - {fileID: 7373692588499671618}
   - {fileID: 2031047834234726918}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -701,7 +701,7 @@ MonoBehaviour:
   _spectatorInterpolation: 2
   _enableTeleport: 0
   _teleportThreshold: 1
-  <PrefabId>k__BackingField: 5
+  <PrefabId>k__BackingField: 4
   <SpawnableCollectionId>k__BackingField: 0
   <AssetPathHash>k__BackingField: 8660729257753279777
   <SceneId>k__BackingField: 0
@@ -917,7 +917,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5f3277981fb055640bbf275ba1c84357, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 4
+  _componentIndexCache: 3
   _addedNetworkObject: {fileID: 5084366635518163755}
   _networkObjectCache: {fileID: 5084366635518163755}
   playerName: {fileID: 3016589416717469956}
@@ -936,7 +936,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85e6eb3dc92b4b0ab56eb14daf51d04a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 5
+  _componentIndexCache: 4
   _addedNetworkObject: {fileID: 6120315999404777701, guid: 4145ad3fa7f2f45458091f01dc142cc6, type: 3}
   _networkObjectCache: {fileID: 5084366635518163755}
   trackingTransform: {fileID: 0}
@@ -967,9 +967,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 58b08fc907cb0bb42b83809ca16ca024, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerInteractionMigrator
-  _componentIndexCache: 255
+  _componentIndexCache: 5
   _addedNetworkObject: {fileID: 5084366635518163755}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 5084366635518163755}
   playerInteraction: {fileID: -6006401730760851951}
 --- !u!137 &3903605093316825880 stripped
 SkinnedMeshRenderer:
