@@ -173,7 +173,8 @@ namespace Code.Player
             else if (_hovered != null)
             {
                 InteractionUIHint.Instance.ShowPrompt(interactText);
-                InteractionUIHint.Instance.ShowSocial(_hovered);
+                if(!string.IsNullOrEmpty(_hovered.Key))
+                    InteractionUIHint.Instance.ShowSocial(_hovered);
             }
             else
             {

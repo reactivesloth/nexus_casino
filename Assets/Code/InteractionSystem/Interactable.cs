@@ -9,7 +9,7 @@ namespace Code.InteractionSystem
 {
     public class Interactable : NetworkBehaviour
     {
-        [SerializeField] private string interactableKey;
+        [SerializeField] public string interactableKey;
         [SerializeField] private float _interactionDistance = 3f;
         [SerializeField] private bool _interactableEnabled = true;
         [SerializeField] private bool _manualRelease = false;

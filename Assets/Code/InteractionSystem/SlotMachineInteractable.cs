@@ -41,7 +41,7 @@ namespace Code.InteractionSystem
         public int IDNumber;
 
         private bool _initSlot;
-
+        
         private void Awake()
         {
             if (_initSlot) return;
@@ -99,6 +99,11 @@ namespace Code.InteractionSystem
             if (idNumberText != null) idNumberText.text = IDNumber.ToString();
             if (networkImageStream == null) networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
             //if (_slotScreenPromoMeshRenderer != null && slotsScreenPromoSpriteSheet.Length > 0) SetupScreensForPromo();
+            
+            interactableKey = "slot_machine_" + IDNumber;
+            var composite = GetComponentInParent<CompositeInteractable>();
+            if (composite != null)
+                composite.interactableKey = this.interactableKey;
         }
 #endif
         
