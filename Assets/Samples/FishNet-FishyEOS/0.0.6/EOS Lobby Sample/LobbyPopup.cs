@@ -32,8 +32,11 @@ namespace EOSLobby
 
         public void Show(string title, string message, int percentage = 100)
         {
-            Debug.Log($"[LobbyPopup] Showing: {title} - {message}"); 
-            LoadingScreenUI.Instance.Show(title, message, percentage);
+            //Debug.Log($"[LobbyPopup] Showing: {title} - {message}"); 
+            //LoadingScreenUI.Instance.Show(title, message, percentage);
+
+            // Заказчик попросил убрать процентный индикатор загрузки при поиске/создании лобби. Если вдруг передумает - убрать эту строку и раскомментировать предыдущие две.
+            LoadingScreenUI.Instance.Show (title, message, 0);
         }
         
         public void Hide()
