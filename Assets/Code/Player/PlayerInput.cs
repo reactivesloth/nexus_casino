@@ -1,11 +1,8 @@
 ﻿using Code.API;
-using Code.Chat;
 using Code.UI;
 using UnityEngine;
 using Code.Utility;
-using NUnit.Framework;
 using TMPro;
-using UnityEngine.Serialization;
 
 [DefaultExecutionOrder(-100)]
 public class PlayerInput : MonoBehaviour
@@ -40,12 +37,12 @@ public class PlayerInput : MonoBehaviour
     public UltimateJoystick MoveJoystick;
     public UltimateTouchpad LookArea;
     public UltimateButton JumpButton;
-    public UltimateButton SprintButton;
     public UltimateButton InteractButton;
     public UltimateButton CameraSwitchButton;
     public UltimateButton PauseButton;
     public UltimateButton VoiceButton;
     public UltimateButton OpenChatButton;
+    public UltimateButton OpenEmoteWheelButton;
     
     public UltimateButton SwitchChatButton;
     public UltimateButton SendChatMessageButton;
@@ -74,8 +71,9 @@ public class PlayerInput : MonoBehaviour
     
     private UltimateButton endInteractButton;
     
-    
-    
+    [Header("Radial Menu UI")]
+    public UltimateRadialMenu RadialMenu;
+    public bool IsRadialMenuOpen { get; set; }
     
     public bool IsBusy { get; set; }
     public bool IsChatOpened { get; set; }
@@ -91,6 +89,7 @@ public class PlayerInput : MonoBehaviour
         _player.Enable();
         
         ShowInteractUI(false);
+        ShowRadialMenu( false);
     }
 
     private void OnEnable() => _player.Enable();
@@ -164,8 +163,8 @@ public class PlayerInput : MonoBehaviour
             {
                 if (MoveJoystick != null)      MoveJoystick.gameObject.SetActive(!HideMobileFallback);
                 if (JumpButton != null)        JumpButton.gameObject.SetActive(!HideMobileFallback);
-                if (SprintButton != null)      SprintButton.gameObject.SetActive(!HideMobileFallback);
-
+                if (OpenEmoteWheelButton != null)   OpenEmoteWheelButton.gameObject.SetActive(!HideMobileFallback);
+                
                 savedHideMobileFallback = HideMobileFallback;
             }
         }
@@ -225,6 +224,17 @@ public class PlayerInput : MonoBehaviour
                 break;
         }
     }
+
+    public void ShowRadialMenu (bool value)
+    {
+        if (value)
+            RadialMenu.Enable();
+        else
+            RadialMenu.Disable();
+    
+        //RadialMenu.gameObject.SetActive(value);
+        IsRadialMenuOpen = value;
+    }
     
     public bool JumpDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : _player.Jump is { triggered: true });
     public bool VoiceHeld => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f);
@@ -245,4 +255,5 @@ public class PlayerInput : MonoBehaviour
     public bool IsScrollDownButton => ChatScrollDownButton.GetButtonDown();
     public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
     public bool OpenAdminPanelDown => ClientDataStorage.UserData.IsAdminRole && _player.OpenAdminPanel is { triggered: true };
+    public bool IsEmotionsControllerButton => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && OpenEmoteWheelButton != null ? OpenEmoteWheelButton.GetButtonUp() : Input.GetKeyUp(KeyCode.H));
 }

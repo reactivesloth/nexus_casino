@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2836e36774ca1c4bbbee976e17b649c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 7
+  _componentIndexCache: 8
   _addedNetworkObject: {fileID: 92631491164151932}
   _networkObjectCache: {fileID: 92631491164151932}
   _componentConfiguration: 0
@@ -1491,6 +1491,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: -2258626244629959312}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 624282661056886494}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8753856777003469895}
@@ -2962,8 +2965,9 @@ MonoBehaviour:
   footstepAudioVolume: 0.5
   CanMove: 1
   LockCameraPosition: 0
+  emotionAnimatorLayer: 0
   sitYawRange: 45
-  sitMinPitch: -30
+  sitMinPitch: -50
   sitMaxPitch: 30
   ikTransitionSpeed: 5
   lookAtSmoothSpeed: 5
@@ -3002,6 +3006,7 @@ MonoBehaviour:
   - {fileID: 7121388327242976003}
   - {fileID: 7525513152038220126}
   - {fileID: -2258626244629959312}
+  - {fileID: 624282661056886494}
   - {fileID: 8144962258630108305}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -3313,6 +3318,592 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 92631491164151932}
   _networkObjectCache: {fileID: 92631491164151932}
   playerInteraction: {fileID: -2968260864419366097}
+--- !u!114 &624282661056886494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127680710956633387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 988398797a97b9048807b76b1a874465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerEmotionsController
+  _componentIndexCache: 7
+  _addedNetworkObject: {fileID: 92631491164151932}
+  _networkObjectCache: {fileID: 92631491164151932}
+  Emotions:
+  - key: 0
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 1
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 2
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 3
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 4
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 5
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 6
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 7
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 8
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 9
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 10
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 11
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 12
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 13
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
+  - key: 14
+    emotionIcon: {fileID: 21300000, guid: 96a94cf6b87f54f23bdfc8da8d5f0ecd, type: 3}
+    radialButtonInfo:
+      radialButton:
+        radialMenu: {fileID: 0}
+        buttonTransform: {fileID: 0}
+        radialImage: {fileID: 0}
+        buttonDisabled: 0
+        name: 
+        description: 
+        buttonIndex: 0
+        angle: 0
+        angleRange: 0
+        iconTransform: {fileID: 0}
+        icon: {fileID: 0}
+        useIconUnique: 0
+        iconSize: 0
+        iconHorizontalPosition: 0
+        iconVerticalPosition: 0
+        iconRotation: 0
+        invertScaleY: 0
+        iconNormalScale: {x: 0, y: 0, z: 0}
+        text: {fileID: 0}
+        normalPosition: {x: 0, y: 0, z: 0}
+        highlightedPosition: {x: 0, y: 0, z: 0}
+        pressedPosition: {x: 0, y: 0, z: 0}
+        selectedPosition: {x: 0, y: 0, z: 0}
+        disabledPosition: {x: 0, y: 0, z: 0}
+        key: 
+        id: 0
+        unityEvent:
+          m_PersistentCalls:
+            m_Calls: []
+      key: 
+      id: 0
+      name: 
+      description: 
+      icon: {fileID: 0}
 --- !u!1 &1148177878228989410 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8320365392235035240, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}

@@ -38,6 +38,11 @@ namespace Code.UI
                 _promptUI.SetActive(false);
             if (_promptText != null && string.IsNullOrEmpty(_promptText.text))
                 _promptText.text = string.Empty;
+            _socialUI.gameObject.SetActive(false);
+            _likesCountText.text = string.Empty;
+            _viewsCountText.text = string.Empty;
+            _likeButton.interactable = false;
+            _likeIndicatorObject.SetActive(false);
         }
 
         private void Awake()
@@ -83,22 +88,24 @@ namespace Code.UI
 
         public void ShowSocial(Interactable interactable)
         {
+            Debug.Log($"[InteractionUIHint] ShowSocial: {interactable.Key}");
             if (IsSocialOpened)
                 return;
 
+            Debug.Log($"[InteractionUIHint] ShowSocial. Requesting social data...");
             EnsureInit();
             _interactable = interactable;
             _socialUI.SetActive(true);
 
             var interactableRequest = new RequestHelper
             {
-                Uri = ApiRoutes.GetInteractableSocialUrl(),
-                Headers = ClientDataStorage.GetJwtHeader(),
-                Params = new Dictionary<string, string> { { "object_id", interactable.Key } }
+                Uri = ApiRoutes.GetInteractableSocialUrl(interactable.Key),
+                Headers = ClientDataStorage.GetJwtHeader()
             };
 
             RestClient.Get(interactableRequest).Then(interactableResponse =>
             {
+                Debug.Log($"[InteractionUIHint] Social data: {interactableResponse.Text}");
                 if (interactableResponse.StatusCode != 200)
                     return;
                 var responseData =
@@ -112,32 +119,53 @@ namespace Code.UI
 
         public void HideSocial()
         {
+            if (!IsSocialOpened)
+                return;
+
             EnsureInit();
             _interactable = null;
             _socialUI.gameObject.SetActive(false);
             _likeButton.interactable = false;
+            SetViewStatus(0);
+            SetLikeButtonStatus(false, 0);
         }
 
         private void InitSocial(InteractableSocialData data)
         {
-            _viewsCountText.text = data.views_count.ToString();
-            // TODO: mark view where its done
+            SetViewStatus(data.views_count);
             if (!data.is_viewed_by_me)
                 RestClient.Post(new RequestHelper
                 {
-                    Uri = "", // TODO
+                    Uri = ApiRoutes.PostMarkViewedUrl(),
                     Headers = ClientDataStorage.GetJwtHeader(),
-                    Params = new SerializedDictionary<string, string> { { "object_id", _interactable.Key } }
+                    Body = new InteractableSocialRequest
+                    {
+                        object_id = _interactable.Key
+                    }
+                }).Then(markViewedResponse =>
+                {
+                    if (markViewedResponse.StatusCode != 200)
+                        return;
+                    var responseData =
+                        JsonUtility.FromJson<SuccessResponse<InteractableSocialData>>(markViewedResponse.Text);
+                    if (!responseData.success)
+                        return;
+                    SetViewStatus(responseData.data.views_count);
                 });
 
-            _likesCountText.text = data.likes_count.ToString();
-            SetLikeButtonStatus(data.is_liked_by_me);
+            SetLikeButtonStatus(data.is_liked_by_me, data.likes_count);
         }
 
-        private void SetLikeButtonStatus(bool hasLiked)
+        private void SetViewStatus(int viewsCount)
+        {
+            _viewsCountText.text = viewsCount.ToString();
+        }
+
+        private void SetLikeButtonStatus(bool hasLiked, int likeCount)
         {
             _hasLikedStatus = hasLiked;
             _likeIndicatorObject.SetActive(_hasLikedStatus);
+            _likesCountText.text = likeCount.ToString();
         }
 
         private void OnLikeClicked()
@@ -147,19 +175,24 @@ namespace Code.UI
 
             var toggleLikeRequest = new RequestHelper
             {
-                Uri = "", // TODO
+                Uri = ApiRoutes.PostToggleLikeUrl(),
                 Headers = ClientDataStorage.GetJwtHeader(),
-                Params = new Dictionary<string, string> { { "object_id", _interactable.Key } }
+                Body = new ToggleLikeRequest
+                {
+                    object_id = _interactable.Key,
+                    like = !_hasLikedStatus
+                }
             };
 
             RestClient.Post(toggleLikeRequest).Then(toggleLikeResponse =>
             {
                 if (toggleLikeResponse.StatusCode != 200)
                     return;
-                var responseData = JsonUtility.FromJson<SuccessResponse<Empty>>(toggleLikeResponse.Text);
+                var responseData =
+                    JsonUtility.FromJson<SuccessResponse<InteractableSocialData>>(toggleLikeResponse.Text);
                 if (!responseData.success)
                     return;
-                SetLikeButtonStatus(!_hasLikedStatus);
+                SetLikeButtonStatus(responseData.data.is_liked_by_me, responseData.data.likes_count);
             });
         }
     }

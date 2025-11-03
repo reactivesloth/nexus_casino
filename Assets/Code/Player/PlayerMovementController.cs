@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Text;
 using Unity.Cinemachine;
 using Code.API;
@@ -52,6 +53,13 @@ namespace Code.Player
         public bool CanMove = true;
         public bool LockCameraPosition = true;
 
+        [SerializeField] private int emotionAnimatorLayer = 0; // На каком слое проигрываются эмоции
+        
+        private int animIDEmotionActive;
+        private int animIDEmotionIndex;
+        private Coroutine _emotionRoutine;
+        private bool _wasFPV = false;
+        
         private bool _firstPersonView = true;
 
         public bool FirstPersonView
@@ -426,6 +434,8 @@ namespace Code.Player
             animIDHorizontal = Animator.StringToHash("Horizontal");
             animIDTurn = Animator.StringToHash("TurnAngle");
             animIDFPV = Animator.StringToHash("FirstPerson");
+            animIDEmotionActive = Animator.StringToHash("EmotionActive");
+            animIDEmotionIndex = Animator.StringToHash("Emotion");
         }
 
         public void ForceEnterFPV(bool enable, bool snap = true)
@@ -706,6 +716,90 @@ namespace Code.Player
             animator.SetFloat(animIDTurn, turnClamped);
 
             animator.SetFloat(animIDFPV, FirstPersonView ? 1f : 0f);
+        }
+
+        public void PlayEmotionAnimation(int index)
+        {
+            if (!IsOwner) return; // только локальный владелец
+            if (animator == null) return; // защитная проверка
+
+            // Перезапуск, если уже играется
+            if (_emotionRoutine != null)
+            {
+                //StopCoroutine(_emotionRoutine);
+                //_emotionRoutine = null;
+                return;
+            }
+
+            _wasFPV = _firstPersonView;
+            ForceEnterFPV(false);
+            _emotionRoutine = StartCoroutine(PlayEmotionRoutine(index));
+        }
+
+        private IEnumerator PlayEmotionRoutine(int index)
+        {
+            CanMove = false;
+            SuppressLookAtIK = true;
+
+            // Включаем параметры эмоции
+            animator.SetBool(animIDEmotionActive, true);
+            animator.SetFloat(animIDEmotionIndex, index);
+
+            // Дать Animator один апдейт, чтобы применился стейт
+            yield return null;
+
+            // Определяем длительность текущего клипа на нужном слое
+            float clipLength = 0f;
+            var stateInfo = animator.GetCurrentAnimatorStateInfo(emotionAnimatorLayer);
+            if (stateInfo.length > 0f)
+            {
+                clipLength = stateInfo.length / Mathf.Max(0.0001f, Mathf.Abs(stateInfo.speed));
+            }
+
+            // Если клипа нет (длительность 0), пробуем подождать смену стейта небольшое время
+            if (clipLength <= 0f)
+            {
+                float waitForStateTimeout = 0.25f;
+                float t = 0f;
+                while (t < waitForStateTimeout)
+                {
+                    yield return null;
+                    t += Time.deltaTime;
+
+                    stateInfo = animator.GetCurrentAnimatorStateInfo(emotionAnimatorLayer);
+                    if (stateInfo.length > 0f)
+                    {
+                        clipLength = stateInfo.length / Mathf.Max(0.0001f, Mathf.Abs(stateInfo.speed));
+                        if (clipLength > 0f) break;
+                    }
+                }
+            }
+
+            // Если так и не нашли длительность — используем дефолт, например 1 секунду
+            if (clipLength <= 0f) clipLength = 1f;
+
+            // Ждём завершения клипа
+            float timer = 0f;
+            while (timer < clipLength)
+            {
+                // Если объект потерял владение/Animator исчез — выходим
+                if (!IsOwner || animator == null) break;
+
+                timer += Time.deltaTime;
+                yield return null;
+            }
+
+            // Выключаем эмоцию и возвращаем управление
+            if (animator != null)
+            {
+                animator.SetBool(animIDEmotionActive, false);
+                //animator.SetFloat(animIDEmotionIndex, 0);
+            }
+
+            CanMove = true;
+            _emotionRoutine = null;
+            SuppressLookAtIK = false;
+            FirstPersonView = _wasFPV;
         }
 
         private void OnAnimatorIK(int layerIndex)

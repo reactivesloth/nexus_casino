@@ -14,7 +14,9 @@ namespace Code.API
         public const string GET_ME = "/api/client/users/me";
         public const string LOAD_STORY = "/api/client/screenshots/add";
         public const string GET_STRORIES_URL = "/api/client/screenshots/";
-        public const string GET_INTERACTABLE_SOCIAL_URL = "/api/client/lobby/interactive-objects/likes-count";
+        public const string GET_INTERACTABLE_SOCIAL_URL = "/api/client/lobby/interactive-objects/{0}";
+        public const string TOGGLE_LIKE = "/api/client/lobby/interactive-objects/toggleLike";
+        public const string MARK_VIEWED = "/api/client/lobby/interactive-objects/markViewed";
         
         public const string LOAD_FILE_URL = "/api/s3/upload";
         public const string GET_FILE_URL = "/api/s3/{0}";
@@ -29,7 +31,9 @@ namespace Code.API
         public static string GetMeUrl() => DOMAIN.TrimEnd('/') + GET_ME;
         public static string GetLoadStoryUrl() => DOMAIN.TrimEnd('/') + LOAD_STORY;
         public static string GetStoriesUrl() => DOMAIN.TrimEnd('/') + GET_STRORIES_URL;
-        public static string GetInteractableSocialUrl() => DOMAIN.TrimEnd('/') + GET_INTERACTABLE_SOCIAL_URL;
+        public static string GetInteractableSocialUrl(string id) => DOMAIN.TrimEnd('/') + string.Format(GET_INTERACTABLE_SOCIAL_URL, id);
+        public static string PostToggleLikeUrl() => DOMAIN.TrimEnd('/') + TOGGLE_LIKE;
+        public static string PostMarkViewedUrl() => DOMAIN.TrimEnd('/') + MARK_VIEWED;
         
         public static string GetLoadFileUrl() => DOMAIN.TrimEnd('/') + LOAD_FILE_URL;
         public static string GetFileUrl(string key) => DOMAIN.TrimEnd('/') + string.Format(GET_FILE_URL, key);

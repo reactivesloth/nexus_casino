@@ -94,6 +94,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -115,6 +117,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -270,6 +273,8 @@ MeshRenderer:
   m_RayTracingAccelStructBuildFlagsOverride: 0
   m_RayTracingAccelStructBuildFlags: 1
   m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -291,6 +296,7 @@ MeshRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
@@ -409,6 +415,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (4)
@@ -427,15 +437,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.00000028626528
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.639
+      value: -0.8579996
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalRotation.w
@@ -503,6 +513,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (3)
@@ -521,15 +535,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.497
+      value: -1.4969997
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.639
+      value: -0.8579996
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalRotation.w
@@ -597,6 +611,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (5)
@@ -619,7 +637,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.639
+      value: 0.842
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.z
@@ -691,6 +709,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (6)
@@ -709,15 +731,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.497
+      value: -1.4970001
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.639
+      value: 0.84199995
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalRotation.w
@@ -785,6 +807,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (7)
@@ -803,15 +829,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -0.000000070780516
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.639
+      value: 0.84199995
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalRotation.w
@@ -994,6 +1020,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   columns: 8
   rows: 8
+  index: 0
   startIndex: 0
   endIndex: 63
   fps: 15
@@ -1054,6 +1081,10 @@ PrefabInstance:
       propertyPath: <SceneId>k__BackingField
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (2)
@@ -1076,7 +1107,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -0.639
+      value: -0.858
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.z
