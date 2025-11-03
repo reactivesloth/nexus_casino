@@ -227,7 +227,12 @@ public class PlayerInput : MonoBehaviour
 
     public void ShowRadialMenu (bool value)
     {
-        RadialMenu.gameObject.SetActive(value);
+        if (value)
+            RadialMenu.Enable();
+        else
+            RadialMenu.Disable();
+    
+        //RadialMenu.gameObject.SetActive(value);
         IsRadialMenuOpen = value;
     }
     
@@ -250,5 +255,5 @@ public class PlayerInput : MonoBehaviour
     public bool IsScrollDownButton => ChatScrollDownButton.GetButtonDown();
     public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
     public bool OpenAdminPanelDown => ClientDataStorage.UserData.IsAdminRole && _player.OpenAdminPanel is { triggered: true };
-    public bool IsEmotionsControllerButton => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && OpenEmoteWheelButton != null ? OpenEmoteWheelButton.GetButtonDown() : Input.GetKeyUp(KeyCode.H));
+    public bool IsEmotionsControllerButton => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && OpenEmoteWheelButton != null ? OpenEmoteWheelButton.GetButtonUp() : Input.GetKeyUp(KeyCode.H));
 }
