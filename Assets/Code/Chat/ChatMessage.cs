@@ -12,7 +12,6 @@ namespace Code.Chat
     {
         public string displayUsername;
         public string displayMessage;
-        public ChatType chatType;
         public DateTime timestamp = DateTime.Now;
         public ChatMessageStyle style = ChatStyles.Default;
         

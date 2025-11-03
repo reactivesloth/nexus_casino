@@ -32,14 +32,18 @@ namespace Code.Chat
 
         private void OnEnable()
         {
-            likeButton.onClick.AddListener(OnLikeClicked);
-            openProfileButton.onClick.AddListener(OnProfileClicked);
+            if (likeButton != null)
+                likeButton.onClick.AddListener(OnLikeClicked);
+            if (openProfileButton != null)
+                openProfileButton.onClick.AddListener(OnProfileClicked);
         }
 
         private void OnDisable()
         {
-            likeButton.onClick.RemoveListener(OnLikeClicked);
-            openProfileButton.onClick.RemoveListener(OnProfileClicked);
+            if(likeButton != null)
+                likeButton.onClick.RemoveListener(OnLikeClicked);
+            if (openProfileButton != null)
+                openProfileButton.onClick.RemoveListener(OnProfileClicked);
         }
 
         public void Init(ChatMessage message)
@@ -50,37 +54,38 @@ namespace Code.Chat
             
             nicknameText.text = message.style.FormatUsername(message.displayUsername);
             messageText.text = message.style.FormatMessageText(message.displayMessage);
-            
-            if(_chatMessageData!=null)
-                InitSocial();
+
+            InitSocial();
         }
 
         public void UpdateLikesStatus(int likesCount, bool isLikedByMe)
         {
+            if(likesCountText == null)
+                return;
+            
             _chatMessageData.likes_count = likesCount;
             _chatMessageData.is_liked_by_me = isLikedByMe;
             
             likesCountText.text = likesCount.ToString();
             _chatMessageData.is_liked_by_me = isLikedByMe;
             likeByMeIndicator.SetActive(_chatMessageData.is_liked_by_me);
-            
-            Debug.Log($"[MessageComponent] {_chatMessageData.id} Like count is {likesCount}/{likesCountText.text}, isLiked by {_chatMessageData.is_liked_by_me}", gameObject);
         }
 
         public void UpdateViewsStatus(int viewsCount, bool isViewedByMe)
         {
+            if(viewsCountText == null)
+                return;
+            
             _chatMessageData.views_count = viewsCount;
             _chatMessageData.is_viewed_by_me = isViewedByMe;
             
             viewsCountText.text = viewsCount.ToString();
             _chatMessageData.is_viewed_by_me = isViewedByMe;
-
-            Debug.Log($"[MessageComponent] {_chatMessageData.id} View count is {viewsCount}, isViewed by {_chatMessageData.is_viewed_by_me}", gameObject);
         }
 
         private void InitSocial()
         {
-            if(_chatMessageData == null)
+            if(_chatMessageData == null || socialPanel == null)
                 return;
             
             socialPanel.SetActive(true);
@@ -90,7 +95,15 @@ namespace Code.Chat
             
             if(!_chatMessageData.is_viewed_by_me)
                 _chatController.OnViewMessage(_chatMessageData.id);
+            
+            LoadAvatar();
+        }
 
+        private void LoadAvatar()
+        {
+            if(avatarImage == null)
+                return;
+            
             // TODO: avatar load
         }
 
@@ -99,12 +112,17 @@ namespace Code.Chat
             nicknameText.text = string.Empty;
             messageText.text = string.Empty;
             
-            socialPanel.SetActive(false);
+            if(socialPanel != null)
+                socialPanel.SetActive(false);
             
-            avatarImage.sprite = defaultAvatar;
-            viewsCountText.text = string.Empty;
-            likesCountText.text = string.Empty;
-            likeByMeIndicator.SetActive(false);
+            if(avatarImage != null)
+                avatarImage.sprite = defaultAvatar;
+            if(viewsCountText != null)
+                viewsCountText.text = string.Empty;
+            if(likesCountText != null)
+                likesCountText.text = string.Empty;
+            if(likeByMeIndicator != null)
+                likeByMeIndicator.SetActive(false);
             
             _chatMessageData = null;
         }
@@ -114,7 +132,6 @@ namespace Code.Chat
             if(_chatController == null || _chatMessageData == null)
                 return;
             
-            Debug.Log($"[MessageComponent] OnLikeClicked : {_chatMessageData.id}", gameObject);
             _chatController.OnLikeMessage(_chatMessageData.id, !_chatMessageData.is_liked_by_me);
         }
 

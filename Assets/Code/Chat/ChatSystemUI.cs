@@ -178,6 +178,10 @@ namespace Code.Chat
         private int emojiPerRow = 5;
 
         [SerializeField] private float emojiTextEdgePadding = 0.05f;
+        
+        [Header("Notification control"), SerializeField] 
+        private Toggle notificationToggle;
+        [SerializeField] private bool isNotificationStartStatus = true;
 
         [Header("Close Button")] [SerializeField]
         private Button closeButton;
@@ -232,6 +236,7 @@ namespace Code.Chat
         public event Action OnInputFieldEnabled;
         public event Action OnInputFieldDisabled;
         public event Action<ChatType> OnReachedTop;
+        public event Action<bool> OnNotificationChange;
 
         #endregion
 
@@ -329,6 +334,8 @@ namespace Code.Chat
             SubscribeToUIEvents();
             UpdateChatTypeButtons();
             Hide();
+            
+            notificationToggle.isOn = isNotificationStartStatus;
 
             if (devLog) Debug.Log("[ChatSystemUI] UI setup complete");
         }
@@ -416,6 +423,11 @@ namespace Code.Chat
             {
                 scrollRect.onValueChanged.AddListener(OnScrollValueChanged);
             }
+
+            if (notificationToggle != null)
+            {
+                notificationToggle.onValueChanged.AddListener(value => OnNotificationChange?.Invoke(value));
+            }
         }
 
         private void UnsubscribeFromUIEvents()
@@ -453,6 +465,11 @@ namespace Code.Chat
             if (scrollRect != null)
             {
                 scrollRect.onValueChanged.RemoveListener(OnScrollValueChanged);
+            }
+
+            if (notificationToggle != null)
+            {
+                notificationToggle.onValueChanged.RemoveAllListeners();
             }
         }
 
@@ -708,32 +725,32 @@ namespace Code.Chat
         /// <summary>
         /// Добавить сообщение в чат
         /// </summary>
-        public void AddMessage(ChatMessage message, bool addByMe = false)
+        public void AddMessage(ChatMessage message, ChatType chatType, bool addByMe = false)
         {
             // Добавляем сообщение в соответствующий чат
-            if (!_chatMessages.ContainsKey(message.chatType))
-                _chatMessages[message.chatType] = new List<ChatMessage>();
+            if (!_chatMessages.ContainsKey(chatType))
+                _chatMessages[chatType] = new List<ChatMessage>();
 
-            _chatMessages[message.chatType].Add(message);
+            _chatMessages[chatType].Add(message);
             _allMessages.Add(message);
 
             // Ограничиваем количество сообщений
-            if (_chatMessages[message.chatType].Count > maxMessagesPerChat)
+            if (_chatMessages[chatType].Count > maxMessagesPerChat)
             {
-                var messageForDelete = _chatMessages[message.chatType][0];
+                var messageForDelete = _chatMessages[chatType][0];
                 _allMessages.Remove(messageForDelete);
-                _chatMessages[message.chatType].Remove(messageForDelete);
+                _chatMessages[chatType].Remove(messageForDelete);
             }
 
             // Обновляем UI только если это текущий активный чат
-            if (message.chatType == _currentChatType && _isVisible)
+            if (chatType == _currentChatType && _isVisible)
             {
                 StartCoroutine(CreateMessageUIWithFrameDelay(message, addByMe));
             }
 
             if (devLog)
                 Debug.Log(
-                    $"[ChatSystemUI] Message added to {message.chatType}: {message.displayUsername}: {message.displayMessage}");
+                    $"[ChatSystemUI] Message added to {chatType}: {message.displayUsername}: {message.displayMessage}");
         }
 
         private IEnumerator CreateMessageUIWithFrameDelay(ChatMessage message, bool addByMe = false)
