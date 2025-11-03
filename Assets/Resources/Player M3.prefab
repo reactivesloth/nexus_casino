@@ -3927,6 +3927,7 @@ GameObject:
   - component: {fileID: -3418586246104198605}
   - component: {fileID: -3491167662588104577}
   - component: {fileID: -7473628795789215681}
+  - component: {fileID: 7076271179006848320}
   m_Layer: 8
   m_Name: Player M3
   m_TagString: Player
@@ -4062,6 +4063,7 @@ MonoBehaviour:
   footstepAudioVolume: 0.5
   CanMove: 1
   LockCameraPosition: 0
+  emotionAnimatorLayer: 0
   sitYawRange: 45
   sitMinPitch: -50
   sitMaxPitch: 30
@@ -4396,6 +4398,21 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 2272209766738373433}
   _networkObjectCache: {fileID: 2272209766738373433}
   playerInteraction: {fileID: 7696486495866622635}
+--- !u!114 &7076271179006848320
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024218303011212308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 988398797a97b9048807b76b1a874465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerEmotionsController
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 2272209766738373433}
+  _networkObjectCache: {fileID: 0}
 --- !u!1 &8047517550926677348
 GameObject:
   m_ObjectHideFlags: 0

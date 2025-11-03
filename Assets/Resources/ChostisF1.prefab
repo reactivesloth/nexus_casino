@@ -1238,6 +1238,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: -7728273655064638457}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6589500659611521752}
     - targetCorrespondingSourceObject: {fileID: 159943881184610819, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4665974107282693136}
@@ -1350,6 +1353,7 @@ MonoBehaviour:
   footstepAudioVolume: 0.5
   CanMove: 1
   LockCameraPosition: 0
+  emotionAnimatorLayer: 0
   sitYawRange: 45
   sitMinPitch: -30
   sitMaxPitch: 30
@@ -1699,6 +1703,21 @@ MonoBehaviour:
   IsAdmin: 1
   IsHost: 1
   IsModerator: 1
+--- !u!114 &-6589500659611521752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5874861292224152706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 988398797a97b9048807b76b1a874465, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerEmotionsController
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 8762398165049904545}
+  _networkObjectCache: {fileID: 0}
 --- !u!4 &6542713848401944120 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
