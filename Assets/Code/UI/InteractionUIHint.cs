@@ -88,11 +88,9 @@ namespace Code.UI
 
         public void ShowSocial(Interactable interactable)
         {
-            Debug.Log($"[InteractionUIHint] ShowSocial: {interactable.Key}");
             if (IsSocialOpened)
                 return;
-
-            Debug.Log($"[InteractionUIHint] ShowSocial. Requesting social data...");
+            
             EnsureInit();
             _interactable = interactable;
             _socialUI.SetActive(true);
