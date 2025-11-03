@@ -652,13 +652,13 @@ public class UltimateButton : MonoBehaviour, IPointerDownHandler, IDragHandler, 
 	/// <summary>
 	/// [INTERNAL] Called by Unity at the end of every frame.
 	/// </summary>
-	void LateUpdate ()
-	{
-		// Reset the 1 frame only input variables since this is the end of the frame.
-		getButtonDown = false;
-		getButtonUp = false;
-		eventDataCalculated = false;
-	}
+	// void LateUpdate ()
+	// {
+	// 	// Reset the 1 frame only input variables since this is the end of the frame.
+	// 	getButtonDown = false;
+	// 	getButtonUp = false;
+	// 	eventDataCalculated = false;
+	// }
 
 	protected override void OnDisable()
 	{
