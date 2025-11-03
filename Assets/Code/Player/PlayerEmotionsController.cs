@@ -1,4 +1,4 @@
-using System;
+using Code.Utility;
 using FishNet.Object;
 using UnityEngine;
 
@@ -6,35 +6,79 @@ namespace Code.Player
 {
     public class PlayerEmotionsController : NetworkBehaviour {
         
+        [System.Serializable]
+        public class EmotionBase
+        {
+            public string key;
+            public Sprite emotionIcon;
+            [HideInInspector] public UltimateRadialButtonInfo radialButtonInfo;
+        }
+        
+        
+        public EmotionBase[] Emotions;
+        EmotionBase currentEmotion;
         private PlayerMovementController playerMovementController;
-
+        private PlayerInput input;
+        private bool isMenuOpen;
+        
         private void Awake()
         {
             playerMovementController = gameObject.GetComponent<PlayerMovementController>();
+            input = PlayerInput.Instance;
         }
 
         private void Update()
         {
-            if (!IsOwner)
+            if (!IsOwner || !playerMovementController.CanMove)
             {
                 return;
             }
 
-            if (Input.GetKeyDown(KeyCode.Alpha0)) playerMovementController.PlayEmotionAnimation(0);
-            if (Input.GetKeyDown(KeyCode.Alpha1)) playerMovementController.PlayEmotionAnimation(1);
-            if (Input.GetKeyDown(KeyCode.Alpha2)) playerMovementController.PlayEmotionAnimation(2);
-            if (Input.GetKeyDown(KeyCode.Alpha3)) playerMovementController.PlayEmotionAnimation(3);
-            if (Input.GetKeyDown(KeyCode.Alpha4)) playerMovementController.PlayEmotionAnimation(4);
-            if (Input.GetKeyDown(KeyCode.Alpha5)) playerMovementController.PlayEmotionAnimation(5);
-            if (Input.GetKeyDown(KeyCode.Alpha6)) playerMovementController.PlayEmotionAnimation(6);
-            if (Input.GetKeyDown(KeyCode.Alpha7)) playerMovementController.PlayEmotionAnimation(7);
-            if (Input.GetKeyDown(KeyCode.Alpha8)) playerMovementController.PlayEmotionAnimation(8);
-            if (Input.GetKeyDown(KeyCode.Alpha9)) playerMovementController.PlayEmotionAnimation(9);
-            if (Input.GetKeyDown(KeyCode.LeftBracket)) playerMovementController.PlayEmotionAnimation(10);
-            if (Input.GetKeyDown(KeyCode.RightBracket)) playerMovementController.PlayEmotionAnimation(11);
-            if (Input.GetKeyDown(KeyCode.Backslash)) playerMovementController.PlayEmotionAnimation(12);
-            if (Input.GetKeyDown(KeyCode.Colon)) playerMovementController.PlayEmotionAnimation(13);
-            if (Input.GetKeyDown(KeyCode.Quote)) playerMovementController.PlayEmotionAnimation(14);
+            if (input.IsEmotionsControllerButton)
+            {
+                if (!PlayerInput.Instance.IsRadialMenuOpen)
+                    ShowRadialMenu();
+                else
+                    CloseRadialMenu();
+            }
+
+            if (isMenuOpen)
+            {
+                CursorManager.Instance.SetForceShowCursor(true);
+            }
+        }
+
+        private void ShowRadialMenu()
+        {
+            input.ShowRadialMenu(true);
+            CursorManager.Instance.SetForceShowCursor(true);
+            input.RadialMenu.ClearMenu();
+            isMenuOpen = true;
+            
+            for( int i = 0; i < Emotions.Length; i++ )
+            {
+                // Assign the information inside the WeaponBase class to the radialButtonInfo to supply to the radial menu.
+                Emotions[ i ].radialButtonInfo.key = Emotions[ i ].key;
+                Emotions[ i ].radialButtonInfo.icon = Emotions[ i ].emotionIcon;
+
+                // Add a radial button to the menu with the current Light Weapon information.
+                input.RadialMenu.RegisterButton( PlayAnimation, Emotions[ i ].radialButtonInfo);
+            }
+        }
+
+        private void CloseRadialMenu()
+        {
+            input.RadialMenu.ClearMenu();
+            CursorManager.Instance.SetForceShowCursor(false);
+            CursorManager.Instance.HideCursor();
+            isMenuOpen = false;
+            input.ShowRadialMenu(false);
+        }
+
+        private void PlayAnimation(string key)
+        {
+            playerMovementController.PlayEmotionAnimation(int.Parse(key));
+            CloseRadialMenu();
         }
     }
 }

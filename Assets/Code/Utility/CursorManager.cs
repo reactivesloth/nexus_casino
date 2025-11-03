@@ -176,6 +176,10 @@ namespace Code.Utility
                 : Cursor.visible;
         }
 
+        public void SetForceShowCursor(bool value)
+        {
+            forceShowCursor = value;
+        }
         #endregion
 
         #region Cursor Image
