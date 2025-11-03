@@ -69,6 +69,9 @@ namespace Code.UI.Admin
         {
             if (PlayerInput.Instance.OpenAdminPanelDown)
                 SetActive(!panel.activeSelf);
+            // Закрытие чата по Escape
+            if (PlayerInput.Instance.IsPausedDown && panel.activeSelf)
+                SetActive(false);
         }
 
         private void OnDisable()
@@ -172,6 +175,7 @@ namespace Code.UI.Admin
             lobbiesButton.GetComponent<Outline>().enabled = lobbiesButton == currentTabButton;
             slotsButton.GetComponent<Outline>().enabled = slotsButton == currentTabButton;
         }
+
         private void SetTabsInteractable(Button currentTabButton)
         {
             usersButton.interactable = usersButton != currentTabButton;

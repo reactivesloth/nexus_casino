@@ -592,7 +592,8 @@ namespace Code.Chat
         public void Show()
         {
             if (_isVisible) return;
-
+            
+            PlayerInput.Instance.IsChatOpened = true;
             _isVisible = true;
             chatPanel.SetActive(true);
             RefreshCurrentChat();
@@ -612,6 +613,7 @@ namespace Code.Chat
         {
             if (!_isVisible) return;
 
+            PlayerInput.Instance.IsChatOpened = false;
             _isVisible = false;
             DisableInputField();
             

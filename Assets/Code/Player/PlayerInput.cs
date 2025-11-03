@@ -238,7 +238,7 @@ public class PlayerInput : MonoBehaviour
     
     public bool JumpDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : _player.Jump is { triggered: true });
     public bool VoiceHeld => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton()   : _player.Voice != null && _player.Voice.ReadValue<float>() > 0.5f);
-    public bool SprintHeld=> !IsChatOpened && !IsBusy && (IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f);
+    public bool SprintHeld => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f);
     public bool CameraSwitchDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : _player.CameraSwitch is { triggered: true });
     public bool InteractDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && InteractButton != null ? InteractButton.GetButtonDown() : _player.Interact is { triggered: true });
     public bool InteractEndDown => !IsChatOpened && (endInteractButton.GetButtonDown() || _player.Interact is { triggered: true });
@@ -254,6 +254,6 @@ public class PlayerInput : MonoBehaviour
     public bool IsScrollUpButton => ChatScrollUpButton.GetButtonDown();
     public bool IsScrollDownButton => ChatScrollDownButton.GetButtonDown();
     public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
-    public bool OpenAdminPanelDown => ClientDataStorage.UserData.IsAdminRole && _player.OpenAdminPanel is { triggered: true };
+    public bool OpenAdminPanelDown => !IsChatOpened && !IsBusy && ClientDataStorage.UserData.IsAdminRole && _player.OpenAdminPanel is { triggered: true };
     public bool IsEmotionsControllerButton => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && OpenEmoteWheelButton != null ? OpenEmoteWheelButton.GetButtonUp() : Input.GetKeyUp(KeyCode.H));
 }

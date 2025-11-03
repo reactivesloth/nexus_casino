@@ -192,7 +192,7 @@ namespace Code.Chat
                 paused = PauseUI.Instance.IsPaused;
 
             // Открытие/закрытие чата
-            if (input.IsOpenChatDown && !paused)
+            if (input.IsOpenChatDown && !paused && !input.IsBusy)
                 ToggleChat();
 
             // Переключение между типами чата
@@ -233,7 +233,7 @@ namespace Code.Chat
             {
                 chatSystemUI.Show();
                 chatSystemUI.EnableInputField();
-                // LoadHistoryIfNeeded();
+                LoadHistoryIfNeeded();
             }
         }
 
@@ -495,7 +495,7 @@ namespace Code.Chat
         private void OnChatTypeChanged(ChatType newChatType)
         {
             if (devLog) Debug.Log($"[ChatController] Chat type changed to: {newChatType}");
-            // LoadHistoryIfNeeded();
+            LoadHistoryIfNeeded();
         }
 
         private void OnInputFieldEnabled()
@@ -525,7 +525,7 @@ namespace Code.Chat
         private void LoadHistoryIfNeeded()
         {
             var currentType = CurrentChatType;
-            if (!chatSystemUI.NoMoreHistory)
+            if (!chatSystemUI.NoMoreHistory && chatSystemUI.CurrentChatMessagesCount < pageSize)
             {
                 _ = LoadHistoryPageAsync(true, currentType);
             }
