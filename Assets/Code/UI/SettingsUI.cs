@@ -140,8 +140,8 @@ namespace Code.UI
         {
             if (invertCameraDropdown == null) return;
             invertCameraDropdown.ClearOptions();
-            var names = new List<string>{"On", "Off"};
-            invertCameraDropdown.AddOptions(names);
+            var names = new List<string>{"on", "off"};
+            invertCameraDropdown.GetComponent<TextSelectionSliderLocalizationHelper>().InitKeys(names);
         }
 
         private void PopulateQualityDropdown()
@@ -149,7 +149,7 @@ namespace Code.UI
             if (qualityDropdown == null) return;
             qualityDropdown.ClearOptions();
             var names = new List<string>(QualitySettings.names);
-            qualityDropdown.AddOptions(names);
+            qualityDropdown.GetComponent<TextSelectionSliderLocalizationHelper>().InitKeys(names);
         }
 
         private void PopulateLocalizationDropdown()
