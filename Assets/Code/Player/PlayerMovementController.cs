@@ -214,13 +214,13 @@ namespace Code.Player
             base.OnStartClient();
             if (IsOwner)
             {
-                EnsureInit();
                 Own = this;
                 if (spawnOnSawedPosition)
                     LoadSpawnPosition();
                 jumpTimeoutDelta = jumpTimeout;
                 fallTimeoutDelta = fallTimeout;
-                
+             
+                EnsureInit();   
                 LobbyVariables.Instance.lobbyPopupUI.Hide();
                 CursorManager.Instance.HideCursor();
             }
@@ -230,10 +230,11 @@ namespace Code.Player
         {
             base.OnOwnershipClient(prevOwner);
             if (!IsOwner) return;
-            EnsureInit();
-            Own = this;
             if (spawnOnSawedPosition)
                 LoadSpawnPosition();
+            
+            EnsureInit();
+            Own = this;
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
         }
@@ -269,19 +270,22 @@ namespace Code.Player
                 transform.rotation = Quaternion.Euler(rotX, rotY, rotZ);
             }).Finally(() => CanMove = true);*/
 
-            if (!PlayerPrefs.HasKey("SavedSpawnPosition")) return;
+            if (PlayerPrefs.HasKey("SavedSpawnPosition"))
+            {
+                transform.position = new Vector3(
+                    PlayerPrefs.GetFloat("SavedSpawnPositionX"),
+                    PlayerPrefs.GetFloat("SavedSpawnPositionY"),
+                    PlayerPrefs.GetFloat("SavedSpawnPositionZ")
+                );
+                transform.rotation = Quaternion.Euler(
+                    PlayerPrefs.GetFloat("SavedSpawnRotationX"),
+                    PlayerPrefs.GetFloat("SavedSpawnRotationY"),
+                    PlayerPrefs.GetFloat("SavedSpawnRotationZ")
+                );
+                PlayerPrefs.DeleteKey("SavedSpawnPosition");
+            }
 
-            transform.position = new Vector3(
-                PlayerPrefs.GetFloat("SavedSpawnPositionX"),
-                PlayerPrefs.GetFloat("SavedSpawnPositionY"),
-                PlayerPrefs.GetFloat("SavedSpawnPositionZ")
-            );
-            transform.rotation = Quaternion.Euler(
-                PlayerPrefs.GetFloat("SavedSpawnRotationX"),
-                PlayerPrefs.GetFloat("SavedSpawnRotationY"),
-                PlayerPrefs.GetFloat("SavedSpawnRotationZ")
-            );
-            PlayerPrefs.DeleteKey("SavedSpawnPosition");
+            spawned = true;
         }
 
         private void UpdateSpawnPositionTimer()
@@ -358,7 +362,7 @@ namespace Code.Player
             JumpAndGravity();
             Move();
 
-            if (spawnOnSawedPosition)
+            if (spawnOnSawedPosition && spawned)
                 UpdateSpawnPositionTimer();
         }
 
@@ -667,6 +671,7 @@ namespace Code.Player
         [SerializeField] private float ikSendRate = 1f / 30f;
         private Vector3 _lastSentLookPos;
         private float _lastSentWeight;
+        private bool spawned = false;
 
         [ServerRpc(RunLocally = true)]
         private void SyncIKServerRpc(Vector3 lookPos, float weight)
