@@ -1,4 +1,5 @@
 ﻿using Code.Network.HostMigration;
+using Code.UI.Popup;
 using Code.Utility;
 using UnityEngine;
 using FishNet;
@@ -12,13 +13,13 @@ namespace Code.Network.Lobby
 {
     public class LobbyDisconnector : MonoBehaviour
     {
-        [SerializeField] private ModularPopupOpener disconnectPopup;
+        [SerializeField] private NexusModularPopupOpener disconnectPopup;
         
         private static ServerManager _serverManager;
         private static ClientManager _clientManager;
         private static LobbyController _lobbyController;
 
-        private static ModularPopupOpener _disconnectPopup;
+        private static NexusModularPopupOpener _disconnectPopup;
 
         private void Awake()
         {
