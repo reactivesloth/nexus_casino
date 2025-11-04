@@ -7,8 +7,8 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Scene_effect
-  m_Shader: {fileID: -6465566751694194690, guid: 8936be0d03302704c9f3680a179e8f00, type: 3}
+  m_Name: Scene_fog
+  m_Shader: {fileID: -6465566751694194690, guid: a136784f36756f04197d4623485cea7b, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -38,32 +38,28 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - FogDensity: 0.5
-    - FogNoise: 10
-    - FogSpeed: 0.1
-    - _BaseScale: 0
+    - _BaseScale: 2.43
     - _BaseSpeed: 1
-    - _BaseStrenght: 0
-    - _CurvatureRadius: 0
-    - _EmissionStrength: 0.5
-    - _FadeDepth: 100
-    - _FresnelOpacity: 1
-    - _FresnelPower: 0
-    - _NoiseEdge1: 0
-    - _NoiseEdge2: 0
-    - _NoiseHigh: 0
-    - _NoisePower: 0
-    - _NoiseScale: 1.05
-    - _NoiseSpeed: 0
+    - _BaseStrenght: -0.01
+    - _CurvatureRadius: 250
+    - _EmissionStrength: 2.56
+    - _FadeDepth: 250
+    - _FresnelOpacity: 0.72
+    - _FresnelPower: -0.12
+    - _NoiseEdge1: 0.28
+    - _NoiseEdge2: -0.35
+    - _NoiseHigh: 0.04
+    - _NoisePower: 0.63
+    - _NoiseScale: 1.2
+    - _NoiseSpeed: 0.32
     - _QueueControl: 0
     - _QueueOffset: 0
     - _XRMotionVectorsPass: 1
     m_Colors:
-    - FogColor: {r: 0.4745098, g: 0.18431373, b: 0.9882353, a: 1}
-    - _ColorPeak: {r: 0.5466803, g: 0.6197707, b: 0.99056596, a: 0}
+    - _ColorPeak: {r: 0, g: 0, b: 0, a: 0}
     - _ColorValley: {r: 1, g: 1, b: 1, a: 0}
-    - _NoiseRemap: {r: 0, g: 1, b: -1, a: 1}
-    - _RotateProjection: {r: 0, g: 0, b: 0, a: 0}
+    - _NoiseRemap: {r: -0.82, g: 2.59, b: -1, a: 1}
+    - _RotateProjection: {r: 1, g: 0, b: 0, a: 23}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &2278005810233012136
