@@ -41,7 +41,10 @@ namespace Code.Network.Lobby
         public ProductUserId ProductUserId
         {
             get => _productUserId;
-            set { _productUserId = value; productUserId = value.ToString(); }
+            set
+            {
+                _productUserId = value; productUserId = value != null ? value.ToString() : string.Empty;
+            }
         }
         
         public AuthData AuthData => authData;

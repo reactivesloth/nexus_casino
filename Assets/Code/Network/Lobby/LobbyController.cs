@@ -19,7 +19,7 @@ namespace Code.Network.Lobby
     public class LobbyController : MonoBehaviour
     {
         #region Lobby Attribute Keys Constants
-        
+
         public const string Name = "NAME";
         public const string Private = "PRIVATE";
         public const string ProductVersion = "PRODUCT_VERSION";
@@ -32,7 +32,7 @@ namespace Code.Network.Lobby
         public const string ModerIn = "MODER_IN";
         public const string Ping = "PING";
         public const string PromoteManually = "PROMOTE_MANUALLY";
-        
+
         #endregion
 
         private Coroutine _pollCoroutine;
@@ -96,10 +96,13 @@ namespace Code.Network.Lobby
 
                 var ping = GetCurrentPing();
 
-                yield return LobbySetMemberAttribute.Run(out var setPing, lobby.lobbyId, localUserId, 
+                yield return LobbySetMemberAttribute.Run(out var setPing, lobby.lobbyId, localUserId,
                     Ping, ping.ToString());
                 if (setPing.CallbackInfo?.ResultCode != Result.Success)
+                {
                     Debug.LogWarning($"[LobbyController] Failed to update ping: {setPing.CallbackInfo?.ResultCode}");
+                    OnEOSConnectionLostHandler();
+                }
             }
         }
 
@@ -111,6 +114,37 @@ namespace Code.Network.Lobby
             return (long)Mathf.Max(1, ping - deduction);
         }
 
+        #endregion
+
+        #region Connection Monitoring
+        
+        /// <summary>
+        /// Вызывается когда произошла потеря соединения с Epic Online Services
+        /// </summary>
+        private void OnEOSConnectionLostHandler()
+        {
+            Debug.LogError($"[LobbyController] Lost connection to Epic Online Services!");
+    
+            // Останавливаем все корутины
+            StopUpdatingPing();
+            StopPollingLobbies();
+    
+            // Очищаем данные лобби
+            var currentLobby = LobbyVariables.Instance.currentLobby;
+            if (currentLobby != null)
+            {
+                currentLobby.lobbyMembers?.Clear();
+                currentLobby.attributeKeys = null;
+                currentLobby.attributeValues = null;
+            }
+    
+            LobbyVariables.Instance.currentLobby = null;
+            LobbyVariables.Instance.ProductUserId = null;
+            LobbyVariables.Instance.hostLobbyName.Value = string.Empty;
+            
+            LobbyDisconnector.Disconnect(true, "Disconnected", "Something went wrong");
+        }
+        
         #endregion
 
         public void StartPollingLobbies()
@@ -145,7 +179,8 @@ namespace Code.Network.Lobby
 
                 for (int attempt = 0; attempt < maxSearchAttempts; attempt++)
                 {
-                    LobbyVariables.Instance.lobbyPopupUI.Show($"loading.search_lobby", string.Empty, 10 * (attempt + 1));
+                    LobbyVariables.Instance.lobbyPopupUI.Show($"loading.search_lobby", string.Empty,
+                        10 * (attempt + 1));
 
                     // 🔹 Запрос поиска лобби
                     yield return LobbySearchLobbies.Run(out var searchLobbies, localUser.Id, false);
@@ -202,13 +237,16 @@ namespace Code.Network.Lobby
 
                 if (!ClientDataStorage.UserData.IsAdminRole)
                 {
-                    freeSlotsReq += isHostResult != Result.Success || isHost.Value.Data.Value.Value.AsUtf8 == false.ToString()
+                    freeSlotsReq += isHostResult != Result.Success ||
+                                    isHost.Value.Data.Value.Value.AsUtf8 == false.ToString()
                         ? 1
                         : 0;
-                    freeSlotsReq += isAdminResult != Result.Success || isAdmin.Value.Data.Value.Value.AsUtf8 == false.ToString()
+                    freeSlotsReq += isAdminResult != Result.Success ||
+                                    isAdmin.Value.Data.Value.Value.AsUtf8 == false.ToString()
                         ? 1
                         : 0;
-                    freeSlotsReq += isModerResult != Result.Success || isModer.Value.Data.Value.Value.AsUtf8 == false.ToString()
+                    freeSlotsReq += isModerResult != Result.Success ||
+                                    isModer.Value.Data.Value.Value.AsUtf8 == false.ToString()
                         ? 1
                         : 0;
                 }
@@ -383,7 +421,6 @@ namespace Code.Network.Lobby
             //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             OnClientConnectionReady();
-
             StartUpdatingPing(10);
         }
 
@@ -460,6 +497,15 @@ namespace Code.Network.Lobby
         {
             UpdateMembers();
             CheckNewOwner(arg);
+        }
+
+
+        private void OnRtcConnectionChange(RTCRoomConnectionChangedCallbackInfo callbackInfo)
+        {
+            Debug.Log(
+                $"[LobbyController] Connection changed to {callbackInfo.IsConnected}. Reason = {callbackInfo.DisconnectReason}");
+            if (callbackInfo.IsConnected)
+                return;
         }
 
         private async void CheckNewOwner(LobbyMemberStatusReceivedCallbackInfo arg)
@@ -559,7 +605,8 @@ namespace Code.Network.Lobby
         // === Ручное создание лобби ===
         public void CreateLobbyManual(string lobbyName, uint maxPlayers, bool isPrivate, string bucketId = null)
         {
-            StartCoroutine(OnManualLobbyCreateRoutine(!string.IsNullOrEmpty(lobbyName) ? lobbyName : GenerateRandomLobbyName(), maxPlayers, isPrivate,
+            StartCoroutine(OnManualLobbyCreateRoutine(
+                !string.IsNullOrEmpty(lobbyName) ? lobbyName : GenerateRandomLobbyName(), maxPlayers, isPrivate,
                 bucketId ?? LobbyVariables.Instance.bucketId));
         }
 
@@ -687,6 +734,8 @@ namespace Code.Network.Lobby
         public void LeaveLobby()
         {
             EOS.GetManager()?.StartCoroutine(LeaveLobbyRoutine());
+            StopUpdatingPing();
+            StopPollingLobbies();
         }
 
         public void SelectNewHostAndPromote(bool includeMe = false)
