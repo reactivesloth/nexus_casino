@@ -1,7 +1,9 @@
+using System.Linq;
 using Code.API;
 using Dissonance;
 using FishNet.Connection;
 using FishNet.Object;
+using FishNet.Object.Synchronizing;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,8 +19,19 @@ namespace Code.UI
         
         private VoiceBroadcastTrigger _voiceBroadcastTrigger;
 
-        private bool _isVoiceHeld;
-        private bool _isVoiceMuted;
+        public readonly SyncVar<bool> IsVoiceHeld = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+        public readonly SyncVar<bool> IsVoiceMuted = new(new SyncTypeSettings
+        {
+            WritePermission = WritePermission.ServerOnly,
+            ReadPermission = ReadPermission.Observers
+        });
+        
+        public string PlayerName => playerName.text;
+        public bool IsHost => hostIndicator.activeSelf;
 
         private void Start()
         {
@@ -33,17 +46,15 @@ namespace Code.UI
                 var newMuted = _voiceBroadcastTrigger.IsMuted;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
-                if (newHeld != _isVoiceHeld || newMuted != _isVoiceMuted)
+                if (newHeld != IsVoiceHeld.Value || newMuted != IsVoiceMuted.Value)
                 {
-                    _isVoiceHeld = newHeld;
-                    _isVoiceMuted = newMuted;
-                    TransmitVoiceState();
+                    SendVoiceStateServerRpc(newHeld, newMuted, Owner);
                 }
             }
 
             if (voiceImage != null)
             {
-                voiceImage.color = _isVoiceMuted ? Color.red : _isVoiceHeld ? Color.green : Color.clear;
+                voiceImage.color = IsVoiceMuted.Value ? Color.red : IsVoiceHeld.Value ? Color.green : Color.clear;
             }
         }
         
@@ -77,20 +88,14 @@ namespace Code.UI
         [ServerRpc(RequireOwnership = false)]
         public void SendVoiceStateServerRpc(bool voice, bool mute, NetworkConnection sender = null)
         {
-            SendVoiceStateObserversRpc(voice, mute);
+            IsVoiceHeld.Value = voice;
+            IsVoiceMuted.Value = mute;
         }
 
-        [ObserversRpc]
-        private void SendVoiceStateObserversRpc(bool voice, bool mute)
+        public static PlayerUI GetByPlayerName(string playerName)
         {
-            _isVoiceHeld = voice;
-            _isVoiceMuted = mute;
-        }
-
-        public void TransmitVoiceState()
-        {
-            if (!IsOwner) return;
-            SendVoiceStateServerRpc(_isVoiceHeld, _isVoiceMuted);
+            var all = FindObjectsByType<PlayerUI>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            return all.FirstOrDefault(ui => ui.PlayerName == playerName);
         }
     }
 }

@@ -1,4 +1,3 @@
-using System;
 using Code.API;
 using Code.Chat;
 using Code.Network.Lobby;
@@ -15,6 +14,9 @@ namespace Code.UI.Admin
 {
     public class UserControlElement : ControlElement
     {
+        [SerializeField] private Image voiceImage;
+        [SerializeField] private GameObject hostIndicator;
+        
         [SerializeField] private TMP_Text roleText;
 
         [SerializeField] private Button kickButton;
@@ -32,6 +34,7 @@ namespace Code.UI.Admin
         private AdminPanelHandler _adminPanelHandler;
         private LobbyData.LobbyMember _lobbyMemberData;
         private NexusModularPopupOpener _popupOpener;
+        private PlayerUI _playerUI;
 
         private string Username => _lobbyMemberData.displayName;
 
@@ -69,6 +72,14 @@ namespace Code.UI.Admin
             promoteButton.onClick.RemoveListener(OnPromoteButtonClicked);
         }
 
+        private void OnDestroy()
+        {
+            if(_playerUI != null)
+            {
+                _playerUI.IsVoiceHeld.OnChange -= IsVoiceHeldOnOnChange;
+                _playerUI.IsVoiceMuted.OnChange -= IsVoiceMutedOnOnChange;
+            }
+        }
 
         private void OnMutedDictionaryChange(SyncDictionaryOperation operation, string key,
             AdminPanelHandler.MuteStateSync value, bool asServer)
@@ -97,6 +108,26 @@ namespace Code.UI.Admin
             kickButton.interactable = banButton.interactable = muteChatButton.interactable =
                 unmuteChatButton.interactable = muteVoiceButton.interactable =
                     unmuteVoiceButton.interactable = Username != ClientDataStorage.UserData.username;
+
+            _playerUI = PlayerUI.GetByPlayerName(_lobbyMemberData.displayName);
+            if(_playerUI != null)
+            {
+                _playerUI.IsVoiceHeld.OnChange += IsVoiceHeldOnOnChange;
+                _playerUI.IsVoiceMuted.OnChange += IsVoiceMutedOnOnChange;
+                hostIndicator.SetActive(_playerUI.IsHost);
+                UpdateVoiceStatus();
+            }
+        }
+        
+        private void IsVoiceHeldOnOnChange(bool prev, bool next, bool asServer) => UpdateVoiceStatus();
+        
+        private void IsVoiceMutedOnOnChange(bool prev, bool next, bool asServer) => UpdateVoiceStatus();
+
+        private void UpdateVoiceStatus()
+        {
+            var isVoiceMuted = _playerUI.IsVoiceMuted.Value;
+            var isVoiceHeld = _playerUI.IsVoiceHeld.Value;
+            voiceImage.color = isVoiceMuted ? Color.red : isVoiceHeld ? Color.green : Color.clear;
         }
 
         private void OnKickClicked()
