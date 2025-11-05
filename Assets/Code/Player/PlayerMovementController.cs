@@ -335,7 +335,7 @@ namespace Code.Player
 
         private void Update()
         {
-            if (transform.position.y < -10)
+            if (transform.position.y < -10 && spawned)
             {
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
                 transform.position = point.position;
