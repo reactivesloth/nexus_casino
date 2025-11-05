@@ -200,24 +200,24 @@ namespace Code.Chat
             if (input.IsOpenChatDown && !paused && !input.IsBusy)
                 ToggleChat();
 
-            // Переключение между типами чата
-            if (input.IsSwitchChatDown && chatSystemUI.IsVisible)
-                chatSystemUI.SwitchChatType();
+            // // Переключение между типами чата
+            // if (input.IsSwitchChatDown && chatSystemUI.IsVisible)
+            //     chatSystemUI.SwitchChatType();
 
             // Закрытие чата по Escape
             if (input.IsPausedDown && chatSystemUI.IsVisible)
                 chatSystemUI.Hide();
 
             // Скроллинг
-            if (input.IsScrollUpButton && chatSystemUI.IsVisible)
-                chatSystemUI.ScrollUp();
-
-            if (input.IsScrollDownButton && chatSystemUI.IsVisible)
-                chatSystemUI.ScrollDown();
-
-            // Отправка сообщения (мобильные устройства)
-            if (input.SendChatMessageButtonDown)
-                SendCurrentMessage();
+            // if (input.IsScrollUpButton && chatSystemUI.IsVisible)
+            //     chatSystemUI.ScrollUp();
+            //
+            // if (input.IsScrollDownButton && chatSystemUI.IsVisible)
+            //     chatSystemUI.ScrollDown();
+            //
+            // // Отправка сообщения (мобильные устройства)
+            // if (input.SendChatMessageButtonDown)
+            //     SendCurrentMessage();
 
             // Синхронизация состояния
             PlayerInput.Instance.IsChatOpened = chatSystemUI.InputFieldActive;
@@ -663,17 +663,17 @@ namespace Code.Chat
             var playerInput = PlayerInput.Instance;
             if (playerInput == null) return;
 
-            if (playerInput.SwitchChatButton != null)
-                playerInput.SwitchChatButton.gameObject.SetActive(value);
-
-            if (playerInput.ChatScrollUpButton != null)
-                playerInput.ChatScrollUpButton.gameObject.SetActive(value);
-
-            if (playerInput.ChatScrollDownButton != null)
-                playerInput.ChatScrollDownButton.gameObject.SetActive(value);
-
-            if (playerInput.SendChatMessageButton != null)
-                playerInput.SendChatMessageButton.gameObject.SetActive(value);
+            // if (playerInput.SwitchChatButton != null)
+            //     playerInput.SwitchChatButton.gameObject.SetActive(value);
+            //
+            // if (playerInput.ChatScrollUpButton != null)
+            //     playerInput.ChatScrollUpButton.gameObject.SetActive(value);
+            //
+            // if (playerInput.ChatScrollDownButton != null)
+            //     playerInput.ChatScrollDownButton.gameObject.SetActive(value);
+            //
+            // if (playerInput.SendChatMessageButton != null)
+            //     playerInput.SendChatMessageButton.gameObject.SetActive(value);
         }
 
         #endregion

@@ -1060,7 +1060,7 @@ MonoBehaviour:
   enableMenuSetting: 1
   keyboardInput: 1
   mouseInteractButton: 0
-  keyboardEnableKey: 1
+  keyboardEnableKey: 0
   controllerInput: 1
   invertHorizontal: 0
   invertVertical: 0
@@ -8481,6 +8481,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2872953090880417949}
   - component: {fileID: 2872953090880417950}
+  - component: {fileID: 2872953090880417951}
   m_Layer: 5
   m_Name: Main
   m_TagString: Untagged
@@ -8550,6 +8551,18 @@ MonoBehaviour:
   titleText: {fileID: 2872953090826624766}
   resendCooldownSeconds: 60
   popupPanel: {fileID: 834218731}
+--- !u!114 &2872953090880417951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2872953090880417948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bfba84c53e198c4d99847922ffd5cd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.UI.UISafeAreaHandler
 --- !u!114 &2872953091361546432
 MonoBehaviour:
   m_ObjectHideFlags: 0

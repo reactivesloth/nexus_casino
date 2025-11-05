@@ -39,7 +39,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -145.71, y: -24}
+  m_AnchoredPosition: {x: -258.51007, y: -24}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &1700355907218789857
@@ -491,7 +491,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -247.2, y: -24}
+  m_AnchoredPosition: {x: -360, y: -24}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 1}
 --- !u!222 &6682381938965524540
@@ -933,6 +933,7 @@ GameObject:
   - component: {fileID: 7378173874975335864}
   - component: {fileID: 5606002303517019210}
   - component: {fileID: 826399546796382921}
+  - component: {fileID: -8430055182619978755}
   m_Layer: 0
   m_Name: UI_CC
   m_TagString: Untagged
@@ -1083,6 +1084,18 @@ MonoBehaviour:
   mobileScale: 850
   desktopScale: 950
   forceMobile: 0
+--- !u!114 &-8430055182619978755
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2396302900887007917}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bfba84c53e198c4d99847922ffd5cd6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.UI.UISafeAreaHandler
 --- !u!1 &2396881471970180188
 GameObject:
   m_ObjectHideFlags: 0

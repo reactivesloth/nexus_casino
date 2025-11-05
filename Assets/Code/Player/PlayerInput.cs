@@ -43,11 +43,6 @@ public class PlayerInput : MonoBehaviour
     public UltimateButton VoiceButton;
     public UltimateButton OpenChatButton;
     public UltimateButton OpenEmoteWheelButton;
-    
-    public UltimateButton SwitchChatButton;
-    public UltimateButton SendChatMessageButton;
-    public UltimateButton ChatScrollUpButton;
-    public UltimateButton ChatScrollDownButton;
 
     [SerializeField] private bool ForceMobile;
     private bool savedHideMobileFallback;
@@ -244,16 +239,12 @@ public class PlayerInput : MonoBehaviour
     public bool InteractEndDown => !IsChatOpened && (endInteractButton.GetButtonDown() || _player.Interact is { triggered: true });
     public bool IsPausedDown => IsUsingMobileFallback && PauseButton != null ? PauseButton.GetButton()  : _player.Pause is { triggered: true };
     public bool IsOpenChatDown => IsUsingMobileFallback && OpenChatButton != null ? OpenChatButton.GetButtonDown() : _player.ChatOpen is { triggered: true };
-    public bool IsSwitchChatDown => IsUsingMobileFallback && SwitchChatButton != null ? SwitchChatButton.GetButtonDown() : _player.SwitсhChat is { triggered: true };
     public bool IsRmbDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback ? Input.touchCount >= 2 : _player.RMB != null && _player.RMB.ReadValue<float>() > 0.5f);
     public bool ForceCursorHeld => IsChatOpened || (_player.ForceCursor != null && _player.ForceCursor.ReadValue<float>() > 0.5f);
     public float Zoom => !IsChatOpened && !IsBusy ? Input.GetAxis("Mouse ScrollWheel") : 0;
     public bool IsSlotsFullscreen => !IsChatOpened && slotsFullscreenButton.GetButtonDown();
     public bool IsSlotsStream => !IsChatOpened && slotsStreamButton.GetButtonDown();
     public bool IsSlotsScreenshot => !IsChatOpened && slotsScreenshotButton.GetButtonDown() && !slotsScreenshotButton.InCooldown;
-    public bool IsScrollUpButton => ChatScrollUpButton.GetButtonDown();
-    public bool IsScrollDownButton => ChatScrollDownButton.GetButtonDown();
-    public bool SendChatMessageButtonDown => SendChatMessageButton.GetButtonDown();
     public bool OpenAdminPanelDown => !IsChatOpened && !IsBusy && ClientDataStorage.UserData.IsAdminRole && _player.OpenAdminPanel is { triggered: true };
     public bool IsEmotionsControllerButton => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && OpenEmoteWheelButton != null ? OpenEmoteWheelButton.GetButtonUp() : Input.GetKeyUp(KeyCode.H));
 }
