@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Code.Network.HostMigration.Data;
 using Code.Network.HostMigration.Utility;
+using Code.UI;
 using FishNet;
 using FishNet.Connection;
 using FishNet.Managing.Client;
@@ -59,7 +60,11 @@ namespace Code.Network.HostMigration
         }
 
         /// <summary> Пометить, что сейчас идёт миграция. Вызывается до переподключения. </summary>
-        public void MarkMigrating() => _isMigrating = true;
+        public void MarkMigrating() 
+        {
+            LoadingScreenUI.Instance.Show("loading.please_wait","loading.host_migrating");
+            _isMigrating = true;
+        }
 
         /// <summary> Клиент успешно подсоединился к новому хосту. </summary>
         public void RunClient()
@@ -76,7 +81,10 @@ namespace Code.Network.HostMigration
             if (_clientManager != null)
                 _clientManager.Broadcast(_migrateData);
             _isMigrating = false;
+            Invoke(nameof(HideLoadingScreen), 2f);
         }
+
+        private void HideLoadingScreen() => LoadingScreenUI.Instance.Hide();
 
         /// <summary> Хост поднят после миграции. Если нужна спец-логика — добавь тут. </summary>
         public void RunHost()
