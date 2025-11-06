@@ -336,7 +336,7 @@ namespace Code.Player
 
         private void Update()
         {
-            if (transform.position.y < -10 && spawned)
+            if (transform.position.y is < -10 or > 10 && spawned)
             {
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
                 controller.enabled = false;
