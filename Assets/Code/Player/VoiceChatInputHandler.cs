@@ -24,17 +24,45 @@ namespace Code.Player
                 saveTime -= Time.deltaTime;
             else if (PlayerInput.Instance.VoiceHeld)
             {
-                saveTime = 0.2f;
-                voiceHeld = !voiceHeld;
-                voiceBroadcastTrigger.VoiceHeld = voiceHeld;
-                
-                if (mobileButtonImage != null)
+#if UNITY_ANDROID
+                if (AndroidRuntimePermissions.CheckPermission("android.permission.RECORD_AUDIO"))
                 {
-                    mobileButtonImage.Color1 = voiceHeld ? on1 : off1;
-                    mobileButtonImage.Color2 = voiceHeld ? on2 : off2;
-                    mobileButtonImage.gameObject.SetActive(false);
-                    mobileButtonImage.gameObject.SetActive(true);
+                    VoiceChatHandle();
                 }
+                else
+                {
+                    RequestPermission();
+                }
+#else
+                VoiceChatHandle();
+#endif
+            }
+        }
+
+#if UNITY_ANDROID
+        async void RequestPermission()
+        {
+            saveTime = 1000000;
+            AndroidRuntimePermissions.Permission result = await AndroidRuntimePermissions.RequestPermissionAsync( "android.permission.RECORD_AUDIO" );
+            if (result == AndroidRuntimePermissions.Permission.Granted)
+            {
+                VoiceChatHandle();
+            }
+        }
+#endif
+   
+        private void VoiceChatHandle()
+        {
+            saveTime = 0.2f;
+            voiceHeld = !voiceHeld;
+            voiceBroadcastTrigger.VoiceHeld = voiceHeld;
+                
+            if (mobileButtonImage != null)
+            {
+                mobileButtonImage.Color1 = voiceHeld ? on1 : off1;
+                mobileButtonImage.Color2 = voiceHeld ? on2 : off2;
+                mobileButtonImage.gameObject.SetActive(false);
+                mobileButtonImage.gameObject.SetActive(true);
             }
         }
     }
