@@ -7,6 +7,7 @@ using Code.Network.HostMigration;
 using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Utility;
+using FishNet.Component.Transforming;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -338,8 +339,11 @@ namespace Code.Player
             if (transform.position.y < -10 && spawned)
             {
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
+                controller.enabled = false;
                 transform.position = point.position;
                 transform.rotation = point.rotation;
+                controller.enabled = true;
+                return;
             }
             
             if (!IsOwner) return;
