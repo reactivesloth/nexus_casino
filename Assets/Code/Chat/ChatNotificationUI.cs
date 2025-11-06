@@ -25,7 +25,7 @@ namespace Code.Chat
             }
         }
 
-        private void Start()
+        private void OnEnable()
         {
             messageView.gameObject.SetActive(false);
             messageCanvasGroup.alpha = 0f;
@@ -106,12 +106,16 @@ namespace Code.Chat
             }
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             if (_animationCoroutine != null)
             {
                 StopCoroutine(_animationCoroutine);
             }
+            _animationCoroutine = null;
+            messageView.gameObject.SetActive(false);
+            messageCanvasGroup.alpha = 0f;
+            _pendingMessage = null;
         }
     }
 }
