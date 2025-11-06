@@ -1,7 +1,5 @@
-using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Code.Chat
 {
@@ -15,15 +13,16 @@ namespace Code.Chat
         [SerializeField] private float displayDuration = 3f;
         [SerializeField] private float fadeOutDuration = 0.3f;
         
-        private Coroutine _currentAnimationCoroutine;
+        private Coroutine _animationCoroutine;
         private ChatMessage _pendingMessage;
-        private bool _hasPendingMessage = false;
-        private bool _isShowingNotification = false;
         private bool _notificationsEnabled = true;
 
         private void OnValidate()
         {
-            messageCanvasGroup ??= messageView.GetComponent<CanvasGroup>();
+            if (messageView != null && messageCanvasGroup == null)
+            {
+                messageCanvasGroup = messageView.GetComponent<CanvasGroup>();
+            }
         }
 
         private void Start()
@@ -37,94 +36,81 @@ namespace Code.Chat
             if (!_notificationsEnabled)
                 return;
 
-            // Сохраняем последнее пришедшее сообщение
             _pendingMessage = message;
-            _hasPendingMessage = true;
-
-            // Если не показываем - начинаем показывать
-            if (!_isShowingNotification)
+            
+            // Если нет активной анимации - показываем сразу
+            if (_animationCoroutine == null)
             {
                 ShowNextNotification();
             }
-            // Если показываем - ждём завершения текущего и покажем последнее пришедшее
         }
 
         private void ShowNextNotification()
         {
-            if (!_hasPendingMessage)
-            {
-                _isShowingNotification = false;
+            if (_pendingMessage == null)
                 return;
-            }
 
-            _isShowingNotification = true;
-            _hasPendingMessage = false;
-            ChatMessage message = _pendingMessage;
+            var message = _pendingMessage;
+            _pendingMessage = null;
 
-            _currentAnimationCoroutine = StartCoroutine(ShowNotificationCoroutine(message));
+            _animationCoroutine = StartCoroutine(ShowNotificationCoroutine(message));
         }
 
         private IEnumerator ShowNotificationCoroutine(ChatMessage message)
         {
-            // Инициализируем сообщение
             messageView.Init(message);
             messageView.gameObject.SetActive(true);
 
             // Fade In
-            yield return FadeCanvasGroup(messageCanvasGroup, messageCanvasGroup.alpha, 1f, fadeInDuration);
+            yield return FadeCanvasGroup(1f, fadeInDuration);
 
-            // Отображение
+            // Display
             yield return new WaitForSeconds(displayDuration);
 
             // Fade Out
-            yield return FadeCanvasGroup(messageCanvasGroup, 1f, 0f, fadeOutDuration);
+            yield return FadeCanvasGroup(0f, fadeOutDuration);
 
             messageView.gameObject.SetActive(false);
+            _animationCoroutine = null;
 
             // Показываем следующее если оно есть
             ShowNextNotification();
         }
 
-        private IEnumerator FadeCanvasGroup(CanvasGroup cg, float startAlpha, float endAlpha, float duration)
+        private IEnumerator FadeCanvasGroup(float targetAlpha, float duration)
         {
+            float startAlpha = messageCanvasGroup.alpha;
             float elapsed = 0f;
             
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                float normalizedTime = elapsed / duration;
-                cg.alpha = Mathf.Lerp(startAlpha, endAlpha, normalizedTime);
+                messageCanvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, elapsed / duration);
                 yield return null;
             }
             
-            cg.alpha = endAlpha;
+            messageCanvasGroup.alpha = targetAlpha;
         }
 
         public void OnNotificationChange(bool isOn)
         {
             _notificationsEnabled = isOn;
             
-            // Если отключаем уведомления - скрываем текущее
-            if (!isOn)
+            if (!isOn && _animationCoroutine != null)
             {
-                if (_currentAnimationCoroutine != null)
-                {
-                    StopCoroutine(_currentAnimationCoroutine);
-                    _currentAnimationCoroutine = null;
-                }
-                
+                StopCoroutine(_animationCoroutine);
+                _animationCoroutine = null;
                 messageView.gameObject.SetActive(false);
                 messageCanvasGroup.alpha = 0f;
-                _isShowingNotification = false;
-                _hasPendingMessage = false;
+                _pendingMessage = null;
             }
         }
 
         private void OnDestroy()
         {
-            if (_currentAnimationCoroutine != null)
+            if (_animationCoroutine != null)
             {
-                StopCoroutine(_currentAnimationCoroutine);
+                StopCoroutine(_animationCoroutine);
             }
         }
     }

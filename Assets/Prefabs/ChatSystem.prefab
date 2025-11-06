@@ -1595,8 +1595,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6419376402012608418}
   - component: {fileID: 7295716426900697802}
-  - component: {fileID: 2199744421160414387}
-  - component: {fileID: 9005878822212773671}
   m_Layer: 0
   m_Name: ChatSystem
   m_TagString: Untagged
@@ -1642,7 +1640,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Help
           m_Mode: 1
@@ -1660,7 +1658,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Kick
           m_Mode: 0
@@ -1678,7 +1676,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Mute
           m_Mode: 0
@@ -1697,7 +1695,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: Unmute
           m_Mode: 0
@@ -1715,7 +1713,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: MuteChat
           m_Mode: 0
@@ -1733,7 +1731,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: UnmuteChat
           m_Mode: 0
@@ -1751,7 +1749,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: MuteVoice
           m_Mode: 0
@@ -1769,7 +1767,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: UnmuteVoice
           m_Mode: 0
@@ -1787,7 +1785,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: PromoteMember
           m_Mode: 0
@@ -1805,7 +1803,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: BanUser
           m_Mode: 0
@@ -1823,7 +1821,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: UnbanUser
           m_Mode: 0
@@ -1841,7 +1839,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: ResetSlot
           m_Mode: 0
@@ -1859,7 +1857,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.AdminPanelHandler, Assembly-CSharp
           m_MethodName: NewRoomHandle
           m_Mode: 0
@@ -1877,7 +1875,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: SceneControl
           m_Mode: 0
@@ -1895,7 +1893,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: GetRooms
           m_Mode: 1
@@ -1913,7 +1911,7 @@ MonoBehaviour:
     unityEvent:
       m_PersistentCalls:
         m_Calls:
-        - m_Target: {fileID: 2199744421160414387}
+        - m_Target: {fileID: 0}
           m_TargetAssemblyTypeName: Code.Chat.ChatCommandsHandler, Assembly-CSharp
           m_MethodName: MoveUserToRoom
           m_Mode: 0
@@ -1928,76 +1926,6 @@ MonoBehaviour:
     description: 
   pageSize: 10
   devLog: 0
---- !u!114 &2199744421160414387
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2511283305394129235}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e56c620ed686459bad68d51816490682, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 9005878822212773671}
-  _networkObjectCache: {fileID: 0}
-  chatController: {fileID: 7295716426900697802}
-  helpText: 'Comands:'
-  sceneObjectsController: {fileID: 0}
---- !u!114 &9005878822212773671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2511283305394129235}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  <IsNested>k__BackingField: 0
-  WasActiveDuringEdit: 0
-  WasActiveDuringEdit_Set1: 1
-  <ComponentIndex>k__BackingField: 0
-  <PredictedSpawn>k__BackingField: {fileID: 0}
-  <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours: []
-  InitializedParentNetworkBehaviour: {fileID: 0}
-  InitializedNestedNetworkObjects: []
-  RuntimeParentNetworkBehaviour: {fileID: 0}
-  RuntimeChildNetworkBehaviours: []
-  _isNetworked: 1
-  _isSpawnable: 0
-  _isGlobal: 0
-  _initializeOrder: 0
-  _preventDespawnOnDisconnect: 0
-  _defaultDespawnType: 0
-  NetworkObserver: {fileID: 0}
-  _enablePrediction: 0
-  _predictionType: 0
-  _graphicalObject: {fileID: 0}
-  _detachGraphicalObject: 0
-  _enableStateForwarding: 1
-  _networkTransform: {fileID: 0}
-  _ownerInterpolation: 1
-  _ownerSmoothedProperties: 4294967295
-  _adaptiveInterpolation: 3
-  _spectatorSmoothedProperties: 4294967295
-  _spectatorInterpolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  <PrefabId>k__BackingField: 65535
-  <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 0
-  <SceneId>k__BackingField: 0
-  SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: 0, y: 0, z: 0, w: 0}
-    Scale: {x: 0, y: 0, z: 0}
-    IsValid: 0
 --- !u!1 &3293631920998860182
 GameObject:
   m_ObjectHideFlags: 0
