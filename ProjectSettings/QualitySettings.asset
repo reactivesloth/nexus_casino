@@ -4,10 +4,10 @@
 QualitySettings:
   m_ObjectHideFlags: 0
   serializedVersion: 5
-  m_CurrentQuality: 2
+  m_CurrentQuality: 3
   m_QualitySettings:
-  - serializedVersion: 4
-    name: Ultra Low
+  - serializedVersion: 5
+    name: ultra_low
     pixelLightCount: 2
     shadows: 2
     shadowResolution: 1
@@ -34,6 +34,7 @@ QualitySettings:
     adaptiveVsyncExtraA: 0
     adaptiveVsyncExtraB: 0
     lodBias: 1
+    meshLodThreshold: 1
     maximumLODLevel: 1
     enableLODCrossFade: 1
     streamingMipmapsActive: 1
@@ -58,8 +59,8 @@ QualitySettings:
     terrainFadeLength: 5
     terrainMaxTrees: 50
     excludedTargetPlatforms: []
-  - serializedVersion: 4
-    name: ' Low'
+  - serializedVersion: 5
+    name: low
     pixelLightCount: 2
     shadows: 2
     shadowResolution: 1
@@ -86,6 +87,7 @@ QualitySettings:
     adaptiveVsyncExtraA: 0
     adaptiveVsyncExtraB: 0
     lodBias: 1
+    meshLodThreshold: 1
     maximumLODLevel: 1
     enableLODCrossFade: 1
     streamingMipmapsActive: 1
@@ -110,8 +112,8 @@ QualitySettings:
     terrainFadeLength: 5
     terrainMaxTrees: 50
     excludedTargetPlatforms: []
-  - serializedVersion: 4
-    name: Medium
+  - serializedVersion: 5
+    name: medium
     pixelLightCount: 2
     shadows: 2
     shadowResolution: 1
@@ -138,6 +140,7 @@ QualitySettings:
     adaptiveVsyncExtraA: 0
     adaptiveVsyncExtraB: 0
     lodBias: 2
+    meshLodThreshold: 1
     maximumLODLevel: 0
     enableLODCrossFade: 1
     streamingMipmapsActive: 1
@@ -163,8 +166,8 @@ QualitySettings:
     terrainMaxTrees: 50
     excludedTargetPlatforms:
     - iPhone
-  - serializedVersion: 4
-    name: High
+  - serializedVersion: 5
+    name: high
     pixelLightCount: 2
     shadows: 2
     shadowResolution: 1
@@ -191,6 +194,7 @@ QualitySettings:
     adaptiveVsyncExtraA: 0
     adaptiveVsyncExtraB: 0
     lodBias: 2
+    meshLodThreshold: 1
     maximumLODLevel: 0
     enableLODCrossFade: 1
     streamingMipmapsActive: 1
