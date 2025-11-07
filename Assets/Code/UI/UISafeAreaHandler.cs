@@ -25,9 +25,9 @@ namespace Code.UI
             Vector2 anchorMin = safeArea.position;
             Vector2 anchorMax = safeArea.position + safeArea.size;
 
-            anchorMin.x /= Screen.width - offset / 2;
+            anchorMin.x /= Screen.width - offset;
             anchorMin.y /= Screen.height;
-            anchorMax.x /= Screen.width + offset / 2;
+            anchorMax.x /= Screen.width + offset;
             anchorMax.y /= Screen.height;
 
             rectTransform.anchorMin = anchorMin;
