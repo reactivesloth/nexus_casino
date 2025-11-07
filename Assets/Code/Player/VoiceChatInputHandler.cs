@@ -27,7 +27,7 @@ namespace Code.Player
 #if UNITY_ANDROID
                 if (AndroidRuntimePermissions.CheckPermission("android.permission.RECORD_AUDIO"))
                 {
-                    VoiceChatHandle();
+                    VoiceChatHandle(!voiceHeld);
                 }
                 else
                 {
@@ -46,15 +46,15 @@ namespace Code.Player
             AndroidRuntimePermissions.Permission result = await AndroidRuntimePermissions.RequestPermissionAsync( "android.permission.RECORD_AUDIO" );
             if (result == AndroidRuntimePermissions.Permission.Granted || result == AndroidRuntimePermissions.Permission.ShouldAsk)
             {
-                VoiceChatHandle();
+                VoiceChatHandle(!voiceHeld);
             }
         }
 #endif
    
-        private void VoiceChatHandle()
+        public void VoiceChatHandle(bool value)
         {
             saveTime = 0.2f;
-            voiceHeld = !voiceHeld;
+            voiceHeld = value;
             voiceBroadcastTrigger.VoiceHeld = voiceHeld;
                 
             if (mobileButtonImage != null)
