@@ -609,6 +609,8 @@ namespace Code.UI
                 var p = new Vector3(posX, posY, posZ);
                 var r = Quaternion.Euler(rotX, rotY, rotZ);
 
+                Debug.Log($"[PlayerMovementController] Spawn position gets {p}");
+                
                 PlayerPrefs.SetFloat("SavedSpawnPositionX", p.x);
                 PlayerPrefs.SetFloat("SavedSpawnPositionY", p.y);
                 PlayerPrefs.SetFloat("SavedSpawnPositionZ", p.z);
