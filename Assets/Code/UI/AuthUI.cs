@@ -65,7 +65,7 @@ namespace Code.UI
             if (logoutButton != null) logoutButton.onClick.AddListener(OnLogoutClicked);
             if (boutiqueButton != null) boutiqueButton.onClick.AddListener(OnBoutiqueClicked);
             if (settingsButton != null) settingsButton.onClick.AddListener(OnSettingsClicked);
-            if (nicknameInput != null) nicknameInput.onValueChanged.AddListener(OnNickNameChanged);
+            if (nicknameInput != null) nicknameInput.onEndEdit.AddListener(OnNickNameChanged);
         }
 
         private void OnDisable()
@@ -78,7 +78,7 @@ namespace Code.UI
             if (logoutButton != null) logoutButton.onClick.RemoveListener(OnLogoutClicked);
             if (boutiqueButton != null) boutiqueButton.onClick.RemoveListener(OnBoutiqueClicked);
             if (settingsButton != null) settingsButton.onClick.RemoveListener(OnSettingsClicked);
-            if (nicknameInput != null) nicknameInput.onValueChanged.RemoveListener(OnNickNameChanged);
+            if (nicknameInput != null) nicknameInput.onEndEdit.RemoveListener(OnNickNameChanged);
         }
 
         private void Start()
