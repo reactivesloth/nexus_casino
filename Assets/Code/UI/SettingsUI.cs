@@ -181,6 +181,7 @@ namespace Code.UI
             if (index >= 0)
             {
                 localizationDropdown.value = index;
+                PopulateQualityDropdown();
             }
         }
         

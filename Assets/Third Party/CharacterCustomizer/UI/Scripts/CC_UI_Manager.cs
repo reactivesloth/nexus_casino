@@ -44,9 +44,7 @@ namespace CC
         public GameObject CharacterParent;
 
         private int currentCharacter;
-
-        public List<AudioClip> UISounds = new List<AudioClip>();
-
+        
         public void Start()
         {
             string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
@@ -118,12 +116,6 @@ namespace CC
                 hoveredPart = hit.collider.name;
             }
             else hoveredPart = "";
-        }
-
-        public void playUIAudio(int Index)
-        {
-            var audioSource = gameObject.GetComponent<AudioSource>();
-            if (audioSource && UISounds.Count > Index) audioSource.clip = UISounds[Index]; audioSource.Play();
         }
 
         public void SetActiveCharacter(int i)

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Code.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -14,7 +15,7 @@ namespace CC
             var buttons = GetComponentsInChildren<Button>();
             foreach (var button in buttons)
             {
-                button.onClick.AddListener(() => CC_UI_Manager.instance.playUIAudio(sound));
+                button.onClick.AddListener(() => UIPlayAudio.Instance.PlayAudio(sound));
             }
         }
     }

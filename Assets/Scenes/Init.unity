@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 62434830}
   - component: {fileID: 62434829}
   - component: {fileID: 62434828}
+  - component: {fileID: 62434833}
   m_Layer: 5
   m_Name: Button_Settings
   m_TagString: Untagged
@@ -272,6 +273,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 62434826}
   m_CullTransparentMesh: 0
+--- !u!114 &62434833
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 62434826}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &119295243
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,6 +387,7 @@ GameObject:
   m_Component:
   - component: {fileID: 133815130}
   - component: {fileID: 133815131}
+  - component: {fileID: 133815132}
   m_Layer: 5
   m_Name: Button_Close
   m_TagString: Untagged
@@ -458,6 +473,19 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+--- !u!114 &133815132
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 133815129}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &137126864
 GameObject:
   m_ObjectHideFlags: 0
@@ -473,6 +501,7 @@ GameObject:
   - component: {fileID: 137126868}
   - component: {fileID: 137126867}
   - component: {fileID: 137126866}
+  - component: {fileID: 137126872}
   m_Layer: 5
   m_Name: Button_Site
   m_TagString: Untagged
@@ -625,6 +654,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 137126864}
   m_CullTransparentMesh: 0
+--- !u!114 &137126872
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 137126864}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &166244649
 GameObject:
   m_ObjectHideFlags: 0
@@ -1218,6 +1260,7 @@ GameObject:
   - component: {fileID: 359982201}
   - component: {fileID: 359982205}
   - component: {fileID: 359982206}
+  - component: {fileID: 359982207}
   m_Layer: 5
   m_Name: Button_TikTok
   m_TagString: Untagged
@@ -1370,6 +1413,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonOpenURL
   url: https://www.tiktok.com/@nexus.meta.club
+--- !u!114 &359982207
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 359982199}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &385345287
 GameObject:
   m_ObjectHideFlags: 0
@@ -2058,6 +2114,7 @@ GameObject:
   - component: {fileID: 471242885}
   - component: {fileID: 471242889}
   - component: {fileID: 471242890}
+  - component: {fileID: 471242891}
   m_Layer: 5
   m_Name: Button_IG
   m_TagString: Untagged
@@ -2210,6 +2267,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonOpenURL
   url: https://nexusmetaclub.com/
+--- !u!114 &471242891
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 471242883}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &478108411
 GameObject:
   m_ObjectHideFlags: 0
@@ -3447,6 +3517,7 @@ GameObject:
   - component: {fileID: 722379977}
   - component: {fileID: 722379976}
   - component: {fileID: 722379975}
+  - component: {fileID: 722379980}
   m_Layer: 5
   m_Name: Button_Auth
   m_TagString: Untagged
@@ -3586,6 +3657,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 722379973}
   m_CullTransparentMesh: 0
+--- !u!114 &722379980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 722379973}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &742236862 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6894909799798522850, guid: eff28b2ed3e134cf8b2f761ad686f671, type: 3}
@@ -3778,6 +3862,7 @@ GameObject:
   - component: {fileID: 893386391}
   - component: {fileID: 893386390}
   - component: {fileID: 893386389}
+  - component: {fileID: 893386394}
   m_Layer: 5
   m_Name: Button_Boutique
   m_TagString: Untagged
@@ -3917,6 +4002,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 893386387}
   m_CullTransparentMesh: 0
+--- !u!114 &893386394
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893386387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &903139237
 GameObject:
   m_ObjectHideFlags: 0
@@ -4896,6 +4994,7 @@ GameObject:
   - component: {fileID: 1209756614}
   - component: {fileID: 1209756613}
   - component: {fileID: 1209756612}
+  - component: {fileID: 1209756617}
   m_Layer: 5
   m_Name: Button_Next
   m_TagString: Untagged
@@ -5035,6 +5134,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1209756610}
   m_CullTransparentMesh: 0
+--- !u!114 &1209756617
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1209756610}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &1213526588
 GameObject:
   m_ObjectHideFlags: 0
@@ -6756,6 +6868,7 @@ GameObject:
   - component: {fileID: 1696430576}
   - component: {fileID: 1696430580}
   - component: {fileID: 1696430581}
+  - component: {fileID: 1696430582}
   m_Layer: 5
   m_Name: Button_Facebook
   m_TagString: Untagged
@@ -6908,6 +7021,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonOpenURL
   url: https://nexusmetaclub.com/
+--- !u!114 &1696430582
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1696430574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &1717763421
 GameObject:
   m_ObjectHideFlags: 0
@@ -7105,6 +7231,7 @@ GameObject:
   - component: {fileID: 1793795770}
   - component: {fileID: 1793795769}
   - component: {fileID: 1793795768}
+  - component: {fileID: 1793795774}
   m_Layer: 5
   m_Name: Button_Telegram
   m_TagString: Untagged
@@ -7257,6 +7384,19 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1793795766}
   m_CullTransparentMesh: 0
+--- !u!114 &1793795774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1793795766}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &1852159772
 GameObject:
   m_ObjectHideFlags: 0
@@ -7271,6 +7411,7 @@ GameObject:
   - component: {fileID: 1852159775}
   - component: {fileID: 1852159774}
   - component: {fileID: 1852159778}
+  - component: {fileID: 1852159779}
   m_Layer: 5
   m_Name: Button_Exit
   m_TagString: Untagged
@@ -7410,6 +7551,19 @@ MonoBehaviour:
   Color1: {r: 0.4745098, g: 0.18431373, b: 0.9882353, a: 1}
   Color2: {r: 0.89899665, g: 0.5058824, b: 1, a: 1}
   Angle: -17
+--- !u!114 &1852159779
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1852159772}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &1885394266
 GameObject:
   m_ObjectHideFlags: 0
@@ -8342,6 +8496,7 @@ GameObject:
   - component: {fileID: 2872953090639261572}
   - component: {fileID: 2872953090639261577}
   - component: {fileID: 2872953090639261576}
+  - component: {fileID: 2872953090639261578}
   m_Layer: 5
   m_Name: Button_Start
   m_TagString: Untagged
@@ -8396,6 +8551,19 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &2872953090639261578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2872953090639261574}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &2872953090826624752
 GameObject:
   m_ObjectHideFlags: 0
@@ -8757,6 +8925,7 @@ GameObject:
   - component: {fileID: 2872953091361546438}
   - component: {fileID: 2872953091361546439}
   - component: {fileID: 2872953091361546440}
+  - component: {fileID: 2872953091361546441}
   m_Layer: 5
   m_Name: Button_X
   m_TagString: Untagged
@@ -8807,6 +8976,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonOpenURL
   url: https://nexusmetaclub.com/
+--- !u!114 &2872953091361546441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2872953091361546437}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9023a8ca4ce46224a99b57ac0a9b6bbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  sound: 0
 --- !u!1 &5494558132143276142 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5563980964872353910, guid: 1387aa9123d744e0f8d09187be601fcf, type: 3}
