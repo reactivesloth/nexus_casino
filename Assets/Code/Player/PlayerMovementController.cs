@@ -216,8 +216,6 @@ namespace Code.Player
             if (IsOwner)
             {
                 Own = this;
-                if (spawnOnSawedPosition)
-                    LoadSpawnPosition();
                 jumpTimeoutDelta = jumpTimeout;
                 fallTimeoutDelta = fallTimeout;
              
@@ -271,9 +269,11 @@ namespace Code.Player
                 transform.rotation = Quaternion.Euler(rotX, rotY, rotZ);
             }).Finally(() => CanMove = true);*/
 
+            var spawnPos = Vector3.zero;
+            
             if (PlayerPrefs.HasKey("SavedSpawnPosition"))
             {
-                transform.position = new Vector3(
+                spawnPos = transform.position = new Vector3(
                     PlayerPrefs.GetFloat("SavedSpawnPositionX"),
                     PlayerPrefs.GetFloat("SavedSpawnPositionY"),
                     PlayerPrefs.GetFloat("SavedSpawnPositionZ")
@@ -285,13 +285,17 @@ namespace Code.Player
                 );
                 PlayerPrefs.DeleteKey("SavedSpawnPosition");
             }
+            
+            Debug.Log($"Spawn pos is {spawnPos}");
 
             spawned = true;
         }
 
         private void UpdateSpawnPositionTimer()
         {
-            if (!IsOwner) return;
+            if (!IsOwner)
+                return;
+            
             if (_spawnPositionTimer > 0f)
             {
                 _spawnPositionTimer -= Time.deltaTime;
@@ -338,6 +342,7 @@ namespace Code.Player
         {
             if (transform.position.y is < -10 or > 10 && spawned)
             {
+                Debug.Log($"[PlayerMovementController] Spawn position out of range");
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
                 controller.enabled = false;
                 transform.position = point.position;
