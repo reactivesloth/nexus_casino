@@ -31,8 +31,9 @@ namespace Code.UI
         });
         
         public string PlayerName => playerName.text;
+        public string PlayerRole => playerRole.text;
         public bool IsHost => hostIndicator.activeSelf;
-
+        
         private void Start()
         {
             _voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
