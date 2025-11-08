@@ -199,13 +199,20 @@ namespace Code.Player
 
                 _hovered = null;
 
-                if (Active.GetComponentInChildren<SlotMachineInteractable>(true))
+                if (Active != null)
                 {
-                    PlayerInput.Instance.ShowInteractUI(true, "Slots");
+                    if (Active.GetComponentInChildren<SlotMachineInteractable>(true))
+                    {
+                        PlayerInput.Instance.ShowInteractUI(true, "Slots");
+                    }
+                    else
+                    {
+                        PlayerInput.Instance.ShowInteractUI(true, "Base");
+                    }
                 }
                 else
                 {
-                    PlayerInput.Instance.ShowInteractUI(true, "Base");
+                    PlayerInput.Instance.ShowInteractUI(false);
                 }
             }
 
