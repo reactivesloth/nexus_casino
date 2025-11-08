@@ -42,6 +42,9 @@ namespace Code.UI.Admin
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
             _adminPanelHandler = FindAnyObjectByType<AdminPanelHandler>(FindObjectsInactive.Include);
+            
+            voiceImage.color = Color.clear;
+            hostIndicator.SetActive(false);
         }
 
         private void OnEnable()
