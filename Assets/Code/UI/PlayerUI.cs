@@ -54,7 +54,8 @@ namespace Code.UI
 
             if (voiceImage != null)
             {
-                voiceImage.color = IsVoiceMuted.Value ? Color.red : IsVoiceHeld.Value ? Color.green : Color.clear;
+                voiceImage.color = IsVoiceMuted.Value ? Color.red : IsVoiceHeld.Value ? Color.white : Color.clear;
+                voiceImage.gameObject.SetActive(IsVoiceHeld.Value || IsVoiceMuted.Value);
             }
         }
         

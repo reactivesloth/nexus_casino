@@ -34,7 +34,7 @@ namespace Code.Player
                     RequestPermission();
                 }
 #else
-                VoiceChatHandle();
+                VoiceChatHandle(!voiceHeld);
 #endif
             }
         }
