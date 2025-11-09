@@ -6,6 +6,7 @@ using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network.Lobby;
 using Code.Network.Player;
+using Code.Player;
 using Code.Scene.SceneObjectControl;
 using Dissonance;
 using Epic.OnlineServices;
@@ -349,7 +350,37 @@ namespace Code.Chat
         {
             chatController.IsMuted = muteChatState;
             FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = muteVoiceState;
+        }
+
+        public void ToggleOffVoice(string username)
+        {
+            // if(false)
+            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            {
+                CommandCallback("You can't mute other users.", false);
+                return;
+            }
+
+            //Mute_ServerRpc(ClientManager.Connection, username, muteChat, muteVoice);
+            ToggleOffVoce_ServerRpc(ClientManager.Connection, username);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void ToggleOffVoce_ServerRpc(NetworkConnection sender, string username)
+        {
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                CommandCallback_Rpc(sender, $"User {username} not found", false);
+                return;
+            }
             
+            ToggleOffVoice_TargetRpc(connection);
+        }
+
+        [TargetRpc]
+        private void ToggleOffVoice_TargetRpc(NetworkConnection target)
+        {
+            FindAnyObjectByType<VoiceChatInputHandler>().VoiceChatHandle(false);
         }
 
         #endregion

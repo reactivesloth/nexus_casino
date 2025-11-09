@@ -28,6 +28,7 @@ namespace Code.UI.Admin
 
         [Space, SerializeField] private Button muteVoiceButton;
         [SerializeField] private Button unmuteVoiceButton;
+        [SerializeField] private Button toggleOffVoiceButton;
 
         [SerializeField] private Button promoteButton;
 
@@ -57,6 +58,7 @@ namespace Code.UI.Admin
             unmuteChatButton.onClick.AddListener(OnUnmuteChatClicked);
             muteVoiceButton.onClick.AddListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.AddListener(OnUnmuteVoiceClicked);
+            toggleOffVoiceButton.onClick.AddListener(OnToggleOffVoiceClicked);
 
             promoteButton.onClick.AddListener(OnPromoteButtonClicked);
         }
@@ -71,6 +73,7 @@ namespace Code.UI.Admin
             unmuteChatButton.onClick.RemoveListener(OnUnmuteChatClicked);
             muteVoiceButton.onClick.RemoveListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.RemoveListener(OnUnmuteVoiceClicked);
+            toggleOffVoiceButton.onClick.RemoveListener(OnToggleOffVoiceClicked);
 
             promoteButton.onClick.RemoveListener(OnPromoteButtonClicked);
         }
@@ -198,6 +201,11 @@ namespace Code.UI.Admin
         private void OnUnmuteVoiceClicked()
         {
             _adminPanelHandler.UnmuteVoice(Username);
+        }
+
+        private void OnToggleOffVoiceClicked()
+        {
+            _adminPanelHandler.ToggleOffVoice(Username);
         }
 
         private void SetMutedButtonsState(bool isMuteChat, bool isUnmuteVoice)
