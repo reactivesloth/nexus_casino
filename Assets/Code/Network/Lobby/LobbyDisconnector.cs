@@ -8,6 +8,7 @@ using FishNet.Managing.Server;
 using FishNet.Transporting;
 using Ricimi;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 namespace Code.Network.Lobby
 {
@@ -62,7 +63,16 @@ namespace Code.Network.Lobby
             _disconnectPopup.Title = "You was disconnected from the server";
             _disconnectPopup.Subtitle = popupTitle;
             _disconnectPopup.Message = popupMessage;
-            _disconnectPopup.Buttons[0].OnClickedEvent.AddListener(popupOkAction);
+            
+            var okButton = new ButtonInfo
+            {
+                Label = "OK",
+                ClosePopupWhenClicked = true,
+                OnClickedEvent = new Button.ButtonClickedEvent()
+            };
+            okButton.OnClickedEvent.AddListener(popupOkAction);
+            _disconnectPopup.Buttons.Add(okButton);
+            
             _disconnectPopup.OpenPopup();
         }
 
