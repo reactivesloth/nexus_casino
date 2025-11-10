@@ -199,6 +199,7 @@ namespace CC
 
                 //Create UI
                 UI_Instance = Instantiate(UI, CC_UI_Manager.instance.transform);
+                UI_Instance.transform.SetAsFirstSibling();
                 if (UI_Instance.GetComponent<CC_UI_Util>() == null)
                 {
                     Debug.LogError("UI is missing CC_UI_Util script");
