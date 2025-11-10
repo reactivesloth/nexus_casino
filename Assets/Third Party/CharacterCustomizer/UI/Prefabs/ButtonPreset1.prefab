@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3377814573301435377}
   - component: {fileID: 689911777199952866}
   - component: {fileID: 1004435026158083582}
+  - component: {fileID: 5270381625046447573}
   m_Layer: 0
   m_Name: Button
   m_TagString: Untagged
@@ -66,8 +67,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 3241c89fd73887b4589e96b97bd0cfd4, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: a4c526a8688384357bf70b3207c18fe2, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -97,7 +98,7 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 0.4862745, g: 0.4862745, b: 0.4862745, a: 0.5019608}
+    m_NormalColor: {r: 1, g: 1, b: 1, a: 0.5019608}
     m_HighlightedColor: {r: 0.4862745, g: 0.4862745, b: 0.4862745, a: 1}
     m_PressedColor: {r: 0.4862745, g: 0.4862745, b: 0.4862745, a: 1}
     m_SelectedColor: {r: 0.4862745, g: 0.4862745, b: 0.4862745, a: 0.5019608}
@@ -120,6 +121,21 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &5270381625046447573
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4627107685882790395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 675024213d3ca44038e1471b22348c0f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp-firstpass::Ricimi.Gradient
+  Color1: {r: 0.40252444, g: 0.19824673, b: 0.764151, a: 1}
+  Color2: {r: 0.8, g: 0.6901961, b: 0.99215686, a: 1}
+  Angle: -19
 --- !u!1 &5633646142812117178
 GameObject:
   m_ObjectHideFlags: 0
@@ -185,8 +201,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 625b1bcabe9867f439033d98dbe37ff1, type: 3}
-  m_Type: 0
+  m_Sprite: {fileID: 21300000, guid: 951eb16d07f144d3f83eddecf4dfb650, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
