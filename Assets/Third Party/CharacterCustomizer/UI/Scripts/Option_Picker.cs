@@ -18,6 +18,7 @@ namespace CC
         public int Slot = 0;
 
         public TextMeshProUGUI PropertyText;
+        public GameObject OptionBG;
         public TextMeshProUGUI OptionText;
 
         public string DisplayOption;
@@ -157,6 +158,9 @@ namespace CC
         {
             if (valueFromIndex) { OptionText.gameObject.SetActive(true); OptionText.SetText((navIndex + 1) + "/" + optionsCount); }
             if (valueFromString) { OptionText.gameObject.SetActive(true); OptionText.SetText(Options[navIndex].stringValue); }
+            
+            if (OptionBG != null)
+                OptionBG.gameObject.SetActive(OptionText.gameObject.activeSelf);
         }
 
         public void setOption(int i)
