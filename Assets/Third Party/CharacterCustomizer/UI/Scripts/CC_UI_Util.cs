@@ -1,3 +1,4 @@
+using Code.UI;
 using UnityEngine;
 
 namespace CC
@@ -18,17 +19,12 @@ namespace CC
                 element?.InitializeUIElement(customizer, this);
             }
             
-            //Invoke(nameof(InitDelay), 1f);
+            Invoke(nameof(InitDelay), 1f);
         }
 
         private void InitDelay()
         {
-            var interfaces = gameObject.GetComponentsInChildren<ICustomizerUI>(true);
-
-            foreach (var element in interfaces)
-            {
-                element?.InitializeUIElement(customizer, this);
-            }
+            if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.Hide();
         }
         
         private void OnLoad() => customizer.LoadFromJSON();

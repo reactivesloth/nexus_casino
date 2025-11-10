@@ -5,6 +5,7 @@ using UnityEditor;
 using System.IO;
 using System.Collections;
 using Code.API;
+using Code.UI;
 using Proyecto26;
 
 namespace CC
@@ -210,7 +211,15 @@ namespace CC
 
         private void OnEnable()
         {
-            if (UI_Instance != null) UI_Instance.SetActive(true);
+            if (UI_Instance != null)
+            {
+                UI_Instance.SetActive(true);
+                if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.Hide();
+            }
+            else
+            {
+                if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.Show("loading.please_wait", "loading");
+            }
         }
 
         private void OnDisable()
