@@ -5,6 +5,7 @@ using Code.Network;
 using Code.Utility;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Random = UnityEngine.Random;
 
 namespace Code.InteractionSystem
@@ -16,7 +17,8 @@ namespace Code.InteractionSystem
         cq9,
         superomatic,
         champion,
-        onlyplay
+        onlyplay,
+        customUrl
     }
     
     public class SlotMachineInteractable : Interactable
@@ -41,6 +43,8 @@ namespace Code.InteractionSystem
         public int IDNumber;
 
         private bool _initSlot;
+        
+        [SerializeField] private string customUrl = "https://demo.superomatic.biz/";
         
         private void Awake()
         {
@@ -199,10 +203,17 @@ namespace Code.InteractionSystem
 
                 if (!silentURL)
                 {
-                    WebViewManager.Instance.LoadURL(
-                        string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken,
-                        GetProvider()
-                    );
+                    if (provider == Providers.customUrl)
+                    {
+                        WebViewManager.Instance.LoadURL(customUrl);
+                    }
+                    else
+                    {
+                        WebViewManager.Instance.LoadURL(
+                            string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken,
+                            GetProvider()
+                        );
+                    }
                 }
 
                 if (useFs)

@@ -107,6 +107,13 @@ public class WebViewManager : MonoBehaviour
         WebView.LoadUrl(url);
         Debug.Log($"[WebViewManager] {url}");
     }
+
+    public void LoadURL(string link)
+    {
+        if (WebView == null) return;
+        WebView.LoadUrl(link);
+        Debug.Log($"[WebViewManager] {link}");
+    }
     
     public void OpenFullscreen()
     {
