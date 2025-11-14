@@ -219,7 +219,7 @@ namespace CC
             }
             else
             {
-                if (LoadingScreenUI.Instance != null) LoadingScreenUI.Instance.Show("loading.please_wait", "loading");
+                if (LoadingScreenUI.Instance != null && UI != null) LoadingScreenUI.Instance.Show("loading.please_wait", "loading");
             }
         }
 
