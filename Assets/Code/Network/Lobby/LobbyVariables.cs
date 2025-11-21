@@ -25,6 +25,7 @@ namespace Code.Network.Lobby
         public string bucketId = "MyBucket";
         public AuthData authData;
         public LobbyData currentLobby;
+        public int pollLobbiesAttempts = 3;
         public float pollLobbiesInterval = 5f;
         public LobbyDetails[] searchResults;
 

@@ -101,7 +101,7 @@ namespace Code.Network.Lobby
                 if (setPing.CallbackInfo?.ResultCode != Result.Success)
                 {
                     Debug.LogWarning($"[LobbyController] Failed to update ping: {setPing.CallbackInfo?.ResultCode}");
-                    OnEOSConnectionLostHandler();
+                    OnEOSConnectionLostHandler(setPing.CallbackInfo?.ResultCode);
                 }
             }
         }
@@ -121,7 +121,7 @@ namespace Code.Network.Lobby
         /// <summary>
         /// Вызывается когда произошла потеря соединения с Epic Online Services
         /// </summary>
-        private void OnEOSConnectionLostHandler()
+        private void OnEOSConnectionLostHandler(Result? result)
         {
             Debug.LogError($"[LobbyController] Lost connection to Epic Online Services!");
     
@@ -142,7 +142,7 @@ namespace Code.Network.Lobby
             LobbyVariables.Instance.ProductUserId = null;
             LobbyVariables.Instance.hostLobbyName.Value = string.Empty;
             
-            LobbyDisconnector.Disconnect(true, "Disconnected", "Something went wrong");
+            LobbyDisconnector.Disconnect(true, "Disconnected", "Something went wrong. Code:" + result.ToString());
         }
         
         #endregion
@@ -170,7 +170,7 @@ namespace Code.Network.Lobby
             yield return LocalUser.Get(out var localUser);
 
             // 🔹 Количество проходок поиска (можно вынести в настройки LobbyVariables)
-            int maxSearchAttempts = ClientDataStorage.UserData.IsAdminRole ? 1 : 3;
+            int maxSearchAttempts = ClientDataStorage.UserData.IsAdminRole ? 1 : LobbyVariables.Instance.pollLobbiesAttempts;
             float waitBetweenAttempts = LobbyVariables.Instance.pollLobbiesInterval;
 
             while (enabled)
