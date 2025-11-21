@@ -8,13 +8,11 @@ using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Player;
 using Code.Scene.SceneObjectControl;
-using Dissonance;
 using Epic.OnlineServices;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using Proyecto26;
-using TankAndHealerStudioAssets;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -282,8 +280,8 @@ namespace Code.Chat
         {
             if (muteChat)
                 chatController.IsMuted = true;
-            if (muteVoice)
-                FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = true;
+            //if (muteVoice)
+            //    FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
@@ -342,14 +340,14 @@ namespace Code.Chat
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
-            if (unmuteVoice)
-                FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
+            //if (unmuteVoice)
+                //FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
         {
             chatController.IsMuted = muteChatState;
-            FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = muteVoiceState;
+            //FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = muteVoiceState;
         }
 
         public void ToggleOffVoice(string username)

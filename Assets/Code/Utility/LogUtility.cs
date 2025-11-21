@@ -45,35 +45,30 @@ public class LogUtility : MonoBehaviour
 
     private async void Start()
     {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
         AndroidRuntimePermissions.Permission result = await AndroidRuntimePermissions.RequestPermissionAsync( "android.permission.WRITE_EXTERNAL_STORAGE" );
-
 #endif
-        string sdcardPath = GetExternalStoragePath();
-        string filePath = Path.Combine(sdcardPath, "user_log.txt");
-        Debug.Log("Log will be saved to: " + filePath);
     }
     
     string GetExternalStoragePath()
     {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
         if (AndroidRuntimePermissions.CheckPermission("android.permission.WRITE_EXTERNAL_STORAGE"))
         {
             using (var env = new AndroidJavaClass("android.os.Environment"))
             {
-                return env.CallStatic<AndroidJavaObject>("getExternalStorageDirectory")
-                    .Call<string>("getAbsolutePath");
+                return Path.Combine( env.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");, "user_log.txt");
             }
         }
         else
         {
-#if UNITY_ANDROID
+#if UNITY_ANDROID && !UNITY_EDITOR
             
 #endif
-            return Application.persistentDataPath;
+            return Path.Combine(Application.persistentDataPath, "user_log.txt");
         }
 #else
-        return Application.persistentDataPath;
+        return Path.Combine(Application.persistentDataPath, "user_log.txt");
 #endif
     }
 

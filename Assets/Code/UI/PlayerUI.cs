@@ -1,6 +1,5 @@
 using System.Linq;
 using Code.API;
-using Dissonance;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -17,7 +16,7 @@ namespace Code.UI
         [SerializeField] private Image voiceImage;
         [SerializeField] private GameObject hostIndicator;
         
-        private VoiceBroadcastTrigger _voiceBroadcastTrigger;
+        //private VoiceBroadcastTrigger _voiceBroadcastTrigger;
 
         public readonly SyncVar<bool> IsVoiceHeld = new(new SyncTypeSettings
         {
@@ -36,15 +35,15 @@ namespace Code.UI
         
         private void Start()
         {
-            _voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
+        //    _voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
         }
 
         private void Update()
         {
             if (IsOwner)
             {
-                var newHeld = _voiceBroadcastTrigger.VoiceHeld;
-                var newMuted = _voiceBroadcastTrigger.IsMuted;
+                var newHeld = false; //_voiceBroadcastTrigger.VoiceHeld;
+                var newMuted = false; //_voiceBroadcastTrigger.IsMuted;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
                 if (newHeld != IsVoiceHeld.Value || newMuted != IsVoiceMuted.Value)

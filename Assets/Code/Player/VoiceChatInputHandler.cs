@@ -1,5 +1,4 @@
 using Code.UI.Popup;
-using Dissonance;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
@@ -10,21 +9,17 @@ namespace Code.Player
 {
     public class VoiceChatInputHandler : MonoBehaviour
     {
-        [SerializeField] private VoiceBroadcastTrigger voiceBroadcastTrigger;
         [SerializeField] private Gradient mobileButtonImage;
         [SerializeField] private Color on1, on2, off1, off2;
         
         private bool voiceHeld = false;
         private float saveTime;
-        private DissonanceComms comms;
         
         private NexusModularPopupOpener _popupOpener;
         
         private void Awake()
         {
-            voiceBroadcastTrigger ??= GetComponent<VoiceBroadcastTrigger>();
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
-            comms ??= FindObjectOfType<DissonanceComms>();
         }
 
         private void Update()
@@ -114,7 +109,7 @@ namespace Code.Player
         {
             saveTime = 0.2f;
             voiceHeld = value;
-            voiceBroadcastTrigger.VoiceHeld = voiceHeld;
+            //voiceBroadcastTrigger.VoiceHeld = voiceHeld;
                 
             if (mobileButtonImage != null)
             {
@@ -122,15 +117,6 @@ namespace Code.Player
                 mobileButtonImage.Color2 = voiceHeld ? on2 : off2;
                 mobileButtonImage.gameObject.SetActive(false);
                 mobileButtonImage.gameObject.SetActive(true);
-            }
-
-            if (value)
-            {
-                comms.UnpauseCapture();
-            }
-            else
-            { 
-                comms.PauseCapture();
             }
         }
 
