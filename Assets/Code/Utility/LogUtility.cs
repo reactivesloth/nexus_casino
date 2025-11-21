@@ -26,6 +26,8 @@ public class LogUtility : MonoBehaviour
     private Thread logThread;
     private bool isRunning;
     private StreamWriter logWriter;
+    private float saveTime;
+    private string mobilePath;
 
     private void Awake()
     {
@@ -41,27 +43,35 @@ public class LogUtility : MonoBehaviour
         }
     }
 
-    private void Start()
+    private async void Start()
     {
 #if UNITY_ANDROID
-        if (!Permission.HasUserAuthorizedPermission(Permission.ExternalStorageWrite))
-        {
-            Permission.RequestUserPermission(Permission.ExternalStorageWrite);
-        }
+        AndroidRuntimePermissions.Permission result = await AndroidRuntimePermissions.RequestPermissionAsync( "android.permission.WRITE_EXTERNAL_STORAGE" );
+
 #endif
         string sdcardPath = GetExternalStoragePath();
         string filePath = Path.Combine(sdcardPath, "user_log.txt");
         Debug.Log("Log will be saved to: " + filePath);
     }
-
+    
     string GetExternalStoragePath()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-    using (var env = new AndroidJavaClass("android.os.Environment"))
-    {
-        return env.CallStatic<AndroidJavaObject>("getExternalStorageDirectory")
-                  .Call<string>("getAbsolutePath");
-    }
+#if UNITY_ANDROID
+        if (AndroidRuntimePermissions.CheckPermission("android.permission.WRITE_EXTERNAL_STORAGE"))
+        {
+            using (var env = new AndroidJavaClass("android.os.Environment"))
+            {
+                return env.CallStatic<AndroidJavaObject>("getExternalStorageDirectory")
+                    .Call<string>("getAbsolutePath");
+            }
+        }
+        else
+        {
+#if UNITY_ANDROID
+            
+#endif
+            return Application.persistentDataPath;
+        }
 #else
         return Application.persistentDataPath;
 #endif
