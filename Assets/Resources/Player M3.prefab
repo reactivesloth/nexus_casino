@@ -3927,7 +3927,6 @@ GameObject:
   - component: {fileID: -3491167662588104577}
   - component: {fileID: -7473628795789215681}
   - component: {fileID: 7076271179006848320}
-  - component: {fileID: -224115876523046475}
   - component: {fileID: 7255431869213475838}
   m_Layer: 8
   m_Name: Player M3
@@ -4971,42 +4970,6 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
---- !u!114 &-224115876523046475
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8024218303011212308}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b6a9958e1fac70e42b5e45207ebcbc69, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.MetaVc
-  audioInput: {fileID: 0}
-  audioOutput: {fileID: 0}
-  config:
-    application: 2048
-    complexity: 10
-    framesize: 5004
-    signal: 3001
-    jitterTimeWindow: 0.24
-    jitterMeanOffsetWindow: 100
-    outputMinBufferSize: 2
-  isEchoEnabled: 0
-  isSineOverrideEnabled: 0
-  maxCodecMilliseconds: 50
-  allowMultipleCodecWarningsPerFrame: 0
-  isDeafened:
-    value: 0
-  isInputMuted:
-    value: 0
-  isInputMutedByServer:
-    value: 0
-  isOutputMuted:
-    value: 0
-  isSpeaking:
-    value: 0
 --- !u!114 &7255431869213475838
 MonoBehaviour:
   m_ObjectHideFlags: 0

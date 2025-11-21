@@ -12,7 +12,6 @@ using FishNet.Managing;
 
 namespace MetaVoiceChat.NetProviders.FishNet
 {
-    [RequireComponent(typeof(MetaVc))]
     public class MetaVCFishNetProvider : NetworkBehaviour, INetProvider
     {
         #region Singleton

@@ -1028,9 +1028,6 @@ PrefabInstance:
       addedObject: {fileID: 3089625148397322802}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 9170071795663308969}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -3822727139687031423}
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
@@ -2040,42 +2037,6 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
---- !u!114 &9170071795663308969
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b6a9958e1fac70e42b5e45207ebcbc69, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.MetaVc
-  audioInput: {fileID: 0}
-  audioOutput: {fileID: 0}
-  config:
-    application: 2048
-    complexity: 10
-    framesize: 5004
-    signal: 3001
-    jitterTimeWindow: 0.24
-    jitterMeanOffsetWindow: 100
-    outputMinBufferSize: 2
-  isEchoEnabled: 0
-  isSineOverrideEnabled: 0
-  maxCodecMilliseconds: 50
-  allowMultipleCodecWarningsPerFrame: 0
-  isDeafened:
-    value: 0
-  isInputMuted:
-    value: 0
-  isInputMutedByServer:
-    value: 0
-  isOutputMuted:
-    value: 0
-  isSpeaking:
-    value: 0
 --- !u!114 &-3822727139687031423
 MonoBehaviour:
   m_ObjectHideFlags: 0
