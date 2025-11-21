@@ -60,8 +60,8 @@ namespace Code.Network.Lobby
         private static void ShowPopup(string popupTitle, string popupMessage, UnityAction popupOkAction)
         {
             popupOkAction ??= DefaultOkAction;
-            _disconnectPopup.Title = "You was disconnected from the server";
-            _disconnectPopup.Subtitle = popupTitle;
+            _disconnectPopup.Title = popupTitle;
+            _disconnectPopup.Subtitle = "You was disconnected from the server";
             _disconnectPopup.Message = popupMessage;
             
             var okButton = new ButtonInfo
