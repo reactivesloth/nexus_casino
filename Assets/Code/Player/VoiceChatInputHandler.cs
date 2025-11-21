@@ -3,6 +3,7 @@ using Dissonance;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
+using static AndroidRuntimePermissions;
 using Gradient = Ricimi.Gradient;
 
 namespace Code.Player
@@ -12,9 +13,10 @@ namespace Code.Player
         [SerializeField] private VoiceBroadcastTrigger voiceBroadcastTrigger;
         [SerializeField] private Gradient mobileButtonImage;
         [SerializeField] private Color on1, on2, off1, off2;
-
+        
         private bool voiceHeld = false;
         private float saveTime;
+        private DissonanceComms comms;
         
         private NexusModularPopupOpener _popupOpener;
         
@@ -22,6 +24,7 @@ namespace Code.Player
         {
             voiceBroadcastTrigger ??= GetComponent<VoiceBroadcastTrigger>();
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
+            comms ??= FindObjectOfType<DissonanceComms>();
         }
 
         private void Update()
@@ -34,7 +37,7 @@ namespace Code.Player
                 else
                 {
 #if UNITY_ANDROID
-                if (AndroidRuntimePermissions.CheckPermission("android.permission.RECORD_AUDIO"))
+                if (CheckPermission("android.permission.RECORD_AUDIO"))
                 {
                     VoiceChatHandle(true);
                 }
@@ -53,28 +56,27 @@ namespace Code.Player
         async void RequestPermission()
         {
             saveTime = 1000000;
-            AndroidRuntimePermissions.Permission result = await AndroidRuntimePermissions.RequestPermissionAsync( "android.permission.RECORD_AUDIO" );
-            if (result == AndroidRuntimePermissions.Permission.Granted)
+            var result = await RequestPermissionAsync( "android.permission.RECORD_AUDIO" );
+            switch (result)
             {
-                VoiceChatHandle(!voiceHeld);
-            } 
-            else if (result != AndroidRuntimePermissions.Permission.ShouldAsk)
-            {
-                if (_popupOpener != null)
+                case Permission.Granted:
+                    VoiceChatHandle(true);
+                    break;
+                case Permission.ShouldAsk:
                 {
-                    _popupOpener.Title = "Voice chat require permission for recording";
+                    _popupOpener.Title = "Разрешение записи голоса";
                     _popupOpener.Subtitle = "";
-                    _popupOpener.Message = "You need give permission for recording for voice chat enable";
+                    _popupOpener.Message = "Вам необходимо разрешить использование микрофона для того чтобы работал голосовой чат";
             
                     var okButton = new ButtonInfo
                     {
-                        Label = "Allow",
+                        Label = "Ок",
                         ClosePopupWhenClicked = true,
                         OnClickedEvent = new Button.ButtonClickedEvent()
                     };
                     var cancellButton = new ButtonInfo
                     {
-                        Label = "No",
+                        Label = "Нет",
                         ClosePopupWhenClicked = false,
                         OnClickedEvent = new Button.ButtonClickedEvent()
                     };
@@ -83,6 +85,26 @@ namespace Code.Player
                     _popupOpener.Buttons.Add(okButton);
                     _popupOpener.Buttons.Add(cancellButton);
                     _popupOpener.OpenPopup();
+                    break;
+                }
+                case Permission.Denied:
+                {
+                    _popupOpener.Title = "Разрешение записи голоса";
+                    _popupOpener.Subtitle = "";
+                    _popupOpener.Message = "Т.к. вы выбрали больше не спрашивать, то приложение не может снова вызвать разрешение для микрофона, " +
+                                           "необходимое для работы голосового чата. Вам необходимо зайти в настройки, в поиске найти Nexus Meta Club," +
+                                           " внутри зайти в пункт Разрешения и в разрешении для микрофона выбрать пункт Разрешить всегда";
+            
+                    var okButton = new ButtonInfo
+                    {
+                        Label = "Хорошо",
+                        ClosePopupWhenClicked = true,
+                        OnClickedEvent = new Button.ButtonClickedEvent()
+                    };
+                    okButton.OnClickedEvent.AddListener(RequestPermission);
+                    _popupOpener.Buttons.Add(okButton);
+                    _popupOpener.OpenPopup();
+                    break;
                 }
             }
         }
@@ -101,6 +123,25 @@ namespace Code.Player
                 mobileButtonImage.gameObject.SetActive(false);
                 mobileButtonImage.gameObject.SetActive(true);
             }
+
+            if (value)
+            {
+                comms.UnpauseCapture();
+            }
+            else
+            { 
+                comms.PauseCapture();
+            }
+        }
+
+        public void OnApplicationPause(bool pauseStatus)
+        {
+            VoiceChatHandle(false);
+        }
+
+        public void OnApplicationFocus(bool hasFocus)
+        {
+            VoiceChatHandle(false);
         }
     }
 }

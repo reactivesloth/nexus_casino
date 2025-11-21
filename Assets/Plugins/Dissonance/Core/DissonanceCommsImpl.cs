@@ -846,5 +846,21 @@ namespace Dissonance
             // Getting the filter state loads the DLL (and has no side effects, it's just a getter). Will throw if DLL is missing.
             AudioPluginDissonanceNative.Dissonance_GetFilterState();
         }
+
+        public bool IsCapturing()
+        {
+            return _started && _capture.IsCapturing();
+        }
+        public void PauseCapture()
+        {
+            if (_started && _capture.IsCapturing())
+                _capture.Pause();
+        }
+
+        public void UnpauseCapture()
+        {
+            if (_started && !_capture.IsCapturing())
+                _capture.Resume();
+        }
     }
 }

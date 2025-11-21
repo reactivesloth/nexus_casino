@@ -61,7 +61,7 @@ namespace Code.Network.Lobby
             LobbyEvents.Instance.LobbyMemberStatusReceived.RemoveListener(OnLobbyMemberStatusReceived);
         }
 
-        #region Ping Update
+        /*#region Ping Update
 
         // 🔹 Запуск обновления пинга каждые N секунд
         public void StartUpdatingPing(float intervalSeconds)
@@ -104,7 +104,7 @@ namespace Code.Network.Lobby
                     OnEOSConnectionLostHandler(setPing.CallbackInfo?.ResultCode);
                 }
             }
-        }
+        
 
         private long GetCurrentPing()
         {
@@ -115,7 +115,8 @@ namespace Code.Network.Lobby
         }
 
         #endregion
-
+}*/
+        
         #region Connection Monitoring
         
         /// <summary>
@@ -126,7 +127,7 @@ namespace Code.Network.Lobby
             Debug.LogError($"[LobbyController] Lost connection to Epic Online Services!");
     
             // Останавливаем все корутины
-            StopUpdatingPing();
+            //StopUpdatingPing();
             StopPollingLobbies();
     
             // Очищаем данные лобби
@@ -342,7 +343,7 @@ namespace Code.Network.Lobby
             SetLobbyAttributes(currentLobby, lobbyDetails);
 
             OnHostConnectionReady();
-            StartUpdatingPing(10);
+            //StartUpdatingPing(10);
 
             lobbyDetails.Release();
         }
@@ -421,7 +422,7 @@ namespace Code.Network.Lobby
             //LobbyVariables.Instance.lobbyPopupUI.Hide();
 
             OnClientConnectionReady();
-            StartUpdatingPing(10);
+            //StartUpdatingPing(10);
         }
 
         public void UpdateLobbyAttribute(string attr, string value)
@@ -734,7 +735,7 @@ namespace Code.Network.Lobby
         public void LeaveLobby()
         {
             EOS.GetManager()?.StartCoroutine(LeaveLobbyRoutine());
-            StopUpdatingPing();
+            //StopUpdatingPing();
             StopPollingLobbies();
         }
 

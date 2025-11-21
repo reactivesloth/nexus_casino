@@ -462,6 +462,11 @@ namespace Dissonance.Audio.Capture
         }
         //ncrunch: no coverage end
 
+        internal bool IsCapturing()
+        {
+            return _microphone != null && _microphone.IsRecording;
+        }
+        
         public void ForceReset()
         {
             Log.Warn("Forcing capture pipeline reset");
