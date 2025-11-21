@@ -12,6 +12,7 @@ using Epic.OnlineServices;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MetaVoiceChat.NetProviders.FishNet;
 using Proyecto26;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -280,8 +281,8 @@ namespace Code.Chat
         {
             if (muteChat)
                 chatController.IsMuted = true;
-            //if (muteVoice)
-            //    FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = true;
+            if (muteVoice)
+                MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
@@ -340,14 +341,14 @@ namespace Code.Chat
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
-            //if (unmuteVoice)
-                //FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = false;
+            if (unmuteVoice)
+                MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
         {
             chatController.IsMuted = muteChatState;
-            //FindAnyObjectByType<VoiceBroadcastTrigger>().IsMuted = muteVoiceState;
+            MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value = muteVoiceState;
         }
 
         public void ToggleOffVoice(string username)

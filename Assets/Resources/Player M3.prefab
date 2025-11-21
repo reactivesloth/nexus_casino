@@ -3927,6 +3927,8 @@ GameObject:
   - component: {fileID: -3491167662588104577}
   - component: {fileID: -7473628795789215681}
   - component: {fileID: 7076271179006848320}
+  - component: {fileID: -224115876523046475}
+  - component: {fileID: 7255431869213475838}
   m_Layer: 8
   m_Name: Player M3
   m_TagString: Player
@@ -3956,6 +3958,7 @@ Transform:
   - {fileID: 8738339954833063695}
   - {fileID: 5418120928208591388}
   - {fileID: 7282408952419977115}
+  - {fileID: 920545373072165472}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &5898368919441672844
@@ -4968,6 +4971,57 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
+--- !u!114 &-224115876523046475
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024218303011212308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6a9958e1fac70e42b5e45207ebcbc69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.MetaVc
+  audioInput: {fileID: 0}
+  audioOutput: {fileID: 0}
+  config:
+    application: 2048
+    complexity: 10
+    framesize: 5004
+    signal: 3001
+    jitterTimeWindow: 0.24
+    jitterMeanOffsetWindow: 100
+    outputMinBufferSize: 2
+  isEchoEnabled: 0
+  isSineOverrideEnabled: 0
+  maxCodecMilliseconds: 50
+  allowMultipleCodecWarningsPerFrame: 0
+  isDeafened:
+    value: 0
+  isInputMuted:
+    value: 0
+  isInputMutedByServer:
+    value: 0
+  isOutputMuted:
+    value: 0
+  isSpeaking:
+    value: 0
+--- !u!114 &7255431869213475838
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024218303011212308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1117dd79caed3949abdf12674fe3b7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.NetProviders.FishNet.MetaVCFishNetNetProvider
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 2272209766738373433}
+  _networkObjectCache: {fileID: 0}
 --- !u!1 &8047517550926677348
 GameObject:
   m_ObjectHideFlags: 0
@@ -5443,6 +5497,76 @@ Transform:
   - {fileID: 767646539018500725}
   m_Father: {fileID: 2293517519249732540}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &4182403001955179282
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 7210281303564588718}
+    m_Modifications:
+    - target: {fileID: 848959517093177195, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_Name
+      value: VoiceChat
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007538482642097896, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: WasActiveDuringEdit
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.21711
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.46292
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.04009
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8511040994698824356, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 3793281026455086989}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+--- !u!4 &920545373072165472 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+  m_PrefabInstance: {fileID: 4182403001955179282}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7200876480133382684
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5473,27 +5597,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 0
+      value: 141.29999
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 0
+      value: 104
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 151.29999
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0
+      value: -52
       objectReference: {fileID: 0}
     - target: {fileID: 3434268101353160747, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_Name

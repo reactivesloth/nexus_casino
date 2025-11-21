@@ -1260,6 +1260,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3480051585346763968}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6878806813127336063}
     - targetCorrespondingSourceObject: {fileID: 7208261743932278219, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 713667818490075550}
@@ -1306,6 +1309,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: -6589500659611521752}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6657293890111847574}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -2975774918412812473}
     - targetCorrespondingSourceObject: {fileID: 159943881184610819, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4665974107282693136}
@@ -2339,6 +2348,57 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
+--- !u!114 &6657293890111847574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5874861292224152706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6a9958e1fac70e42b5e45207ebcbc69, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.MetaVc
+  audioInput: {fileID: 0}
+  audioOutput: {fileID: 0}
+  config:
+    application: 2048
+    complexity: 10
+    framesize: 5004
+    signal: 3001
+    jitterTimeWindow: 0.24
+    jitterMeanOffsetWindow: 100
+    outputMinBufferSize: 2
+  isEchoEnabled: 0
+  isSineOverrideEnabled: 0
+  maxCodecMilliseconds: 50
+  allowMultipleCodecWarningsPerFrame: 0
+  isDeafened:
+    value: 0
+  isInputMuted:
+    value: 0
+  isInputMutedByServer:
+    value: 0
+  isOutputMuted:
+    value: 0
+  isSpeaking:
+    value: 0
+--- !u!114 &-2975774918412812473
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5874861292224152706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f1117dd79caed3949abdf12674fe3b7f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.NetProviders.FishNet.MetaVCFishNetNetProvider
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 8762398165049904545}
+  _networkObjectCache: {fileID: 0}
 --- !u!4 &6542713848401944120 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
@@ -2686,3 +2746,73 @@ MonoBehaviour:
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0
   inspCollectionDisplayMode: 0
+--- !u!1001 &7618648167297691917
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6542713848401944120}
+    m_Modifications:
+    - target: {fileID: 848959517093177195, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_Name
+      value: VoiceChat
+      objectReference: {fileID: 0}
+    - target: {fileID: 2007538482642097896, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: WasActiveDuringEdit
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.04824996
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.94744
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.92973995
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8511040994698824356, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 3280159945752068084}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+--- !u!4 &6878806813127336063 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
+  m_PrefabInstance: {fileID: 7618648167297691917}
+  m_PrefabAsset: {fileID: 0}

@@ -45,6 +45,8 @@ namespace MetaVoiceChat
         public MetaSerializableReactiveProperty<bool> isDeafened;
         [Tooltip("This is the local player and they don't want anyone to hear them.")]
         public MetaSerializableReactiveProperty<bool> isInputMuted;
+        [Tooltip("This is the local player and admins don't want anyone to hear them.")]
+        public MetaSerializableReactiveProperty<bool> isInputMutedByServer;
         [Tooltip("This is a remote player that the local player doesn't want to hear.")]
         public MetaSerializableReactiveProperty<bool> isOutputMuted;
         [Tooltip("This player is speaking or trying to speak.")]
@@ -206,6 +208,12 @@ namespace MetaVoiceChat
                     }
                 }
             }
+        }
+
+        private void Update()
+        {
+            if (isInputMutedByServer.Value)
+                isInputMuted.Value = true;
         }
 
         public void StopClient()

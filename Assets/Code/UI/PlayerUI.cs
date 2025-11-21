@@ -3,6 +3,7 @@ using Code.API;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
+using MetaVoiceChat.NetProviders.FishNet;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -16,8 +17,6 @@ namespace Code.UI
         [SerializeField] private Image voiceImage;
         [SerializeField] private GameObject hostIndicator;
         
-        //private VoiceBroadcastTrigger _voiceBroadcastTrigger;
-
         public readonly SyncVar<bool> IsVoiceHeld = new(new SyncTypeSettings
         {
             WritePermission = WritePermission.ServerOnly,
@@ -32,18 +31,13 @@ namespace Code.UI
         public string PlayerName => playerName.text;
         public string PlayerRole => playerRole.text;
         public bool IsHost => hostIndicator.activeSelf;
-        
-        private void Start()
-        {
-        //    _voiceBroadcastTrigger ??= FindAnyObjectByType<VoiceBroadcastTrigger>();
-        }
 
         private void Update()
         {
             if (IsOwner)
             {
-                var newHeld = false; //_voiceBroadcastTrigger.VoiceHeld;
-                var newMuted = false; //_voiceBroadcastTrigger.IsMuted;
+                var newHeld = !MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value;
+                var newMuted = MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
                 if (newHeld != IsVoiceHeld.Value || newMuted != IsVoiceMuted.Value)

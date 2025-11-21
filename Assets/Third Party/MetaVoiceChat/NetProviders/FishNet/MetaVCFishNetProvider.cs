@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using MetaVoiceChat.Utils;
 using FishNet.Object;
 using UnityEngine;
-using FishNet;
 using FishNet.Transporting;
 using FishNet.Managing;
 
@@ -14,12 +13,12 @@ using FishNet.Managing;
 namespace MetaVoiceChat.NetProviders.FishNet
 {
     [RequireComponent(typeof(MetaVc))]
-    public class FishNetNetProvider : NetworkBehaviour, INetProvider
+    public class MetaVCFishNetProvider : NetworkBehaviour, INetProvider
     {
         #region Singleton
-        public static FishNetNetProvider LocalPlayerInstance { get; private set; }
-        private readonly static List<FishNetNetProvider> instances = new();
-        public static IReadOnlyList<FishNetNetProvider> Instances => instances;
+        public static MetaVCFishNetProvider LocalPlayerInstance { get; private set; }
+        private readonly static List<MetaVCFishNetProvider> instances = new();
+        public static IReadOnlyList<MetaVCFishNetProvider> Instances => instances;
         #endregion
 
         bool INetProvider.IsLocalPlayerDeafened => LocalPlayerInstance.MetaVc.isDeafened;
@@ -47,7 +46,7 @@ namespace MetaVoiceChat.NetProviders.FishNet
                 return bytes;
             }
 
-            MetaVc = GetComponent<MetaVc>();
+            MetaVc = GetComponentInChildren<MetaVc>();
             MetaVc.StartClient(this, IsOwner, GetMaxDataBytesPerPacket(NetworkManager));
         }
 

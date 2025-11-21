@@ -62,9 +62,6 @@ public class LogUtility : MonoBehaviour
         }
         else
         {
-#if UNITY_ANDROID && !UNITY_EDITOR
-            
-#endif
             return Path.Combine(Application.persistentDataPath, "user_log.txt");
         }
 #else

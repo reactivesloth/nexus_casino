@@ -1,4 +1,5 @@
 using Code.UI.Popup;
+using MetaVoiceChat.NetProviders.FishNet;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
@@ -109,7 +110,7 @@ namespace Code.Player
         {
             saveTime = 0.2f;
             voiceHeld = value;
-            //voiceBroadcastTrigger.VoiceHeld = voiceHeld;
+            MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value = !voiceHeld;
                 
             if (mobileButtonImage != null)
             {
