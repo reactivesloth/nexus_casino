@@ -57,7 +57,7 @@ public class LogUtility : MonoBehaviour
         {
             using (var env = new AndroidJavaClass("android.os.Environment"))
             {
-                return Path.Combine( env.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath");, "user_log.txt");
+                return Path.Combine( env.CallStatic<AndroidJavaObject>("getExternalStorageDirectory").Call<string>("getAbsolutePath"), "user_log.txt");
             }
         }
         else
