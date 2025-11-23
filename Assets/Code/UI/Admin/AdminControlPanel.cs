@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Code.Chat;
 using Code.InteractionSystem;
-using Code.Network.Lobby;
 using Code.Scene.SceneObjectControl;
 using Code.UI.Popup;
 using Code.Utility;
@@ -197,14 +196,14 @@ namespace Code.UI.Admin
         {
             ClearContent();
 
-            var lobbyMembers = LobbyVariables.Instance.currentLobby.lobbyMembers;
-
-            foreach (var lobbyMember in lobbyMembers)
-            {
-                var controlElement = Instantiate(userControlElementPrefab, contentContainer);
-                controlElement.Init(lobbyMember);
-                _controlElements.Add(controlElement);
-            }
+            // var lobbyMembers = LobbyVariables.Instance.currentLobby.lobbyMembers;
+            //
+            // foreach (var lobbyMember in lobbyMembers)
+            // {
+            //     var controlElement = Instantiate(userControlElementPrefab, contentContainer);
+            //     controlElement.Init(lobbyMember);
+            //     _controlElements.Add(controlElement);
+            // }
         }
 
         private void UpdateScene()
@@ -240,15 +239,17 @@ namespace Code.UI.Admin
 
         private IEnumerator UpdateLobbiesListRoutine()
         {
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
-            var lobbies = lobbyController.GetAllLobbies();
-            foreach (var lobby in lobbies)
-            {
-                var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
-                controlElement.Init(lobby);
-                _controlElements.Add(controlElement);
-            }
+            //var lobbyController = FindAnyObjectByType<LobbyController>();
+            //yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
+            //var lobbies = lobbyController.GetAllLobbies();
+            //foreach (var lobby in lobbies)
+            //{
+            //    var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
+            //    controlElement.Init(lobby);
+            //    _controlElements.Add(controlElement);
+            //}
+
+            yield return null;
         }
 
         private void ClearContent()
@@ -290,7 +291,7 @@ namespace Code.UI.Admin
             });
 
             var hostVariants = new List<string> { "me" };
-            hostVariants.AddRange(LobbyVariables.Instance.currentLobby.lobbyMembers.Select(m => m.displayName));
+            //hostVariants.AddRange(LobbyVariables.Instance.currentLobby.lobbyMembers.Select(m => m.displayName));
 
             _popupOpener.Inputs.Add(new InputInfo
             {

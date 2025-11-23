@@ -1,5 +1,3 @@
-using Epic.OnlineServices.Stats;
-
 namespace Code.API
 {
     public static class ApiRoutes

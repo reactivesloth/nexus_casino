@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Code.API;
 using Code.API.Models;
-using Code.Network.Lobby;
 using Code.Player;
 using FishNet;
 using FishNet.Broadcast;
@@ -61,7 +59,8 @@ namespace Code.Network.Player
 
         public static readonly Dictionary<NetworkConnection, MeSchema> SpawnedPlayerData_Server = new();
         public static readonly Dictionary<string, NetworkConnection> NameConnectionsData_Server = new();
-
+        
+#if !UNITY_SERVER
         private void Awake()
         {
             // подготовим словарь модели → префаб (последний дубликат перезаписывает)
@@ -119,7 +118,8 @@ namespace Code.Network.Player
             if (InstanceFinder.ClientManager != null)
                 InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;
         }
-
+#endif
+        
         // === сервер: получили от клиента тип модели ===
         private void OnPlayerTypeBroadcastReceived(NetworkConnection conn, PlayerTypeBroadcast msg, Channel _)
         {
@@ -142,8 +142,8 @@ namespace Code.Network.Player
 
         private async void DisconnectLocalPlayer(DisconnectBroadcast data)
         {
-            await Task.Delay(3_500);
-            LobbyDisconnector.Disconnect(true, data.Reason);
+            //await Task.Delay(3_500);
+            //LobbyDisconnector.Disconnect(true, data.Reason);
         }
         
         // === сервер: общий стейт сервера (очистим список запретов при стопе) ===

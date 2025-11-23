@@ -1,12 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Code.Chat;
-using Code.Network.Lobby;
 using Code.UI.Popup;
 using Code.Utility;
-using Epic.OnlineServices;
-using Epic.OnlineServices.Lobby;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -50,8 +46,9 @@ namespace Code.UI.Admin
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
         }
 
-        public void Init(LobbyDetails lobby)
+        public void Init()//LobbyDetails lobby)
         {
+            /*  
             Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
             if (!info.HasValue)
             {
@@ -108,6 +105,7 @@ namespace Code.UI.Admin
 
             moveToButton.interactable = _lobbyId != LobbyVariables.Instance.currentLobby.lobbyId;
             SearchKey = lobbyName;
+            */
         }
 
         private void OnMoveToButtonClick()
@@ -147,6 +145,7 @@ namespace Code.UI.Admin
 
         private void InitializePlayerSelectionSystem()
         {
+            /*
             // Кешируем всех доступных игроков
             _allAvailablePlayers = LobbyVariables.Instance.currentLobby.lobbyMembers
                 .Select(m => m.displayName)
@@ -156,6 +155,7 @@ namespace Code.UI.Admin
 
             // Добавляем первый дропдаун
             AddPlayerToPopup();
+        */
         }
 
         private void AddPlayerToPopup()

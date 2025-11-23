@@ -85,6 +85,7 @@ MonoBehaviour:
     Position: 1
     Rotation: 1
     Scale: 0
+  _useScaledTime: 1
   _interpolation: 2
   _extrapolation: 2
   _enableTeleport: 0
@@ -93,6 +94,7 @@ MonoBehaviour:
   _sendToOwner: 1
   _interval: 1
   _synchronizePosition: 1
+  _positionSensitivity: 0.001
   _positionSnapping:
     X: 0
     Y: 0
@@ -103,6 +105,7 @@ MonoBehaviour:
     Y: 0
     Z: 0
   _synchronizeScale: 1
+  _scaleSensitivity: 0.001
   _scaleSnapping:
     X: 0
     Y: 0
@@ -1302,9 +1305,6 @@ PrefabInstance:
       addedObject: {fileID: 4171674874594874402}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1765251472944961214}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
-      insertIndex: -1
       addedObject: {fileID: -7728273655064638457}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
@@ -1463,7 +1463,7 @@ MonoBehaviour:
   - {fileID: 2821366903035775452}
   - {fileID: 5566332282629166826}
   - {fileID: 0}
-  - {fileID: 1765251472944961214}
+  - {fileID: 0}
   - {fileID: -6589500659611521752}
   - {fileID: 821171617514341180}
   InitializedParentNetworkBehaviour: {fileID: 0}
@@ -1476,6 +1476,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
+  _initializedTimestamp: 0
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -1492,8 +1493,8 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 6
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 11694091506212731513
-  <SceneId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 8507527414886321891
+  SceneId: 0
   SerializedTransformProperties:
     Position: {x: -2.52891, y: -2.23596, z: 5.59859}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
@@ -1520,6 +1521,7 @@ MonoBehaviour:
     Position: 1
     Rotation: 1
     Scale: 1
+  _useScaledTime: 1
   _interpolation: 2
   _extrapolation: 2
   _enableTeleport: 0
@@ -1528,6 +1530,7 @@ MonoBehaviour:
   _sendToOwner: 1
   _interval: 1
   _synchronizePosition: 1
+  _positionSensitivity: 0.001
   _positionSnapping:
     X: 0
     Y: 0
@@ -1538,6 +1541,7 @@ MonoBehaviour:
     Y: 0
     Z: 0
   _synchronizeScale: 1
+  _scaleSensitivity: 0.001
   _scaleSnapping:
     X: 0
     Y: 0
@@ -1728,22 +1732,6 @@ MonoBehaviour:
   isDebug: 0
   useLocalLipSync: 1
   amplifyMultipleExperimental: 1
---- !u!114 &1765251472944961214
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5874861292224152706}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58b08fc907cb0bb42b83809ca16ca024, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerInteractionMigrator
-  _componentIndexCache: 5
-  _addedNetworkObject: {fileID: 8762398165049904545}
-  _networkObjectCache: {fileID: 8762398165049904545}
-  playerInteraction: {fileID: 161650767903664296}
 --- !u!114 &-7728273655064638457
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,7 +1,5 @@
 using Code.API;
 using Code.Chat;
-using Code.Network.Lobby;
-using Code.Network.Lobby.Data;
 using Code.UI.Popup;
 using Code.Utility;
 using FishNet.Object.Synchronizing;
@@ -33,11 +31,11 @@ namespace Code.UI.Admin
         [SerializeField] private Button promoteButton;
 
         private AdminPanelHandler _adminPanelHandler;
-        private LobbyData.LobbyMember _lobbyMemberData;
+        //private LobbyData.LobbyMember _lobbyMemberData;
         private NexusModularPopupOpener _popupOpener;
         private PlayerUI _playerUI;
 
-        private string Username => _lobbyMemberData.displayName;
+        private string Username;// => _lobbyMemberData.displayName;
 
         private void Awake()
         {
@@ -95,27 +93,25 @@ namespace Code.UI.Admin
         }
 
 
-        public void Init(LobbyData.LobbyMember lobbyMemberData)
+        public void Init()//LobbyData.LobbyMember lobbyMemberData)
         {
-            _lobbyMemberData = lobbyMemberData;
+            //_lobbyMemberData = lobbyMemberData;
 
-            titleDisplayText.text = _lobbyMemberData.displayName;
-            roleText.text = _lobbyMemberData.Attributes.TryGetValue(LobbyController.Role, out var role)
-                ? role
-                : string.Empty;
+            titleDisplayText.text = "";//_lobbyMemberData.displayName;
+            roleText.text = "";//_lobbyMemberData.Attributes.TryGetValue(LobbyController.Role, out var role) ? role : string.Empty;
 
             if (_adminPanelHandler.MutedDictionary.TryGetValue(Username, out var muteState))
                 SetMutedButtonsState(muteState.muteChat, muteState.muteVoice);
             else
                 SetMutedButtonsState(false, false);
 
-            SearchKey = lobbyMemberData.displayName;
+            SearchKey = ""; //lobbyMemberData.displayName;
 
             kickButton.interactable = banButton.interactable = muteChatButton.interactable =
                 unmuteChatButton.interactable = muteVoiceButton.interactable =
                     unmuteVoiceButton.interactable = Username != ClientDataStorage.UserData.username;
 
-            _playerUI = PlayerUI.GetByPlayerName(_lobbyMemberData.displayName);
+            _playerUI = null;//PlayerUI.GetByPlayerName(_lobbyMemberData.displayName);
             if(_playerUI != null)
             {
                 _playerUI.IsVoiceHeld.OnChange += IsVoiceHeldOnOnChange;

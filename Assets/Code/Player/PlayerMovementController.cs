@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Text;
 using Unity.Cinemachine;
 using Code.API;
-using Code.Network.HostMigration;
-using Code.Network.Lobby;
-using Code.Network.Player;
 using Code.Utility;
-using FishNet.Component.Transforming;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -18,7 +13,7 @@ using Random = UnityEngine.Random;
 namespace Code.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerMovementController : NetworkBehaviour, IMigratable<CharacterMigrateData>
+    public class PlayerMovementController : NetworkBehaviour
     {
         public static PlayerMovementController Own { get; private set; }
 
@@ -220,7 +215,6 @@ namespace Code.Player
                 fallTimeoutDelta = fallTimeout;
              
                 EnsureInit();   
-                LobbyVariables.Instance.lobbyPopupUI.Hide();
                 CursorManager.Instance.HideCursor();
             }
         }
@@ -853,35 +847,5 @@ namespace Code.Player
                 animator.SetLookAtPosition(_lookPos);
             }
         }
-
-        #region IMigratable
-
-        public void OnMigrateDataReceived_Server(CharacterMigrateData data)
-        {
-            if (NetworkManager.IsServerStarted)
-                SetPlayerState(Owner, data);
-        }
-
-        [TargetRpc]
-        private void SetPlayerState(NetworkConnection conn, CharacterMigrateData data)
-        {
-            cinemachineTargetPitch = data.cinemachineTargetPitch;
-            cinemachineTargetYaw = data.cinemachineTargetYaw;
-            cameraDistance = data.cameraDistance;
-            FirstPersonView = data.isFirstPersonView;
-        }
-
-        public CharacterMigrateData GetMigrateData_Client()
-        {
-            return new CharacterMigrateData
-            {
-                cinemachineTargetPitch = cinemachineTargetPitch,
-                cinemachineTargetYaw = cinemachineTargetYaw,
-                cameraDistance = cameraDistance,
-                isFirstPersonView = FirstPersonView
-            };
-        }
-
-        #endregion
     }
 }

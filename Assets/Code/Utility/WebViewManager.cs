@@ -265,7 +265,7 @@ public class WebViewManager : MonoBehaviour
 
     public async Task ClearAllDataAsync(bool deepStandalone)
     {
-#if UNITY_STANDALONE || UNITY_EDITOR
+#if (UNITY_STANDALONE || UNITY_EDITOR) && !UNITY_SERVER
         if (deepStandalone && WebViewPrefabInstance != null)
         {
             await StandaloneWebView.TerminateBrowserProcess();

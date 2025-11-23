@@ -110,7 +110,8 @@ namespace Code.Player
         {
             saveTime = 0.2f;
             voiceHeld = value;
-            MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value = !voiceHeld;
+            if (MetaVCFishNetProvider.LocalPlayerInstance != null)
+                MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value = !voiceHeld;
                 
             if (mobileButtonImage != null)
             {

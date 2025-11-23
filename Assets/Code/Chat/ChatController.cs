@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Code.API;
 using Code.API.Models;
-using Code.Network.Lobby;
 using NativeWebSocket;
 using Proyecto26;
 using System.Threading.Tasks;
@@ -359,9 +358,9 @@ namespace Code.Chat
             if (msg?.data?.message == null) return;
 
             var message = msg.data.message;
-            var lobby = LobbyVariables.Instance?.currentLobby;
+            //var lobby = LobbyVariables.Instance?.currentLobby;
 
-            bool isLobbyMessage = lobby != null && message.lobby_id == lobby.lobbyId;
+            //bool isLobbyMessage = lobby != null && message.lobby_id == lobby.lobbyId;
 
             var messageStyle = message.type == "important" ? ChatStyles.Important : ChatStyles.Default;
 
@@ -379,10 +378,10 @@ namespace Code.Chat
 
             chatSystemUI.AddMessage(chatMessage, ChatType.Global, ClientDataStorage.UserData.id == message.user_id);
 
-            if (isLobbyMessage)
-            {
-                chatSystemUI.AddMessage(chatMessage, ChatType.Lobby, ClientDataStorage.UserData.id == message.user_id);
-            }
+            //if (isLobbyMessage)
+            //{
+            //    chatSystemUI.AddMessage(chatMessage, ChatType.Lobby, ClientDataStorage.UserData.id == message.user_id);
+            //}
 
             if (_isOnNotification && !chatSystemUI.IsVisible)
             {
@@ -431,8 +430,8 @@ namespace Code.Chat
                 return;
             }
 
-            var lobby = LobbyVariables.Instance?.currentLobby;
-            string lobbyId = CurrentChatType == ChatType.Global ? "main" : (lobby?.lobbyId ?? "main");
+            //var lobby = LobbyVariables.Instance?.currentLobby;
+            string lobbyId = "main";//CurrentChatType == ChatType.Global ? "main" : (lobby?.lobbyId ?? "main");
 
             var payload = new ChatModel<SendMassage>
             {
@@ -595,12 +594,12 @@ namespace Code.Chat
             var url = ApiRoutes.DOMAIN.TrimEnd('/') + "/api/client/lobby/chat/messages";
             var reqParams = new Dictionary<string, string> { { "limit", pageSize.ToString() } };
 
-            if (!isGlobal)
-            {
-                var lobby = LobbyVariables.Instance?.currentLobby;
-                if (lobby != null)
-                    reqParams.Add("lobby_id", lobby.lobbyId);
-            }
+            // if (!isGlobal)
+            // {
+            //     var lobby = LobbyVariables.Instance?.currentLobby;
+            //     if (lobby != null)
+            //         reqParams.Add("lobby_id", lobby.lobbyId);
+            // }
 
             if (beforeId.HasValue)
                 reqParams.Add("before_id", beforeId.Value.ToString());

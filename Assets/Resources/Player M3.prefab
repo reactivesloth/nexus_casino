@@ -2510,6 +2510,7 @@ MonoBehaviour:
     Position: 1
     Rotation: 1
     Scale: 0
+  _useScaledTime: 1
   _interpolation: 2
   _extrapolation: 2
   _enableTeleport: 0
@@ -2518,6 +2519,7 @@ MonoBehaviour:
   _sendToOwner: 1
   _interval: 1
   _synchronizePosition: 1
+  _positionSensitivity: 0.001
   _positionSnapping:
     X: 0
     Y: 0
@@ -2528,6 +2530,7 @@ MonoBehaviour:
     Y: 0
     Z: 0
   _synchronizeScale: 1
+  _scaleSensitivity: 0.001
   _scaleSnapping:
     X: 0
     Y: 0
@@ -3925,7 +3928,6 @@ GameObject:
   - component: {fileID: 7696486495866622635}
   - component: {fileID: 5060087527674730955}
   - component: {fileID: -3491167662588104577}
-  - component: {fileID: -7473628795789215681}
   - component: {fileID: 7076271179006848320}
   - component: {fileID: 7255431869213475838}
   m_Layer: 8
@@ -4103,7 +4105,7 @@ MonoBehaviour:
   - {fileID: 2675656703575049569}
   - {fileID: 5060087527674730955}
   - {fileID: 0}
-  - {fileID: -7473628795789215681}
+  - {fileID: 0}
   - {fileID: 7076271179006848320}
   - {fileID: 8373490462401573762}
   InitializedParentNetworkBehaviour: {fileID: 0}
@@ -4116,6 +4118,7 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
+  _initializedTimestamp: 0
   NetworkObserver: {fileID: 0}
   _enablePrediction: 0
   _predictionType: 0
@@ -4132,8 +4135,8 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 2
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 6750367265408915173
-  <SceneId>k__BackingField: 0
+  <AssetPathHash>k__BackingField: 578847452228561687
+  SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}
     Rotation: {x: 0, y: 0, z: 0, w: 1}
@@ -4160,6 +4163,7 @@ MonoBehaviour:
     Position: 1
     Rotation: 1
     Scale: 1
+  _useScaledTime: 1
   _interpolation: 2
   _extrapolation: 2
   _enableTeleport: 0
@@ -4168,6 +4172,7 @@ MonoBehaviour:
   _sendToOwner: 1
   _interval: 1
   _synchronizePosition: 1
+  _positionSensitivity: 0.001
   _positionSnapping:
     X: 0
     Y: 0
@@ -4178,6 +4183,7 @@ MonoBehaviour:
     Y: 0
     Z: 0
   _synchronizeScale: 1
+  _scaleSensitivity: 0.001
   _scaleSnapping:
     X: 0
     Y: 0
@@ -4368,22 +4374,6 @@ MonoBehaviour:
   isDebug: 0
   useLocalLipSync: 1
   amplifyMultipleExperimental: 1
---- !u!114 &-7473628795789215681
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8024218303011212308}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 58b08fc907cb0bb42b83809ca16ca024, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Player.PlayerInteractionMigrator
-  _componentIndexCache: 5
-  _addedNetworkObject: {fileID: 2272209766738373433}
-  _networkObjectCache: {fileID: 2272209766738373433}
-  playerInteraction: {fileID: 7696486495866622635}
 --- !u!114 &7076271179006848320
 MonoBehaviour:
   m_ObjectHideFlags: 0

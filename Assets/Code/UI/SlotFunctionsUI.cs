@@ -4,11 +4,9 @@ using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network;
-using Code.Network.Lobby;
 using FishNet;
 using FishNet.Transporting;
 using Proyecto26;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -160,9 +158,7 @@ namespace Code.UI
                     {
                         image_url = fileUri,
                         slot_id = slotMachineInteractable != null ? slotMachineInteractable.IDNumber : 0,
-                        lobby_id = LobbyVariables.Instance != null && LobbyVariables.Instance.currentLobby != null
-                            ? LobbyVariables.Instance.currentLobby.lobbyId
-                            : 0.ToString(),
+                        lobby_id = 0.ToString() //LobbyVariables.Instance != null && LobbyVariables.Instance.currentLobby != null ? LobbyVariables.Instance.currentLobby.lobbyId : 0.ToString(),
                     },
                     Timeout = 7
                 };

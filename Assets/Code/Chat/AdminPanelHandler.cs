@@ -1,14 +1,12 @@
 using System.Collections;
-using System.Linq;
 using System.Text;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
-using Code.Network.Lobby;
 using Code.Network.Player;
 using Code.Player;
 using Code.Scene.SceneObjectControl;
-using Epic.OnlineServices;
+//using Epic.OnlineServices;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -114,7 +112,7 @@ namespace Code.Chat
         private void Kick_TargetRpc(NetworkConnection target)
         {
             PlayerPrefs.DeleteKey("auth_accessToken");
-            LobbyDisconnector.Disconnect(true, "You was kicked / baned");
+            //LobbyDisconnector.Disconnect(true, "You was kicked / baned");
         }
 
         #endregion
@@ -138,8 +136,7 @@ namespace Code.Chat
                 return;
             }
 
-            var banedUser =
-                LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username);
+            /*var banedUser = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username);
             
             if (banedUser == null)
             {
@@ -152,7 +149,8 @@ namespace Code.Chat
                 CommandCallback($"User can not be banned", false);
                 return;
             }
-
+            */
+            
             var banRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetBanUrl(),
@@ -388,7 +386,7 @@ namespace Code.Chat
 
         public void PromoteMember(string promotedUserName)
         {
-            var userMemberData = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m =>
+            /*var userMemberData = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m =>
             {
                 if (!m.Attributes.TryGetValue("NAME", out var memberName))
                     return false;
@@ -410,12 +408,13 @@ namespace Code.Chat
                 Promote_ServerRpc(userId);
             else
                 CommandCallback("You can't promote members", false);
+            */
         }
 
         [ServerRpc(RequireOwnership = false)]
         private void Promote_ServerRpc(string userId)
         {
-            FindAnyObjectByType<LobbyController>().Promote(userId);
+            //FindAnyObjectByType<LobbyController>().Promote(userId);
         }
 
         #endregion
@@ -517,9 +516,9 @@ namespace Code.Chat
 
         private void CreateRoom(string roomName, bool isPrivate)
         {
-            LobbyDisconnector.Disconnect();
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-            lobbyController.CreateLobbyManual(roomName, 64, isPrivate: isPrivate);
+            //LobbyDisconnector.Disconnect();
+            //var lobbyController = FindAnyObjectByType<LobbyController>();
+            //lobbyController.CreateLobbyManual(roomName, 64, isPrivate: isPrivate);
         }
 
         public void GetRooms()
@@ -535,7 +534,7 @@ namespace Code.Chat
 
         private IEnumerator GetRoomsCoroutine()
         {
-            var lobbyController = FindAnyObjectByType<LobbyController>();
+            /*var lobbyController = FindAnyObjectByType<LobbyController>();
             yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
             var lobbies = lobbyController.GetAllLobbies();
 
@@ -561,6 +560,8 @@ namespace Code.Chat
             }
 
             CommandCallback(textToInput.ToString(), true);
+            */
+            yield return null;
         }
 
         public void MoveUserToRoom(string args)
@@ -617,9 +618,9 @@ namespace Code.Chat
             StartCoroutine(MoveUserToRoomByIdCoroutine(sender, connection, username, lobbyId));
         }
 
-        private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username,
-            string lobbyName)
+        private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
         {
+            /*
             var lobbyController = FindAnyObjectByType<LobbyController>();
             yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
             var lobbies = lobbyController.GetAllLobbies().ToList();
@@ -653,11 +654,14 @@ namespace Code.Chat
 
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
+            */
+            yield return null;
         }
 
         private IEnumerator MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target,
             string username, string lobbyId)
         {
+            /*
             var lobbyController = FindAnyObjectByType<LobbyController>();
             yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
             var lobbies = lobbyController.GetAllLobbies().ToList();
@@ -676,17 +680,19 @@ namespace Code.Chat
 
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
+            */
+            yield return null;
         }
 
         [TargetRpc]
         private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
         {
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-
-            CommandCallback("You moved to another lobby", true);
-
-            LobbyDisconnector.Disconnect();
-            lobbyController.JoinLobbyById(lobbyId);
+            // var lobbyController = FindAnyObjectByType<LobbyController>();
+            //
+            // CommandCallback("You moved to another lobby", true);
+            //
+            // LobbyDisconnector.Disconnect();
+            // lobbyController.JoinLobbyById(lobbyId);
         }
 
         #endregion
