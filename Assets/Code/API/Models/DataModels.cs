@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using FishNet.Broadcast;
-using NUnit.Framework;
 
 namespace Code.API.Models
 {

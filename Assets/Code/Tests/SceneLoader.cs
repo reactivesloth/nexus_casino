@@ -1,4 +1,5 @@
 using Code.UI;
+using PlayFlow;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -31,8 +32,8 @@ namespace Code.Tests
         public void Load(int buildIndex)
         {
             LoadingScreenUI.Instance.LoadScene(SceneManager.GetSceneByBuildIndex(buildIndex).name);
-            //if (isDisconnect)
-                //Code.Network.Lobby.LobbyDisconnector.Disconnect();
+            if (isDisconnect)
+                PlayFlowLobbyManagerV2.Instance.Disconnect();
         }
     }
 }

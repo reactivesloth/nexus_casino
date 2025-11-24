@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Code.Network
 {
-    public class PlayFlowClientConnector : MonoBehaviour
+    public class PlayFlowFishnet : MonoBehaviour
     {
 #if !UNITY_SERVER
         public int maxPlayersPerLobby = 100;
@@ -17,19 +17,36 @@ namespace Code.Network
         
         void OnInitialized()
         {
-
             Debug.Log("PlayFlow SDK готов. Получаем список лобби...");
             TryJoinOrCreateLobby();
         
             PlayFlowLobbyManagerV2.Instance.Events.OnMatchRunning.AddListener(OnServerReady);
+            PlayFlowLobbyManagerV2.Instance.Events.OnLobbyJoined.AddListener(OnLobbyJoined);
+            PlayFlowLobbyManagerV2.Instance.Events.OnLobbyUpdated.AddListener(OnLobbyUpdated);
+            PlayFlowLobbyManagerV2.Instance.Events.OnPlayerJoined.AddListener(OnPlayerJoined);
             PlayFlowLobbyManagerV2.Instance.Events.OnError.AddListener(OnError);
             PlayFlowLobbyManagerV2.Instance.Events.OnDisconnected.AddListener(OnDisconnected);
             PlayFlowLobbyManagerV2.Instance.Events.OnPlayerLeft.AddListener(OnPlayerLeft);
         }
+        
+        void OnLobbyJoined(Lobby lobby)
+        {
+            Debug.Log($"Successfully joined lobby: {lobby.name}");
+        }
 
+        void OnPlayerJoined(PlayerAction action)
+        {
+            Debug.Log($"Player {action.PlayerId} joined the lobby!");
+        }
+        
         private void OnPlayerLeft(PlayerAction action)
         {
             Debug.Log($"[PlayFlowClientConnector] Игрок {action.PlayerId} отключен от сервера.");
+        }
+
+        void OnLobbyUpdated(Lobby lobby)
+        {
+            Debug.Log("Lobby data has been updated.");
         }
 
         private void OnDisconnected()
@@ -96,6 +113,21 @@ namespace Code.Network
         {
             Debug.Log($"Сервер готов! Подключаемся к {connectionInfo.Ip}:{connectionInfo.Port}");
             InstanceFinder.NetworkManager.ClientManager.StartConnection(connectionInfo.Ip, (ushort) connectionInfo.Port);
+        }
+
+        void OnDisable()
+        {
+            var events = PlayFlowLobbyManagerV2.Instance.Events;
+            if (events != null)
+            {
+                PlayFlowLobbyManagerV2.Instance.Events.OnMatchRunning.RemoveListener(OnServerReady);
+                PlayFlowLobbyManagerV2.Instance.Events.OnLobbyJoined.RemoveListener(OnLobbyJoined);
+                PlayFlowLobbyManagerV2.Instance.Events.OnLobbyUpdated.RemoveListener(OnLobbyUpdated);
+                PlayFlowLobbyManagerV2.Instance.Events.OnPlayerJoined.RemoveListener(OnPlayerJoined);
+                PlayFlowLobbyManagerV2.Instance.Events.OnError.RemoveListener(OnError);
+                PlayFlowLobbyManagerV2.Instance.Events.OnDisconnected.RemoveListener(OnDisconnected);
+                PlayFlowLobbyManagerV2.Instance.Events.OnPlayerLeft.RemoveListener(OnPlayerLeft);
+            }
         }
 #endif
     }

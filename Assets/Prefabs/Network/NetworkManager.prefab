@@ -10,12 +10,12 @@ GameObject:
   m_Component:
   - component: {fileID: 7947594284464758584}
   - component: {fileID: -7787611042363234579}
-  - component: {fileID: 6356089309601172939}
   - component: {fileID: -1856791261854789086}
   - component: {fileID: -2075149150159575520}
   - component: {fileID: 2358639528394899744}
   - component: {fileID: -5730291507850343229}
   - component: {fileID: -5213578328157531378}
+  - component: {fileID: 5353664881606109110}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -57,34 +57,6 @@ MonoBehaviour:
   _persistence: 0
   _logging: {fileID: 0}
   _spawnablePrefabs: {fileID: 11400000, guid: 2cf7ef0a30897a4488dc92bab8cfe808, type: 2}
---- !u!114 &6356089309601172939
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 598e8b9bae3f494c9b167dd7af028106, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerSpawner
-  _addToDefaultScene: 1
-  Spawns:
-  - {fileID: 0}
-  playerPrefabs:
-  - key: Male
-    val: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
-  - key: Female
-    val: {fileID: 4352281537206514680, guid: 51ca181595adb9f4badfe0ef54b91255, type: 3}
-  - key: PlayerM1
-    val: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
-  - key: PlayerM2
-    val: {fileID: 5084366635518163755, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
-  - key: PlayerM3
-    val: {fileID: 2272209766738373433, guid: 264bab18018f257499f6a02bb93ee245, type: 3}
-  - key: ChostisF1
-    val: {fileID: 8762398165049904545, guid: fd5bf44672cdc4f40a1b68d943372f19, type: 3}
 --- !u!114 &-1856791261854789086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -226,3 +198,30 @@ MonoBehaviour:
   _enableHeartbeat: 0
   _heartbeatInterval: 30
   _debugLogging: 0
+--- !u!114 &5353664881606109110
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 598e8b9bae3f494c9b167dd7af028106, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerSpawner
+  _addToDefaultScene: 1
+  Spawns: []
+  playerPrefabs:
+  - key: Male
+    val: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
+  - key: Female
+    val: {fileID: 4352281537206514680, guid: 51ca181595adb9f4badfe0ef54b91255, type: 3}
+  - key: PlayerM1
+    val: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+  - key: PlayerM2
+    val: {fileID: 5084366635518163755, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
+  - key: PlayerM3
+    val: {fileID: 2272209766738373433, guid: 264bab18018f257499f6a02bb93ee245, type: 3}
+  - key: ChostisF1
+    val: {fileID: 8762398165049904545, guid: fd5bf44672cdc4f40a1b68d943372f19, type: 3}
