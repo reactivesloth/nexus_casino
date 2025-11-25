@@ -112,6 +112,9 @@ namespace Code.Network
                 name: "Lobby_" + Random.Range(000000, 999999),
                 maxPlayers: maxPlayersPerLobby,
                 isPrivate: false,
+                allowLateJoin:true,
+                region: "eu-west",
+                customSettings: new Dictionary<string, object>(),
                 onSuccess: lobby =>
                 {
                     Debug.Log($"Лобби создано с ID: {lobby.id}");
