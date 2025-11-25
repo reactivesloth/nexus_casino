@@ -1469,9 +1469,9 @@ MonoBehaviour:
   m_Script: {fileID: -1091098677, guid: 21fe281538940584e84b6d5eedb3525e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioSrc: {fileID: 0}
+  audioSrc: {fileID: 3793281026455086989}
   waitForAudioSource: 0
-  useExternalAnalysis: 1
+  useExternalAnalysis: 0
   audioSourceWaitTarget: {fileID: 0}
   queueProcessor: {fileID: 272687025468308130}
   emoter: {fileID: 6218711020452665331}
@@ -3927,7 +3927,6 @@ GameObject:
   - component: {fileID: 2675656703575049569}
   - component: {fileID: 7696486495866622635}
   - component: {fileID: 5060087527674730955}
-  - component: {fileID: -3491167662588104577}
   - component: {fileID: 7076271179006848320}
   - component: {fileID: 7255431869213475838}
   m_Layer: 8
@@ -4359,21 +4358,6 @@ MonoBehaviour:
   playerRole: {fileID: 5198110434763197137}
   voiceImage: {fileID: 6465184294284859972}
   hostIndicator: {fileID: 8341353670095585006}
---- !u!114 &-3491167662588104577
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8024218303011212308}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ee64685f2881fe9479b93b1d1583b4ae, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  isDebug: 0
-  useLocalLipSync: 1
-  amplifyMultipleExperimental: 1
 --- !u!114 &7076271179006848320
 MonoBehaviour:
   m_ObjectHideFlags: 0
