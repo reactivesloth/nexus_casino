@@ -1,23 +1,31 @@
+using System;
+using Code.UI;
 using FishNet;
 using PlayFlow;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Code.Network
 {
     public class PlayFlowFishnet : MonoBehaviour
     {
-#if !UNITY_SERVER
         public int maxPlayersPerLobby = 100;
 
         void Start()
         {
+#if !UNITY_SERVER
+
             string playerId = SystemInfo.deviceUniqueIdentifier;
+            PlayFlowLobbyManagerV2.Instance.DefaultLobbyConfig = Application.version;
             PlayFlowLobbyManagerV2.Instance.Initialize(playerId, OnInitialized);
+            LoadingScreenUI.Instance.Show("loading", "loading.please_wait");
+#endif
         }
-        
+
         void OnInitialized()
         {
             Debug.Log("PlayFlow SDK готов. Получаем список лобби...");
+            LoadingScreenUI.Instance.Show("loading.join_lobby.getting", "loading.please_wait");
             TryJoinOrCreateLobby();
         
             PlayFlowLobbyManagerV2.Instance.Events.OnMatchRunning.AddListener(OnServerReady);
@@ -64,6 +72,7 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.GetAvailableLobbies(
                 onSuccess: lobbies =>
                 {
+                    LoadingScreenUI.Instance.Show("loading.search_lobby", "loading.please_wait");
                     Debug.Log($"Найдено лобби: {lobbies.Count}");
                     // Ищем лобби с местом
                     foreach (var lobby in lobbies)
@@ -92,6 +101,7 @@ namespace Code.Network
 
         void CreateLobby()
         {
+            LoadingScreenUI.Instance.Show("loading.create_lobby", "loading.please_wait");
             Debug.Log("Создаем новую лобби...");
             PlayFlowLobbyManagerV2.Instance.CreateLobby(
                 name: "Lobby_" + Random.Range(000000, 999999),
@@ -105,14 +115,20 @@ namespace Code.Network
                         onError: (error) => Debug.LogError(error)
                     );
                 },
-                onError: error => Debug.LogError("Ошибка создания лобби: " + error)
-            );
+                onError: error =>
+                {
+                    LoadingScreenUI.Instance.Show("loading.start_scene", "error");
+                    Debug.LogError("Ошибка создания лобби: " + error);
+                    TryJoinOrCreateLobby();
+                });
         }
 
         void OnServerReady(ConnectionInfo connectionInfo)
         {
+            LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
             Debug.Log($"Сервер готов! Подключаемся к {connectionInfo.Ip}:{connectionInfo.Port}");
             InstanceFinder.NetworkManager.ClientManager.StartConnection(connectionInfo.Ip, (ushort) connectionInfo.Port);
+            LoadingScreenUI.Instance.Invoke("Hide", 1);
         }
 
         void OnDisable()
@@ -128,7 +144,24 @@ namespace Code.Network
                 PlayFlowLobbyManagerV2.Instance.Events.OnDisconnected.RemoveListener(OnDisconnected);
                 PlayFlowLobbyManagerV2.Instance.Events.OnPlayerLeft.RemoveListener(OnPlayerLeft);
             }
+            Destroy(gameObject);
         }
-#endif
+
+        public void Disconnect()
+        {
+            PlayFlowLobbyManagerV2.Instance.Disconnect();
+            Destroy(gameObject);
+        }
+
+        public void LeftLobby()
+        {
+            PlayFlowLobbyManagerV2.Instance.LeaveLobby();
+            Destroy(gameObject);
+        }
+
+        public void EndMatch()
+        {
+            PlayFlowLobbyManagerV2.Instance.EndMatch();
+        }
     }
 }
