@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Code.API;
 using Code.UI;
 using FishNet;
 using PlayFlow;
@@ -77,12 +79,15 @@ namespace Code.Network
                     // Ищем лобби с местом
                     foreach (var lobby in lobbies)
                     {
-                        if (lobby.currentPlayers < lobby.maxPlayers)
+                        if (lobby.currentPlayers < lobby.maxPlayers 
+                            && lobby.currentPlayers > 0 
+                            && lobby.status == "in_game")
                         {
                             Debug.Log($"Подключаемся к лобби {lobby.name} с ID {lobby.id}...");
                             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobby.id,
                                 onSuccess: lobbyJoined => {
                                     Debug.Log("Успешно подключились к лобби");
+                                    InitPlayerDataOnLobby();
                                 }, 
                                 onError: error => Debug.LogError("Ошибка при подключении к лобби: " + error));
                             return;
@@ -114,6 +119,7 @@ namespace Code.Network
                         onSuccess: (lobby) => Debug.Log("Match starting! Waiting for server..."),
                         onError: (error) => Debug.LogError(error)
                     );
+                    InitPlayerDataOnLobby();
                 },
                 onError: error =>
                 {
@@ -129,6 +135,16 @@ namespace Code.Network
             Debug.Log($"Сервер готов! Подключаемся к {connectionInfo.Ip}:{connectionInfo.Port}");
             InstanceFinder.NetworkManager.ClientManager.StartConnection(connectionInfo.Ip, (ushort) connectionInfo.Port);
             LoadingScreenUI.Instance.Invoke("Hide", 1);
+        }
+
+        private void InitPlayerDataOnLobby()
+        {
+            var playerDataDictionary = new Dictionary<string, object>
+            {
+                { "data", ClientDataStorage.UserData }
+            };
+            
+            PlayFlowLobbyManagerV2.Instance.UpdatePlayerState(playerDataDictionary);
         }
 
         void OnDisable()
