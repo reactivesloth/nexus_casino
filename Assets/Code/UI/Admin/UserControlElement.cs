@@ -1,8 +1,11 @@
+using System.Collections.Generic;
 using Code.API;
+using Code.API.Models;
 using Code.Chat;
 using Code.UI.Popup;
 using Code.Utility;
 using FishNet.Object.Synchronizing;
+using PlayFlow;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -31,11 +34,11 @@ namespace Code.UI.Admin
         [SerializeField] private Button promoteButton;
 
         private AdminPanelHandler _adminPanelHandler;
-        //private LobbyData.LobbyMember _lobbyMemberData;
         private NexusModularPopupOpener _popupOpener;
         private PlayerUI _playerUI;
 
-        private string Username;// => _lobbyMemberData.displayName;
+        private string _username;
+        private string _playerId;
 
         private void Awake()
         {
@@ -88,30 +91,32 @@ namespace Code.UI.Admin
         private void OnMutedDictionaryChange(SyncDictionaryOperation operation, string key,
             AdminPanelHandler.MuteStateSync value, bool asServer)
         {
-            if (key == Username)
+            if (key == _username)
                 SetMutedButtonsState(value.muteChat, value.muteVoice);
         }
 
 
-        public void Init()//LobbyData.LobbyMember lobbyMemberData)
+        public void Init(string id, Dictionary<string, object> playerData)
         {
-            //_lobbyMemberData = lobbyMemberData;
+            _playerId = id;
+            
+            var meSchema = JsonUtility.FromJson<MeSchema>(playerData["data"].ToString());
+            
+            titleDisplayText.text = _username = meSchema.username;
+            roleText.text = meSchema.role;
 
-            titleDisplayText.text = "";//_lobbyMemberData.displayName;
-            roleText.text = "";//_lobbyMemberData.Attributes.TryGetValue(LobbyController.Role, out var role) ? role : string.Empty;
-
-            if (_adminPanelHandler.MutedDictionary.TryGetValue(Username, out var muteState))
+            if (_adminPanelHandler.MutedDictionary.TryGetValue(_username, out var muteState))
                 SetMutedButtonsState(muteState.muteChat, muteState.muteVoice);
             else
                 SetMutedButtonsState(false, false);
 
-            SearchKey = ""; //lobbyMemberData.displayName;
+            SearchKey = _username;
 
             kickButton.interactable = banButton.interactable = muteChatButton.interactable =
                 unmuteChatButton.interactable = muteVoiceButton.interactable =
-                    unmuteVoiceButton.interactable = Username != ClientDataStorage.UserData.username;
+                    unmuteVoiceButton.interactable = _username != ClientDataStorage.UserData.username;
 
-            _playerUI = null;//PlayerUI.GetByPlayerName(_lobbyMemberData.displayName);
+            _playerUI = PlayerUI.GetByPlayerName(_username);
             if(_playerUI != null)
             {
                 _playerUI.IsVoiceHeld.OnChange += IsVoiceHeldOnOnChange;
@@ -135,7 +140,7 @@ namespace Code.UI.Admin
         private void OnKickClicked()
         {
             _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.kick");//"Kick";
-            _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.kick.answer", "username", Username);//$"Do You want kick {Username}?";
+            _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.kick.answer", "username", _username);//$"Do You want kick {Username}?";
 
             var yesButtonInfo = new ButtonInfo
             {
@@ -149,12 +154,12 @@ namespace Code.UI.Admin
             _popupOpener.OpenPopup();
         }
 
-        private void KickAction() => _adminPanelHandler.Kick(Username);
+        private void KickAction() => _adminPanelHandler.Kick(_username);
 
         private void OnBanClicked()
         {
             _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.ban");//"Ban";
-                _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.ban.answer", "username", Username);//$"Do You want ban {Username}?";
+                _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.ban.answer", "username", _username);//$"Do You want ban {Username}?";
 
             _popupOpener.Inputs.Add(new InputInfo
             {
@@ -177,31 +182,31 @@ namespace Code.UI.Admin
                 () => BanAction(int.Parse(_popupOpener.LastPopup.GetInputValue(0))));
         }
 
-        private void BanAction(int time) => _adminPanelHandler.BanUser(Username, time);
+        private void BanAction(int time) => _adminPanelHandler.BanUser(_username, time);
 
         private void OnMuteChatClicked()
         {
-            _adminPanelHandler.MuteChat(Username);
+            _adminPanelHandler.MuteChat(_username);
         }
 
         private void OnUnmuteChatClicked()
         {
-            _adminPanelHandler.UnmuteChat(Username);
+            _adminPanelHandler.UnmuteChat(_username);
         }
 
         private void OnMuteVoiceClicked()
         {
-            _adminPanelHandler.MuteVoice(Username);
+            _adminPanelHandler.MuteVoice(_username);
         }
 
         private void OnUnmuteVoiceClicked()
         {
-            _adminPanelHandler.UnmuteVoice(Username);
+            _adminPanelHandler.UnmuteVoice(_username);
         }
 
         private void OnToggleOffVoiceClicked()
         {
-            _adminPanelHandler.ToggleOffVoice(Username);
+            _adminPanelHandler.ToggleOffVoice(_username);
         }
 
         private void SetMutedButtonsState(bool isMuteChat, bool isUnmuteVoice)
@@ -215,12 +220,12 @@ namespace Code.UI.Admin
 
         private void OnPromoteButtonClicked()
         {
-            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.promote");//"Set as host";
-            _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.promote.answer", "username", Username);//$"Do You want promote {Username}?";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("admin.players.promote");
+            _popupOpener.Subtitle = LocalizationHelper.GetLocalizedString("admin.players.promote.answer", "username", _username);
 
             var promoteButtonInfo = new ButtonInfo
             {
-                Label = LocalizationHelper.GetLocalizedString("admin.players.promote"),//  "Promote",
+                Label = LocalizationHelper.GetLocalizedString("admin.players.promote"),
                 ClosePopupWhenClicked = true,
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
@@ -231,6 +236,6 @@ namespace Code.UI.Admin
             _popupOpener.OpenPopup();
         }
 
-        private void Promote() => _adminPanelHandler.PromoteMember(Username);
+        private void Promote() => _adminPanelHandler.PromoteMember(_username);
     }
 }

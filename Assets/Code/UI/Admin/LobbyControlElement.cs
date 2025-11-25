@@ -3,6 +3,7 @@ using System.Linq;
 using Code.Chat;
 using Code.UI.Popup;
 using Code.Utility;
+using PlayFlow;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -46,66 +47,15 @@ namespace Code.UI.Admin
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
         }
 
-        public void Init()//LobbyDetails lobby)
+        public void Init(Lobby lobby)//LobbyDetails lobby)
         {
-            /*  
-            Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
-            if (!info.HasValue)
-            {
-                Destroy(gameObject);
-                return;
-            }
-
-            var lobbyId = info.Value.LobbyId;
-            _lobbyId = lobbyId;
-
-            var nameResult =
-                Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.Name, out var nameAttr);
-            var lobbyName = nameResult == Result.Success
-                ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
-                : string.Empty;
-
-            var hostInResult =
-                Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.HostIn, out var hostInAttr);
-            var hostIn = hostInResult == Result.Success
-                ? hostInAttr.Value.Data.Value.Value.AsUtf8 == bool.TrueString
-                : false;
-
-            var moderInResult =
-                Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.ModerIn, out var moderInAttr);
-            var moderIn = moderInResult == Result.Success
-                ? moderInAttr.Value.Data.Value.Value.AsUtf8 == bool.TrueString
-                : false;
-
-            var adminInResult =
-                Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.AdminIn, out var adminInAttr);
-            var adminIn = adminInResult == Result.Success
-                ? adminInAttr.Value.Data.Value.Value.AsUtf8 == bool.TrueString
-                : false;
-
-            var privateResult =
-                Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.Private, out var privateAttr);
-            var isPrivate = privateResult == Result.Success
-                ? privateAttr.Value.Data.Value.Value.AsUtf8 == bool.TrueString
-                : false;
-
-            var maxPlayersCount = info.Value.MaxMembers;
-            var currentPlayersCount = Network.Lobby.EOSCoroutines.Lobby.GetMembers(lobby).Count;
-
-            titleDisplayText.text = lobbyName;
-            idText.text = lobbyId;
-            playersCountText.text = $"{currentPlayersCount}/{maxPlayersCount}";
-            var privateKey= isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";
+            adminsStatusText.text = "";
+            _lobbyId = lobby.id;
+            titleDisplayText.text = lobby.name;
+            idText.text = lobby.id;
+            playersCountText.text = $"{lobby.currentPlayers}/{lobby.maxPlayers}";
+            var privateKey= lobby.isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";
             LocalizationHelper.SetLocalizedTextAsync(privateText, privateKey);
-
-            var adminText = adminIn ? "Admin\n" : string.Empty;
-            var hostText = hostIn ? "Host\n" : string.Empty;
-            var moderText = moderIn ? "Moderator\n" : string.Empty;
-            adminsStatusText.text = $"{adminText}{hostText}{moderText}";
-
-            moveToButton.interactable = _lobbyId != LobbyVariables.Instance.currentLobby.lobbyId;
-            SearchKey = lobbyName;
-            */
         }
 
         private void OnMoveToButtonClick()

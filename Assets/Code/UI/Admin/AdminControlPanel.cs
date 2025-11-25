@@ -6,6 +6,7 @@ using Code.InteractionSystem;
 using Code.Scene.SceneObjectControl;
 using Code.UI.Popup;
 using Code.Utility;
+using PlayFlow;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -41,8 +42,6 @@ namespace Code.UI.Admin
 
         private AdminPanelHandler _adminPanelHandler;
         private NexusModularPopupOpener _popupOpener;
-
-        private Coroutine _updateLobbiesRoutine;
 
         private void Awake()
         {
@@ -188,22 +187,23 @@ namespace Code.UI.Admin
         private void OnStartNewTab()
         {
             searchField.text = string.Empty;
-            if (_updateLobbiesRoutine != null)
-                StopCoroutine(_updateLobbiesRoutine);
         }
 
         private void UpdateUsers()
         {
             ClearContent();
 
-            // var lobbyMembers = LobbyVariables.Instance.currentLobby.lobbyMembers;
-            //
-            // foreach (var lobbyMember in lobbyMembers)
-            // {
-            //     var controlElement = Instantiate(userControlElementPrefab, contentContainer);
-            //     controlElement.Init(lobbyMember);
-            //     _controlElements.Add(controlElement);
-            // }
+            var lobbyIds = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players;
+
+            foreach (var playerId in lobbyIds)
+            {
+                if(!PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(playerId, out var playerData))
+                    continue;
+                
+                var controlElement = Instantiate(userControlElementPrefab, contentContainer);
+                controlElement.Init(playerId, playerData);
+                _controlElements.Add(controlElement);
+            }
         }
 
         private void UpdateScene()
@@ -234,22 +234,17 @@ namespace Code.UI.Admin
         private void UpdateLobbies()
         {
             ClearContent();
-            _updateLobbiesRoutine = StartCoroutine(UpdateLobbiesListRoutine());
+            PlayFlowLobbyManagerV2.Instance.GetAvailableLobbies(OnLobbiesReceived, Debug.LogError);
         }
 
-        private IEnumerator UpdateLobbiesListRoutine()
+        private void OnLobbiesReceived(List<Lobby> lobbies)
         {
-            //var lobbyController = FindAnyObjectByType<LobbyController>();
-            //yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
-            //var lobbies = lobbyController.GetAllLobbies();
-            //foreach (var lobby in lobbies)
-            //{
-            //    var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
-            //    controlElement.Init(lobby);
-            //    _controlElements.Add(controlElement);
-            //}
-
-            yield return null;
+            foreach (var lobby in lobbies)
+            {
+                var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
+                controlElement.Init(lobby);
+                _controlElements.Add(controlElement);
+            }
         }
 
         private void ClearContent()
