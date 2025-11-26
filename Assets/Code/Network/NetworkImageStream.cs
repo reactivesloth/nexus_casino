@@ -266,7 +266,7 @@ namespace Code.Network
             // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
             if (Owner != null && OwnerId != -1)
             {
-                SendInChunks(encoded, w, h);
+                UploadFrame(encoded, w, h);
                 //UploadFrame(encoded, w, h);
                 OnApplyTexture?.Invoke(rawImage.texture);
             }
@@ -278,7 +278,7 @@ namespace Code.Network
         private int _latestWidth;
         private int _latestHeight;
         
-        /// <summary>
+        /*/// <summary>
         /// Разбиение на чанки по 1000 байт и отправка.
         /// </summary>
         private void SendInChunks(byte[] data, int width, int height)
@@ -350,15 +350,15 @@ namespace Code.Network
 
                 _latestFrameChunks = null;
             }
-        }
+        }*/
         
-        /*[ServerRpc(RequireOwnership = false, DataLength = 15_000)]
+        [ServerRpc(RequireOwnership = false)]
         private void UploadFrame(byte[] data, int width, int height)
         {
             RelayFrame(data, width, height);
         }
 
-        [ObserversRpc(ExcludeOwner = true, BufferLast = true, DataLength = 15_000)]
+        [ObserversRpc(ExcludeOwner = true, BufferLast = true)]
         private void RelayFrame(byte[] data, int width, int height)
         {
             if (IsOwner) // владелец не принимает свои же кадры
@@ -383,7 +383,7 @@ namespace Code.Network
                 raw = K4os.Compression.LZ4.LZ4Pickler.Unpickle(raw);
 
             ApplyImage(raw, width, height);
-        }*/
+        }
 
         private void ApplyImage(byte[] bytes, int width, int height)
         {
