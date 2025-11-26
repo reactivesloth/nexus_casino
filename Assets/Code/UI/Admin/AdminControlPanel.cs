@@ -241,6 +241,9 @@ namespace Code.UI.Admin
         {
             foreach (var lobby in lobbies)
             {
+                if(lobby.currentPlayers <= 0)
+                    continue;
+                
                 var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
                 controlElement.Init(lobby);
                 _controlElements.Add(controlElement);
@@ -285,8 +288,22 @@ namespace Code.UI.Admin
                 }
             });
 
+            
+            
             var hostVariants = new List<string> { "me" };
-            //hostVariants.AddRange(LobbyVariables.Instance.currentLobby.lobbyMembers.Select(m => m.displayName));
+            var allAvailablePlayers = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.ToList()
+                .Select(id =>
+                {
+                    if (PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(id, out var playerData)
+                        && playerData.TryGetValue("name", out var playerName))
+                        return playerName.ToString();
+                    return string.Empty;
+                })
+                .Where(playerName => !string.IsNullOrEmpty(playerName))
+                .Distinct()
+                .ToList();
+            
+            hostVariants.AddRange(allAvailablePlayers);
 
             _popupOpener.Inputs.Add(new InputInfo
             {

@@ -100,10 +100,11 @@ namespace Code.UI.Admin
         {
             _playerId = id;
             
-            var meSchema = JsonUtility.FromJson<MeSchema>(playerData["data"].ToString());
+            if(playerData.TryGetValue("name", out var playerName))
+                titleDisplayText.text = _username = playerName.ToString();
             
-            titleDisplayText.text = _username = meSchema.username;
-            roleText.text = meSchema.role;
+            if(playerData.TryGetValue("role", out var playerRole))
+                roleText.text = playerRole.ToString();
 
             if (_adminPanelHandler.MutedDictionary.TryGetValue(_username, out var muteState))
                 SetMutedButtonsState(muteState.muteChat, muteState.muteVoice);

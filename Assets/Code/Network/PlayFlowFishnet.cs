@@ -29,7 +29,7 @@ namespace Code.Network
             Debug.Log("PlayFlow SDK готов. Получаем список лобби...");
             LoadingScreenUI.Instance.Show("loading.join_lobby.getting", "loading.please_wait");
             TryJoinOrCreateLobby();
-        
+
             PlayFlowLobbyManagerV2.Instance.Events.OnMatchRunning.AddListener(OnServerReady);
             PlayFlowLobbyManagerV2.Instance.Events.OnLobbyJoined.AddListener(OnLobbyJoined);
             PlayFlowLobbyManagerV2.Instance.Events.OnLobbyUpdated.AddListener(OnLobbyUpdated);
@@ -38,7 +38,7 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.Events.OnDisconnected.AddListener(OnDisconnected);
             PlayFlowLobbyManagerV2.Instance.Events.OnPlayerLeft.AddListener(OnPlayerLeft);
         }
-        
+
         void OnLobbyJoined(Lobby lobby)
         {
             Debug.Log($"Successfully joined lobby: {lobby.name}");
@@ -48,7 +48,7 @@ namespace Code.Network
         {
             Debug.Log($"Player {action.PlayerId} joined the lobby!");
         }
-        
+
         private void OnPlayerLeft(PlayerAction action)
         {
             Debug.Log($"[PlayFlowClientConnector] Игрок {action.PlayerId} отключен от сервера.");
@@ -79,20 +79,22 @@ namespace Code.Network
                     // Ищем лобби с местом
                     foreach (var lobby in lobbies)
                     {
-                        if (lobby.currentPlayers < lobby.maxPlayers 
-                            && lobby.currentPlayers > 0 
+                        if (lobby.currentPlayers < lobby.maxPlayers
+                            && lobby.currentPlayers > 0
                             && lobby.status == "in_game")
                         {
                             Debug.Log($"Подключаемся к лобби {lobby.name} с ID {lobby.id}...");
                             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobby.id,
-                                onSuccess: lobbyJoined => {
+                                onSuccess: lobbyJoined =>
+                                {
                                     Debug.Log("Успешно подключились к лобби");
                                     InitPlayerDataOnLobby();
-                                }, 
+                                },
                                 onError: error => Debug.LogError("Ошибка при подключении к лобби: " + error));
                             return;
                         }
                     }
+
                     // Если свободных комнат нет - создаём новую
                     CreateLobby();
                 },
@@ -104,15 +106,16 @@ namespace Code.Network
                 });
         }
 
-        void CreateLobby()
+        // TODO: Private rooms create
+        public void CreateLobby(string lobbyName = null, bool isPrivate = false)
         {
             LoadingScreenUI.Instance.Show("loading.create_lobby", "loading.please_wait");
             Debug.Log("Создаем новую лобби...");
             PlayFlowLobbyManagerV2.Instance.CreateLobby(
-                name: "Lobby_" + Random.Range(000000, 999999),
+                name: lobbyName ?? "Lobby_" + Random.Range(000000, 999999),
                 maxPlayers: maxPlayersPerLobby,
-                isPrivate: false,
-                allowLateJoin:true,
+                isPrivate: false, 
+                allowLateJoin: true,
                 region: "eu-west",
                 customSettings: new Dictionary<string, object>(),
                 onSuccess: lobby =>
@@ -136,7 +139,7 @@ namespace Code.Network
         {
             LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
             Debug.Log($"Сервер готов! Подключаемся к {connectionInfo.Ip}:{connectionInfo.Port}");
-            InstanceFinder.NetworkManager.ClientManager.StartConnection(connectionInfo.Ip, (ushort) connectionInfo.Port);
+            InstanceFinder.NetworkManager.ClientManager.StartConnection(connectionInfo.Ip, (ushort)connectionInfo.Port);
             LoadingScreenUI.Instance.Invoke("Hide", 1);
         }
 
@@ -144,9 +147,10 @@ namespace Code.Network
         {
             var playerDataDictionary = new Dictionary<string, object>
             {
-                { "data", ClientDataStorage.UserData }
+                { "name", ClientDataStorage.UserData.username },
+                { "role", ClientDataStorage.UserData.role }
             };
-            
+
             PlayFlowLobbyManagerV2.Instance.UpdatePlayerState(playerDataDictionary);
         }
 
@@ -163,6 +167,7 @@ namespace Code.Network
                 PlayFlowLobbyManagerV2.Instance.Events.OnDisconnected.RemoveListener(OnDisconnected);
                 PlayFlowLobbyManagerV2.Instance.Events.OnPlayerLeft.RemoveListener(OnPlayerLeft);
             }
+
             Destroy(gameObject);
         }
 

@@ -3,6 +3,7 @@ using System.Text;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
+using Code.Network;
 using Code.Network.Player;
 using Code.Player;
 using Code.Scene.SceneObjectControl;
@@ -11,6 +12,7 @@ using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
 using MetaVoiceChat.NetProviders.FishNet;
+using PlayFlow;
 using Proyecto26;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -516,52 +518,13 @@ namespace Code.Chat
 
         private void CreateRoom(string roomName, bool isPrivate)
         {
-            //LobbyDisconnector.Disconnect();
-            //var lobbyController = FindAnyObjectByType<LobbyController>();
-            //lobbyController.CreateLobbyManual(roomName, 64, isPrivate: isPrivate);
-        }
-
-        public void GetRooms()
-        {
-            if (!ClientDataStorage.UserData.IsAdminRole)
+            PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>
             {
-                CommandCallback("You can not get rooms", false);
-                return;
-            }
-
-            StartCoroutine(GetRoomsCoroutine());
-        }
-
-        private IEnumerator GetRoomsCoroutine()
-        {
-            /*var lobbyController = FindAnyObjectByType<LobbyController>();
-            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
-            var lobbies = lobbyController.GetAllLobbies();
-
-            var textToInput = new StringBuilder();
-            foreach (var lobby in lobbies)
-            {
-                Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
-                if (!info.HasValue)
-                    continue;
-
-                var nameResult =
-                    Network.Lobby.EOSCoroutines.Lobby.GetAttribute(lobby, LobbyController.Name, out var nameAttr);
-
-                var lobbyId = info.Value.LobbyId;
-                var lobbyName = nameResult == Result.Success
-                    ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
-                    : string.Empty;
-                var maxPlayersCount = info.Value.MaxMembers;
-                var currentPlayersCount = Network.Lobby.EOSCoroutines.Lobby.GetMembers(lobby).Count;
-
-                textToInput.Append(
-                    $"<color=red>{lobbyId}</color> {lobbyName} [{currentPlayersCount}/{maxPlayersCount}] \n");
-            }
-
-            CommandCallback(textToInput.ToString(), true);
-            */
-            yield return null;
+                var playFlowFishNet = FindAnyObjectByType<PlayFlowFishnet>();
+                if(playFlowFishNet == null)
+                    return;
+                playFlowFishNet.CreateLobby(roomName, isPrivate);
+            });
         }
 
         public void MoveUserToRoom(string args)
@@ -603,7 +566,7 @@ namespace Code.Chat
                 return;
             }
 
-            StartCoroutine(MoveUserToRoomCoroutine(sender, connection, username, lobbyName));
+            MoveUserToRoomCoroutine(sender, connection, username, lobbyName);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -615,73 +578,21 @@ namespace Code.Chat
                 return;
             }
 
-            StartCoroutine(MoveUserToRoomByIdCoroutine(sender, connection, username, lobbyId));
+            MoveUserToRoomByIdCoroutine(sender, connection, username, lobbyId);
         }
 
-        private IEnumerator MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
+        private void MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
         {
-            /*
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
-            var lobbies = lobbyController.GetAllLobbies().ToList();
-
-            var lobby = lobbies.Find(l =>
-            {
-                var nameResult =
-                    Network.Lobby.EOSCoroutines.Lobby.GetAttribute(l, LobbyController.Name, out var nameAttr);
-
-                var findLobbyName = nameResult == Result.Success
-                    ? nameAttr.Value.Data.Value.Value.AsUtf8.ToString()
-                    : string.Empty;
-
-                return findLobbyName == lobbyName;
-            });
-
-            if (lobby == null)
-            {
-                CommandCallback_Rpc(sender, $"Lobby {lobbyName} not found", false);
-                yield break;
-            }
-
-            Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(lobby, out var info);
-            if (!info.HasValue)
-            {
-                CommandCallback_Rpc(sender, $"Unknown error", false);
-                yield break;
-            }
-
-            var lobbyId = info.Value.LobbyId;
-
-            MoveUserTargetRpc(target, lobbyId);
-            CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
-            */
-            yield return null;
+            
         }
 
-        private IEnumerator MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target,
+        private void MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target,
             string username, string lobbyId)
         {
-            /*
-            var lobbyController = FindAnyObjectByType<LobbyController>();
-            yield return StartCoroutine(lobbyController.PollLobbiesRoutine());
-            var lobbies = lobbyController.GetAllLobbies().ToList();
-
-            var lobby = lobbies.Find(l =>
-            {
-                Network.Lobby.EOSCoroutines.Lobby.GetLobbyInfo(l, out var info);
-                return info.HasValue && info.Value.LobbyId == lobbyId;
-            });
-
-            if (lobby == null)
-            {
-                CommandCallback_Rpc(sender, $"Lobby {lobbyId} not found", false);
-                yield break;
-            }
 
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
-            */
-            yield return null;
+            
         }
 
         [TargetRpc]
@@ -693,6 +604,10 @@ namespace Code.Chat
             //
             // LobbyDisconnector.Disconnect();
             // lobbyController.JoinLobbyById(lobbyId);
+            
+            PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>  
+                PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId),
+                error => Debug.LogError(error));
         }
 
         #endregion

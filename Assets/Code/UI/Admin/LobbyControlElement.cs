@@ -95,17 +95,21 @@ namespace Code.UI.Admin
 
         private void InitializePlayerSelectionSystem()
         {
-            /*
-            // Кешируем всех доступных игроков
-            _allAvailablePlayers = LobbyVariables.Instance.currentLobby.lobbyMembers
-                .Select(m => m.displayName)
-                .Where(name => !string.IsNullOrEmpty(name))
+            
+            _allAvailablePlayers = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.ToList()
+                .Select(id =>
+                {
+                    if (PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(id, out var playerData)
+                        && playerData.TryGetValue("name", out var playerName))
+                        return playerName.ToString();
+                    return string.Empty;
+                })
+                .Where(playerName => !string.IsNullOrEmpty(playerName))
                 .Distinct()
                 .ToList();
 
             // Добавляем первый дропдаун
             AddPlayerToPopup();
-        */
         }
 
         private void AddPlayerToPopup()
