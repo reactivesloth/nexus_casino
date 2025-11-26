@@ -1,14 +1,6 @@
-// To use rnnoise in MetaVoiceChat:
-// 1. Install Adrenak's RNNoise4Unity using the instructons here: https://github.com/adrenak/RNNoise4Unity
-// 2. Uncomment #define ENABLE_RNNOISE_FOR_META_VOICE_CHAT below
-
-//#define ENABLE_RNNOISE_FOR_META_VOICE_CHAT
-
-#if ENABLE_RNNOISE_FOR_META_VOICE_CHAT
 using Adrenak.RNNoise4Unity;
 using UnityEngine;
 using System;
-#endif
 
 using MetaVoiceChat.Input;
 
@@ -18,7 +10,6 @@ namespace MetaVoiceChat.Rnnoise
     {
         public MetaVc metaVc;
 
-#if ENABLE_RNNOISE_FOR_META_VOICE_CHAT
         private const int DenoiserFramesize = 480;
 
         private Denoiser denoiser;
@@ -51,11 +42,9 @@ namespace MetaVoiceChat.Rnnoise
             denoiser = null;
             multiples = 0;
         }
-#endif
 
         protected override void Filter(int index, ref float[] samples)
         {
-#if ENABLE_RNNOISE_FOR_META_VOICE_CHAT
             if (denoiser == null || multiples == 0)
             {
                 return;
@@ -86,7 +75,6 @@ namespace MetaVoiceChat.Rnnoise
 
                 //FixedLengthArrayPool<float>.Return(buffer);
             }
-#endif
         }
     }
 }
