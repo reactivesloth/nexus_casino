@@ -352,18 +352,19 @@ namespace Code.Network
             }
         }*/
         
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(RequireOwnership = false, DataLength = 15_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
             RelayFrame(data, width, height);
         }
-
-        [ObserversRpc(ExcludeOwner = true, BufferLast = true)]
+        
+        [ObserversRpc(ExcludeOwner = true, DataLength = 15_000)]
         private void RelayFrame(byte[] data, int width, int height)
         {
-            if (IsOwner) // владелец не принимает свои же кадры
+            if (IsOwner)
                 return;
 
+            Debug.Log(data.Length + " bytes");
             float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
             if (_currentReceiveInterval < wait)
                 return;
@@ -397,15 +398,9 @@ namespace Code.Network
                 _recvTex.filterMode = FilterMode.Bilinear; // или Trilinear
                 _recvTex.wrapMode = TextureWrapMode.Clamp;
             }
-
+            
             if (!_recvTex.LoadImage(bytes, false))
                 return;
-            
-            float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
-            if (_currentReceiveInterval < wait)
-                return;
-
-            _currentReceiveInterval = 0f;
 
             targetImage.texture = _recvTex;
             ImageUtility.AdjustAspect(targetImage);
