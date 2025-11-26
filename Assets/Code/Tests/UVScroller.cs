@@ -1,3 +1,4 @@
+#if !UNITY_SERVER
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -133,3 +134,4 @@ public sealed class UVScroller : MonoBehaviour
             enabled = true;
     }
 }
+#endif

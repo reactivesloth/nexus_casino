@@ -1,4 +1,4 @@
-using System;
+#if !UNITY_SERVER
 using UnityEngine;
 
 [RequireComponent(typeof(Renderer))]
@@ -226,3 +226,4 @@ public sealed class TileSheetAnimator : MonoBehaviour
         }
     }
 }
+#endif

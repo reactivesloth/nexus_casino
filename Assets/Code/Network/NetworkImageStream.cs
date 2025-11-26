@@ -364,7 +364,7 @@ namespace Code.Network
             if (IsOwner)
                 return;
 
-            Debug.Log(data.Length + " bytes");
+            //Debug.Log(data.Length + " bytes");
             float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
             if (_currentReceiveInterval < wait)
                 return;

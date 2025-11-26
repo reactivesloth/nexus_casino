@@ -1,3 +1,4 @@
+#if !UNITY_SERVER
 using UnityEngine;
 
 [DisallowMultipleComponent]
@@ -164,3 +165,4 @@ public sealed class UVDiscoFloor : MonoBehaviour
         if (enabled) OnEnable();
     }
 }
+#endif
