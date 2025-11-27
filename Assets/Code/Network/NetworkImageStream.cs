@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Code.InteractionSystem;
 using Code.Utility;
 using FishNet;
 using FishNet.Connection;
@@ -20,8 +21,10 @@ namespace Code.Network
     /// • Адаптивная частота отправки/приёма.
     /// • Осторожно с ресурсами и null'ами.
     /// </summary>
-    public sealed class NetworkImageStream : NetworkBehaviour
+    public sealed class NetworkImageStream : NetworkBehaviour, ITurtlePassReceiver 
     {
+        [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        
         [Header("Source UI")]
         [SerializeField] private RawImage rawImage;
 
@@ -62,13 +65,23 @@ namespace Code.Network
 
         private float _currentReceiveInterval;
         
+        private int SlotNumber => slotMachineInteractable.IDNumber;
+        
         public event Action<Texture> OnApplyTexture;
 
+#if UNITY_EDITOR
+        protected override void OnValidate()
+        {
+            base.OnValidate();
+            slotMachineInteractable = GetComponent<SlotMachineInteractable>();
+        }
+#endif
+        
         private void Awake()
         {
             ResetQualitySettings();
         }
-
+        
         public void SetQualitySettings(float down, int jpg)
         {
             _currentDownscale = down;
@@ -144,6 +157,9 @@ namespace Code.Network
                 StartSendLoop();
             else if (Owner == null)
                 ShowIdleTexture();
+            
+            
+            TurtlePassManager.Receivers.Add(this);
         }
 
         private void Update()
@@ -156,6 +172,8 @@ namespace Code.Network
             StopSendLoop();
             ReleaseResources();
             _currentReceiveInterval = 0f;
+            
+            TurtlePassManager.Receivers.Remove(this);
         }
 
         private void StartSendLoop()
@@ -266,19 +284,153 @@ namespace Code.Network
             // Защита: объект может ещё не быть заспавнен/владельцем на этот кадр
             if (Owner != null && OwnerId != -1)
             {
-                UploadFrame(encoded, w, h);
-                //UploadFrame(encoded, w, h);
+                // UploadFrame(encoded, w, h);
+                SendLongBytes(encoded, w, h);
                 OnApplyTexture?.Invoke(rawImage.texture);
             }
         }
+
+        private void SendLongBytes(byte[] encoded, int width, int height)
+        {
+            byte[] payload = new byte[1 + 4 + 4 + encoded.Length];
+            payload[0] = (byte)SlotNumber; 
+            Buffer.BlockCopy(BitConverter.GetBytes(width), 0, payload, 1, 4);
+            Buffer.BlockCopy(BitConverter.GetBytes(height), 0, payload, 5, 4);
+            Buffer.BlockCopy(encoded, 0, payload, 9, encoded.Length);
+            
+            var clientConn = NetworkManager.ClientManager.Connection;
+            int senderID = clientConn != null ? clientConn.ClientId : -1;
+            
+            TurtlePassManager.QueueSendBytes(
+                senderID: senderID,
+                dataType: TurtlePassDataType.StreamFrame,
+                data: payload,
+                packedSize: payload.Length,
+                sendToServer: true
+            );
+        }
         
-        private Dictionary<int, byte[]> _latestFrameChunks;
+        // ITurtlePassReceiver implementation
+        public void ReceiveTurtlePassMessage(byte[] data, int packedSize, int senderId, TurtlePassDataType dataType)
+        {
+            Debug.Log($"[NetworkImageStream] Receive turtle pass message from {senderId}, data type: {dataType}");
+            if (dataType != TurtlePassDataType.StreamFrame)
+                return;
+
+            // На сервере раздаём наблюдателям
+            if (NetworkManager.IsServerStarted)
+            {
+                HandleOnServer(data, packedSize, senderId);
+                return;
+            }
+
+            // На клиентах принимаем и показываем
+            if (NetworkManager.IsClientStarted)
+            {
+                Debug.Log("[NetworkImageStream] Client Handle");
+                HandleOnClient(data, packedSize, senderId);
+            }
+        }
+
+        private void HandleOnServer(byte[] data, int packedSize, int senderId)
+        {
+            // Проверяем, что отправитель — это владелец этого объекта
+            if (Owner == null || Owner.ClientId != senderId)
+                return;
+
+            if (data == null || data.Length < 9)
+                return;
+
+            // Фильтрация по экрану
+            byte screen = data[0];
+            if (screen != (byte)SlotNumber) 
+                return;
+
+            // Извлекаем наблюдателей
+            if (NetworkObject == null)
+                return;
+
+            var observers = NetworkObject.Observers;
+            if (observers == null || observers.Count == 0)
+                return;
+
+            TurtlePassManager.QueueSendBytes(
+                senderID: -1,
+                dataType: TurtlePassDataType.StreamFrame,
+                data: data,
+                packedSize: packedSize,
+                sendToServer: false
+            );
+            
+            /*// Раздаём кадр каждому наблюдателю (кроме владельца)
+            foreach (NetworkConnection observer in observers)
+            {
+                if (observer == null)
+                    continue;
+
+                if (observer == Owner)
+                    continue;
+
+                TurtlePassManager.QueueSendBytes(
+                    senderID: -1,
+                    dataType: TurtlePassDataType.StreamFrame,
+                    data: data,
+                    packedSize: packedSize,
+                    sendToServer: false,
+                    ToSpecificID: observer.ClientId
+                );
+            }*/
+        }
+
+        private void HandleOnClient(byte[] data, int packedSize, int senderId)
+        {
+            if (data == null || data.Length < 9)
+                return;
+
+            // Фильтрация по номеру экрана
+            byte screen = data[0];
+            if (screen != (byte)SlotNumber)
+                return;
+
+            int width = BitConverter.ToInt32(data, 1);
+            int height = BitConverter.ToInt32(data, 5);
+
+            byte[] imageData = new byte[data.Length - 9];
+            Buffer.BlockCopy(data, 9, imageData, 0, imageData.Length);
+
+            float wait = GetWait(receiveMaxFps, receiveMaxFramePercent);
+            if (_currentReceiveInterval < wait)
+                return;
+
+            _currentReceiveInterval = 0f;
+
+            targetImage.gameObject.SetActive(true);
+
+            byte[] raw = imageData;
+            if (lz4Compress)
+            {
+                try
+                {
+                    raw = LZ4Pickler.Unpickle(raw);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"LZ4 unpickle error: {ex.Message}");
+                    return;
+                }
+            }
+
+            ApplyImage(raw, width, height);
+        }
+        
+        //RPC + ЧАНКИ
+        /*private Dictionary<int, byte[]> _latestFrameChunks;
         private Guid _currentFrameGuid;
         private int _latestTotalChunks;
         private int _latestWidth;
         private int _latestHeight;
-        
-        /*/// <summary>
+
+        /// <summary>
         /// Разбиение на чанки по 1000 байт и отправка.
         /// </summary>
         private void SendInChunks(byte[] data, int width, int height)
@@ -316,9 +468,9 @@ namespace Code.Network
                 ShowIdleTexture();
                 return;
             }
-            
+
             targetImage.gameObject.SetActive(true);
-            
+
             // если пришёл новый GUID — сбросить старые данные
             if (_latestFrameChunks == null || frameGuid != _currentFrameGuid)
             {
@@ -352,7 +504,8 @@ namespace Code.Network
             }
         }*/
         
-        [ServerRpc(RequireOwnership = false, DataLength = 15_000)]
+        //RPC
+        /*[ServerRpc(RequireOwnership = false, DataLength = 15_000)]
         private void UploadFrame(byte[] data, int width, int height)
         {
             RelayFrame(data, width, height);
@@ -384,7 +537,7 @@ namespace Code.Network
                 raw = K4os.Compression.LZ4.LZ4Pickler.Unpickle(raw);
 
             ApplyImage(raw, width, height);
-        }
+        }*/
 
         private void ApplyImage(byte[] bytes, int width, int height)
         {
