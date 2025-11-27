@@ -16,7 +16,7 @@ public class TurtlePassManager : MonoBehaviour
     public static TurtlePassMessagePool pool = new TurtlePassMessagePool();
     public const int maxSize = 40_000;
     public const int maxSendPerAttempt = 10;
-    public const float sendInterval = 0.1f; 
+    public const float sendInterval = 0.05f; 
 
     public static List<ITurtlePassReceiver> Receivers = new List<ITurtlePassReceiver>();
     private Dictionary<int,TurtlePassMessage> TurtlePassSenderDict = new Dictionary<int, TurtlePassMessage>();
