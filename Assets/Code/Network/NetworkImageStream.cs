@@ -2,6 +2,7 @@ using System;
 using Code.InteractionSystem;
 using Code.Network.Stream;
 using Code.Network.Stream.Data;
+using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -205,6 +206,7 @@ namespace Code.Network
             {
                 targetImage.texture = _recvTex;
                 targetImage.color = Color.white;
+                ImageUtility.AdjustAspect(targetImage);
                 OnApplyTexture?.Invoke(_recvTex);
             }
         }
