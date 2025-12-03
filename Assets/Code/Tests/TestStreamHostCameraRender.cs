@@ -1,3 +1,4 @@
+using Code.Network.Stream;
 using FishNet.Object;
 using UnityEngine;
 
@@ -6,7 +7,7 @@ namespace Code.Tests
     public class TestStreamHostCameraRender : NetworkBehaviour
     {
         [SerializeField] private RenderTexture renderTexture;
-        [SerializeField] private Code.Network.NetworkImageStream imageStream;
+        [SerializeField] private NetworkImageStream imageStream;
 
         private Camera _cam;
         private Transform _camTf;

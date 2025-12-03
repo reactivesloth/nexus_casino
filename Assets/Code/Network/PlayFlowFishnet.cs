@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Code.API;
 using Code.UI;
@@ -139,7 +140,13 @@ namespace Code.Network
         {
             LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
             Debug.Log($"Сервер готов! Подключаемся к {connectionInfo.Ip}:{connectionInfo.Port}");
-            InstanceFinder.NetworkManager.ClientManager.StartConnection(connectionInfo.Ip, (ushort)connectionInfo.Port);
+            StartCoroutine(ConnectToServer(connectionInfo.Ip, (ushort)connectionInfo.Port));
+        }
+
+        private IEnumerator ConnectToServer(string ip, ushort port)
+        {
+            yield return new WaitForSeconds(2f);
+            InstanceFinder.NetworkManager.ClientManager.StartConnection(ip, port);
             LoadingScreenUI.Instance.Invoke("Hide", 1);
         }
 

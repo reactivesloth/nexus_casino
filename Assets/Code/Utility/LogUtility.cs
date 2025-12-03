@@ -65,7 +65,7 @@ public class LogUtility : MonoBehaviour
             return Path.Combine(Application.persistentDataPath, "user_log.txt");
         }
 #else
-        return Path.Combine(Application.persistentDataPath, "user_log.txt");
+        return Path.Combine(Application.streamingAssetsPath, "user_log.txt");
 #endif
     }
 
