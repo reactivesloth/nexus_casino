@@ -87,7 +87,7 @@ namespace Code.Network
         public void ApplyTexture(Texture texture)
         {
             screenRawImage.texture = texture;
-            ImageUtility.AdjustAspect(screenRawImage);
+            //ImageUtility.AdjustAspect(screenRawImage);
         }
 
         [ServerRpc(RequireOwnership = false)]

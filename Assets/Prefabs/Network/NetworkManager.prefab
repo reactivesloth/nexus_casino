@@ -19,6 +19,7 @@ GameObject:
   - component: {fileID: -4495655378147797735}
   - component: {fileID: -5474675281091056609}
   - component: {fileID: -3783495027438322831}
+  - component: {fileID: 220126288237820897}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -283,3 +284,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TurtlePassManager
   debug: 1
+--- !u!114 &220126288237820897
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f944dbd0dd55d48478bd43d44466deb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.FishNetAutoReconnect
