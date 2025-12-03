@@ -32,6 +32,8 @@ namespace Code.Network.Stream
         private NetPacketProcessor packetProcessor;
         private NetDataWriter writer;
 
+        public event Action<StreamFrameData> OnFrameReceived;
+        
         private void Awake()
         {
             InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
@@ -46,7 +48,7 @@ namespace Code.Network.Stream
         {
             if (args.ConnectionState == LocalConnectionState.Started)
             {
-                Invoke(nameof(Connect), 10f);
+                Connect();
             }
             else
             {
@@ -62,15 +64,15 @@ namespace Code.Network.Stream
             packetProcessor = new NetPacketProcessor();
             writer = new NetDataWriter();
             
-            packetProcessor.SubscribeReusable<StreamFrameData>(OnFrameReceived);
+            packetProcessor.SubscribeReusable<StreamFrameData>(OnFrameReceive);
 
             client = new NetManager(this, null)
             {
-                AutoRecycle = true,
-                DisconnectTimeout = 10_000
+                AutoRecycle = true
             };
             client.Start();
             client.Connect(StreamingLiteNetLibServer.ServerAddress, StreamingLiteNetLibServer.ServerStreamPort, "stream_peer");
+            
             if (debugLogs)
                 Debug.Log(
                     $"[StreamingLiteNetLibPeer] Connecting to {StreamingLiteNetLibServer.ServerAddress}:{StreamingLiteNetLibServer.ServerStreamPort}");
@@ -86,7 +88,7 @@ namespace Code.Network.Stream
         /// <summary>
         /// Отправить фрейм стрима на сервер.
         /// </summary>
-        public void SendStreamFrame(byte slotNumber, byte[] frameData)
+        public void SendStreamFrame(int slotNumber, byte[] frameData)
         {
             if(server.ConnectionState != ConnectionState.Connected)
                 return;
@@ -112,10 +114,9 @@ namespace Code.Network.Stream
             return false;
         }
 
-        private void OnFrameReceived(StreamFrameData frameData)
+        private void OnFrameReceive(StreamFrameData frameData)
         {
-            Debug.Log(
-                $"[StreamingLiteNetLibPeer] Received {frameData.Data.Length} bytes form player {frameData.StreamerId} slot#{frameData.SlotId}");
+            OnFrameReceived?.Invoke(frameData);
         }
 
         #region INetEventListener
@@ -136,7 +137,9 @@ namespace Code.Network.Stream
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            Debug.LogWarning($"[StreamingLiteNetLibPeer] Peer disconnected. Reason: {disconnectInfo.Reason}");
+            Connect();
+            
+            if(debugLogs) Debug.LogWarning($"[StreamingLiteNetLibPeer] Peer disconnected. Reason: {disconnectInfo.Reason}");
         }
 
         public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)

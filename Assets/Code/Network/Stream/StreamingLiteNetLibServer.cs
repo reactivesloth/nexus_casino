@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using Code.InteractionSystem;
 using Code.Network.Stream.Data;
 using LiteNetLib;
 using FishNet;
@@ -28,9 +30,9 @@ namespace Code.Network.Stream
 
         private NetPacketProcessor packetProcessor;
         private NetDataWriter writer;
-        
+
         private readonly Dictionary<NetPeer, int> clients = new Dictionary<NetPeer, int>();
-        
+
         public static string ServerAddress
         {
             get
@@ -67,25 +69,17 @@ namespace Code.Network.Stream
         {
             server?.PollEvents();
         }
-        
-        /*
-        private void OnServerConnectionState(ServerConnectionStateArgs args)
-        {
-            if (args.ConnectionState == LocalConnectionState.Started)
-                StartServer();
-            if (args.ConnectionState == LocalConnectionState.Stopped && _isRunning)
-                StopServer();
-        }*/
 
         private void StartServer()
         {
             packetProcessor = new NetPacketProcessor();
             writer = new NetDataWriter();
-            
+
             packetProcessor.SubscribeReusable<StreamFrameData, NetPeer>(OnFrameReceived);
             packetProcessor.SubscribeReusable<PlayerConnectionData, NetPeer>(OnClientConnected);
-            
-            server = new NetManager(this, null) {
+
+            server = new NetManager(this, null)
+            {
                 AutoRecycle = true,
                 DisconnectTimeout = 5_000_000,
             };
@@ -109,8 +103,20 @@ namespace Code.Network.Stream
 
         private void RetranslateFrame(StreamFrameData data)
         {
-            foreach (var client in clients)
+            // ПОлучаем id наблюдателей за автоматом №data.SlotId
+            var slotObserverController =
+                SlotMachineInteractable.FindById(data.SlotId).Observers.Select(nc => nc.ClientId);
+
+            // Выбираем пиров по id для отправки
+            var clientsForSent = clients.Where(c => 
+                slotObserverController.Contains(c.Value));
+
+            foreach (var client in clientsForSent)
             {
+                // Не отправляем стримеру обратно 
+                if (client.Value == data.StreamerId)
+                    return;
+
                 writer.Reset();
                 packetProcessor.Write(writer, data);
                 client.Key.Send(writer, DeliveryMethod.ReliableOrdered);
@@ -125,7 +131,7 @@ namespace Code.Network.Stream
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            if(clients.ContainsKey(peer))
+            if (clients.ContainsKey(peer))
                 clients.Remove(peer);
         }
 

@@ -1,4 +1,7 @@
 using System;
+using Code.InteractionSystem;
+using Code.Network.Stream;
+using Code.Network.Stream.Data;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -9,6 +12,8 @@ namespace Code.Network
 {
     public sealed class NetworkImageStream : NetworkBehaviour
     {
+        [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        
         [Header("UI")]
         [SerializeField] private RawImage rawImage;
         [SerializeField] private RawImage targetImage;
@@ -19,6 +24,8 @@ namespace Code.Network
         [SerializeField] private int jpgQuality = 35;
         [SerializeField] private float sendRate = 0.1f; // 10 раз в секунду
         
+        [Header("Stream Connection"), SerializeField] private StreamingLiteNetLibPeer streamConnection;
+        
         [Header("Debug")]
         [SerializeField] private bool showDebugLogs = true;
 
@@ -28,7 +35,23 @@ namespace Code.Network
         private Texture2D _readTex;
         private Texture2D _recvTex;
 
+        private int SlotNumber => slotMachineInteractable.IDNumber;
+        
         public event Action<Texture> OnApplyTexture;
+
+        private void Awake()
+        {
+            streamConnection = FindAnyObjectByType<StreamingLiteNetLibPeer>();
+            streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
+        }
+
+        private void StreamConnectionOnOnFrameReceived(StreamFrameData data)
+        {
+            if(data == null || data.SlotId != SlotNumber)
+                return;
+            
+            ApplyReceivedTexture(data.Data);
+        }
 
         // =================================================================================
         // ЛОГИКА СТРИМЕРА
@@ -126,7 +149,9 @@ namespace Code.Network
             
             // Вызываем ServerRpc. FishNet сам знает, какому объекту это принадлежит.
             // По умолчанию это RELIABLE (Гарантированная доставка).
-            Server_UploadFrame(data);
+            //Server_UploadFrame(data);
+            if (streamConnection != null && streamConnection.IsConnected) 
+                streamConnection.SendStreamFrame(SlotNumber, data);
             
             _isCapturing = false;
         }
