@@ -113,7 +113,7 @@ namespace Code.Network.Stream
         /// <summary>
         /// Отправить фрейм стрима на сервер.
         /// </summary>
-        public void SendStreamFrame(int slotNumber, byte[] frameData, int[] observers)
+        public void SendStreamFrame(int slotNumber, byte[] frameData, int[] observers = null)
         {
             if (_server.ConnectionState != ConnectionState.Connected)
             {
@@ -138,7 +138,7 @@ namespace Code.Network.Stream
         {
             OnFrameReceived?.Invoke(frameData);
             if(debugLogs)
-                Debug.Log($"[StreamingLiteNetLibPeer] Received frame {frameData.Data.Length} bytes");
+                Debug.Log($"[StreamingLiteNetLibPeer] Received frame {frameData.Data.Length} bytes from slot №{frameData.SlotId} user №{frameData.StreamerId}");
         }
         
         private void OnClientConnected(PlayerConnectionData data)

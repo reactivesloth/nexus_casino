@@ -162,7 +162,7 @@ namespace Code.Network.Stream
             if (showDebugLogs) Debug.Log($"[Client] Sending RPC {data.Length} bytes...");
 
             if (streamConnection != null && streamConnection.IsConnected)
-                streamConnection.SendStreamFrame(SlotNumber, data, Observers.Select(o => o.ClientId).ToArray());
+                streamConnection.SendStreamFrame(SlotNumber, data);
 
             _isCapturing = false;
         }
@@ -209,10 +209,13 @@ namespace Code.Network.Stream
                     targetImage.color = Color.clear; // Прячем до первого кадра
                 }
             }
-
+            
+            if(showDebugLogs)
+                Debug.Log($"[NetworkImageStreamClient] OnStartClient slot №{SlotNumber} owner: {Owner.ClientId}");
+            
             if (Owner.ClientId == -1)
             {
-                targetImage.gameObject.SetActive(false);
+                targetImage.gameObject.SetActive(true);
             }
         }
 
@@ -222,8 +225,12 @@ namespace Code.Network.Stream
             if (_tempRT) RenderTexture.ReleaseTemporary(_tempRT);
             if (_readTex) Destroy(_readTex);
             if (_recvTex) Destroy(_recvTex);
+            targetImage.gameObject.SetActive(false);
+            
+            if(showDebugLogs)
+                Debug.Log($"[NetworkImageStreamClient] OnStopClient slot №{SlotNumber} owner: {Owner.ClientId}");
         }
-
+        
         // API
         public void SetQualitySettings(float d, int j)
         {
