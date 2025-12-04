@@ -17,8 +17,7 @@ namespace Code.Network
         void Start()
         {
 #if !UNITY_SERVER
-
-            string playerId = SystemInfo.deviceUniqueIdentifier;
+            string playerId = ClientDataStorage.UserData.username;
             PlayFlowLobbyManagerV2.Instance.DefaultLobbyConfig = Application.version;
             PlayFlowLobbyManagerV2.Instance.Initialize(playerId, OnInitialized);
             LoadingScreenUI.Instance.Show("loading", "loading.please_wait");

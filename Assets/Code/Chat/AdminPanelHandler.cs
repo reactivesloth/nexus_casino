@@ -1,5 +1,4 @@
-using System.Collections;
-using System.Text;
+using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
@@ -7,7 +6,6 @@ using Code.Network;
 using Code.Network.Player;
 using Code.Player;
 using Code.Scene.SceneObjectControl;
-//using Epic.OnlineServices;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -52,69 +50,18 @@ namespace Code.Chat
             if(MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
                 SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
-
-        public void Help()
-        {
-            /*if (chatController == null || chatController.CurrentChatBox == null) return;
-
-            var sb = new StringBuilder();
-            if (!string.IsNullOrEmpty(helpText))
-                sb.AppendLine($"<color=yellow>{helpText}</color>");
-
-            // без LINQ/foreach alloc
-            var dict = chatController.CommandsDictionary;
-            if (dict != null)
-            {
-                foreach (var kv in dict)
-                {
-                    var cmd = kv.Value;
-                    if (cmd != null)
-                        sb.AppendLine(cmd.commandValue + " - " + cmd.description);
-                }
-            }
-
-            chatController.CurrentChatBox.RegisterChat(chatController.SystemName, sb.ToString());*/
-        }
-
+        
         #region Kick
 
         public void Kick(string username)
         {
-            // if(false)
             if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
             {
                 CommandCallback("You can't kick other users.", false);
                 return;
             }
 
-            Kick_ServerRPC(ClientManager.Connection, username);
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void Kick_ServerRPC(NetworkConnection sender, string username)
-        {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
-            {
-                CommandCallback_Rpc(sender, $"User {username} not found", false);
-                return;
-            }
-
-            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
-                && playerData.IsAdminRole)
-            {
-                CommandCallback_Rpc(sender, $"User {username} cannot be kicked", false);
-                return;
-            }
-
-            CommandCallback_Rpc(null, $"User {username} was kicked", true);
-            Kick_TargetRpc(connection);
-        }
-
-        [TargetRpc]
-        private void Kick_TargetRpc(NetworkConnection target)
-        {
-            PlayerPrefs.DeleteKey("auth_accessToken");
-            //LobbyDisconnector.Disconnect(true, "You was kicked / baned");
+            PlayFlowLobbyManagerV2.Instance.KickPlayer(username);
         }
 
         #endregion
@@ -137,8 +84,8 @@ namespace Code.Chat
                 CommandCallback($"You can't ban users", false);
                 return;
             }
-
-            /*var banedUser = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m => m.displayName == username);
+            
+            var banedUser = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.FirstOrDefault(m => m == username);
             
             if (banedUser == null)
             {
@@ -146,12 +93,11 @@ namespace Code.Chat
                 return;
             }
 
-            if (banedUser.Attributes.TryGetValue(LobbyController.Role, out var role) && MeSchema.CheckAdmin(role))
+            if (PlayFlowLobbyManagerV2.Instance.CurrentLobby.matchmakingData.TryGetValue(banedUser, out var role) && MeSchema.CheckAdmin((string)role))
             {
                 CommandCallback($"User can not be banned", false);
                 return;
             }
-            */
             
             var banRequest = new RequestHelper
             {
