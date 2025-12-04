@@ -71,6 +71,14 @@ namespace Code.Network
 
         void TryJoinOrCreateLobby()
         {
+            if (PlayerPrefs.HasKey("Playflow_NewLobbyInstantID"))
+            {
+                string lobbyId = PlayerPrefs.GetString("Playflow_NewLobbyInstantID");
+                PlayerPrefs.DeleteKey("Playflow_NewLobbyInstantID");
+                JoinLobby(lobbyId);
+                return;
+            }
+            
             PlayFlowLobbyManagerV2.Instance.GetAvailableLobbies(
                 onSuccess: lobbies =>
                 {
@@ -115,7 +123,13 @@ namespace Code.Network
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
                 },
-                onError: error => Debug.LogError("Ошибка при подключении к лобби: " + error));
+                onError: error =>
+                {
+                    Debug.LogError("Ошибка при подключении к лобби: " + error);
+                    
+                    // Можно попытаться повторить зайти в лобби
+                    JoinLobby(lobbyId);
+                });
         }
 
         // TODO: Private rooms create

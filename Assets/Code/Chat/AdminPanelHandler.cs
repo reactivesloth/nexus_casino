@@ -142,6 +142,7 @@ namespace Code.Chat
                 if (banResponse.StatusCode != 200)
                 {
                     CommandCallback(banResponse.Error, false);
+                    Kick(username);
                     return;
                 }
 
@@ -149,6 +150,7 @@ namespace Code.Chat
                 if (!responseData.success)
                 {
                     CommandCallback(responseData.detail, false);
+                    Kick(username);
                     return;
                 }
 
@@ -464,25 +466,6 @@ namespace Code.Chat
             });
         }
 
-        public void MoveUserToRoom(string args)
-        {
-            if (!ClientDataStorage.UserData.IsAdminRole)
-            {
-                CommandCallback("You can not move users", false);
-                return;
-            }
-
-            var argsArray = args.Split(' ');
-
-            if (argsArray.Length != 2)
-            {
-                CommandCallback("Invalid params", false);
-                return;
-            }
-
-            MoveUserByLobbyName_ServerRpc(ClientManager.Connection, argsArray[0], argsArray[1]);
-        }
-
         public void MoveUserToRoom(string username, string roomId)
         {
             if (!ClientDataStorage.UserData.IsAdminRole)
@@ -491,7 +474,7 @@ namespace Code.Chat
                 return;
             }
 
-            MoveUser_ServerRpc(ClientManager.Connection, username, roomId);
+            MoveUserByLobbyName_ServerRpc(ClientManager.Connection, username, roomId);
         }
 
         [ServerRpc(RequireOwnership = false)]
@@ -506,41 +489,19 @@ namespace Code.Chat
             MoveUserToRoomCoroutine(sender, connection, username, lobbyName);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void MoveUser_ServerRpc(NetworkConnection sender, string username, string lobbyId)
-        {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
-            {
-                CommandCallback_Rpc(sender, $"User {username} not found", false);
-                return;
-            }
-
-            MoveUserToRoomByIdCoroutine(sender, connection, username, lobbyId);
-        }
-
         private void MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
         {
             MoveUserTargetRpc(target, lobbyName);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyName}", true);
         }
 
-        private void MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target,
-            string username, string lobbyId)
-        {
-
-            MoveUserTargetRpc(target, lobbyId);
-            CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
-        }
-
         [TargetRpc]
         private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
         {
-            PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>
-            {
-                var playFlowFishNet = FindAnyObjectByType<PlayFlowFishnet>();
-                if(playFlowFishNet == null)
-                    playFlowFishNet.JoinLobby(lobbyId);
-            });
+            PlayerPrefs.SetString("Playflow_NewLobbyInstantID", lobbyId);
+            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
+            flowFishnet.Disconnect();
+            LoadingScreenUI.Instance.LoadScene("Main");
         }
 
         #endregion
@@ -594,9 +555,34 @@ namespace Code.Chat
 
         private void CommandCallback(string message, bool success)
         {
-            Debug.Log ($"Message: {message}, success: {success}");
-            /*chatController.SendSystemMessage(message,
-                !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);*/
+            chatController.SendSystemMessage(message,
+                !success
+                    ? new ChatMessageStyle
+                    {
+                        hideUsername = true,
+                        messageBold = true,
+                        messageColor = Color.darkRed,
+                        messageItalic = true,
+                        messageUnderlined = false,
+                        noUsernameFollowup = true,
+                        usernameBold = false,
+                        usernameColor = Color.white,
+                        usernameItalic = false,
+                        usernameUnderlined = false
+                    }
+                    : new ChatMessageStyle
+                    {
+                        hideUsername = true,
+                        messageBold = true,
+                        messageColor = Color.green,
+                        messageItalic = true,
+                        messageUnderlined = false,
+                        noUsernameFollowup = true,
+                        usernameBold = false,
+                        usernameColor = Color.white,
+                        usernameItalic = false,
+                        usernameUnderlined = false
+                    });
         }
 
         #endregion
