@@ -55,7 +55,7 @@ namespace Code.Chat
 
         public void Kick(string username)
         {
-            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            if (!ClientDataStorage.UserData.IsAdminRole) 
             {
                 CommandCallback("You can't kick other users.", false);
                 return;
@@ -107,7 +107,7 @@ namespace Code.Chat
                     username = username,
                     timeout_minutes = time
                 },
-                Headers = ClientDataStorage.GetJwtHeader(),
+                Headers = ClientDataStorage.GetJwtHeader()
             };
 
             RestClient.Post(banRequest).Then(banResponse =>
@@ -146,7 +146,7 @@ namespace Code.Chat
                 {
                     username = username
                 },
-                Headers = ClientDataStorage.GetJwtHeader(),
+                Headers = ClientDataStorage.GetJwtHeader()
             };
 
             RestClient.Post(unbanRequest).Then(unbanResponse =>
@@ -330,43 +330,6 @@ namespace Code.Chat
 
         #endregion
 
-        #region Promote
-
-        public void PromoteMember(string promotedUserName)
-        {
-            /*var userMemberData = LobbyVariables.Instance.currentLobby.lobbyMembers.FirstOrDefault(m =>
-            {
-                if (!m.Attributes.TryGetValue("NAME", out var memberName))
-                    return false;
-                return memberName == promotedUserName;
-            });
-
-            if (userMemberData == null)
-            {
-                CommandCallback($"User {promotedUserName} not found",
-                    false);
-                return;
-            }
-
-            var userId = userMemberData.productUserId;
-
-            if (ServerManager.Started)
-                FindAnyObjectByType<LobbyController>().Promote(userId);
-            else if (ClientDataStorage.UserData.IsAdminRole)
-                Promote_ServerRpc(userId);
-            else
-                CommandCallback("You can't promote members", false);
-            */
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void Promote_ServerRpc(string userId)
-        {
-            //FindAnyObjectByType<LobbyController>().Promote(userId);
-        }
-
-        #endregion
-
         #region Slots
 
         public void ResetSlot(string idString)
@@ -544,13 +507,6 @@ namespace Code.Chat
         [TargetRpc]
         private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
         {
-            // var lobbyController = FindAnyObjectByType<LobbyController>();
-            //
-            // CommandCallback("You moved to another lobby", true);
-            //
-            // LobbyDisconnector.Disconnect();
-            // lobbyController.JoinLobbyById(lobbyId);
-            
             PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>  
                 PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId),
                 error => Debug.LogError(error));

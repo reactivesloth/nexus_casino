@@ -30,9 +30,7 @@ namespace Code.UI.Admin
         [Space, SerializeField] private Button muteVoiceButton;
         [SerializeField] private Button unmuteVoiceButton;
         [SerializeField] private Button toggleOffVoiceButton;
-
-        [SerializeField] private Button promoteButton;
-
+        
         private AdminPanelHandler _adminPanelHandler;
         private NexusModularPopupOpener _popupOpener;
         private PlayerUI _playerUI;
@@ -60,8 +58,6 @@ namespace Code.UI.Admin
             muteVoiceButton.onClick.AddListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.AddListener(OnUnmuteVoiceClicked);
             toggleOffVoiceButton.onClick.AddListener(OnToggleOffVoiceClicked);
-
-            promoteButton.onClick.AddListener(OnPromoteButtonClicked);
         }
 
         private void OnDisable()
@@ -75,8 +71,6 @@ namespace Code.UI.Admin
             muteVoiceButton.onClick.RemoveListener(OnMuteVoiceClicked);
             unmuteVoiceButton.onClick.RemoveListener(OnUnmuteVoiceClicked);
             toggleOffVoiceButton.onClick.RemoveListener(OnToggleOffVoiceClicked);
-
-            promoteButton.onClick.RemoveListener(OnPromoteButtonClicked);
         }
 
         private void OnDestroy()
@@ -230,13 +224,10 @@ namespace Code.UI.Admin
                 ClosePopupWhenClicked = true,
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
-            promoteButtonInfo.OnClickedEvent.AddListener(Promote);
-
+            
             _popupOpener.Buttons.Add(promoteButtonInfo);
 
             _popupOpener.OpenPopup();
         }
-
-        private void Promote() => _adminPanelHandler.PromoteMember(_username);
     }
 }
