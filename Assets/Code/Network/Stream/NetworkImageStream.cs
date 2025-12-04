@@ -96,7 +96,7 @@ namespace Code.Network.Stream
         {
             _isCapturing = true;
             Texture src = rawImage.texture;
-            OnApplyTexture?.Invoke(_recvTex);
+            OnApplyTexture?.Invoke(src);
 
             // Ресайз
             float aspect = (float)src.width / src.height;
@@ -177,7 +177,8 @@ namespace Code.Network.Stream
                 targetImage.texture = _recvTex;
                 targetImage.color = Color.white;
                 ImageUtility.AdjustAspect(targetImage);
-                OnApplyTexture?.Invoke(_recvTex);
+                if(IsOwner)
+                    OnApplyTexture?.Invoke(_recvTex);
             }
         }
 
