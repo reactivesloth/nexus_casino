@@ -57,14 +57,20 @@ namespace Code.Network.Stream
         // =================================================================================
         // ЛОГИКА СТРИМЕРА
         // =================================================================================
-
+        
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
+            
             if (IsOwner)
             {
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
                 _isCapturing = false;
+            }
+            
+            if (Owner.ClientId == -1)
+            {
+                targetImage.gameObject.SetActive(false);
             }
         }
 
@@ -90,6 +96,7 @@ namespace Code.Network.Stream
         {
             _isCapturing = true;
             Texture src = rawImage.texture;
+            OnApplyTexture?.Invoke(_recvTex);
 
             // Ресайз
             float aspect = (float)src.width / src.height;
@@ -155,40 +162,6 @@ namespace Code.Network.Stream
         }
 
         // =================================================================================
-        // СЕТЕВАЯ ЧАСТЬ (RPC)
-        // =================================================================================
-
-        // 1. Client -> Server (Upload)
-        [ServerRpc] 
-        private void Server_UploadFrame(byte[] data)
-        {
-            // Сервер получил данные.
-            // Отправляем подтверждение владельцу (Debug)
-            Target_DebugReply(Owner, data.Length);
-
-            // Рассылаем всем наблюдателям (Observers)
-            Observers_DownloadFrame(data);
-        }
-
-        // 2. Server -> Clients (Download)
-        // ExcludeOwner = true -> Чтобы не слать картинку обратно стримеру
-        // BufferLast = false -> Чтобы новые игроки не получали старый кадр, а ждали новый
-        [ObserversRpc(ExcludeOwner = true, BufferLast = false)]
-        private void Observers_DownloadFrame(byte[] data)
-        {
-            // Этот код выполняется у ЗРИТЕЛЕЙ
-            ApplyReceivedTexture(data);
-        }
-
-        // 3. Debug Reply (Server -> Owner)
-        [TargetRpc]
-        private void Target_DebugReply(NetworkConnection conn, int bytes)
-        {
-            if (showDebugLogs)
-                Debug.Log($"<color=green>[Server Reply] RPC дошел! Размер: {bytes}</color>");
-        }
-
-        // =================================================================================
         // ПРИЕМ НА КЛИЕНТЕ
         // =================================================================================
 
@@ -228,6 +201,11 @@ namespace Code.Network.Stream
                     targetImage.gameObject.SetActive(true);
                     targetImage.color = Color.clear; // Прячем до первого кадра
                 }
+            }
+            
+            if (Owner.ClientId == -1)
+            {
+                targetImage.gameObject.SetActive(false);
             }
         }
         

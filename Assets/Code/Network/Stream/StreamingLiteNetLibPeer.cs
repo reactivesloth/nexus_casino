@@ -188,6 +188,7 @@ namespace Code.Network.Stream
         public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader,
             UnconnectedMessageType messageType)
         {
+            
         }
 
         public void OnNetworkLatencyUpdate(NetPeer peer, int latency)
