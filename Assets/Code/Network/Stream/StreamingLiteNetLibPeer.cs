@@ -54,7 +54,7 @@ namespace Code.Network.Stream
                 Invoke(nameof(Connect), 1f);    
                 //Connect();
             }
-            else
+            else if(args.ConnectionState == LocalConnectionState.Stopped)
             {
                 Disconnect();
             }
@@ -89,18 +89,28 @@ namespace Code.Network.Stream
             client.Start();
             client.Connect(StreamingLiteNetLibServer.ServerAddress, StreamingLiteNetLibServer.ServerStreamPort, "stream_peer");
             
-            Invoke(nameof(Disconnect), 10f);
+            Invoke(nameof(Reconnect), 10f);
             if (debugLogs)
                 Debug.Log(
                     $"[StreamingLiteNetLibPeer] Connecting to {StreamingLiteNetLibServer.ServerAddress}:{StreamingLiteNetLibServer.ServerStreamPort}");
         }
 
+        [ContextMenu("Reconnect")]
+        public void Reconnect()
+        {
+            Disconnect();
+            Connect();
+        }
+        
         /// <summary>
         /// Отключиться от сервера.
         /// </summary>
         [ContextMenu("Disconnect")]
         public void Disconnect()
         {
+            if (client == null)
+                return;
+            
             client.DisconnectAll();
             client.Stop();
         }
@@ -118,7 +128,7 @@ namespace Code.Network.Stream
             
             var data = new StreamFrameData()
             {
-                StreamerId = 1,//InstanceFinder.ClientManager.Connection.ClientId,
+                StreamerId = InstanceFinder.ClientManager.Connection.ClientId,
                 SlotId = slotNumber,
                 Data = frameData
             };
@@ -150,7 +160,7 @@ namespace Code.Network.Stream
 
             var data = new PlayerConnectionData
             {
-                PlayerId = 1,
+                PlayerId = InstanceFinder.ClientManager.Connection.ClientId,
             };
             writer.Reset();
             packetProcessor.Write(writer, data);
