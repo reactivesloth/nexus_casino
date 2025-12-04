@@ -128,6 +128,9 @@ namespace Code.Network.Stream
                 Data = frameData
             };
             
+            writer.Reset();
+            packetProcessor.Write(writer, data);
+            server.Send(writer, DeliveryMethod.ReliableOrdered);
             _writer.Reset();
             _packetProcessor.Write(_writer, data);
             _server.Send(_writer, DeliveryMethod.ReliableOrdered);
