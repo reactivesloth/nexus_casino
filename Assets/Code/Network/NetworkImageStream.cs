@@ -48,10 +48,11 @@ namespace Code.Network
 
         private void StreamConnectionOnOnFrameReceived(StreamFrameData data)
         {
-            if(data == null || data.SlotId != SlotNumber)
+            if(data == null)
                 return;
             
-            ApplyReceivedTexture(data.Data);
+            if(data.SlotId == SlotNumber)
+                ApplyReceivedTexture(data.Data);
         }
 
         // =================================================================================
