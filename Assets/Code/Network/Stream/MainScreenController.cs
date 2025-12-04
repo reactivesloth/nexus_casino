@@ -1,5 +1,4 @@
 using Code.InteractionSystem;
-using Code.Utility;
 using FishNet.Component.Observing;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -7,7 +6,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Code.Network
+namespace Code.Network.Stream
 {
     public class MainScreenController : NetworkBehaviour
     {

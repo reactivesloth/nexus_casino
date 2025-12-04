@@ -1,15 +1,14 @@
 using System;
 using Code.InteractionSystem;
-using Code.Network.Stream;
 using Code.Network.Stream.Data;
 using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
-namespace Code.Network
+namespace Code.Network.Stream
 {
     public sealed class NetworkImageStream : NetworkBehaviour
     {

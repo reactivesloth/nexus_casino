@@ -4,6 +4,7 @@ using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
 using Code.Network;
+using Code.Network.Stream;
 using FishNet;
 using FishNet.Transporting;
 using PlayFlow;
