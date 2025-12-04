@@ -524,7 +524,8 @@ namespace Code.Chat
 
         private void MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
         {
-            
+            MoveUserTargetRpc(target, lobbyName);
+            CommandCallback_Rpc(sender, $"Moved {username} to {lobbyName}", true);
         }
 
         private void MoveUserToRoomByIdCoroutine(NetworkConnection sender, NetworkConnection target,
@@ -533,15 +534,17 @@ namespace Code.Chat
 
             MoveUserTargetRpc(target, lobbyId);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyId}", true);
-            
         }
 
         [TargetRpc]
         private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
         {
-            PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>  
-                PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId),
-                error => Debug.LogError(error));
+            PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>
+            {
+                var playFlowFishNet = FindAnyObjectByType<PlayFlowFishnet>();
+                if(playFlowFishNet == null)
+                    playFlowFishNet.JoinLobby(lobbyId);
+            });
         }
 
         #endregion

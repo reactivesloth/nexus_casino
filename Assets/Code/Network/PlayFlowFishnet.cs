@@ -106,6 +106,18 @@ namespace Code.Network
                 });
         }
 
+        public void JoinLobby(string lobbyId)
+        {
+            Debug.Log($"Подключаемся к лобби {lobbyId} с ID {lobbyId}...");
+            PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
+                onSuccess: lobbyJoined =>
+                {
+                    Debug.Log("Успешно подключились к лобби");
+                    InitPlayerDataOnLobby();
+                },
+                onError: error => Debug.LogError("Ошибка при подключении к лобби: " + error));
+        }
+
         // TODO: Private rooms create
         public void CreateLobby(string lobbyName = null, bool isPrivate = false)
         {
