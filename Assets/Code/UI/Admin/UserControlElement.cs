@@ -109,7 +109,7 @@ namespace Code.UI.Admin
 
             kickButton.interactable = banButton.interactable = muteChatButton.interactable =
                 unmuteChatButton.interactable = muteVoiceButton.interactable =
-                    unmuteVoiceButton.interactable = _username != ClientDataStorage.UserData.username;
+                    unmuteVoiceButton.interactable = roleText.text is "user" or "vip";
 
             _playerUI = PlayerUI.GetByPlayerName(_username);
             if(_playerUI != null)
