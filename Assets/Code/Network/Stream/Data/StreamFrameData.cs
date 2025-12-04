@@ -5,6 +5,5 @@ namespace Code.Network.Stream.Data
         public int StreamerId { get; set; }
         public int SlotId { get; set; }
         public byte[] Data { get; set; }
-        public int[] ObserversIds { get; set; }
     }
 }
