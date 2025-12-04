@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using Code.Network.Stream.Data;
@@ -7,8 +6,6 @@ using LiteNetLib;
 using LiteNetLib.Utils;
 using FishNet;
 using FishNet.Transporting;
-using FishNet.Transporting.Tugboat;
-using PlayFlow;
 using UnityEngine;
 
 namespace Code.Network.Stream
@@ -136,7 +133,6 @@ namespace Code.Network.Stream
             writer.Reset();
             packetProcessor.Write(writer, data);
             server.Send(writer, DeliveryMethod.ReliableOrdered);
-            Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes");
         }
 
         private void OnFrameReceive(StreamFrameData frameData)

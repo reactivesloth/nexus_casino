@@ -121,7 +121,7 @@ namespace Code.Network
             _readTex.SetPixelData(req.GetData<byte>(), 0);
             _readTex.Apply(false, false);
             
-            SendRPC(_readTex.EncodeToJPG(jpgQuality));
+            Send(_readTex.EncodeToJPG(jpgQuality));
         }
 
         private void SyncReadback(int w, int h)
@@ -133,7 +133,7 @@ namespace Code.Network
             _readTex.Apply(false, false);
             RenderTexture.active = prev;
             
-            SendRPC(_readTex.EncodeToJPG(jpgQuality));
+            Send(_readTex.EncodeToJPG(jpgQuality));
         }
 
         private void PrepareReadTex(int w, int h)
@@ -145,13 +145,10 @@ namespace Code.Network
             }
         }
 
-        private void SendRPC(byte[] data)
+        private void Send(byte[] data)
         {
             if (showDebugLogs) Debug.Log($"[Client] Sending RPC {data.Length} bytes...");
             
-            // Вызываем ServerRpc. FishNet сам знает, какому объекту это принадлежит.
-            // По умолчанию это RELIABLE (Гарантированная доставка).
-            //Server_UploadFrame(data);
             if (streamConnection != null && streamConnection.IsConnected) 
                 streamConnection.SendStreamFrame(SlotNumber, data);
             
