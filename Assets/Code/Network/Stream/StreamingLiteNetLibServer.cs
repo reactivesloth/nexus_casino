@@ -114,11 +114,8 @@ namespace Code.Network.Stream
 
             foreach (var client in clients)
             {
-                if (!data.ObserversIds.Contains(client.Value))
+                if (client.Value == data.StreamerId)
                     continue;
-
-                /*if (client.Value == data.StreamerId)
-                    continue;*/
 
                 writer.Reset();
                 packetProcessor.Write(writer, data);

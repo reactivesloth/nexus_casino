@@ -125,14 +125,13 @@ namespace Code.Network.Stream
             {
                 StreamerId = InstanceFinder.ClientManager.Connection.ClientId,
                 SlotId = slotNumber,
-                Data = frameData, 
-                ObserversIds = observers
+                Data = frameData
             };
             
             _writer.Reset();
             _packetProcessor.Write(_writer, data);
             _server.Send(_writer, DeliveryMethod.ReliableOrdered);
-            Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes to {data.ObserversIds.Length} observers");
+            Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes");
         }
 
         private void OnFrameReceive(StreamFrameData frameData)
@@ -182,8 +181,6 @@ namespace Code.Network.Stream
             DeliveryMethod deliveryMethod)
         {
             _packetProcessor.ReadAllPackets(reader);
-            /*if(debugLogs)
-                Debug.Log($"[StreamingLiteNetLibPeer] Received somethings {reader.RawData.Length} bytes");*/
         }
 
         public void OnNetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader,
