@@ -6,6 +6,7 @@ using Code.Network;
 using Code.Network.Player;
 using Code.Player;
 using Code.Scene.SceneObjectControl;
+using Code.UI;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -55,13 +56,44 @@ namespace Code.Chat
 
         public void Kick(string username)
         {
-            if (!ClientDataStorage.UserData.IsAdminRole) 
+            // if(false)
+            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
             {
                 CommandCallback("You can't kick other users.", false);
                 return;
             }
 
             PlayFlowLobbyManagerV2.Instance.KickPlayer(username);
+            Kick_ServerRPC(ClientManager.Connection, username);
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void Kick_ServerRPC(NetworkConnection sender, string username)
+        {
+            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            {
+                CommandCallback_Rpc(sender, $"User {username} not found", false);
+                return;
+            }
+
+            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
+                && playerData.IsAdminRole)
+            {
+                CommandCallback_Rpc(sender, $"User {username} cannot be kicked", false);
+                return;
+            }
+
+            CommandCallback_Rpc(null, $"User {username} was kicked", true);
+            Kick_TargetRpc(connection);
+        }
+
+        [TargetRpc]
+        private void Kick_TargetRpc(NetworkConnection target)
+        {
+            PlayerPrefs.DeleteKey("auth_accessToken");
+            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
+            flowFishnet.Disconnect();
+            LoadingScreenUI.Instance.LoadScene("Init");
         }
 
         #endregion
