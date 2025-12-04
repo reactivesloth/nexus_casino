@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Code.InteractionSystem;
 using Code.Network.Stream.Data;
 using Code.Utility;
@@ -13,21 +14,22 @@ namespace Code.Network.Stream
     public sealed class NetworkImageStream : NetworkBehaviour
     {
         [SerializeField] private SlotMachineInteractable slotMachineInteractable;
-        
-        [Header("UI")]
-        [SerializeField] private RawImage rawImage;
+
+        [Header("UI")] [SerializeField] private RawImage rawImage;
         [SerializeField] private RawImage targetImage;
 
         [Header("Settings")]
         // 128px = ~2-3 КБ. Это пролетит мгновенно даже через Reliable.
-        [SerializeField] private int maxResolution = 128; 
+        [SerializeField]
+        private int maxResolution = 128;
+
         [SerializeField] private int jpgQuality = 35;
         [SerializeField] private float sendRate = 0.1f; // 10 раз в секунду
-        
-        [Header("Stream Connection"), SerializeField] private StreamingLiteNetLibPeer streamConnection;
-        
-        [Header("Debug")]
-        [SerializeField] private bool showDebugLogs = true;
+
+        [Header("Stream Connection"), SerializeField]
+        private StreamingLiteNetLibPeer streamConnection;
+
+        [Header("Debug")] [SerializeField] private bool showDebugLogs = true;
 
         private float _nextTime;
         private bool _isCapturing;
@@ -36,7 +38,7 @@ namespace Code.Network.Stream
         private Texture2D _recvTex;
 
         private int SlotNumber => slotMachineInteractable.IDNumber;
-        
+
         public event Action<Texture> OnApplyTexture;
 
         private void Awake()
@@ -47,27 +49,27 @@ namespace Code.Network.Stream
 
         private void StreamConnectionOnOnFrameReceived(StreamFrameData data)
         {
-            if(data == null)
+            if (data == null)
                 return;
-            
-            if(data.SlotId == SlotNumber)
+
+            if (data.SlotId == SlotNumber)
                 ApplyReceivedTexture(data.Data);
         }
 
         // =================================================================================
         // ЛОГИКА СТРИМЕРА
         // =================================================================================
-        
+
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-            
+
             if (IsOwner)
             {
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
                 _isCapturing = false;
             }
-            
+
             if (Owner.ClientId == -1)
             {
                 targetImage.gameObject.SetActive(false);
@@ -78,13 +80,13 @@ namespace Code.Network.Stream
         {
             // Стримим только если владелец
             if (!IsOwner) return;
-            
+
             // Лимит частоты
             if (Time.time < _nextTime) return;
-            
+
             // Защита от наложения
             if (_isCapturing) return;
-            
+
             // Валидация источника
             if (rawImage == null || rawImage.texture == null || rawImage.texture.width < 16) return;
 
@@ -121,12 +123,16 @@ namespace Code.Network.Stream
         private void OnReadback(AsyncGPUReadbackRequest req, int w, int h)
         {
             if (this == null) return;
-            if (req.hasError) { _isCapturing = false; return; }
+            if (req.hasError)
+            {
+                _isCapturing = false;
+                return;
+            }
 
             PrepareReadTex(w, h);
             _readTex.SetPixelData(req.GetData<byte>(), 0);
             _readTex.Apply(false, false);
-            
+
             Send(_readTex.EncodeToJPG(jpgQuality));
         }
 
@@ -135,10 +141,10 @@ namespace Code.Network.Stream
             PrepareReadTex(w, h);
             var prev = RenderTexture.active;
             RenderTexture.active = _tempRT;
-            _readTex.ReadPixels(new Rect(0,0,w,h), 0, 0);
+            _readTex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
             _readTex.Apply(false, false);
             RenderTexture.active = prev;
-            
+
             Send(_readTex.EncodeToJPG(jpgQuality));
         }
 
@@ -154,10 +160,10 @@ namespace Code.Network.Stream
         private void Send(byte[] data)
         {
             if (showDebugLogs) Debug.Log($"[Client] Sending RPC {data.Length} bytes...");
-            
-            if (streamConnection != null && streamConnection.IsConnected) 
-                streamConnection.SendStreamFrame(SlotNumber, data);
-            
+
+            if (streamConnection != null && streamConnection.IsConnected)
+                streamConnection.SendStreamFrame(SlotNumber, data, Observers.Select(o => o.ClientId).ToArray());
+
             _isCapturing = false;
         }
 
@@ -177,7 +183,7 @@ namespace Code.Network.Stream
                 targetImage.texture = _recvTex;
                 targetImage.color = Color.white;
                 ImageUtility.AdjustAspect(targetImage);
-                if(IsOwner)
+                if (IsOwner)
                     OnApplyTexture?.Invoke(_recvTex);
             }
         }
@@ -189,27 +195,27 @@ namespace Code.Network.Stream
         public override void OnStartClient()
         {
             base.OnStartClient();
-            
+
             // Настройка видимости
-            if (IsOwner) 
+            if (IsOwner)
             {
-                if(targetImage) targetImage.gameObject.SetActive(false);
-            } 
-            else 
+                if (targetImage) targetImage.gameObject.SetActive(false);
+            }
+            else
             {
-                if(targetImage) 
+                if (targetImage)
                 {
                     targetImage.gameObject.SetActive(true);
                     targetImage.color = Color.clear; // Прячем до первого кадра
                 }
             }
-            
+
             if (Owner.ClientId == -1)
             {
                 targetImage.gameObject.SetActive(false);
             }
         }
-        
+
         public override void OnStopClient()
         {
             base.OnStopClient();
@@ -219,9 +225,22 @@ namespace Code.Network.Stream
         }
 
         // API
-        public void SetQualitySettings(float d, int j) {}
-        public void ResetQualitySettings() {}
-        public void SetTexture(RawImage i) { rawImage = i; }
-        public void ClearTexture() { rawImage = null; }
+        public void SetQualitySettings(float d, int j)
+        {
+        }
+
+        public void ResetQualitySettings()
+        {
+        }
+
+        public void SetTexture(RawImage i)
+        {
+            rawImage = i;
+        }
+
+        public void ClearTexture()
+        {
+            rawImage = null;
+        }
     }
 }

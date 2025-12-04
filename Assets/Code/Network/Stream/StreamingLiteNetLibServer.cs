@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using Code.InteractionSystem;
 using Code.Network.Stream.Data;
 using LiteNetLib;
 using FishNet;
@@ -20,7 +22,7 @@ namespace Code.Network.Stream
         [SerializeField] private int port = 7777;
         [SerializeField] private int maxClients = 100;
         [SerializeField] private bool debugLogs = true;
-        
+
         // Настройки буферизации
         [SerializeField] private int maxFramesPerSlot = 3; // Максимум кадров в буфере для каждого слота
         [SerializeField] private float frameDropCheckInterval = 1f; // Интервал проверки старых кадров
@@ -32,7 +34,7 @@ namespace Code.Network.Stream
         private NetDataWriter writer;
 
         private readonly Dictionary<NetPeer, int> clients = new Dictionary<NetPeer, int>();
-        
+
         public static string ServerAddress
         {
             get
@@ -95,33 +97,28 @@ namespace Code.Network.Stream
 
         private void OnFrameReceived(StreamFrameData data, NetPeer peer)
         {
-            AddFrameToBuffer(data);
+            RetranslateFrame(data);
         }
 
         private void OnClientConnected(PlayerConnectionData data, NetPeer peer)
         {
             clients[peer] = data.PlayerId;
-            
+
             writer.Reset();
             packetProcessor.Write(writer, data);
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
         }
 
-        /// <summary>
-        /// Добавляет кадр в буфер слота с проверкой максимального размера буфера
-        /// </summary>
-        private void AddFrameToBuffer(StreamFrameData data)
-        {
-            RetranslateFrame(data);
-        }
-
         private void RetranslateFrame(StreamFrameData data)
         {
+
             foreach (var client in clients)
             {
-                /*// Не отправляем стримеру обратно 
-                if (client.Value == data.StreamerId)
-                    return;*/
+                if (!data.ObserversIds.Contains(client.Value))
+                    continue;
+
+                /*if (client.Value == data.StreamerId)
+                    continue;*/
 
                 writer.Reset();
                 packetProcessor.Write(writer, data);

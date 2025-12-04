@@ -113,7 +113,7 @@ namespace Code.Network.Stream
         /// <summary>
         /// Отправить фрейм стрима на сервер.
         /// </summary>
-        public void SendStreamFrame(int slotNumber, byte[] frameData)
+        public void SendStreamFrame(int slotNumber, byte[] frameData, int[] observers)
         {
             if (_server.ConnectionState != ConnectionState.Connected)
             {
@@ -125,13 +125,14 @@ namespace Code.Network.Stream
             {
                 StreamerId = InstanceFinder.ClientManager.Connection.ClientId,
                 SlotId = slotNumber,
-                Data = frameData
+                Data = frameData, 
+                ObserversIds = observers
             };
             
             _writer.Reset();
             _packetProcessor.Write(_writer, data);
             _server.Send(_writer, DeliveryMethod.ReliableOrdered);
-            Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes");
+            Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes to {data.ObserversIds.Length} observers");
         }
 
         private void OnFrameReceive(StreamFrameData frameData)
