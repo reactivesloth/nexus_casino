@@ -110,7 +110,6 @@ namespace Code.Chat
 
         public void BanUser(string username, int time)
         {
-            Debug.Log($"BAN {username} for {time}");
             if (!ClientDataStorage.UserData.IsAdminRole)
             {
                 CommandCallback($"You can't ban users", false);
@@ -121,15 +120,11 @@ namespace Code.Chat
             
             if (banedUser == null)
             {
-                CommandCallback($"User not found in lobby", false);
-                return;
+                 CommandCallback($"User not found in lobby", false);
+                 return;
             }
-
-            if (PlayFlowLobbyManagerV2.Instance.CurrentLobby.matchmakingData.TryGetValue(banedUser, out var role) && MeSchema.CheckAdmin((string)role))
-            {
-                CommandCallback($"User can not be banned", false);
-                return;
-            }
+            
+            Debug.Log($"Banning {username} for {time}");
             
             var banRequest = new RequestHelper
             {
@@ -159,6 +154,7 @@ namespace Code.Chat
 
                 CommandCallback($"User {username} was banned", true);
 
+                Debug.Log($"BAN {username} for {time}");
                 Kick(username);
             });
         }
@@ -598,6 +594,7 @@ namespace Code.Chat
 
         private void CommandCallback(string message, bool success)
         {
+            Debug.Log ($"Message: {message}, success: {success}");
             /*chatController.SendSystemMessage(message,
                 !success ? UltimateChatBoxStyles.errorMessage : UltimateChatBoxStyles.noticeMessage);*/
         }
