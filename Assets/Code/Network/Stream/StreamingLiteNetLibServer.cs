@@ -55,9 +55,9 @@ namespace Code.Network.Stream
                 var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
                 if (lobby == null)
                     return internalPort;
-                if (!lobby.TryGetPortMapping(internalPort, out var portMapping))
-                    return internalPort;
-                return portMapping.ExternalPort;
+                return !lobby.TryGetPortMapping(internalPort, out var portMapping)
+                    ? internalPort
+                    : portMapping.ExternalPort;
             }
         }
 
@@ -91,10 +91,6 @@ namespace Code.Network.Stream
             server.Start(port);
         }
 
-        private void StopServer()
-        {
-        }
-
         private void OnFrameReceived(StreamFrameData data, NetPeer peer)
         {
             RetranslateFrame(data);
@@ -111,10 +107,14 @@ namespace Code.Network.Stream
 
         private void RetranslateFrame(StreamFrameData data)
         {
-
             foreach (var client in clients)
             {
                 if (client.Value == data.StreamerId)
+                    continue;
+                
+                var slotObserversIds = SlotMachineInteractable.FindById(data.SlotId).Observers.Select(o => o.ClientId)
+                    .ToArray();
+                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(client.Value))
                     continue;
 
                 writer.Reset();
@@ -156,7 +156,7 @@ namespace Code.Network.Stream
 
         public void OnConnectionRequest(ConnectionRequest request)
         {
-            request.Accept();
+            request.AcceptIfKey("stream_peer");
         }
 
         #endregion
