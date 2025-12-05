@@ -26,6 +26,11 @@ namespace Code.Network.Stream
         [SerializeField] private int jpgQuality = 35;
         [SerializeField] private float sendRate = 0.1f; // 10 раз в секунду
 
+        [Header("Frame Change Detection")]
+        [SerializeField] private bool enableFrameChangeDetection = true;
+        [SerializeField] private int frameHashCheckInterval = 1; // Проверять каждый N-й кадр перед отправкой
+        [SerializeField] private float hashSimilarityThreshold = 0.95f; // 95% одинаковости = не отправляем
+
         [Header("Stream Connection"), SerializeField]
         private StreamingLiteNetLibPeer streamConnection;
 
@@ -36,6 +41,11 @@ namespace Code.Network.Stream
         private RenderTexture _tempRT;
         private Texture2D _readTex;
         private Texture2D _recvTex;
+
+        // Frame change detection
+        private byte[] _lastFrameData;
+        private uint _lastFrameHash;
+        private int _frameCheckCounter;
 
         private int SlotNumber => slotMachineInteractable.IDNumber;
 
@@ -59,26 +69,6 @@ namespace Code.Network.Stream
         // =================================================================================
         // ЛОГИКА СТРИМЕРА
         // =================================================================================
-
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
-        {
-            base.OnOwnershipClient(prevOwner);
-
-            if (IsOwner)
-            {
-                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
-                _isCapturing = false;
-            }
-
-            if (Owner.ClientId == -1)
-            {
-                targetImage.gameObject.SetActive(false);
-            }
-            else if (!IsOwner)
-            {
-                targetImage.gameObject.SetActive(true);
-            }
-        }
 
         private void Update()
         {
@@ -137,7 +127,8 @@ namespace Code.Network.Stream
             _readTex.SetPixelData(req.GetData<byte>(), 0);
             _readTex.Apply(false, false);
 
-            Send(_readTex.EncodeToJPG(jpgQuality));
+            byte[] jpgData = _readTex.EncodeToJPG(jpgQuality);
+            Send(jpgData);
         }
 
         private void SyncReadback(int w, int h)
@@ -149,7 +140,8 @@ namespace Code.Network.Stream
             _readTex.Apply(false, false);
             RenderTexture.active = prev;
 
-            Send(_readTex.EncodeToJPG(jpgQuality));
+            byte[] jpgData = _readTex.EncodeToJPG(jpgQuality);
+            Send(jpgData);
         }
 
         private void PrepareReadTex(int w, int h)
@@ -163,7 +155,113 @@ namespace Code.Network.Stream
 
         private void Send(byte[] data)
         {
-            if (showDebugLogs) Debug.Log($"[Client] Sending RPC {data.Length} bytes...");
+            if (!enableFrameChangeDetection)
+            {
+                SendFrameInternal(data);
+                return;
+            }
+
+            // Проверка на дубликат кадра
+            if (IsFrameDuplicate(data))
+            {
+                if (showDebugLogs) Debug.Log($"[Client] Frame skipped (duplicate) - {data.Length} bytes");
+                _isCapturing = false;
+                return;
+            }
+
+            SendFrameInternal(data);
+        }
+
+        private bool IsFrameDuplicate(byte[] currentData)
+        {
+            if (_lastFrameData == null)
+            {
+                _lastFrameData = currentData;
+                _lastFrameHash = CalculateHash(currentData);
+                _frameCheckCounter = 0;
+                return false;
+            }
+
+            // Быстрая проверка: размер должен быть одинаковым
+            if (currentData.Length != _lastFrameData.Length)
+            {
+                _lastFrameData = currentData;
+                _lastFrameHash = CalculateHash(currentData);
+                _frameCheckCounter = 0;
+                return false;
+            }
+
+            _frameCheckCounter++;
+
+            // Каждый N-й кадр проверяем полное совпадение
+            if (_frameCheckCounter >= frameHashCheckInterval)
+            {
+                uint currentHash = CalculateHash(currentData);
+                
+                // Полное совпадение хешей = дубликат
+                if (currentHash == _lastFrameHash)
+                {
+                    return true;
+                }
+
+                _lastFrameData = currentData;
+                _lastFrameHash = currentHash;
+                _frameCheckCounter = 0;
+                return false;
+            }
+
+            // Между проверками - быстрое сравнение первых N байт
+            int sampleSize = Mathf.Min(256, currentData.Length);
+            bool isSimilar = ArraysAreEqual(currentData, _lastFrameData, sampleSize);
+
+            if (!isSimilar)
+            {
+                _lastFrameData = currentData;
+                _lastFrameHash = CalculateHash(currentData);
+                _frameCheckCounter = 0;
+            }
+
+            return isSimilar;
+        }
+
+        /// <summary>
+        /// Быстрое сравнение первых N байт массивов
+        /// </summary>
+        private bool ArraysAreEqual(byte[] arr1, byte[] arr2, int length)
+        {
+            if (arr1 == null || arr2 == null || arr1.Length < length || arr2.Length < length)
+                return false;
+
+            for (int i = 0; i < length; i++)
+            {
+                if (arr1[i] != arr2[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Быстрый хеш всего массива (DJB2 алгоритм)
+        /// </summary>
+        private uint CalculateHash(byte[] data)
+        {
+            if (data == null || data.Length == 0)
+                return 0;
+
+            uint hash = 5381;
+            
+            for (int i = 0; i < data.Length; i++)
+            {
+                hash = ((hash << 5) + hash) ^ data[i];
+            }
+
+            return hash;
+        }
+
+        private void SendFrameInternal(byte[] data)
+        {
+            if (showDebugLogs) Debug.Log($"[Client] Sending frame {data.Length} bytes");
 
             if (streamConnection != null && streamConnection.IsConnected)
                 streamConnection.SendStreamFrame(SlotNumber, data);
@@ -222,6 +320,26 @@ namespace Code.Network.Stream
                 targetImage.gameObject.SetActive(true);
             }
         }
+        
+        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        {
+            base.OnOwnershipClient(prevOwner);
+
+            if (IsOwner)
+            {
+                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
+                _isCapturing = false;
+            }
+
+            if (Owner.ClientId == -1)
+            {
+                targetImage.gameObject.SetActive(false);
+            }
+            else if (!IsOwner)
+            {
+                targetImage.gameObject.SetActive(true);
+            }
+        }
 
         public override void OnStopClient()
         {
@@ -230,6 +348,11 @@ namespace Code.Network.Stream
             if (_readTex) Destroy(_readTex);
             if (_recvTex) Destroy(_recvTex);
             targetImage.gameObject.SetActive(false);
+
+            // Очистка данных дублирования
+            _lastFrameData = null;
+            _lastFrameHash = 0;
+            _frameCheckCounter = 0;
             
             if(showDebugLogs)
                 Debug.Log($"[NetworkImageStreamClient] OnStopClient slot №{SlotNumber} owner: {Owner.ClientId}");
