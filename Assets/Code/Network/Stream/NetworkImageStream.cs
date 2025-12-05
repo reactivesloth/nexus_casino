@@ -74,6 +74,10 @@ namespace Code.Network.Stream
             {
                 targetImage.gameObject.SetActive(false);
             }
+            else if (!IsOwner)
+            {
+                targetImage.gameObject.SetActive(true);
+            }
         }
 
         private void Update()
