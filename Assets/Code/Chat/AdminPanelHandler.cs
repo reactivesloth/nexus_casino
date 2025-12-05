@@ -457,13 +457,12 @@ namespace Code.Chat
 
         private void CreateRoom(string roomName, bool isPrivate)
         {
-            PlayFlowLobbyManagerV2.Instance.LeaveLobby(() =>
-            {
-                var playFlowFishNet = FindAnyObjectByType<PlayFlowFishnet>();
-                if(playFlowFishNet == null)
-                    return;
-                playFlowFishNet.CreateLobby(roomName, isPrivate);
-            });
+            PlayerPrefs.SetString("Playflow_NewLobbyInstantID", roomName);
+            PlayerPrefs.SetString("Playflow_NewLobby_IsPrivate", isPrivate ? "true" : "false");
+            PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "true");
+            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
+            flowFishnet.Disconnect();
+            LoadingScreenUI.Instance.LoadScene("Main");
         }
 
         public void MoveUserToRoom(string username, string roomId)
@@ -499,6 +498,7 @@ namespace Code.Chat
         private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
         {
             PlayerPrefs.SetString("Playflow_NewLobbyInstantID", lobbyId);
+            PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "false");
             PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
             flowFishnet.Disconnect();
             LoadingScreenUI.Instance.LoadScene("Main");

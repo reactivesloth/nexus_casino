@@ -90,15 +90,12 @@ namespace Code.UI.Admin
         }
 
 
-        public void Init(string id, Dictionary<string, object> playerData)
+        public void Init(string id, string playerName, string playerRole)
         {
             _playerId = id;
             
-            if(playerData.TryGetValue("name", out var playerName))
-                titleDisplayText.text = _username = playerName.ToString();
-            
-            if(playerData.TryGetValue("role", out var playerRole))
-                roleText.text = playerRole.ToString();
+            titleDisplayText.text = _username = playerName;
+            roleText.text = playerRole;
 
             if (_adminPanelHandler.MutedDictionary.TryGetValue(_username, out var muteState))
                 SetMutedButtonsState(muteState.muteChat, muteState.muteVoice);

@@ -73,9 +73,22 @@ namespace Code.Network
         {
             if (PlayerPrefs.HasKey("Playflow_NewLobbyInstantID"))
             {
-                string lobbyId = PlayerPrefs.GetString("Playflow_NewLobbyInstantID");
+                var lobbyId = PlayerPrefs.GetString("Playflow_NewLobbyInstantID");
                 PlayerPrefs.DeleteKey("Playflow_NewLobbyInstantID");
-                JoinLobby(lobbyId);
+
+                if (PlayerPrefs.GetString("Playflow_NewLobby_IsNewRoom") == "true")
+                {
+                    bool isPrivate = PlayerPrefs.GetString("Playflow_NewLobby_IsPrivate") == "true";
+                    CreateLobby(lobbyId, isPrivate);
+                }
+                else
+                {
+                    JoinLobby(lobbyId);
+                }
+                
+                PlayerPrefs.DeleteKey("Playflow_NewLobby_IsNewRoom");
+                PlayerPrefs.DeleteKey("Playflow_NewLobby_IsPrivate");
+
                 return;
             }
             
@@ -118,7 +131,7 @@ namespace Code.Network
         {
             Debug.Log($"Подключаемся к лобби {lobbyId} с ID {lobbyId}...");
             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
-                onSuccess: lobbyJoined =>
+                onSuccess: _ =>
                 {
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
@@ -148,8 +161,8 @@ namespace Code.Network
                 {
                     Debug.Log($"Лобби создано с ID: {lobby.id}");
                     PlayFlowLobbyManagerV2.Instance.StartMatch(
-                        onSuccess: (lobby) => Debug.Log("Match starting! Waiting for server..."),
-                        onError: (error) => Debug.LogError(error)
+                        onSuccess: _ => Debug.Log("Match starting! Waiting for server..."),
+                        onError: error => Debug.LogError(error)
                     );
                     InitPlayerDataOnLobby();
                 },
@@ -157,7 +170,10 @@ namespace Code.Network
                 {
                     LoadingScreenUI.Instance.Show("loading.start_scene", "error");
                     Debug.LogError("Ошибка создания лобби: " + error);
-                    TryJoinOrCreateLobby();
+                    if (error.Contains("exists"))
+                        TryJoinOrCreateLobby();
+                    else
+                        CreateLobby(lobbyName, isPrivate);
                 });
         }
 
@@ -205,6 +221,7 @@ namespace Code.Network
 
         public void Disconnect()
         {
+            LeftLobby();
             PlayFlowLobbyManagerV2.Instance.Disconnect();
             Destroy(gameObject);
         }

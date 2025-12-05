@@ -128,7 +128,12 @@ namespace Code.UI.Admin
                 default:
                     return;
             }
+            
+            refreshButton.interactable = false;
+            Invoke(nameof(RefreshButtonReenable), 1.5f);
         }
+        
+        private void RefreshButtonReenable() => refreshButton.interactable = true;
 
         private void OnUsersButtonClick()
         {
@@ -197,11 +202,20 @@ namespace Code.UI.Admin
 
             foreach (var playerId in lobbyIds)
             {
-                if(!PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(playerId, out var playerData))
+                if (playerId == null) continue;
+                
+                if (!PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(playerId,
+                        out var playerData))
                     continue;
+
+                if (playerData == null) continue;
+                var pn = playerData.GetValueOrDefault("name", "_Name").ToString();
+                var pr = playerData.GetValueOrDefault("role", "_Role").ToString();
+                
+                if (pn.Equals("_Name") || pr.Equals("_Role")) continue;
                 
                 var controlElement = Instantiate(userControlElementPrefab, contentContainer);
-                controlElement.Init(playerId, playerData);
+                controlElement.Init(playerId, pn, pr);
                 _controlElements.Add(controlElement);
             }
         }
