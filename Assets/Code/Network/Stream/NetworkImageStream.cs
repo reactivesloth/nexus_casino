@@ -34,6 +34,7 @@ namespace Code.Network.Stream
 
         [Header("Stream Connection"), SerializeField]
         private StreamingLiteNetLibPeer streamConnection;
+        [SerializeField] private StreamingLiteNetLibServer streamServer;
 
         [Header("Debug")] [SerializeField] private bool showDebugLogs = true;
 
@@ -58,6 +59,7 @@ namespace Code.Network.Stream
         {
             _savedJPGQuality = jpgQuality;
             streamConnection = FindAnyObjectByType<StreamingLiteNetLibPeer>();
+            streamServer = FindAnyObjectByType<StreamingLiteNetLibServer>();
             streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
         }
 
@@ -320,13 +322,18 @@ namespace Code.Network.Stream
                 }
             }
             
-            if(showDebugLogs)
-                Debug.Log($"[NetworkImageStreamClient] OnStartClient slot №{SlotNumber} owner: {Owner.ClientId}");
-            
-            if (Owner.ClientId == -1)
+            if (Owner.ClientId != -1)
             {
                 targetImage.gameObject.SetActive(true);
+                OnNewObserver(ClientManager.Connection);
             }
+        }
+
+        [ServerRpc(RequireOwnership = false)]
+        private void OnNewObserver(NetworkConnection newObserver)
+        {
+            if (newObserver == null) return;
+            streamServer.OnPlayerObserverSlot(newObserver.ClientId, SlotNumber);
         }
         
         public override void OnOwnershipClient(NetworkConnection prevOwner)
@@ -361,9 +368,6 @@ namespace Code.Network.Stream
             _lastFrameData = null;
             _lastFrameHash = 0;
             _frameCheckCounter = 0;
-            
-            if(showDebugLogs)
-                Debug.Log($"[NetworkImageStreamClient] OnStopClient slot №{SlotNumber} owner: {Owner.ClientId}");
         }
         
         // API

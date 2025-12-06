@@ -19,13 +19,15 @@ namespace Code.Network.Stream
     /// </summary>
     public sealed class StreamingLiteNetLibServer : MonoBehaviour, INetEventListener
     {
+        private record PlayerData
+        {
+            public PlayerConnectionData Data { get; set; }
+            public NetPeer Peer { get; set; }
+        }
+
         [SerializeField] private int port = 7777;
         [SerializeField] private int maxClients = 100;
         [SerializeField] private bool debugLogs = true;
-
-        // Настройки буферизации
-        [SerializeField] private int maxFramesPerSlot = 3; // Максимум кадров в буфере для каждого слота
-        [SerializeField] private float frameDropCheckInterval = 1f; // Интервал проверки старых кадров
 
         private NetManager server;
         private bool _isRunning = false;
@@ -33,7 +35,9 @@ namespace Code.Network.Stream
         private NetPacketProcessor packetProcessor;
         private NetDataWriter writer;
 
-        private readonly Dictionary<NetPeer, int> clients = new Dictionary<NetPeer, int>();
+        private readonly Dictionary<int, PlayerData> _clients = new();
+        private readonly Dictionary<int, SlotMachineInteractable> _slots = new();
+        private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
         public static string ServerAddress
         {
@@ -63,12 +67,29 @@ namespace Code.Network.Stream
 
         private void Awake()
         {
+#if UNITY_SERVER
             StartServer();
+#endif
+            foreach (var slot in FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                _slots.Add(slot.IDNumber, slot);
         }
 
         private void Update()
         {
             server?.PollEvents();
+        }
+        
+        public void OnPlayerObserverSlot(int playerId, int slotId)
+        {
+            var frameData = _slotsLastFrame[slotId];
+            var playerData = _clients[playerId];
+            
+            if(frameData == null || playerData == null)
+                return;
+            
+            writer.Reset();
+            packetProcessor.Write(writer, frameData);
+            playerData.Peer?.Send(writer, DeliveryMethod.ReliableUnordered);
         }
 
         private void StartServer()
@@ -93,33 +114,35 @@ namespace Code.Network.Stream
 
         private void OnFrameReceived(StreamFrameData data, NetPeer peer)
         {
+            _slotsLastFrame[data.SlotId] = data;
+            
             RetranslateFrame(data);
         }
 
         private void OnClientConnected(PlayerConnectionData data, NetPeer peer)
         {
-            clients[peer] = data.PlayerId;
+            _clients[data.PlayerId] = new PlayerData{ Data = data, Peer = peer };
 
             writer.Reset();
             packetProcessor.Write(writer, data);
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
         }
-
-        private void RetranslateFrame(StreamFrameData data)
+        
+        private void RetranslateFrame(StreamFrameData frameData)
         {
-            foreach (var client in clients)
+            foreach (var (id, playerData) in _clients)
             {
-                if (client.Value == data.StreamerId)
+                if (playerData.Data.PlayerId == frameData.StreamerId)
                     continue;
                 
-                var slotObserversIds = SlotMachineInteractable.FindById(data.SlotId).Observers.Select(o => o.ClientId)
+                var slotObserversIds = _slots[frameData.SlotId].Observers.Select(o => o.ClientId)
                     .ToArray();
-                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(client.Value))
+                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
                     continue;
 
                 writer.Reset();
-                packetProcessor.Write(writer, data);
-                client.Key.Send(writer, DeliveryMethod.ReliableOrdered);
+                packetProcessor.Write(writer, frameData);
+                playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
             }
         }
 
@@ -131,8 +154,8 @@ namespace Code.Network.Stream
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            if (clients.ContainsKey(peer))
-                clients.Remove(peer);
+            var recordForRemove = _clients.FirstOrDefault(x => Equals(x.Value.Peer, peer));
+            _clients.Remove(recordForRemove.Key);
         }
 
         public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)

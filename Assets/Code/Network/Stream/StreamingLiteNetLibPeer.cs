@@ -17,6 +17,8 @@ namespace Code.Network.Stream
     public sealed class StreamingLiteNetLibPeer : MonoBehaviour, INetEventListener
     {
         [SerializeField] private int serverPort = 7777;
+        [SerializeField] private float timeToReconnect = 60f;
+        
         [SerializeField] private bool debugLogs = false;
 
         [SerializeField] private int debugPing = -1;
@@ -84,7 +86,7 @@ namespace Code.Network.Stream
             _client.Connect(StreamingLiteNetLibServer.ServerAddress, StreamingLiteNetLibServer.ServerStreamPort,
                 "stream_peer");
 
-            Invoke(nameof(Reconnect), 10f);
+            Invoke(nameof(Reconnect), timeToReconnect);
             if (debugLogs)
                 Debug.Log(
                     $"[StreamingLiteNetLibPeer] Connecting to {StreamingLiteNetLibServer.ServerAddress}:{StreamingLiteNetLibServer.ServerStreamPort}");
@@ -124,7 +126,7 @@ namespace Code.Network.Stream
 
             _writer.Reset();
             _packetProcessor.Write(_writer, frameData);
-            _server.Send(_writer, DeliveryMethod.ReliableOrdered);
+            _server.Send(_writer, DeliveryMethod.ReliableUnordered);
             if (debugLogs)
                 Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {frameData.Data.Length} bytes");
         }
@@ -151,6 +153,7 @@ namespace Code.Network.Stream
         public void OnPeerConnected(NetPeer peer)
         {
             _server = peer;
+            Debug.Log($"[StreamingLiteNetLibPeer] Client TTL {_client.Ttl}");
 
             var data = new PlayerConnectionData
             {
