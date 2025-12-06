@@ -853,8 +853,11 @@ MonoBehaviour:
   maxResolution: 512
   jpgQuality: 35
   sendRate: 0.1
+  enableFrameChangeDetection: 1
+  frameHashCheckInterval: 1
+  hashSimilarityThreshold: 0.95
   streamConnection: {fileID: 0}
-  showDebugLogs: 1
+  showDebugLogs: 0
 --- !u!1 &4440273282103300431
 GameObject:
   m_ObjectHideFlags: 0
@@ -1139,7 +1142,6 @@ GameObject:
   - component: {fileID: 791084595948481418}
   - component: {fileID: 8199382324019828225}
   - component: {fileID: 5211295989168695212}
-  - component: {fileID: 7703568324240717683}
   m_Layer: 9
   m_Name: Slot Machine Interactable
   m_TagString: Untagged
@@ -1284,18 +1286,6 @@ MonoBehaviour:
   _updateHostVisibility: 1
   _observerConditions:
   - {fileID: 11400000, guid: 77980fe7b99a848428ea623c92c8f466, type: 2}
---- !u!114 &7703568324240717683
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6154966392846168794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f944dbd0dd55d48478bd43d44466deb2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.FishNetAutoReconnect
 --- !u!1 &7428642365710054699
 GameObject:
   m_ObjectHideFlags: 0
@@ -1560,7 +1550,7 @@ MonoBehaviour:
   timeout: 15
   streamIndicator: {fileID: 0}
   streamDownscale: 0.5
-  streamJpgQuality: 30
+  streamJpgQuality: 35
   slotMachineInteractable: {fileID: 8690079509221083420}
 --- !u!1 &8453526588274256824
 GameObject:

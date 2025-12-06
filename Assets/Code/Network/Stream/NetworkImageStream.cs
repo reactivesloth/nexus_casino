@@ -47,12 +47,15 @@ namespace Code.Network.Stream
         private uint _lastFrameHash;
         private int _frameCheckCounter;
 
+        private int _savedJPGQuality = 35;
+        
         private int SlotNumber => slotMachineInteractable.IDNumber;
 
         public event Action<Texture> OnApplyTexture;
 
         private void Awake()
         {
+            _savedJPGQuality = jpgQuality;
             streamConnection = FindAnyObjectByType<StreamingLiteNetLibPeer>();
             streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
         }
@@ -361,10 +364,12 @@ namespace Code.Network.Stream
         // API
         public void SetQualitySettings(float d, int j)
         {
+            jpgQuality = j;
         }
 
         public void ResetQualitySettings()
         {
+            jpgQuality = _savedJPGQuality;
         }
 
         public void SetTexture(RawImage i)

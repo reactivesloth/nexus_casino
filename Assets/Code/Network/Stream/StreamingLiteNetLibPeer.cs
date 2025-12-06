@@ -117,7 +117,8 @@ namespace Code.Network.Stream
         {
             if (_server.ConnectionState != ConnectionState.Connected)
             {
-                Debug.LogWarning($"[StreamingLiteNetLibPeer] Connection state is {_server.ConnectionState}");
+                if (debugLogs)
+                    Debug.LogWarning($"[StreamingLiteNetLibPeer] Connection state is {_server.ConnectionState}");
                 return;
             }
 
@@ -131,7 +132,8 @@ namespace Code.Network.Stream
             _writer.Reset();
             _packetProcessor.Write(_writer, data);
             _server.Send(_writer, DeliveryMethod.ReliableOrdered);
-            Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes");
+            if (debugLogs)
+                Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {data.Data.Length} bytes");
         }
 
         private void OnFrameReceive(StreamFrameData frameData)

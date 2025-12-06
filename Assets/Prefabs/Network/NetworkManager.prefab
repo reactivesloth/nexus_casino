@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 5353664881606109110}
   - component: {fileID: -4495655378147797735}
   - component: {fileID: -5474675281091056609}
+  - component: {fileID: 770303110248068356}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -271,6 +272,18 @@ MonoBehaviour:
   _frameRate: 500
   _shareIds: 1
   _startOnHeadless: 1
+--- !u!114 &770303110248068356
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f944dbd0dd55d48478bd43d44466deb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.FishNetAutoReconnect
 --- !u!1 &3799973681424323288
 GameObject:
   m_ObjectHideFlags: 0
@@ -319,6 +332,8 @@ MonoBehaviour:
   port: 9000
   maxClients: 200
   debugLogs: 1
+  maxFramesPerSlot: 3
+  frameDropCheckInterval: 1
 --- !u!114 &165506157183848823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -333,6 +348,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingLiteNetLibPeer
   serverPort: 9000
   debugLogs: 1
+  debugPing: -1
 --- !u!1001 &1178301237822981492
 PrefabInstance:
   m_ObjectHideFlags: 0

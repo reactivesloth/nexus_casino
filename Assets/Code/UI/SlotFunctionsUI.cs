@@ -23,7 +23,7 @@ namespace Code.UI
 
         [Header("Stream")] [SerializeField] private Image streamIndicator;
         [SerializeField] private float streamDownscale = 0.75f;
-        [SerializeField] private int streamJpgQuality = 20;
+        [SerializeField] private int streamJpgQuality = 35;
         private bool _streaming;
 
         [Space] [SerializeField] private SlotMachineInteractable slotMachineInteractable;
