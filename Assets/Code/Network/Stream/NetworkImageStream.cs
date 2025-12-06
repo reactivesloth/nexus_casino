@@ -3,6 +3,7 @@ using System.Linq;
 using Code.InteractionSystem;
 using Code.Network.Stream.Data;
 using Code.Utility;
+using FishNet;
 using FishNet.Connection;
 using FishNet.Object;
 using UnityEngine;
@@ -267,7 +268,12 @@ namespace Code.Network.Stream
             if (showDebugLogs) Debug.Log($"[Client] Sending frame {data.Length} bytes");
 
             if (streamConnection != null && streamConnection.IsConnected)
-                streamConnection.SendStreamFrame(SlotNumber, data);
+                streamConnection.SendStreamFrame(new StreamFrameData()
+                {
+                    Data = data,
+                    SlotId = SlotNumber,
+                    StreamerId = InstanceFinder.ClientManager.Connection.ClientId
+                });
 
             _isCapturing = false;
         }
@@ -288,8 +294,7 @@ namespace Code.Network.Stream
                 targetImage.texture = _recvTex;
                 targetImage.color = Color.white;
                 ImageUtility.AdjustAspect(targetImage);
-                if (IsOwner)
-                    OnApplyTexture?.Invoke(_recvTex);
+                OnApplyTexture?.Invoke(_recvTex);
             }
         }
 
@@ -362,9 +367,9 @@ namespace Code.Network.Stream
         }
         
         // API
-        public void SetQualitySettings(float d, int j)
+        public void SetQualitySettings(float res, int quality)
         {
-            jpgQuality = j;
+            jpgQuality = quality;
         }
 
         public void ResetQualitySettings()
