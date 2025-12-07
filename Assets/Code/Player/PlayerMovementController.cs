@@ -558,7 +558,7 @@ namespace Code.Player
             animationBlend = Mathf.Lerp(animationBlend, targetSpeed, Time.deltaTime * speedChangeRate);
             if (animationBlend < 0.01f) animationBlend = 0f;
 
-            var inputDir = new Vector3(mvUsed.x, 0f, mvUsed.y).normalized;
+            var inputDir = new Vector3(mvUsed.x, 0f, mvUsed.y);
             var camYaw = _mainCamera != null ? _mainCamera.transform.eulerAngles.y : transform.eulerAngles.y;
             targetRotation = Mathf.Atan2(inputDir.x, inputDir.z) * Mathf.Rad2Deg + camYaw;
 
