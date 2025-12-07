@@ -3,7 +3,6 @@ using System.Collections;
 using Code.API;
 using Code.API.Models;
 using Code.InteractionSystem;
-using Code.Network;
 using Code.Network.Stream;
 using FishNet;
 using FishNet.Transporting;
@@ -60,8 +59,8 @@ namespace Code.UI
 
             if (PlayerInput.Instance.IsSlotsFullscreen) SwitchFullscreen();
             if (PlayerInput.Instance.IsSlotsScreenshot && !_screenShotBusy) OnScreenshotClicked();
-            if (PlayerInput.Instance.IsSlotsStream && !_streaming) RequestStream();
-            if (PlayerInput.Instance.IsSlotsStream && _streaming) CancelStream();
+            
+            if (PlayerInput.Instance.IsSlotsStream) OnStreamClick();
 
             if (_screenShotBusy)
             {
@@ -93,6 +92,7 @@ namespace Code.UI
             }
 
             _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
+            _streaming = false;
         }
 
         private async void OnScreenshotClicked()
@@ -212,15 +212,13 @@ namespace Code.UI
             if (resultText != null) resultText.text = string.Empty;
         }
 
-        private void RequestStream()
+        private void OnStreamClick()
         {
             var nickname = !string.IsNullOrEmpty(ClientDataStorage.UserData.username) ? ClientDataStorage.UserData.username : "unknown";
-            _mainScreenController.RequestStream(slotMachineInteractable.IDNumber, nickname);
-        }
-
-        private void CancelStream()
-        {
-            _mainScreenController.RequestCancel();
+            if(!_streaming) 
+                _mainScreenController.RequestStream(slotMachineInteractable.IDNumber, nickname);
+            else 
+                _mainScreenController.RequestCancel();
         }
 
         private void StreamSlotIdOnOnChange(int prevId, int newId, bool asServer)

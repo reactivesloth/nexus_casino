@@ -31,9 +31,13 @@ namespace Code.InteractionSystem
         public bool IsEnabled => _interactableEnabled;
         public bool ManualRelease => _manualRelease;
         public bool IsOccupied => _isOccupied.Value;
+
+        public delegate void InteractCallback(bool success);
         
-        public event Action<bool> InteractCallback_Client;
-        public event Action<bool> InteractCallback_Server;
+        public event InteractCallback InteractCallback_Client;
+        public event InteractCallback StartInteractCallback_Server;
+        public event InteractCallback EndInteractCallback_Server;
+        
 
         private void Awake()
         {
@@ -151,7 +155,7 @@ namespace Code.InteractionSystem
         [Server]
         protected virtual void OnInteractCallback_Server(NetworkConnection requester, bool success, bool force = false)
         {
-            InteractCallback_Server?.Invoke(success);
+            StartInteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
             GiveOwnership(requester);
@@ -160,7 +164,7 @@ namespace Code.InteractionSystem
         [Server]
         protected virtual void OnInteractEndCallback_Server(NetworkConnection requester, bool success)
         {
-            InteractCallback_Server?.Invoke(success);
+            EndInteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
             RemoveOwnership();

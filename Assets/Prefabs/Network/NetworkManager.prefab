@@ -332,8 +332,6 @@ MonoBehaviour:
   port: 9000
   maxClients: 200
   debugLogs: 1
-  maxFramesPerSlot: 3
-  frameDropCheckInterval: 1
 --- !u!114 &165506157183848823
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -347,6 +345,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingLiteNetLibPeer
   serverPort: 9000
+  timeToReconnect: 15
   debugLogs: 1
   debugPing: -1
 --- !u!1001 &1178301237822981492
