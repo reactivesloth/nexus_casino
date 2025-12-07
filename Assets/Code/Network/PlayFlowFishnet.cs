@@ -111,7 +111,11 @@ namespace Code.Network
                                     Debug.Log("Успешно подключились к лобби");
                                     InitPlayerDataOnLobby();
                                 },
-                                onError: error => Debug.LogError("Ошибка при подключении к лобби: " + error));
+                                onError: error =>
+                                {
+                                    Debug.LogError("Ошибка при подключении к лобби: " + error);
+                                    TryJoinOrCreateLobby();
+                                });
                             return;
                         }
                     }
