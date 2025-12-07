@@ -216,7 +216,12 @@ namespace Code.Network
                 PlayFlowLobbyManagerV2.Instance.Events.OnPlayerLeft.RemoveListener(OnPlayerLeft);
             }
 
-            Destroy(gameObject);
+            Disconnect();
+        }
+
+        public void OnApplicationQuit()
+        {
+            Disconnect();
         }
 
         public void Disconnect()
