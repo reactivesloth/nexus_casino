@@ -162,8 +162,15 @@ namespace Code.Network
                     Debug.Log($"Лобби создано с ID: {lobby.id}");
                     PlayFlowLobbyManagerV2.Instance.StartMatch(
                         onSuccess: _ => Debug.Log("Match starting! Waiting for server..."),
-                        onError: error => Debug.LogError(error)
-                    );
+                        onError: error =>
+                        {
+                            Debug.LogError(error);
+                            if (error.Contains("timeout"))
+                            {
+                                PlayFlowLobbyManagerV2.Instance.LeaveLobby();
+                                TryJoinOrCreateLobby();
+                            }
+                        });
                     InitPlayerDataOnLobby();
                 },
                 onError: error =>
