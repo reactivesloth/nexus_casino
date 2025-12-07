@@ -180,6 +180,10 @@ namespace Code.Player
 
         private bool _initedPlayer;
 
+        private Vector3 smoothedHeadPos;
+        private Quaternion smoothedHeadRot;
+        private float headSmoothSpeed = 8f; 
+        
         private void Awake()
         {
             EnsureInit();
@@ -390,6 +394,17 @@ namespace Code.Player
             }
 
             UpdateHeadTargetPos();
+            
+            // Сглаживание для FPV при сидении
+            if (FirstPersonView && LookCameraLimitRotation)
+            {
+                smoothedHeadPos = Vector3.Lerp(smoothedHeadPos, cinemachineCameraTarget.transform.position, 
+                    Time.deltaTime * headSmoothSpeed);
+                smoothedHeadRot = Quaternion.Slerp(smoothedHeadRot, cinemachineCameraTarget.transform.rotation, 
+                    Time.deltaTime * headSmoothSpeed);
+                headTarget.position = smoothedHeadPos + cinemachineCameraTarget.transform.forward * 10f;
+                headTarget.rotation = smoothedHeadRot;
+            }
         }
 
         private void UpdateHeadTargetPos()
@@ -816,7 +831,11 @@ namespace Code.Player
 
             if (IsOwner)
             {
-                if (SuppressLookAtIK || Time.time < _ikSuppressUntil) return;
+                if (SuppressLookAtIK || Time.time < _ikSuppressUntil)
+                {
+                    SyncIKServerRpc(headTarget.position, 0);
+                    return;
+                }
 
                 currentIkWeight = FirstPersonView ? 1f : 0f;
 
