@@ -2,6 +2,7 @@
 using System.Text;
 using Unity.Cinemachine;
 using Code.API;
+using Code.UI;
 using Code.Utility;
 using FishNet.Connection;
 using FishNet.Object;
@@ -41,6 +42,7 @@ namespace Code.Player
         [SerializeField] private float bottomClamp = -30f;
         [SerializeField] public float cameraAngleOverride = 0f;
         [SerializeField] private Transform headTarget;
+        public Transform HeadIKLookAtCustomTarget;
 
         [Header("Audio")] [SerializeField] private AudioClip landingAudioClip;
         [SerializeField] private AudioClip[] footstepAudioClips;
@@ -228,8 +230,11 @@ namespace Code.Player
             base.OnOwnershipClient(prevOwner);
             if (!IsOwner) return;
             if (spawnOnSawedPosition)
+            {
+                LoadingScreenUI.Instance?.Hide();
                 LoadSpawnPosition();
-            
+            }
+
             EnsureInit();
             Own = this;
             jumpTimeoutDelta = jumpTimeout;
@@ -394,24 +399,16 @@ namespace Code.Player
             }
 
             UpdateHeadTargetPos();
-            
-            // Сглаживание для FPV при сидении
-            if (FirstPersonView && LookCameraLimitRotation)
-            {
-                smoothedHeadPos = Vector3.Lerp(smoothedHeadPos, cinemachineCameraTarget.transform.position, 
-                    Time.deltaTime * headSmoothSpeed);
-                smoothedHeadRot = Quaternion.Slerp(smoothedHeadRot, cinemachineCameraTarget.transform.rotation, 
-                    Time.deltaTime * headSmoothSpeed);
-                headTarget.position = smoothedHeadPos + cinemachineCameraTarget.transform.forward * 10f;
-                headTarget.rotation = smoothedHeadRot;
-            }
         }
 
         private void UpdateHeadTargetPos()
         {
             if (animator != null && headTarget != null && cinemachineCameraTarget != null)
             {
-                headTarget.position = cinemachineCameraTarget.transform.position +
+                if (HeadIKLookAtCustomTarget != null)
+                    headTarget.position = Vector3.Lerp(headTarget.position, HeadIKLookAtCustomTarget.position, Time.deltaTime * 0.8f);
+                else
+                    headTarget.position = cinemachineCameraTarget.transform.position +
                                       cinemachineCameraTarget.transform.forward * 10f;
             }
         }

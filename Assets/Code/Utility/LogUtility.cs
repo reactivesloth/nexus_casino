@@ -52,6 +52,7 @@ public class LogUtility : MonoBehaviour
     
     string GetExternalStoragePath()
     {
+        string path = "";
 #if UNITY_ANDROID && !UNITY_EDITOR
         if (AndroidRuntimePermissions.CheckPermission("android.permission.WRITE_EXTERNAL_STORAGE"))
         {
@@ -62,10 +63,16 @@ public class LogUtility : MonoBehaviour
         }
         else
         {
+            path = Path.Combine(Application.persistentDataPath);
+            if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+
             return Path.Combine(Application.persistentDataPath, "user_log.txt");
         }
 #else
-        return Path.Combine(Application.streamingAssetsPath, "user_log.txt");
+        path = Path.Combine(Application.streamingAssetsPath);
+        if (!Directory.Exists(path)) Directory.CreateDirectory(path);
+        
+        return Path.Combine(path, "user_log.txt");
 #endif
     }
 

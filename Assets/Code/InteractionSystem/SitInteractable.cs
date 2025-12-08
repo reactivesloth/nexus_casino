@@ -14,8 +14,9 @@ namespace Code.InteractionSystem
             public string animationID;
         }
 
-        [Header("Sit Settings")] [SerializeField]
-        private Transform sitPoint;
+        [Header("Sit Settings")] 
+        [SerializeField] private Transform sitPoint;
+        [SerializeField] private Transform headIKTarget;
 
         [SerializeField] private float sitAdjustHeight = 0.0f;
         [SerializeField] private bool allowRotateCamera = true;
@@ -250,8 +251,11 @@ namespace Code.InteractionSystem
             Transform tf, EntryData entry)
         {
             IsBusy = true;
-            move.SuppressLookAtIK = true;
-
+            if (headIKTarget != null)
+                move.HeadIKLookAtCustomTarget = headIKTarget;
+            else 
+                move.SuppressLookAtIK = true;
+            
             _savedPos = tf.position;
             _savedRot = tf.rotation;
 
@@ -311,7 +315,11 @@ namespace Code.InteractionSystem
             if (anim != null) anim.applyRootMotion = false;
             _sitRoutine = null;
             _isSittingLocal = true;
-            move.SuppressLookAtIK = false;
+            
+            if (headIKTarget != null)
+                move.HeadIKLookAtCustomTarget = null;
+            else 
+                move.SuppressLookAtIK = false;
 
             if (allowRotateCamera)
             {
@@ -397,6 +405,7 @@ namespace Code.InteractionSystem
 
             _sitRoutine = null;
             IsBusy = false;
+            
             move.SuppressLookAtIK = false;
 
             move.SnapAimToCurrentCamera();
