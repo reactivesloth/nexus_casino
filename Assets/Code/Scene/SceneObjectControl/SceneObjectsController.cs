@@ -12,25 +12,25 @@ namespace Code.Scene.SceneObjectControl
 {
     public class SceneObjectsController : MonoBehaviour
     {
-        private static ServerManager ServerManager => InstanceFinder.ServerManager;
-        private static ClientManager ClientManager => InstanceFinder.ClientManager;
-        private static SceneManager SceneManager => InstanceFinder.SceneManager;
+        private static ServerManager ServerManager => InstanceFinder.NetworkManager != null ? InstanceFinder.ServerManager : null;
+        private static ClientManager ClientManager => InstanceFinder.NetworkManager != null ? InstanceFinder.ClientManager : null;
+        private static SceneManager SceneManager => InstanceFinder.NetworkManager != null ? InstanceFinder.SceneManager : null;
 
-        private static readonly Dictionary<string, IControlledSceneObject> _sceneObjects = new();
-        private static readonly Dictionary<string, StateMessage> _lastStates = new();
+        private static readonly Dictionary<string, IControlledSceneObject> SceneObjects = new();
+        private static readonly Dictionary<string, StateMessage> LastStates = new();
 
-        public static List<IControlledSceneObject> AllSceneObjects => _sceneObjects.Values.ToList();
+        public static List<IControlledSceneObject> AllSceneObjects => SceneObjects.Values.ToList();
 
         private void Awake()
         {
-            _sceneObjects.Clear();
+            SceneObjects.Clear();
 
             var components = FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None)
                 .OfType<IControlledSceneObject>();
 
             foreach (var controlledSceneObject in components)
             {
-                if (!_sceneObjects.TryAdd(controlledSceneObject.Key, controlledSceneObject))
+                if (!SceneObjects.TryAdd(controlledSceneObject.Key, controlledSceneObject))
                 {
                     Debug.LogWarning($"[SceneControl] Duplicate key: {controlledSceneObject.Key}");
                 }
@@ -68,7 +68,7 @@ namespace Code.Scene.SceneObjectControl
         /// <param name="objectName"></param>
         /// <returns></returns>
         public List<string> GetStatesByName(string objectName) =>
-            !_sceneObjects.TryGetValue(objectName, out var sceneObject) ? null : sceneObject.States;
+            !SceneObjects.TryGetValue(objectName, out var sceneObject) ? null : sceneObject.States;
 
         /// <summary>
         /// Local call for command
@@ -98,7 +98,7 @@ namespace Code.Scene.SceneObjectControl
             if (!asServer)
                 return;
 
-            foreach (var action in _lastStates.Values)
+            foreach (var action in LastStates.Values)
             {
                 ServerManager.Broadcast(conn, action);
             }
@@ -109,13 +109,13 @@ namespace Code.Scene.SceneObjectControl
         {
             Debug.Log($"[SceneControl.Server] {message.ObjectName} is making action {message.Action}");
 
-            _lastStates[message.ObjectName] = message;
+            LastStates[message.ObjectName] = message;
             ServerManager.Broadcast(message);
         }
 
         private void ClientReceiveState(StateMessage message, Channel channel = Channel.Reliable)
         {
-            if (!_sceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
+            if (!SceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
             {
                 Debug.LogWarning($"[SceneControl.Client] Object not found: {message.ObjectName}");
                 return;
@@ -123,7 +123,7 @@ namespace Code.Scene.SceneObjectControl
 
             Debug.Log($"[SceneControl.Client] {message.ObjectName} is making action {message.Action}");
 
-            _lastStates[message.ObjectName] = message;
+            LastStates[message.ObjectName] = message;
             sceneObject.SetState(message.Action);
         }
     }

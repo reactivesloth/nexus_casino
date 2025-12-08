@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using Code.API;
@@ -85,13 +84,13 @@ namespace Code.Network
                 {
                     JoinLobby(lobbyId);
                 }
-                
+
                 PlayerPrefs.DeleteKey("Playflow_NewLobby_IsNewRoom");
                 PlayerPrefs.DeleteKey("Playflow_NewLobby_IsPrivate");
 
                 return;
             }
-            
+
             PlayFlowLobbyManagerV2.Instance.GetAvailableLobbies(
                 onSuccess: lobbies =>
                 {
@@ -104,14 +103,7 @@ namespace Code.Network
                             && lobby.currentPlayers > 0
                             && lobby.status == "in_game")
                         {
-                            Debug.Log($"Подключаемся к лобби {lobby.name} с ID {lobby.id}...");
-                            PlayFlowLobbyManagerV2.Instance.JoinLobby(lobby.id,
-                                onSuccess: lobbyJoined =>
-                                {
-                                    Debug.Log("Успешно подключились к лобби");
-                                    InitPlayerDataOnLobby();
-                                },
-                                onError: error => Debug.LogError("Ошибка при подключении к лобби: " + error));
+                            JoinLobby(lobby.id);
                             return;
                         }
                     }
@@ -127,7 +119,7 @@ namespace Code.Network
                 });
         }
 
-        public void JoinLobby(string lobbyId)
+        private void JoinLobby(string lobbyId)
         {
             Debug.Log($"Подключаемся к лобби {lobbyId} с ID {lobbyId}...");
             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
@@ -145,8 +137,7 @@ namespace Code.Network
                 });
         }
 
-        // TODO: Private rooms create
-        public void CreateLobby(string lobbyName = null, bool isPrivate = false)
+        private void CreateLobby(string lobbyName = null, bool isPrivate = false)
         {
             LoadingScreenUI.Instance.Show("loading.create_lobby", "loading.please_wait");
             Debug.Log("Создаем новую лобби...");
@@ -165,18 +156,14 @@ namespace Code.Network
                         onError: error =>
                         {
                             Debug.LogError(error);
-                            if (error.Contains("timeout"))
-                            {
-                                PlayFlowLobbyManagerV2.Instance.LeaveLobby();
-                                TryJoinOrCreateLobby();
-                            }
+                            
+                            PlayFlowLobbyManagerV2.Instance.LeaveLobby();
+                            TryJoinOrCreateLobby();
                         });
                     InitPlayerDataOnLobby();
                 },
                 onError: error =>
                 {
-                    LoadingScreenUI.Instance.Show("loading.start_scene", "error");
-                    Debug.LogError("Ошибка создания лобби: " + error);
                     if (error.Contains("exists"))
                         TryJoinOrCreateLobby();
                     else
@@ -184,7 +171,7 @@ namespace Code.Network
                 });
         }
 
-        void OnServerReady(ConnectionInfo connectionInfo)
+        private void OnServerReady(ConnectionInfo connectionInfo)
         {
             LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
             Debug.Log($"Сервер готов! Подключаемся к {connectionInfo.Ip}:{connectionInfo.Port}");
@@ -195,7 +182,6 @@ namespace Code.Network
         {
             yield return new WaitForSeconds(2f);
             InstanceFinder.NetworkManager.ClientManager.StartConnection(ip, port);
-            LoadingScreenUI.Instance.Invoke("Hide", 1);
         }
 
         private void InitPlayerDataOnLobby()
@@ -238,13 +224,13 @@ namespace Code.Network
             Destroy(gameObject);
         }
 
-        public void LeftLobby()
+        private void LeftLobby()
         {
             PlayFlowLobbyManagerV2.Instance.LeaveLobby();
             Destroy(gameObject);
         }
 
-        public void EndMatch()
+        private void EndMatch()
         {
             PlayFlowLobbyManagerV2.Instance.EndMatch();
         }
