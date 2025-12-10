@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Linq;
+using Code.Utility;
 
 namespace CC
 {
@@ -73,7 +74,7 @@ namespace CC
             {
                 scrObj_Apparel.MenuCategory cat = menuCategories[i];
                 GameObject categoryButton = Instantiate(CategoryPrefab, CategoryContainer.transform).gameObject;
-                categoryButton.GetComponentInChildren<TextMeshProUGUI>().text = menuCategories[i].ToString();
+                LocalizationHelper.SetLocalizedTextAsync(categoryButton.GetComponentInChildren<TextMeshProUGUI>(), menuCategories[i].ToString());
                 var button = categoryButton.GetComponentInChildren<Button>();
                 button.onClick.RemoveAllListeners();
                 button.onClick.AddListener(() => { createApparelButtons(cat); });
@@ -95,7 +96,10 @@ namespace CC
             Button.GetComponentInChildren<Button>().onClick.AddListener(() => { customizer.setApparelByName(name, apparelSlot, matIndex); });
 
             if (useIcons) Button.GetComponentInChildren<Image>().sprite = sprite == null ? defaultIcon : sprite;
-            else Button.GetComponentInChildren<TextMeshProUGUI>().text = text;
+            else
+            {
+                LocalizationHelper.SetLocalizedTextAsync(Button.GetComponentInChildren<TextMeshProUGUI>(), text);
+            }
         }
 
         public void RefreshUIElement()

@@ -32,6 +32,7 @@ namespace Code.UI
 
         [Header("Buttons")]
         public Button applyButton;
+        public Button closeButton;
         public Button cancelButton;
         public Button resetDefaultsButton;
 
@@ -117,6 +118,7 @@ namespace Code.UI
             PushDraftToUI();
 
             if (applyButton != null)        applyButton.onClick.AddListener(ApplySettings);
+            if (closeButton != null)        closeButton.onClick.AddListener(ApplySettings);
             if (cancelButton != null)       cancelButton.onClick.AddListener(CancelChanges);
             if (resetDefaultsButton != null)resetDefaultsButton.onClick.AddListener(ResetToDefaultsDraft);
         }
@@ -195,6 +197,8 @@ namespace Code.UI
             {
                 localizationDropdown.value = index;
                 PopulateQualityDropdown();
+                PopulateFPSDropdown();
+                PopulateInvertCameraYDropdown();
             }
         }
         

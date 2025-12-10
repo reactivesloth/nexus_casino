@@ -63,7 +63,7 @@ namespace Code.Utility
 
             QualityLevel      = PlayerPrefs.GetInt("GraphicsQuality", DefaultGraphicsQuality);
 #if UNITY_IOS || UNITY_ANDROID
-            FPSLimit          = PlayerPrefs.GetInt("FPSLimit",         0);
+            FPSLimit          = PlayerPrefs.GetInt("FPSLimit",         1);
 #else
             FPSLimit          = PlayerPrefs.GetInt("FPSLimit",         2);
 #endif
@@ -106,7 +106,7 @@ namespace Code.Utility
 
             QualityLevel      = DefaultGraphicsQuality;
 #if UNITY_IOS || UNITY_ANDROID
-            FPSLimit          = 0;
+            FPSLimit          = 1;
 #else
             FPSLimit          = 2;
 #endif
