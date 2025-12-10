@@ -3,7 +3,6 @@ using Code.API;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
-using MetaVoiceChat.NetProviders.FishNet;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -36,8 +35,8 @@ namespace Code.UI
         {
             if (IsOwner)
             {
-                var newHeld = !MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value;
-                var newMuted = MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value;
+                var newHeld = false;//!MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value;
+                var newMuted = false;// MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
                 if (newHeld != IsVoiceHeld.Value || newMuted != IsVoiceMuted.Value)

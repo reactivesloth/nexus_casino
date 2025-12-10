@@ -983,9 +983,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4001682504778783961}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 8137460385001018117}
     - targetCorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4828444766259589334}
@@ -1023,9 +1020,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3089625148397322802}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -3822727139687031423}
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8509050154869065461}
@@ -1168,7 +1162,7 @@ MonoBehaviour:
   - {fileID: 8380620837345130814}
   - {fileID: -564814886681505277}
   - {fileID: 3089625148397322802}
-  - {fileID: -3822727139687031423}
+  - {fileID: 0}
   - {fileID: 6321799689242055446}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -2007,21 +2001,6 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
---- !u!114 &-3822727139687031423
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1117dd79caed3949abdf12674fe3b7f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.NetProviders.FishNet.MetaVCFishNetNetProvider
-  _componentIndexCache: 5
-  _addedNetworkObject: {fileID: 3901444026938387538}
-  _networkObjectCache: {fileID: 3901444026938387538}
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
@@ -2662,76 +2641,6 @@ MonoBehaviour:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
   m_PrefabInstance: {fileID: 1384048308031903674}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &5053776994098266743
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1495082819104649297}
-    m_Modifications:
-    - target: {fileID: 848959517093177195, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_Name
-      value: VoiceChat
-      objectReference: {fileID: 0}
-    - target: {fileID: 2007538482642097896, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.27606
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.87144
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.67588
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8511040994698824356, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: audioSource
-      value: 
-      objectReference: {fileID: 7593374925195555231}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
---- !u!4 &8137460385001018117 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-  m_PrefabInstance: {fileID: 5053776994098266743}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5231084025345458665
 PrefabInstance:

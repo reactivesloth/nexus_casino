@@ -1430,9 +1430,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5223305122386451266}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2583906934070287110}
     - targetCorrespondingSourceObject: {fileID: -6173754733725934867, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: 0
       addedObject: {fileID: 7549635482763133243}
@@ -1491,9 +1488,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 624282661056886494}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1211175882387157115}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8753856777003469895}
@@ -2950,6 +2944,7 @@ MonoBehaviour:
   bottomClamp: -30
   cameraAngleOverride: 0
   headTarget: {fileID: 5223305122386451266}
+  HeadIKLookAtCustomTarget: {fileID: 0}
   landingAudioClip: {fileID: 8300000, guid: ff697d3070687ce4583faa0561a145a2, type: 3}
   footstepAudioClips:
   - {fileID: 8300000, guid: 72f526a6a9890f643a88e85a61c86c8a, type: 3}
@@ -3005,7 +3000,7 @@ MonoBehaviour:
   - {fileID: -626117860274373281}
   - {fileID: 7121388327242976003}
   - {fileID: 624282661056886494}
-  - {fileID: 1211175882387157115}
+  - {fileID: 0}
   - {fileID: 8144962258630108305}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
@@ -3860,21 +3855,6 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
---- !u!114 &1211175882387157115
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1127680710956633387}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f1117dd79caed3949abdf12674fe3b7f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.NetProviders.FishNet.MetaVCFishNetProvider
-  _componentIndexCache: 6
-  _addedNetworkObject: {fileID: 92631491164151932}
-  _networkObjectCache: {fileID: 92631491164151932}
 --- !u!1 &1148177878228989410 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: -8320365392235035240, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
@@ -6628,76 +6608,6 @@ MonoBehaviour:
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -101327038897059761, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
   m_PrefabInstance: {fileID: 245228957973901434}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &1519806372083255924
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 355084039068129169}
-    m_Modifications:
-    - target: {fileID: 848959517093177195, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_Name
-      value: VoiceChat
-      objectReference: {fileID: 0}
-    - target: {fileID: 2007538482642097896, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -0.02172
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.48205
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0.31614
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8511040994698824356, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-      propertyPath: audioSource
-      value: 
-      objectReference: {fileID: 4155454088143405929}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
---- !u!4 &2583906934070287110 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3948687642136695154, guid: 1d06894a13e4fc44b905858da825292b, type: 3}
-  m_PrefabInstance: {fileID: 1519806372083255924}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &6876354456791582965
 PrefabInstance:
