@@ -1,3 +1,4 @@
+using Code.Network;
 using Code.UI.Popup;
 using Ricimi;
 using UnityEngine;
@@ -109,8 +110,8 @@ namespace Code.Player
         {
             saveTime = 0.2f;
             voiceHeld = value;
-            // if (MetaVCFishNetProvider.LocalPlayerInstance != null)
-            //     MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value = !voiceHeld;
+            if (PlayerVoice.LocalPlayerVoiceInstance != null)
+                 PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = !voiceHeld;
                 
             if (mobileButtonImage != null)
             {

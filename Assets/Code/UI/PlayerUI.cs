@@ -1,5 +1,6 @@
 using System.Linq;
 using Code.API;
+using Code.Network;
 using FishNet.Connection;
 using FishNet.Object;
 using FishNet.Object.Synchronizing;
@@ -30,13 +31,13 @@ namespace Code.UI
         public string PlayerName => playerName.text;
         public string PlayerRole => playerRole.text;
         public bool IsHost => hostIndicator.activeSelf;
-
+        
         private void Update()
         {
             if (IsOwner)
             {
-                var newHeld = false;//!MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value;
-                var newMuted = false;// MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value;
+                var newHeld = !PlayerVoice.LocalPlayerVoiceInstance.isInputMuted;
+                var newMuted = PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
                 if (newHeld != IsVoiceHeld.Value || newMuted != IsVoiceMuted.Value)

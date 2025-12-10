@@ -256,8 +256,8 @@ namespace Code.Chat
         {
             if (muteChat)
                 chatController.IsMuted = true;
-            // if (muteVoice)
-            //     MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value = true;
+            if (muteVoice)
+                 PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
@@ -316,14 +316,14 @@ namespace Code.Chat
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
-            // if (unmuteVoice)
-            //     MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value = false;
+            if (unmuteVoice)
+                 PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
         {
             chatController.IsMuted = muteChatState;
-            // MetaVCFishNetProvider.LocalPlayerInstance.MetaVc.isInputMutedByServer.Value = muteVoiceState;
+            PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = muteVoiceState;
         }
 
         public void ToggleOffVoice(string username)

@@ -3928,6 +3928,7 @@ GameObject:
   - component: {fileID: 7696486495866622635}
   - component: {fileID: 5060087527674730955}
   - component: {fileID: 7076271179006848320}
+  - component: {fileID: 3782497319128210736}
   m_Layer: 8
   m_Name: Player M3
   m_TagString: Player
@@ -4942,6 +4943,23 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
+--- !u!114 &3782497319128210736
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024218303011212308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0e4960b036b442ab88083f5713ede38, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.VivoxPlayer
+  _componentIndexCache: 255
+  _addedNetworkObject: {fileID: 2272209766738373433}
+  _networkObjectCache: {fileID: 0}
+  isInputMuted: 0
+  isInputMutedByServer: 0
 --- !u!1 &8047517550926677348
 GameObject:
   m_ObjectHideFlags: 0
