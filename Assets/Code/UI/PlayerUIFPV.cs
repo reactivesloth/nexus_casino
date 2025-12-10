@@ -1,70 +1,67 @@
-using System;
+using System.Linq;
 using Code.Player;
-using Code.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerUIFPV : MonoBehaviour
+namespace Code.UI
 {
-    [SerializeField] private GameObject playerUIFPVPanel;
-    [SerializeField] private TextMeshProUGUI playerName;
-    [SerializeField] private TextMeshProUGUI playerRole;
-    [SerializeField] private Image voiceImage;
-    [SerializeField] private GameObject hostIndicator;
-
-    private bool inited = false;
-    
-    private PlayerUI _playerUI;
-    private PlayerMovementController  _playerMovementController;
-
-    private void Update()
+    public class PlayerUIFPV : MonoBehaviour
     {
-        if (!inited)
+        [SerializeField] private GameObject playerUIFPVPanel;
+        [SerializeField] private TextMeshProUGUI playerName;
+        [SerializeField] private TextMeshProUGUI playerRole;
+        [SerializeField] private Image voiceImage;
+        [SerializeField] private GameObject hostIndicator;
+
+        private bool _inited;
+    
+        private PlayerUI _playerUI;
+        private PlayerMovementController  _playerMovementController;
+
+        private void Update()
         {
-            _playerMovementController = FindLocalOwnerMovement();
-            if (_playerMovementController != null)
+            if (!_inited)
             {
-                _playerUI = _playerMovementController.GetComponent<PlayerUI>();
-                if (_playerUI != null)
+                _playerMovementController = FindLocalOwnerMovement();
+                if (_playerMovementController != null)
                 {
-                    inited = true;
+                    _playerUI = _playerMovementController.GetComponent<PlayerUI>();
+                    if (_playerUI != null)
+                    {
+                        _inited = true;
+                    }
                 }
             }
-        }
 
-        if (inited && playerUIFPVPanel != null)
-        {
-            playerUIFPVPanel.SetActive(_playerMovementController.FirstPersonView);
-            
-            if (playerUIFPVPanel.activeSelf)
+            if (!_inited || playerUIFPVPanel == null) return;
+            if (_playerUI != null)
             {
-                if (playerName != null) playerName.text = _playerUI.PlayerName;
-                if (playerRole != null) playerRole.text = _playerUI.PlayerRole;
-                if (hostIndicator != null) hostIndicator.SetActive(_playerUI.IsHost);
-                if (voiceImage != null)
+                playerUIFPVPanel.SetActive(_playerMovementController.FirstPersonView);
+
+                if (playerUIFPVPanel.activeSelf)
                 {
-                    voiceImage.color = _playerUI.IsVoiceMuted.Value ? Color.red : _playerUI.IsVoiceHeld.Value ? Color.white : Color.clear;
-                    voiceImage.gameObject.SetActive(_playerUI.IsVoiceHeld.Value || _playerUI.IsVoiceMuted.Value);
-                }        
+                    if (playerName != null) playerName.text = _playerUI.PlayerName;
+                    if (playerRole != null) playerRole.text = _playerUI.PlayerRole;
+                    if (hostIndicator != null) hostIndicator.SetActive(_playerUI.IsHost);
+                    if (voiceImage != null)
+                    {
+                        voiceImage.color = _playerUI.IsVoiceMuted.Value ? Color.red :
+                            _playerUI.IsVoiceHeld.Value ? Color.white : Color.clear;
+                        voiceImage.gameObject.SetActive(_playerUI.IsVoiceHeld.Value || _playerUI.IsVoiceMuted.Value);
+                    }
+                }
+            }
+            else
+            {
+                _inited = false;
             }
         }
-        else
-        {
-            return;
-        }
-    }
     
-    private PlayerMovementController FindLocalOwnerMovement()
-    {
-        var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-        for (int i = 0; i < all.Length; i++)
+        private static PlayerMovementController FindLocalOwnerMovement()
         {
-            var m = all[i];
-            if (m != null && m.Owner.IsLocalClient)
-                return m;
+            var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            return all.FirstOrDefault(m => m != null && m.Owner.IsLocalClient);
         }
-
-        return null;
     }
 }

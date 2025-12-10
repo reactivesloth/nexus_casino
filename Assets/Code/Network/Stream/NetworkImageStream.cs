@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using Code.InteractionSystem;
 using Code.Network.Stream.Data;
 using Code.Utility;
@@ -15,27 +14,37 @@ namespace Code.Network.Stream
     public sealed class NetworkImageStream : NetworkBehaviour
     {
         [SerializeField] private SlotMachineInteractable slotMachineInteractable;
+        [SerializeField] private StreamLoadBalancer streamLoadBalancer;
 
         [Header("UI")] [SerializeField] private RawImage rawImage;
         [SerializeField] private RawImage targetImage;
 
         [Header("Settings")]
-        // 128px = ~2-3 КБ. Это пролетит мгновенно даже через Reliable.
-        [SerializeField]
-        private int maxResolution = 128;
-
+        [SerializeField] private int maxResolution = 128;
         [SerializeField] private int jpgQuality = 35;
         [SerializeField] private float sendRate = 0.1f; // 10 раз в секунду
 
         [Header("Frame Change Detection")]
         [SerializeField] private bool enableFrameChangeDetection = true;
         [SerializeField] private int frameHashCheckInterval = 1; // Проверять каждый N-й кадр перед отправкой
-        [SerializeField] private float hashSimilarityThreshold = 0.95f; // 95% одинаковости = не отправляем
 
         [Header("Stream Connection"), SerializeField]
         private StreamingLiteNetLibPeer streamConnection;
         [SerializeField] private StreamingLiteNetLibServer streamServer;
 
+        [Header("Auto Quality")]
+        [SerializeField] private bool enableAutoQuality = true;
+        [SerializeField] private int targetFrameSizeBytes = 12_000;   // целевой размер кадра
+        [SerializeField] private int minJpgQuality = 20;
+        [SerializeField] private int maxJpgQuality = 70;
+        [SerializeField] private float minSendRate = 0.05f;           // максимум 20 FPS
+        [SerializeField] private float maxSendRate = 0.3f;            // минимум ~3 FPS
+        [SerializeField] private float qualityAdjustInterval = 5f;    // раз в N секунд
+
+        private int _frameCountForStats;
+        private long _bytesForStats;
+        private float _nextQualityAdjustTime;
+        
         [Header("Debug")] [SerializeField] private bool showDebugLogs = true;
 
         private float _nextTime;
@@ -45,8 +54,8 @@ namespace Code.Network.Stream
         private Texture2D _recvTex;
 
         // Frame change detection
-        private byte[] _lastFrameData;
         private uint _lastFrameHash;
+        private int _lastFrameLength;
         private int _frameCheckCounter;
 
         private int _savedJPGQuality = 35;
@@ -55,14 +64,24 @@ namespace Code.Network.Stream
 
         public event Action<Texture> OnApplyTexture;
 
-        private void Awake()
+        private void Start()
         {
             _savedJPGQuality = jpgQuality;
-            streamConnection = FindAnyObjectByType<StreamingLiteNetLibPeer>();
-            streamServer = FindAnyObjectByType<StreamingLiteNetLibServer>();
+            streamConnection = StreamingLiteNetLibPeer.Instance;
+            streamServer = StreamingLiteNetLibServer.Instance;
+            
             streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
+            
+            if (streamLoadBalancer == null)
+                streamLoadBalancer = FindAnyObjectByType<StreamLoadBalancer>();
         }
 
+        private void OnDestroy()
+        {
+            if (streamConnection != null)
+                streamConnection.OnFrameReceived -= StreamConnectionOnOnFrameReceived;
+        }
+        
         private void StreamConnectionOnOnFrameReceived(StreamFrameData data)
         {
             if (data == null)
@@ -78,22 +97,65 @@ namespace Code.Network.Stream
 
         private void Update()
         {
-            // Стримим только если владелец
             if (!IsOwner) return;
-
-            // Лимит частоты
             if (Time.time < _nextTime) return;
-
-            // Защита от наложения
             if (_isCapturing) return;
-
-            // Валидация источника
+            
+            if (enableAutoQuality)
+                TryAdjustQuality();
+            
             if (rawImage == null || rawImage.texture == null || rawImage.texture.width < 16) return;
 
             _nextTime = Time.time + sendRate;
             Capture();
         }
 
+        private void TryAdjustQuality()
+        {
+            if (Time.time < _nextQualityAdjustTime)
+                return;
+
+            _nextQualityAdjustTime = Time.time + qualityAdjustInterval;
+
+            if (_frameCountForStats <= 0)
+                return;
+
+            float avgSize = (float)_bytesForStats / _frameCountForStats;
+
+            // Сброс счётчиков
+            _frameCountForStats = 0;
+            _bytesForStats = 0;
+            
+            int dynamicTarget = targetFrameSizeBytes;
+            if (enableAutoQuality && streamLoadBalancer != null)
+                dynamicTarget = streamLoadBalancer.GetTargetFrameSize();
+            
+            // Отношение к целевому размеру
+            float ratio = avgSize / dynamicTarget;
+
+            // Немного "мёртвой зоны", чтобы не дёргалось
+            if (ratio > 1.1f)
+            {
+                // Слишком жирные кадры -> режем качество и/или FPS
+                jpgQuality = Mathf.Max(minJpgQuality, jpgQuality - 5);
+                sendRate = Mathf.Min(maxSendRate, sendRate + 0.01f);
+                maxResolution = Mathf.Max(128, Mathf.Clamp(maxResolution - 32, 128, 512));
+
+                if (showDebugLogs)
+                    Debug.Log($"[AutoQuality] Decrease quality: avg={avgSize:F0} bytes, jpg={jpgQuality}, sendRate={sendRate:F3}");
+            }
+            else if (ratio < 0.7f)
+            {
+                // Можно поднять качество / FPS
+                jpgQuality = Mathf.Min(maxJpgQuality, jpgQuality + 5);
+                sendRate = Mathf.Max(minSendRate, sendRate - 0.01f);
+                maxResolution = Mathf.Max(128, Mathf.Clamp(maxResolution + 32, 128, 512));
+
+                if (showDebugLogs)
+                    Debug.Log($"[AutoQuality] Increase quality: avg={avgSize:F0} bytes, jpg={jpgQuality}, sendRate={sendRate:F3}");
+            }
+        }
+        
         private void Capture()
         {
             _isCapturing = true;
@@ -163,11 +225,11 @@ namespace Code.Network.Stream
         {
             if (!enableFrameChangeDetection)
             {
+                RegisterFrameStats(data.Length);
                 SendFrameInternal(data);
                 return;
             }
 
-            // Проверка на дубликат кадра
             if (IsFrameDuplicate(data))
             {
                 if (showDebugLogs) Debug.Log($"[Client] Frame skipped (duplicate) - {data.Length} bytes");
@@ -175,92 +237,63 @@ namespace Code.Network.Stream
                 return;
             }
 
+            RegisterFrameStats(data.Length);
             SendFrameInternal(data);
         }
 
+        private void RegisterFrameStats(int sizeBytes)
+        {
+            _frameCountForStats++;
+            _bytesForStats += sizeBytes;
+        }
+        
         private bool IsFrameDuplicate(byte[] currentData)
         {
-            if (_lastFrameData == null)
+            if (currentData == null || currentData.Length == 0)
             {
-                _lastFrameData = currentData;
-                _lastFrameHash = CalculateHash(currentData);
+                _lastFrameHash = 0;
+                _lastFrameLength = 0;
                 _frameCheckCounter = 0;
                 return false;
             }
 
-            // Быстрая проверка: размер должен быть одинаковым
-            if (currentData.Length != _lastFrameData.Length)
+            // Быстрая проверка по длине
+            if (currentData.Length != _lastFrameLength)
             {
-                _lastFrameData = currentData;
-                _lastFrameHash = CalculateHash(currentData);
+                _lastFrameLength = currentData.Length;
+                _lastFrameHash = CalculateSampleHash(currentData);
                 _frameCheckCounter = 0;
                 return false;
             }
 
             _frameCheckCounter++;
 
-            // Каждый N-й кадр проверяем полное совпадение
+            // Только каждый N-й кадр считаем хеш
             if (_frameCheckCounter >= frameHashCheckInterval)
             {
-                uint currentHash = CalculateHash(currentData);
-                
-                // Полное совпадение хешей = дубликат
-                if (currentHash == _lastFrameHash)
-                {
-                    return true;
-                }
+                uint currentHash = CalculateSampleHash(currentData);
+                bool isDuplicate = currentHash == _lastFrameHash;
 
-                _lastFrameData = currentData;
                 _lastFrameHash = currentHash;
                 _frameCheckCounter = 0;
-                return false;
+
+                return isDuplicate;
             }
 
-            // Между проверками - быстрое сравнение первых N байт
-            int sampleSize = Mathf.Min(256, currentData.Length);
-            bool isSimilar = ArraysAreEqual(currentData, _lastFrameData, sampleSize);
-
-            if (!isSimilar)
-            {
-                _lastFrameData = currentData;
-                _lastFrameHash = CalculateHash(currentData);
-                _frameCheckCounter = 0;
-            }
-
-            return isSimilar;
+            return false;
         }
 
-        /// <summary>
-        /// Быстрое сравнение первых N байт массивов
-        /// </summary>
-        private bool ArraysAreEqual(byte[] arr1, byte[] arr2, int length)
-        {
-            if (arr1 == null || arr2 == null || arr1.Length < length || arr2.Length < length)
-                return false;
-
-            for (int i = 0; i < length; i++)
-            {
-                if (arr1[i] != arr2[i])
-                    return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Быстрый хеш всего массива (DJB2 алгоритм)
-        /// </summary>
-        private uint CalculateHash(byte[] data)
+        private uint CalculateSampleHash(byte[] data)
         {
             if (data == null || data.Length == 0)
                 return 0;
 
+            const int sampleSize = 256;
+            int len = Mathf.Min(sampleSize, data.Length);
+
             uint hash = 5381;
-            
-            for (int i = 0; i < data.Length; i++)
-            {
+            for (int i = 0; i < len; i++)
                 hash = ((hash << 5) + hash) ^ data[i];
-            }
 
             return hash;
         }
@@ -344,28 +377,33 @@ namespace Code.Network.Stream
             {
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
                 _isCapturing = false;
+                streamLoadBalancer?.RegisterStream();
             }
 
             if (Owner.ClientId == -1)
             {
                 targetImage.gameObject.SetActive(false);
+                streamLoadBalancer?.UnregisterStream();
             }
             else if (!IsOwner)
             {
                 targetImage.gameObject.SetActive(true);
+                streamLoadBalancer?.UnregisterStream();
             }
         }
 
         public override void OnStopClient()
         {
             base.OnStopClient();
+            
+            if (IsOwner)
+                streamLoadBalancer?.UnregisterStream();
+            
             if (_tempRT) RenderTexture.ReleaseTemporary(_tempRT);
             if (_readTex) Destroy(_readTex);
             if (_recvTex) Destroy(_recvTex);
             targetImage.gameObject.SetActive(false);
 
-            // Очистка данных дублирования
-            _lastFrameData = null;
             _lastFrameHash = 0;
             _frameCheckCounter = 0;
         }

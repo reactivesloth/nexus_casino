@@ -16,7 +16,6 @@ namespace Code.Utility
         private const float DefaultSlotsVolume     = 30f;
         private const float DefaultSFXVolume       = 30f;
         private int DefaultGraphicsQuality => QualitySettings.GetQualityLevel();
-        private const int   DefaultFPSLimit        = 60;
         private const bool  DefaultEffectsEnabled  = true;
         private const int   DefaultAntiAliasing    = 2;
         private const float DefaultCameraSensitivity = 40f;
@@ -63,7 +62,11 @@ namespace Code.Utility
             SFXVolume       = PlayerPrefs.GetFloat("SFXVolume",     DefaultSFXVolume);
 
             QualityLevel      = PlayerPrefs.GetInt("GraphicsQuality", DefaultGraphicsQuality);
-            FPSLimit          = PlayerPrefs.GetInt("FPSLimit",         DefaultFPSLimit);
+#if UNITY_IOS || UNITY_ANDROID
+            FPSLimit          = PlayerPrefs.GetInt("FPSLimit",         0);
+#else
+            FPSLimit          = PlayerPrefs.GetInt("FPSLimit",         2);
+#endif
             EffectsEnabled    = PlayerPrefs.GetInt("EffectsEnabled",   DefaultEffectsEnabled ? 1 : 0) == 1;
             AntiAliasingLevel = PlayerPrefs.GetInt("AntiAliasingLevel", DefaultAntiAliasing);
 
@@ -102,7 +105,11 @@ namespace Code.Utility
             SFXVolume       = DefaultSFXVolume;
 
             QualityLevel      = DefaultGraphicsQuality;
-            FPSLimit          = DefaultFPSLimit;
+#if UNITY_IOS || UNITY_ANDROID
+            FPSLimit          = 0;
+#else
+            FPSLimit          = 2;
+#endif
             EffectsEnabled    = DefaultEffectsEnabled;
             AntiAliasingLevel = DefaultAntiAliasing;
 
@@ -137,7 +144,14 @@ namespace Code.Utility
             
             // Graphics
             QualitySettings.SetQualityLevel(QualityLevel);
-            Application.targetFrameRate = FPSLimit;
+            Application.targetFrameRate = FPSLimit switch
+            {
+                0 => 15,
+                1 => 30,
+                2 => 60,
+                _ => 0
+            };
+            
             QualitySettings.antiAliasing = Mathf.Max(0, AntiAliasingLevel);;
 
             // PostFX
@@ -157,7 +171,20 @@ namespace Code.Utility
         public void SetSFXVolume(float percent)     { SFXVolume       = percent; PlayerPrefs.SetFloat("SFXVolume",   percent);   AudioManager.Instance?.SetVolume("SFX",       PercentTo01(percent)); }
 
         public void SetGraphicsQuality(int level)   { QualityLevel      = level; PlayerPrefs.SetInt("GraphicsQuality", level);   QualitySettings.SetQualityLevel(level); }
-        public void SetFPSLimit(int fps)            { FPSLimit          = fps;   PlayerPrefs.SetInt("FPSLimit", fps);           Application.targetFrameRate = fps; }
+
+        public void SetFPSLimit(int fpsLevel)
+        {
+            FPSLimit = fpsLevel;
+            PlayerPrefs.SetInt("FPSLimit", fpsLevel);
+            Application.targetFrameRate = fpsLevel switch
+            {
+                0 => 15,
+                1 => 30,
+                2 => 60,
+                _ => 0
+            };
+        }
+
         public void SetEffectsEnabled(bool enabled) { EffectsEnabled    = enabled; PlayerPrefs.SetInt("EffectsEnabled", enabled ? 1 : 0); PostProcessingManager.Instance?.SetEnabled(enabled); }
         public void SetAntiAliasing(int level)      { AntiAliasingLevel = level; PlayerPrefs.SetInt("AntiAliasingLevel", level); QualitySettings.antiAliasing = Mathf.Max(0, level); }
 

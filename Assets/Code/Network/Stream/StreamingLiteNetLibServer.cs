@@ -55,7 +55,7 @@ namespace Code.Network.Stream
         {
             get
             {
-                var internalPort = FindAnyObjectByType<StreamingLiteNetLibServer>().port;
+                var internalPort = Instance.port;
                 var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
                 if (lobby == null)
                     return internalPort;
@@ -65,8 +65,12 @@ namespace Code.Network.Stream
             }
         }
 
+        public static StreamingLiteNetLibServer Instance { get; private set; }
+
         private void Awake()
         {
+            Instance = this;
+
 #if UNITY_SERVER
             StartServer();
 #endif

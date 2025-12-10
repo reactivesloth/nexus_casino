@@ -215,7 +215,10 @@ namespace Code.UI
         private void OnStreamClick()
         {
             var nickname = !string.IsNullOrEmpty(ClientDataStorage.UserData.username) ? ClientDataStorage.UserData.username : "unknown";
-            if(!_streaming) 
+            
+            bool isThisSlotNow = _mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber;
+            
+            if(!isThisSlotNow) 
                 _mainScreenController.RequestStream(slotMachineInteractable.IDNumber, nickname);
             else 
                 _mainScreenController.RequestCancel();
@@ -224,8 +227,11 @@ namespace Code.UI
         private void StreamSlotIdOnOnChange(int prevId, int newId, bool asServer)
         {
             var thisId = slotMachineInteractable.IDNumber;
-            if (newId == thisId) OnStartStreaming();
-            else if (newId != thisId) OnEndStreaming();
+
+            if (newId == thisId)
+                OnStartStreaming();
+            else if (prevId == thisId && newId != thisId)
+                OnEndStreaming();
         }
 
         private void OnStartStreaming()

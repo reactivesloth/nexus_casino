@@ -848,15 +848,23 @@ MonoBehaviour:
   _addedNetworkObject: {fileID: 791084595948481418}
   _networkObjectCache: {fileID: 0}
   slotMachineInteractable: {fileID: 8690079509221083420}
+  streamLoadBalancer: {fileID: 0}
   rawImage: {fileID: 0}
   targetImage: {fileID: 4849952405852889531}
-  maxResolution: 512
+  maxResolution: 384
   jpgQuality: 35
   sendRate: 0.1
   enableFrameChangeDetection: 1
   frameHashCheckInterval: 1
-  hashSimilarityThreshold: 0.95
   streamConnection: {fileID: 0}
+  streamServer: {fileID: 0}
+  enableAutoQuality: 1
+  targetFrameSizeBytes: 10000
+  minJpgQuality: 10
+  maxJpgQuality: 40
+  minSendRate: 0.1
+  maxSendRate: 0.5
+  qualityAdjustInterval: 0.015
   showDebugLogs: 0
 --- !u!1 &4440273282103300431
 GameObject:
@@ -1215,7 +1223,7 @@ MonoBehaviour:
   RuntimeParentNetworkBehaviour: {fileID: 0}
   RuntimeChildNetworkBehaviours: []
   _isNetworked: 1
-  _isSpawnable: 0
+  _isSpawnable: 1
   _isGlobal: 0
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
@@ -1237,7 +1245,7 @@ MonoBehaviour:
   _teleportThreshold: 1
   <PrefabId>k__BackingField: 7
   <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 13064311267008439986
+  <AssetPathHash>k__BackingField: 9692150391060675242
   SceneId: 0
   SerializedTransformProperties:
     Position: {x: 0, y: 0, z: 0}

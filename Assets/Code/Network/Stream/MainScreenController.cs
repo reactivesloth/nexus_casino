@@ -19,6 +19,7 @@ namespace Code.Network.Stream
         [SerializeField] private TMP_Text streamerNameText;
 
         private SlotMachineInteractable CurrentStreamSlot => GetCurrentStream(StreamSlotId.Value);
+        private SlotMachineInteractable _prevStreamSlot;
 
         public readonly SyncVar<int> StreamSlotId = new(new SyncTypeSettings
         {
@@ -53,6 +54,9 @@ namespace Code.Network.Stream
         {
             StreamSlotId.OnChange -= OnStreamSlotIdChange;
             StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
+            
+            if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
+                _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
         }
 
         public void RequestStream(int slotId, string username) =>
@@ -80,8 +84,19 @@ namespace Code.Network.Stream
 
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
+            if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
+                _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
+            
             elementsParent.gameObject.SetActive(CurrentStreamSlot != null);
-            if (CurrentStreamSlot == null) return;
+           
+            _prevStreamSlot = CurrentStreamSlot;
+            
+            if (CurrentStreamSlot == null)
+            {
+                screenRawImage.texture = null;
+                slotIdText.text = string.Empty;
+                return;
+            }
             
             CurrentStreamSlot.NetworkImageStream.OnApplyTexture += ApplyTexture;
             slotIdText.text = $"Slot №{next}";

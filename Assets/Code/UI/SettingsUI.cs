@@ -27,6 +27,7 @@ namespace Code.UI
         public TextSelectionSlider localizationDropdown;
         public TextSelectionSlider invertCameraDropdown;
         public TextSelectionSlider qualityDropdown;
+        public TextSelectionSlider fpsDropdown;
         public Slider cameraSensitivitySlider;
 
         [Header("Buttons")]
@@ -38,6 +39,7 @@ namespace Code.UI
         {
             public float Voice, Music, Slots, Sfx;   // 0..100
             public int QualityLevel;
+            public int FPSLimit;
             public float CameraSensitivity;
             public bool InvertCamera;
             public Locale Localization;
@@ -49,6 +51,7 @@ namespace Code.UI
                 Slots            = sm.SlotsVolume;
                 Sfx              = sm.SFXVolume;
                 QualityLevel     = sm.QualityLevel;
+                FPSLimit         = sm.FPSLimit;
                 CameraSensitivity= sm.CameraSensitivity;
                 InvertCamera     = sm.InvertCamera;
                 Localization     = sm.Localization;
@@ -69,6 +72,7 @@ namespace Code.UI
                 Slots             = 30f;
                 Sfx               = 30f;
                 QualityLevel      = QualitySettings.GetQualityLevel();
+                FPSLimit          = 30;
                 CameraSensitivity = 40f;
                 InvertCamera      = false;
                 Localization      = LocalizationSettings.ProjectLocale;
@@ -80,7 +84,7 @@ namespace Code.UI
                 sm.SetMusicVolume(Music);
                 sm.SetSlotsVolume(Slots);
                 sm.SetSFXVolume(Sfx);
-
+                sm.SetFPSLimit(FPSLimit);
                 sm.SetGraphicsQuality(QualityLevel);
                 sm.SetCameraSensitivity(CameraSensitivity);
                 sm.SetInvertCamera(InvertCamera);
@@ -103,6 +107,7 @@ namespace Code.UI
             }
 
             PopulateQualityDropdown();
+            PopulateFPSDropdown();
             PopulateLocalizationDropdown();
             PopulateInvertCameraYDropdown();
             HookUiEvents();
@@ -144,6 +149,14 @@ namespace Code.UI
             invertCameraDropdown.GetComponent<TextSelectionSliderLocalizationHelper>().InitKeys(names);
         }
 
+        private void PopulateFPSDropdown()
+        {
+            if (fpsDropdown == null) return;
+            fpsDropdown.ClearOptions();
+            var names = new List<string>{"15", "30", "60", "Unlimited"};
+            fpsDropdown.GetComponent<TextSelectionSliderLocalizationHelper>().InitKeys(names);
+        }
+        
         private void PopulateQualityDropdown()
         {
             if (qualityDropdown == null) return;
@@ -192,6 +205,7 @@ namespace Code.UI
             if (slotsSlider != null)     slotsSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Slots = v; });
             if (sfxSlider != null)       sfxSlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Sfx = v; });
             if (qualityDropdown != null) qualityDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.QualityLevel = v; });
+            if (fpsDropdown != null) fpsDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.FPSLimit = v; });
             if (localizationDropdown != null) localizationDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.Localization = LocalizationSettings.AvailableLocales.Locales[v]; LocalizationSettings.SelectedLocale = LocalizationSettings.AvailableLocales.Locales[v];});
             if (cameraSensitivitySlider != null) cameraSensitivitySlider.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.CameraSensitivity = v; });
             if (invertCameraDropdown != null) invertCameraDropdown.onValueChanged.AddListener(v => { if (!_suppressUiEvents) _draft.InvertCamera = v != 0; });
@@ -213,6 +227,13 @@ namespace Code.UI
                 qualityDropdown.RefreshShownValue();
             }
 
+            if (fpsDropdown != null)
+            {
+                int max = fpsDropdown.Options.Count > 0 ? fpsDropdown.Options.Count - 1 : 0;
+                fpsDropdown.value = Mathf.Clamp(_draft.FPSLimit, 0, max);
+                fpsDropdown.RefreshShownValue();
+            }
+            
             if (invertCameraDropdown != null)
             {
                 invertCameraDropdown.value = _draft.InvertCamera ? 1 : 0;

@@ -33,8 +33,11 @@ namespace Code.Network.Stream
 
         public event Action<StreamFrameData> OnFrameReceived;
 
+        public static StreamingLiteNetLibPeer Instance { get; private set; }
+        
         private void Awake()
         {
+            Instance = this;
             InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
         }
 
