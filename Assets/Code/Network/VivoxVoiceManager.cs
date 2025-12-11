@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using PlayFlow;
 using Unity.Services.Core;
 using Unity.Services.Vivox;
 using UnityEngine;
@@ -13,19 +14,15 @@ namespace Code.Network
         public const string LobbyChannelName = "lobbyChannel";
 
         // Check to see if we're about to be destroyed.
-        static object m_Lock = new object();
-        static VivoxVoiceManager m_Instance;
+        private static object m_Lock = new object();
+        private static VivoxVoiceManager m_Instance;
 
         //These variables should be set to the projects Vivox credentials if the authentication package is not being used
         //Credentials are available on the Vivox Developer Portal (developer.vivox.com) or the Unity Dashboard (dashboard.unity3d.com), depending on where the organization and project were made
-        [SerializeField]
-        string _key;
-        [SerializeField]
-        string _issuer;
-        [SerializeField]
-        string _domain;
-        [SerializeField]
-        string _server;
+        [SerializeField] private string key;
+        [SerializeField] private string issuer;
+        [SerializeField] private string domain;
+        [SerializeField] private string server;
 
         /// <summary>
         /// Access singleton instance through this propriety.
@@ -50,6 +47,7 @@ namespace Code.Network
                             singletonObject.name = typeof(VivoxVoiceManager).ToString() + " (Singleton)";
                         }
                     }
+
                     // Make instance persistent even if its already in the scene
                     DontDestroyOnLoad(m_Instance.gameObject);
                     return m_Instance;
@@ -57,7 +55,7 @@ namespace Code.Network
             }
         }
 
-        async void Awake()
+        private async void Awake()
         {
             if (m_Instance != this && m_Instance != null)
             {
@@ -65,20 +63,19 @@ namespace Code.Network
                     "Multiple VivoxVoiceManager detected in the scene. Only one VivoxVoiceManager can exist at a time. The duplicate VivoxVoiceManager will be destroyed.");
                 Destroy(this);
             }
+
             var options = new InitializationOptions();
             if (CheckManualCredentials())
             {
-                options.SetVivoxCredentials(_server, _domain, _issuer, _key);
+                options.SetVivoxCredentials(server, domain, issuer, key);
             }
 
             await UnityServices.InitializeAsync(options);
             await VivoxService.Instance.InitializeAsync();
-
         }
 
         public async Task InitializeAsync(string playerName)
         {
-
 #if AUTH_PACKAGE_PRESENT
         if (!CheckManualCredentials())
         {
@@ -88,9 +85,36 @@ namespace Code.Network
 #endif
         }
 
-        bool CheckManualCredentials()
+        public void SetLocalPosition(GameObject localObject)
         {
-            return !(string.IsNullOrEmpty(_issuer) && string.IsNullOrEmpty(_domain) && string.IsNullOrEmpty(_server));
+            VivoxService.Instance.Set3DPosition(localObject, PlayFlowLobbyManagerV2.Instance.CurrentLobby.id);
+        }
+
+        public void MuteLocalPlayer()
+        {
+            VivoxService.Instance.MuteInputDevice();
+        }
+
+        public void UnmuteLocalPlayer()
+        {
+            VivoxService.Instance.UnmuteInputDevice();
+        }
+
+        public void ConnectToLobbyChannel()
+        {
+            Debug.Log("[VivoxVoiceManager] Connecting to lobby channel]");
+            VivoxService.Instance.JoinPositionalChannelAsync(PlayFlowLobbyManagerV2.Instance.CurrentLobby.id,
+                ChatCapability.AudioOnly, new Channel3DProperties(), new ChannelOptions());
+        }
+
+        public void DisconnectFromLobbyChannel()
+        {
+            VivoxService.Instance.LeaveAllChannelsAsync();
+        }
+
+        private bool CheckManualCredentials()
+        {
+            return !(string.IsNullOrEmpty(issuer) && string.IsNullOrEmpty(domain) && string.IsNullOrEmpty(server));
         }
     }
 }

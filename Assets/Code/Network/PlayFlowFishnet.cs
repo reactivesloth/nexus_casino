@@ -4,7 +4,6 @@ using Code.API;
 using Code.UI;
 using FishNet;
 using PlayFlow;
-using Unity.Services.Vivox;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -183,28 +182,6 @@ namespace Code.Network
         {
             yield return new WaitForSeconds(2f);
             InstanceFinder.NetworkManager.ClientManager.StartConnection(ip, port);
-            LoginToVivox();
-        }
-        
-        async void LoginToVivox()
-        {
-            var correctedDisplayName = ClientDataStorage.UserData.username;
-                
-            await VivoxVoiceManager.Instance.InitializeAsync(correctedDisplayName);
-            var loginOptions = new LoginOptions()
-            {
-                DisplayName = correctedDisplayName,
-                ParticipantUpdateFrequency = ParticipantPropertyUpdateFrequency.FivePerSecond
-            };
-            await VivoxService.Instance.LoginAsync(loginOptions);
-        }
-        
-        public async void LogoutOfVivoxServiceAsync()
-        {
-            await VivoxService.Instance.LogoutAsync();
-#if AUTH_PACKAGE_PRESENT
-        AuthenticationService.Instance.SignOut();
-#endif
         }
 
         private void InitPlayerDataOnLobby()
@@ -249,7 +226,6 @@ namespace Code.Network
 
         private void LeftLobby()
         {
-            LogoutOfVivoxServiceAsync();
             PlayFlowLobbyManagerV2.Instance.LeaveLobby();
         }
 
