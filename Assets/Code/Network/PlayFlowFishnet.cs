@@ -133,7 +133,10 @@ namespace Code.Network
                     Debug.LogError("Ошибка при подключении к лобби: " + error);
                     
                     // Можно попытаться повторить зайти в лобби
-                    JoinLobby(lobbyId);
+                    if (error.Contains ("not found"))
+                        CreateLobby(lobbyId);
+                    else
+                        JoinLobby(lobbyId);
                 });
         }
 

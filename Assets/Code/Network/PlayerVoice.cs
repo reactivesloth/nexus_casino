@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using Code.API;
+using Code.Utility;
 using FishNet.Object;
 using Unity.Services.Vivox;
+using UnityEngine;
 #if AUTH_PACKAGE_PRESENT
 using Unity.Services.Authentication;
 #endif
@@ -19,8 +21,9 @@ namespace Code.Network
         public bool isInputMuted;
         public bool isInputMutedByServer;
         
-        // public VivoxParticipant Participant { get; private set; }
-
+        private float savedVol;
+        private float savedVolSettings;
+        
         public override void OnStartClient()
         {
             #region Singleton
@@ -32,6 +35,8 @@ namespace Code.Network
 
             instances.Add(this);
             #endregion
+
+            isInputMuted = true;
         }
 
         public override void OnStopClient()
@@ -51,8 +56,26 @@ namespace Code.Network
         {
             if (isInputMutedByServer)
                 isInputMuted = true;
+
+            if (IsOwner)
+            {
+                if (isInputMuted)
+                {
+                    VivoxVoiceManager.Instance.MuteLocalPlayer();
+                }
+                else
+                {
+                    VivoxVoiceManager.Instance.UnmuteLocalPlayer();
+                }
+            }
+
+            if (savedVolSettings != SettingsManager.Instance.VoiceChatVolume)
+            {
+                VivoxService.Instance.SetOutputDeviceVolume((int)(Mathf.Lerp(-40, 10, SettingsManager.Instance.VoiceChatVolume / 100)));
+                savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
+            }
         }
-                
+
         private async void LoginToVivox()
         {
             var correctedDisplayName = ClientDataStorage.UserData.username;
@@ -66,6 +89,7 @@ namespace Code.Network
             await VivoxService.Instance.LoginAsync(loginOptions);
             VivoxVoiceManager.Instance.ConnectToLobbyChannel();
             InvokeRepeating(nameof(UpdatePos), 0, 0.1f);
+            savedVolSettings = 0;
         }
         
         private async void LogoutOfVivoxServiceAsync()

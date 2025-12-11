@@ -104,7 +104,7 @@ namespace Code.Network
         {
             Debug.Log("[VivoxVoiceManager] Connecting to lobby channel]");
             VivoxService.Instance.JoinPositionalChannelAsync(PlayFlowLobbyManagerV2.Instance.CurrentLobby.id,
-                ChatCapability.AudioOnly, new Channel3DProperties(), new ChannelOptions());
+                ChatCapability.AudioOnly, new Channel3DProperties(40, 30, 1, AudioFadeModel.ExponentialByDistance), new ChannelOptions());
         }
 
         public void DisconnectFromLobbyChannel()
