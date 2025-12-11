@@ -2,16 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using Code.API;
 using Code.UI;
+using Code.UI.Popup;
+using Code.Utility;
 using FishNet;
 using PlayFlow;
+using Ricimi;
 using UnityEngine;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
+using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace Code.Network
 {
     public class PlayFlowFishnet : MonoBehaviour
     {
         public int maxPlayersPerLobby = 100;
+        private NexusModularPopupOpener _popupOpener;
+        
+        private void Awake()
+        {
+            _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
+        }
 
         void Start()
         {
@@ -114,9 +125,40 @@ namespace Code.Network
                 onError: error =>
                 {
                     Debug.LogError("Ошибка получения списка лобби: " + error);
-                    // Можно попытаться создать лобби, если список не получен
-                    CreateLobby();
+
+                    if (error.Contains($"'{Application.version}' not found"))
+                    {
+                        UpdateReadyPopup();
+                    }
+                    else
+                    {
+                        // Можно попытаться создать лобби, если список не получен
+                        CreateLobby();
+                    }
                 });
+        }
+
+        private void UpdateReadyPopup()
+        {
+            CursorManager.Instance.SetForceShowCursor(true);
+            _popupOpener.Title = "Требуется обновление";
+            _popupOpener.Subtitle = "";
+            _popupOpener.Message = "Вышла новая версия Nexus Meta Club. Для того чтобы дальше пользоваться приложением ее необходимо скачать. Вы можете нажать на кнопку и в вашем браузере откроется страница с инструкцией по обновлению.";
+            
+            var okButton = new ButtonInfo
+            {
+                Label = "Хорошо",
+                ClosePopupWhenClicked = true,
+                OnClickedEvent = new Button.ButtonClickedEvent()
+            };
+            okButton.OnClickedEvent.AddListener(()=>
+            {
+                Application.OpenURL("https://nexusmetaclub.com/update#download");
+                CursorManager.Instance.SetForceShowCursor(false);
+                SceneManager.LoadScene("Init");
+            });
+            _popupOpener.Buttons.Add(okButton);
+            _popupOpener.OpenPopup();
         }
 
         private void JoinLobby(string lobbyId)
