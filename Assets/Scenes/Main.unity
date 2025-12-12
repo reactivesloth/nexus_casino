@@ -3333,6 +3333,7 @@ GameObject:
   - component: {fileID: 201514783}
   - component: {fileID: 201514785}
   - component: {fileID: 201514784}
+  - component: {fileID: 201514786}
   m_Layer: 0
   m_Name: Point Light
   m_TagString: Untagged
@@ -3449,6 +3450,19 @@ Light:
   m_LightUnit: 1
   m_LuxAtDistance: 1
   m_EnableSpotReflector: 1
+--- !u!114 &201514786
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 201514782}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2c9f632bc0e65d4e80253275429ffee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Utility.CameraLight
+  light: {fileID: 201514785}
 --- !u!65 &207859358
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -45171,7 +45185,7 @@ MonoBehaviour:
   m_Lens:
     FieldOfView: 60
     OrthographicSize: 10
-    NearClipPlane: 0.2
+    NearClipPlane: 0.1
     FarClipPlane: 500
     Dutch: 0
     ModeOverride: 0
@@ -52097,7 +52111,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.2
+  near clip plane: 0.1
   far clip plane: 500
   field of view: 60
   orthographic: 0
