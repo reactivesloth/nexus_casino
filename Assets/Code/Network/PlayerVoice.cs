@@ -130,6 +130,14 @@ namespace Code.Network
             savedVolSettings = 0;
             isInputMuted = true;
             VivoxVoiceManager.Instance.MuteLocalPlayer();
+
+            VivoxService.Instance.VivoxGlobalAudioSettings.PlatformAcousticEchoCancellationEnabled = false;
+            VivoxService.Instance.VivoxGlobalAudioSettings.AudioClippingProtectorEnabled = true;
+            VivoxService.Instance.VivoxGlobalAudioSettings.VivoxAcousticEchoCancellationEnabled = true;
+            VivoxService.Instance.VivoxGlobalAudioSettings.AutomaticGainControlEnabled = true;
+            VivoxService.Instance.VivoxGlobalAudioSettings.NoiseSuppressionEnabled = true;
+            
+            VivoxService.Instance.EnableAcousticEchoCancellation();
         }
 
         private void LogoutOfVivoxServiceAsync(bool rejoinAfter = false)

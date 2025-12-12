@@ -79,9 +79,6 @@ namespace Code.Network
 
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
-
-            VivoxService.Instance.EnableAcousticEchoCancellation();
-            
             Participants = new List<VivoxParticipant>();
         }
 
@@ -132,6 +129,7 @@ namespace Code.Network
 
         public void ConnectToLobbyChannel()
         {
+            Participants.Clear();
             Debug.Log("[VivoxVoiceManager] Connecting to lobby channel]");
             VivoxService.Instance.JoinPositionalChannelAsync(PlayFlowLobbyManagerV2.Instance.CurrentLobby.id,
                 ChatCapability.AudioOnly, new Channel3DProperties(40, 30, 1, AudioFadeModel.ExponentialByDistance), new ChannelOptions());
@@ -139,6 +137,7 @@ namespace Code.Network
 
         public void DisconnectFromLobbyChannel()
         {
+            Participants.Clear();
             VivoxService.Instance.LeaveAllChannelsAsync();
         }
 
