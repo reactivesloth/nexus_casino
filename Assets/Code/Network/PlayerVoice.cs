@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Code.API;
 using Code.UI;
 using Code.Utility;
@@ -41,13 +40,29 @@ namespace Code.Network
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = this;
-                LoginToVivox();
+                if (!VivoxService.Instance.IsLoggedIn)
+                    LoginToVivox();
+                else
+                    LogoutOfVivoxServiceAsync(true);
             }
 
             instances.Add(this);
          }
         
         public override void OnStopClient()
+        {
+            if (IsOwner)
+            {
+                LocalPlayerVoiceInstance = null;
+                LogoutOfVivoxServiceAsync();
+            }
+
+            instances.Remove(this);
+
+            participant = null;
+        }
+
+        private void OnDestroy()
         {
             if (IsOwner)
             {
@@ -67,32 +82,35 @@ namespace Code.Network
 
             if (participant == null)
             {
-                participant = VivoxVoiceManager.Instance.GetParticipant(gameObject.GetComponentInChildren<PlayerUI>().PlayerName); 
+                participant = VivoxVoiceManager.Instance.GetParticipant(gameObject.GetComponentInChildren<PlayerUI>().PlayerName);
             }
-            
-            if (salsa != null && participant != null)
+            else
             {
-                var audioEnergy = participant.AudioEnergy;
-                if (participant.IsMuted) audioEnergy = 0f;
-                if (audioEnergy < 0.01f) audioEnergy = 0f;
-                salsa.analysisValue = (float)audioEnergy;
-            }
+                if (salsa != null)
+                {
+                    var audioEnergy = participant.AudioEnergy;
+                    if (participant.IsMuted) audioEnergy = 0f;
+                    if (audioEnergy < 0.01f) audioEnergy = 0f;
+                    salsa.analysisValue = (float)audioEnergy;
+                }
 
-            if (!IsOwner) return;
+                if (!IsOwner) return;
 
-            if (isInputMuted && !participant.IsMuted)
-            {
-                VivoxVoiceManager.Instance.MuteLocalPlayer();
-            }
-            else if (!isInputMuted && participant.IsMuted)
-            {
-                VivoxVoiceManager.Instance.UnmuteLocalPlayer();
-            }
+                if (isInputMuted && !participant.IsMuted)
+                {
+                    VivoxVoiceManager.Instance.MuteLocalPlayer();
+                }
+                else if (!isInputMuted && participant.IsMuted)
+                {
+                    VivoxVoiceManager.Instance.UnmuteLocalPlayer();
+                }
 
-            if (savedVolSettings != SettingsManager.Instance.VoiceChatVolume)
-            {
-                VivoxService.Instance.SetOutputDeviceVolume((int)(Mathf.Lerp(-40, 10, SettingsManager.Instance.VoiceChatVolume / 100)));
-                savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
+                if (savedVolSettings != SettingsManager.Instance.VoiceChatVolume)
+                {
+                    VivoxService.Instance.SetOutputDeviceVolume((int)(Mathf.Lerp(-40, 10,
+                        SettingsManager.Instance.VoiceChatVolume / 100)));
+                    savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
+                }
             }
         }
 
@@ -113,15 +131,20 @@ namespace Code.Network
             isInputMuted = true;
             VivoxVoiceManager.Instance.MuteLocalPlayer();
         }
-        
-        private async void LogoutOfVivoxServiceAsync()
+
+        private void LogoutOfVivoxServiceAsync(bool rejoinAfter = false)
         {
-            await VivoxService.Instance.LogoutAsync();
+            VivoxService.Instance.LogoutAsync();
 #if AUTH_PACKAGE_PRESENT
         AuthenticationService.Instance.SignOut();
 #endif
             VivoxVoiceManager.Instance.DisconnectFromLobbyChannel();
             CancelInvoke(nameof(UpdatePos));
+
+            if (rejoinAfter)
+            {
+                LoginToVivox();
+            }
         }
 
         private void UpdatePos()
