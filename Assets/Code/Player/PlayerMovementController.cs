@@ -468,11 +468,13 @@ namespace Code.Player
             }
             else
             {
+                if (savedDistance < 0.1)
+                    savedDistance = 0.5f;
+                
+                cameraDistance = savedDistance;
                 FirstPersonView = false;
             }
         }
-
-        public void ForceSetCameraDistance(float distance) => cameraDistance = distance;
 
         private void UpdateCameraDistance()
         {
@@ -751,13 +753,17 @@ namespace Code.Player
                 return;
             }
 
-            _wasFPV = _firstPersonView;
-            ForceEnterFPV(false);
             _emotionRoutine = StartCoroutine(PlayEmotionRoutine(index));
         }
 
         private IEnumerator PlayEmotionRoutine(int index)
         {
+            var wasFpv = FirstPersonView;
+            CanMove = true;
+            yield return new WaitForEndOfFrame();
+            ForceEnterFPV(false);
+            yield return new WaitForSeconds(0.5f);
+            
             CanMove = false;
             SuppressLookAtIK = true;
 
@@ -815,11 +821,16 @@ namespace Code.Player
                 animator.SetBool(animIDEmotionActive, false);
                 //animator.SetFloat(animIDEmotionIndex, 0);
             }
-
             CanMove = true;
             _emotionRoutine = null;
             SuppressLookAtIK = false;
-            FirstPersonView = _wasFPV;
+            
+            if (wasFpv)
+            {
+                yield return new WaitForEndOfFrame();
+                ForceEnterFPV(true, snap: true);
+                yield return new WaitForEndOfFrame();
+            }
         }
 
         private void OnAnimatorIK(int layerIndex)

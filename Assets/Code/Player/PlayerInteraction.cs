@@ -101,7 +101,7 @@ namespace Code.Player
                 return;
             }
 
-            float extra = (virtualCamera != null) ? virtualCamera.CameraDistance : 0f;
+            float extra = (virtualCamera != null) ? virtualCamera.CameraDistance + 0.5f : 0f;
             Ray ray = new Ray(cam.transform.position, cam.transform.forward);
 
             if (Physics.Raycast(ray, out RaycastHit hit, detectionDistance + extra, interactableMask))

@@ -247,18 +247,17 @@ namespace Code.InteractionSystem
             move.SuppressLookAtIK = !move.FirstPersonView;
         }
 
+        private bool wasFPV = false;
+        
         private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
             Transform tf, EntryData entry)
         {
             IsBusy = true;
-            if (headIKTarget != null)
-                move.HeadIKLookAtCustomTarget = headIKTarget;
-            else 
-                move.SuppressLookAtIK = true;
+            move.SuppressLookAtIK = true;
             
             _savedPos = tf.position;
             _savedRot = tf.rotation;
-
+            
             if (cc != null) cc.enabled = false;
             move.CanMove = false;
 
@@ -274,7 +273,7 @@ namespace Code.InteractionSystem
             yield return RotateTowardPointIfNeeded(tf, entryPoint.position);
             yield return MoveToPoint(tf, entryPoint.position, anim);
             yield return RotateToTarget(tf, entryPoint.rotation);
-
+            
             if (anim != null)
             {
                 anim.applyRootMotion = true;
@@ -282,7 +281,17 @@ namespace Code.InteractionSystem
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
             }
-
+            
+            if (forceFPV)
+            {
+                wasFPV = move.FirstPersonView;
+                move.CanMove = true;
+                yield return new WaitForEndOfFrame();
+                move.ForceEnterFPV(true, snap: true);
+                yield return new WaitForEndOfFrame();
+                move.CanMove = false;
+            }
+            
             if (anim != null)
             {
                 yield return new WaitUntil(() => anim.GetCurrentAnimatorStateInfo(0).IsName(SIT_STATE));
@@ -333,9 +342,6 @@ namespace Code.InteractionSystem
 
             move.sitBaseYaw = move.cinemachineTargetYaw;
             move.sitBasePitch = move.cinemachineTargetPitch;
-
-            if (forceFPV)
-                move.ForceEnterFPV(true, snap: true);
 
             IsBusy = false;
         }
@@ -408,6 +414,19 @@ namespace Code.InteractionSystem
             
             move.SuppressLookAtIK = false;
 
+            
+            if (forceFPV)
+            {
+                yield return new WaitForEndOfFrame();
+                
+                if (move.FirstPersonView && !wasFPV)
+                {
+                    move.ForceEnterFPV(false);
+                }
+                
+                yield return new WaitForEndOfFrame();
+            }
+            
             move.SnapAimToCurrentCamera();
             move.BeginIkGrace(0.2f);
 
@@ -504,11 +523,8 @@ namespace Code.InteractionSystem
         private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f,
             float maxDuration = 1f)
         {
-            float elapsed = 0f;
-
-            while (Quaternion.Angle(tf.rotation, targetRot) > 0.5f && elapsed < maxDuration)
+            while (Quaternion.Angle(tf.rotation, targetRot) > 3f)
             {
-                elapsed += Time.deltaTime;
                 tf.rotation = Quaternion.RotateTowards(tf.rotation, targetRot, rotationSpeed * Time.deltaTime);
                 yield return null;
             }
@@ -527,7 +543,7 @@ namespace Code.InteractionSystem
             float angle = Quaternion.Angle(tf.rotation, targetRotation);
             if (angle < angleThreshold) yield break;
 
-            while (Quaternion.Angle(tf.rotation, targetRotation) > 0.5f)
+            while (Quaternion.Angle(tf.rotation, targetRotation) > 3f)
             {
                 tf.rotation = Quaternion.RotateTowards(tf.rotation, targetRotation, rotationSpeed * Time.deltaTime);
                 yield return null;
