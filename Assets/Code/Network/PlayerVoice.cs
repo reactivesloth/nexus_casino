@@ -1,6 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Code.API;
+using Code.UI;
 using Code.Utility;
+using CrazyMinnow.SALSA;
 using FishNet.Object;
 using Unity.Services.Vivox;
 using UnityEngine;
@@ -23,10 +26,18 @@ namespace Code.Network
         
         private float savedVol;
         private float savedVolSettings;
-        
+        private VivoxParticipant participant;
+        private Salsa salsa;
+
+        private void Awake()
+        {
+            salsa = gameObject.GetComponentInChildren<Salsa>();
+            if (salsa != null)
+                salsa.useExternalAnalysis = true;
+        }
+
         public override void OnStartClient()
         {
-            #region Singleton
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = this;
@@ -34,14 +45,10 @@ namespace Code.Network
             }
 
             instances.Add(this);
-            #endregion
-
-            isInputMuted = true;
-        }
-
+         }
+        
         public override void OnStopClient()
         {
-            #region Singleton
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = null;
@@ -49,7 +56,8 @@ namespace Code.Network
             }
 
             instances.Remove(this);
-            #endregion
+
+            participant = null;
         }
 
         private void Update()
@@ -57,16 +65,28 @@ namespace Code.Network
             if (isInputMutedByServer)
                 isInputMuted = true;
 
-            if (IsOwner)
+            if (participant == null)
             {
-                if (isInputMuted)
-                {
-                    VivoxVoiceManager.Instance.MuteLocalPlayer();
-                }
-                else
-                {
-                    VivoxVoiceManager.Instance.UnmuteLocalPlayer();
-                }
+                participant = VivoxVoiceManager.Instance.GetParticipant(gameObject.GetComponentInChildren<PlayerUI>().PlayerName); 
+            }
+            
+            if (salsa != null && participant != null)
+            {
+                var audioEnergy = participant.AudioEnergy;
+                if (participant.IsMuted) audioEnergy = 0f;
+                if (audioEnergy < 0.01f) audioEnergy = 0f;
+                salsa.analysisValue = (float)audioEnergy;
+            }
+
+            if (!IsOwner) return;
+
+            if (isInputMuted && !participant.IsMuted)
+            {
+                VivoxVoiceManager.Instance.MuteLocalPlayer();
+            }
+            else if (!isInputMuted && participant.IsMuted)
+            {
+                VivoxVoiceManager.Instance.UnmuteLocalPlayer();
             }
 
             if (savedVolSettings != SettingsManager.Instance.VoiceChatVolume)
@@ -90,6 +110,8 @@ namespace Code.Network
             VivoxVoiceManager.Instance.ConnectToLobbyChannel();
             InvokeRepeating(nameof(UpdatePos), 0, 0.1f);
             savedVolSettings = 0;
+            isInputMuted = true;
+            VivoxVoiceManager.Instance.MuteLocalPlayer();
         }
         
         private async void LogoutOfVivoxServiceAsync()

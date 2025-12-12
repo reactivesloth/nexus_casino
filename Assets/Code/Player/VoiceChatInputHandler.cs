@@ -21,6 +21,8 @@ namespace Code.Player
         private void Awake()
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
+            
+            VoiceChatHandle(false);
         }
 
         private void Update()

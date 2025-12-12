@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using PlayFlow;
 using Unity.Services.Core;
@@ -24,6 +26,8 @@ namespace Code.Network
         [SerializeField] private string domain;
         [SerializeField] private string server;
 
+        public List <VivoxParticipant> Participants;
+        
         /// <summary>
         /// Access singleton instance through this propriety.
         /// </summary>
@@ -72,8 +76,34 @@ namespace Code.Network
 
             await UnityServices.InitializeAsync(options);
             await VivoxService.Instance.InitializeAsync();
+
+            VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
+            VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
+
+            VivoxService.Instance.EnableAcousticEchoCancellation();
+            
+            Participants = new List<VivoxParticipant>();
         }
 
+        private void OnParticipantAdded(VivoxParticipant participant)
+        {
+            if (Participants.Contains(participant)) return;
+            
+            Participants.Add(participant);
+        }
+
+        private void OnParticipantRemoved(VivoxParticipant participant)
+        {
+            if (!Participants.Contains(participant)) return;
+            
+            Participants.Remove(participant);
+        }
+
+        public VivoxParticipant GetParticipant(string n)
+        {
+            return Participants.FirstOrDefault(p => p.DisplayName == n);
+        }
+        
         public async Task InitializeAsync(string playerName)
         {
 #if AUTH_PACKAGE_PRESENT
@@ -115,6 +145,12 @@ namespace Code.Network
         private bool CheckManualCredentials()
         {
             return !(string.IsNullOrEmpty(issuer) && string.IsNullOrEmpty(domain) && string.IsNullOrEmpty(server));
+        }
+
+        private void OnDestroy()
+        {
+            VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
+            VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
         }
     }
 }
