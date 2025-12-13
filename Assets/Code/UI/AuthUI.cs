@@ -275,7 +275,7 @@ namespace Code.UI
             var phone = phoneInput != null ? phoneInput.text : string.Empty;
             if (string.IsNullOrEmpty(phone))
             {
-                HandleError("Error", "Phone is empty");
+                HandleError("", "errors.phoneNumberEmpty");
                 if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                 return;
             }
@@ -293,8 +293,8 @@ namespace Code.UI
                 var checkResult = JsonUtility.FromJson<SuccessResponse<bool>>(checkResponse.Text);
                 if (checkResult == null || !checkResult.success)
                 {
-                    HandleError(checkResult != null ? checkResult.code : "Error",
-                        checkResult != null ? checkResult.detail : "Invalid response");
+                    HandleError(checkResult != null ? checkResult.code : "",
+                        checkResult != null ? checkResult.detail : "");
                     if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                     return;
                 }
@@ -321,8 +321,8 @@ namespace Code.UI
                     var sendCodeResult = JsonUtility.FromJson<SuccessResponse<object>>(sendCodeResponse.Text);
                     if (sendCodeResult == null || !sendCodeResult.success)
                     {
-                        HandleError(sendCodeResult != null ? sendCodeResult.code : "Error",
-                            sendCodeResult != null ? sendCodeResult.detail : "Invalid response");
+                        HandleError(sendCodeResult.code,
+                            sendCodeResult.detail);
                         if (getConfirmCodeButton != null) getConfirmCodeButton.interactable = true;
                         return;
                     }
@@ -376,8 +376,8 @@ namespace Code.UI
                     OnAuthSuccess(responseData.data);
                 else
                 {
-                    HandleError(responseData != null ? responseData.code : "Error",
-                        responseData != null ? responseData.detail : "Invalid response");
+                    HandleError(responseData != null ? responseData.code : "",
+                        responseData != null ? responseData.detail : "");
                     ToStartState();
                 }
             }).Finally(() =>
@@ -409,8 +409,8 @@ namespace Code.UI
                     OnAuthSuccess(responseData.data);
                 else
                 {
-                    HandleError(responseData != null ? responseData.code : "Error",
-                        responseData != null ? responseData.detail : "Invalid response");
+                    HandleError(responseData != null ? responseData.code : "",
+                        responseData != null ? responseData.detail : "");
                     ToStartState();
                 }
             }).Finally(() =>
@@ -483,7 +483,7 @@ namespace Code.UI
         {
             if (authResponse == null)
             {
-                HandleError("Error", "Empty auth response");
+                HandleError("", "");
                 return;
             }
 
@@ -504,7 +504,7 @@ namespace Code.UI
             {
                 if (userDataResponse.StatusCode != 200)
                 {
-                    HandleError("Error", "Get user failed");
+                    HandleError("", "");
                     return;
                 }
 
@@ -517,8 +517,7 @@ namespace Code.UI
                 }
                 else
                 {
-                    HandleError(successResponse != null ? successResponse.code : "Error",
-                        successResponse != null ? successResponse.detail : "Invalid response");
+                    HandleError(successResponse.code, successResponse.detail);
                     ToStartState();
                 }
             });
@@ -642,17 +641,101 @@ namespace Code.UI
             settingsPanel.SetActive(!settingsPanel.activeSelf);
         }
 
-        private void HandleError(string title, string errorMessage)
+        private string extraData;
+        private void HandleError(string title = "", string errorMessage = "")
         {
+            extraData = "";
+            
+            switch (title)
+            {
+                case "REQUEST_ERROR":
+                    title = "errors.request_error";
+
+                    if (errorMessage.Contains("Invalid phone number format"))
+                    {
+                        errorMessage = "errors.invalid_phone_number_format";
+                    } 
+                    else if (errorMessage.Contains("Invalid username format"))
+                    {
+                        errorMessage = "errors.invalid_username_format";
+                    } 
+                    else if (errorMessage.Contains("Invalid confirmation code"))
+                    {
+                        errorMessage = "errors.invalid_confirmation_code";
+                    }
+                    else if (errorMessage.Contains("Username is already taken"))
+                    {
+                        errorMessage = "errors.username_already_taken";
+                    }
+                    else if (errorMessage.Contains("Phone number is already taken"))
+                    {
+                        errorMessage = "errors.phone_number_already_taken";
+                    }
+                    else
+                    {
+                        errorMessage = "errors.error_unknown_message";
+                    }
+                    
+                    break;
+                case "AUTH_ERROR":
+                    title = "errors.error_auth";
+                    
+                    if (errorMessage.Contains("User not found"))
+                    {
+                        errorMessage = "errors.user_not_found";
+                    } 
+                    else if (errorMessage.Contains("Your account is permanently banned"))
+                    {
+                        errorMessage = "errors.account_banned";
+                    } 
+                    else if (errorMessage.Contains("Your account is banned until"))
+                    {
+                        extraData = errorMessage.Replace("Your account is banned", "");
+                        errorMessage = "errors.account_banned_until";
+                    }
+                    else
+                    {
+                        errorMessage = "errors.error_unknown_message";
+                    }
+                    
+                    break;
+                case "EXTERNAL_SERVICE_ERROR":
+                    title = "errors.error_external_service_error";
+                    
+                    if (errorMessage.Contains("COUNTRY"))
+                    {
+                        errorMessage = "errors.country_not_allowed";
+                    }
+                    else if (errorMessage.Contains("TurboSMS"))
+                    {
+                        
+                    }
+                    else
+                    {
+                        errorMessage = "errors.error_unknown_message";
+                    }
+                    break;
+                case "TOO_MANY_REQUESTS":
+                    title = "errors.error_too_many_requests";
+                    errorMessage = "errors.too_many_requests_message";
+                    break;
+                case "UNKNOWN_ERROR":
+                    title = "errors.error_title";
+                    errorMessage = "errors.error_unknown_message";
+                    break;
+            }
+            
             if (popupPanel != null)
             {
-                popupPanel.Title = title ?? "Error";
-                popupPanel.Message = errorMessage ?? "Unknown error";
+                popupPanel.Title = title == "" ? LocalizationHelper.GetLocalizedString("errors.error_title") : LocalizationHelper.GetLocalizedString(title);
+                popupPanel.Message = (errorMessage == "" ? LocalizationHelper.GetLocalizedString("errors.error_unknown_message"): LocalizationHelper.GetLocalizedString(errorMessage)) + extraData;
                 popupPanel.Buttons.Clear();
                 popupPanel.OpenPopup();
             }
             else
                 Debug.LogWarning($"{title}: {errorMessage}");
+
+            extraData = "";
         }
 
         private void OnLogoutClicked()
