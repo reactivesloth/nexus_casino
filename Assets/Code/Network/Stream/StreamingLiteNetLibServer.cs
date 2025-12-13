@@ -150,8 +150,8 @@ namespace Code.Network.Stream
         {
             foreach (var (id, playerData) in _clients)
             {
-                /*if (playerData.Data.PlayerId == frameData.StreamerId)
-                    continue;*/
+                if (playerData.Data.PlayerId == frameData.StreamerId)
+                    continue;
                 
                 var slotObserversIds = _slots[frameData.SlotId].Observers.Select(o => o.ClientId)
                     .ToArray();
