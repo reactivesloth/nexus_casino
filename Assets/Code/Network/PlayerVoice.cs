@@ -118,8 +118,7 @@ namespace Code.Network
         {
             var correctedDisplayName = ClientDataStorage.UserData.username;
                 
-            await VivoxVoiceManager.Instance.InitializeAsync(correctedDisplayName);
-            var loginOptions = new LoginOptions()
+            var loginOptions = new LoginOptions
             {
                 DisplayName = correctedDisplayName,
                 ParticipantUpdateFrequency = ParticipantPropertyUpdateFrequency.FivePerSecond

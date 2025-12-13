@@ -100,17 +100,6 @@ namespace Code.Network
         {
             return Participants.FirstOrDefault(p => p.DisplayName == n);
         }
-        
-        public async Task InitializeAsync(string playerName)
-        {
-#if AUTH_PACKAGE_PRESENT
-        if (!CheckManualCredentials())
-        {
-            AuthenticationService.Instance.SwitchProfile(playerName);
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-        }
-#endif
-        }
 
         public void SetLocalPosition(GameObject localObject)
         {
