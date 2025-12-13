@@ -71,15 +71,19 @@ namespace Code.Network.Stream
         private void SetStream(int slotId, string username)
         {
             if(CurrentStreamSlot != null)
+            {
                 CurrentStreamSlot.EndInteractCallback_Server -= OnTargetEndInteraction;
+                SetConditionsEnable(true);
+            }
             
             StreamSlotId.Value = slotId;
             StreamerUsername.Value = username;
             
             if (CurrentStreamSlot != null)
+            {
                 CurrentStreamSlot.EndInteractCallback_Server += OnTargetEndInteraction;
-
-            SetConditionsEnable(CurrentStreamSlot != null);
+                SetConditionsEnable(true);
+            }
         }
 
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
