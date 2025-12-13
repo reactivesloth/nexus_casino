@@ -168,8 +168,8 @@ namespace Code.Network.Stream
         {
             foreach (var (id, playerData) in _clients)
             {
-                /*if (playerData.Data.PlayerId == streamerId)
-                    continue;*/
+                if (playerData.Data.PlayerId == streamerId)
+                    continue;
                 
                 var slotObserversIds = _slots[slotId].Observers.Select(o => o.ClientId)
                     .ToArray();
@@ -189,8 +189,8 @@ namespace Code.Network.Stream
         {
             foreach (var (id, playerData) in _clients)
             {
-                /*if (playerData.Data.PlayerId == frameData.StreamerId)
-                    continue;*/
+                if (playerData.Data.PlayerId == chunkData.StreamerId)
+                    continue;
                 
                 var slotObserversIds = _slots[chunkData.SlotId].Observers.Select(o => o.ClientId)
                     .ToArray();
