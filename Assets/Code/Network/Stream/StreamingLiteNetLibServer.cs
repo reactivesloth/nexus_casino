@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using Code.InteractionSystem;
 using Code.Network.Stream.Data;
+using Code.Network.Stream.Utility;
 using LiteNetLib;
 using FishNet;
 using FishNet.Transporting.Tugboat;
@@ -101,7 +102,7 @@ namespace Code.Network.Stream
             packetProcessor = new NetPacketProcessor();
             writer = new NetDataWriter();
 
-            packetProcessor.SubscribeReusable<StreamFrameData, NetPeer>(OnFrameReceived);
+            packetProcessor.SubscribeReusable<StreamFrameChunkData, NetPeer>(OnFrameChunkReceived);
             packetProcessor.SubscribeReusable<PlayerConnectionData, NetPeer>(OnClientConnected);
 
             server = new NetManager(this, null)
@@ -116,11 +117,17 @@ namespace Code.Network.Stream
             server.Start(port);
         }
 
-        private void OnFrameReceived(StreamFrameData data, NetPeer peer)
+        private void OnFrameChunkReceived(StreamFrameChunkData chunkData, NetPeer peer)
         {
-            _slotsLastFrame[data.SlotId] = data;
+            /*StreamFramesDataAccumulator.AddChunk(chunkData);
+            var allChunksThisFrame = StreamFramesDataAccumulator.GetChunks(chunkData.SlotId, chunkData.FrameId);
+            if (FrameBuilder.TryGetFullFrame(allChunksThisFrame, out var frame))
+            {
+                _slotsLastFrame[chunkData.SlotId] = frame;
+                // RetranslateFrame(allChunksThisFrame, frame.StreamerId, frame.FrameId);
+            }*/
             
-            RetranslateFrame(data);
+            RetranslateChunk(chunkData);
         }
 
         private void OnClientConnected(PlayerConnectionData data, NetPeer peer)
@@ -143,9 +150,48 @@ namespace Code.Network.Stream
                     .ToArray();
                 if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
                     continue;
-
+                
                 writer.Reset();
                 packetProcessor.Write(writer, frameData);
+                playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
+            }
+        }   
+
+        private void RetranslateFrame(List<StreamFrameChunkData> frameData, int streamerId, int slotId)
+        {
+            foreach (var (id, playerData) in _clients)
+            {
+                /*if (playerData.Data.PlayerId == streamerId)
+                    continue;*/
+                
+                var slotObserversIds = _slots[slotId].Observers.Select(o => o.ClientId)
+                    .ToArray();
+                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
+                    continue;
+                
+                foreach (var frameChunk in frameData)
+                {
+                    writer.Reset();
+                    packetProcessor.Write(writer, frameChunk);
+                    playerData.Peer.Send(writer, DeliveryMethod.Sequenced);
+                }
+            }
+        }
+
+        private void RetranslateChunk(StreamFrameChunkData chunkData)
+        {
+            foreach (var (id, playerData) in _clients)
+            {
+                /*if (playerData.Data.PlayerId == frameData.StreamerId)
+                    continue;*/
+                
+                var slotObserversIds = _slots[chunkData.SlotId].Observers.Select(o => o.ClientId)
+                    .ToArray();
+                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
+                    continue;
+                
+                writer.Reset();
+                packetProcessor.Write(writer, chunkData);
                 playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
             }
         }
