@@ -115,12 +115,9 @@ namespace Code.Network.Stream.Utility
 
             // Собираем данные в правильном порядке
             int offset = 0;
-            var indexesStr = new StringBuilder();
-            chunks.ForEach(c => indexesStr.Append($"{c.ChunkIndex}, "));
-            Debug.Log($"[FrameBuilder] Frames indexes: {indexesStr}");
+            
             for (ushort i = 0; i < expectedChunkCount; i++)
             {
-                Debug.Log($"[FrameBuilder] chunk {i} of {expectedChunkCount}");
                 var chunk = chunks.First(c => c.ChunkIndex == i);
                 Array.Copy(chunk.Payload, 0, data, offset, chunk.Payload.Length);
                 offset += chunk.Payload.Length;

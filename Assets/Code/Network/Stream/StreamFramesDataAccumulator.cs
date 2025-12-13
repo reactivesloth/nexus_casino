@@ -24,8 +24,6 @@ namespace Code.Network.Stream
         {
             if (chunkData == null)
                 throw new ArgumentNullException(nameof(chunkData));
-
-            Debug.Log($"[StreamFramesDataAccumulator] Adding chunk {chunkData}");
     
             var slotId = chunkData.SlotId;
             var frameId = chunkData.FrameId;
@@ -69,10 +67,6 @@ namespace Code.Network.Stream
             if (Frames.TryGetValue(slotId, out var slotDict) &&
                 slotDict.TryGetValue(frameId, out var frameEntry))
             {
-                var str = new StringBuilder();
-                frameEntry.Chunks.ForEach(c => str.Append($"\t{c} \n"));
-                
-                Debug.Log($"[StreamFramesDataAccumulator] Get chunks :\n{str}");
                 return new List<StreamFrameChunkData>(frameEntry.Chunks);
             }
 

@@ -19,11 +19,14 @@ namespace Code.Network.Stream
     {
         [SerializeField] private int serverPort = 7777;
         [SerializeField] private float timeToReconnect = 60f;
+        [SerializeField] private int unreliableFramesPerReliable = 10;
         
         [SerializeField] private bool debugLogs = false;
 
         [SerializeField] private int debugPing = -1;
 
+        private int _unreliableFramesCounter = 0;
+        
         private NetManager _client;
         private NetPeer _server;
 
@@ -120,7 +123,7 @@ namespace Code.Network.Stream
         /// <summary>
         /// Отправить фрейм стрима на сервер.
         /// </summary>
-        public void SendStreamFrame(StreamFrameData frameData)
+        public void SendStreamFrame(StreamFrameData frameData, bool forceReliable = false)
         {
             if (_server.ConnectionState != ConnectionState.Connected)
             {
@@ -129,19 +132,38 @@ namespace Code.Network.Stream
                 return;
             }
 
-            var chunks = FrameBuilder.GetFrameChunks(frameData);
-            foreach (var chunk in chunks)
+            if(_unreliableFramesCounter < unreliableFramesPerReliable && !forceReliable)
+            {
+                _unreliableFramesCounter++;
+                SendChunks(FrameBuilder.GetFrameChunks(frameData));
+            }
+            else
+            {
+                _unreliableFramesCounter = 0;
+                SendFullFrame(frameData);
+            }
+            
+            if (debugLogs)
+                Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {frameData.Data.Length} bytes");
+        }
+
+        private void SendChunks(StreamFrameChunkData[] chunksData)
+        {
+            foreach (var chunk in chunksData)
             {
                 if (debugLogs)
                     Debug.Log($"[StreamingLiteNetLibPeer] Try send chunk №{chunk.ChunkIndex} {chunk.Payload.Length} bytes");
                 _writer.Reset();
                 _packetProcessor.Write(_writer, chunk);
-                _server.Send(_writer, DeliveryMethod.ReliableOrdered);
+                _server.Send(_writer, DeliveryMethod.Sequenced);
             }
-            
-            
-            if (debugLogs)
-                Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {frameData.Data.Length} bytes {chunks.Length} chunks");
+        }
+
+        private void SendFullFrame(StreamFrameData frameData)
+        {
+            _writer.Reset();
+            _packetProcessor.Write(_writer, frameData);
+            _server.Send(_writer, DeliveryMethod.ReliableOrdered);
         }
 
         private void OnFrameChunkReceived(StreamFrameChunkData chunkData)

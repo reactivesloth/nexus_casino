@@ -102,6 +102,7 @@ namespace Code.Network.Stream
             packetProcessor = new NetPacketProcessor();
             writer = new NetDataWriter();
 
+            packetProcessor.SubscribeReusable<StreamFrameData, NetPeer>(OnFrameReceived);
             packetProcessor.SubscribeReusable<StreamFrameChunkData, NetPeer>(OnFrameChunkReceived);
             packetProcessor.SubscribeReusable<PlayerConnectionData, NetPeer>(OnClientConnected);
 
@@ -117,17 +118,23 @@ namespace Code.Network.Stream
             server.Start(port);
         }
 
+        private void OnFrameReceived(StreamFrameData frameData, NetPeer peer)
+        {
+            _slotsLastFrame[frameData.SlotId] = frameData;
+            RetranslateFrame(frameData);
+        }
+        
         private void OnFrameChunkReceived(StreamFrameChunkData chunkData, NetPeer peer)
         {
-            /*StreamFramesDataAccumulator.AddChunk(chunkData);
+            RetranslateChunk(chunkData);
+            
+            StreamFramesDataAccumulator.AddChunk(chunkData);
             var allChunksThisFrame = StreamFramesDataAccumulator.GetChunks(chunkData.SlotId, chunkData.FrameId);
             if (FrameBuilder.TryGetFullFrame(allChunksThisFrame, out var frame))
             {
                 _slotsLastFrame[chunkData.SlotId] = frame;
                 // RetranslateFrame(allChunksThisFrame, frame.StreamerId, frame.FrameId);
-            }*/
-            
-            RetranslateChunk(chunkData);
+            }
         }
 
         private void OnClientConnected(PlayerConnectionData data, NetPeer peer)
@@ -143,8 +150,8 @@ namespace Code.Network.Stream
         {
             foreach (var (id, playerData) in _clients)
             {
-                if (playerData.Data.PlayerId == frameData.StreamerId)
-                    continue;
+                /*if (playerData.Data.PlayerId == frameData.StreamerId)
+                    continue;*/
                 
                 var slotObserversIds = _slots[frameData.SlotId].Observers.Select(o => o.ClientId)
                     .ToArray();
@@ -173,7 +180,7 @@ namespace Code.Network.Stream
                 {
                     writer.Reset();
                     packetProcessor.Write(writer, frameChunk);
-                    playerData.Peer.Send(writer, DeliveryMethod.Sequenced);
+                    playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
                 }
             }
         }
@@ -192,10 +199,10 @@ namespace Code.Network.Stream
                 
                 writer.Reset();
                 packetProcessor.Write(writer, chunkData);
-                playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
+                playerData.Peer.Send(writer, DeliveryMethod.Sequenced);
             }
         }
-
+        
         #region INetEventListener
 
         public void OnPeerConnected(NetPeer peer)
