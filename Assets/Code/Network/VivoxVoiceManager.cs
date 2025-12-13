@@ -5,9 +5,6 @@ using PlayFlow;
 using Unity.Services.Core;
 using Unity.Services.Vivox;
 using UnityEngine;
-#if AUTH_PACKAGE_PRESENT
-using Unity.Services.Authentication;
-#endif
 
 namespace Code.Network
 {

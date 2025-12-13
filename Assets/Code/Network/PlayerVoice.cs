@@ -6,9 +6,6 @@ using CrazyMinnow.SALSA;
 using FishNet.Object;
 using Unity.Services.Vivox;
 using UnityEngine;
-#if AUTH_PACKAGE_PRESENT
-using Unity.Services.Authentication;
-#endif
 
 namespace Code.Network
 {
@@ -142,9 +139,7 @@ namespace Code.Network
         private void LogoutOfVivoxServiceAsync(bool rejoinAfter = false)
         {
             VivoxService.Instance.LogoutAsync();
-#if AUTH_PACKAGE_PRESENT
-        AuthenticationService.Instance.SignOut();
-#endif
+
             VivoxVoiceManager.Instance.DisconnectFromLobbyChannel();
             CancelInvoke(nameof(UpdatePos));
 
