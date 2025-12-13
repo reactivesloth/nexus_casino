@@ -121,15 +121,5 @@ namespace Code.Player
                 mobileButtonImage.gameObject.SetActive(true);
             }
         }
-
-        public void OnApplicationPause(bool pauseStatus)
-        {
-            VoiceChatHandle(false);
-        }
-
-        public void OnApplicationFocus(bool hasFocus)
-        {
-            VoiceChatHandle(false);
-        }
     }
 }
