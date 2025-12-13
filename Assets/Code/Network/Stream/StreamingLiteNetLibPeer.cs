@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using Code.Network.Stream.Data;
+using Code.Network.Stream.Utility;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using FishNet;
@@ -74,6 +75,7 @@ namespace Code.Network.Stream
             _writer = new NetDataWriter();
 
             _packetProcessor.SubscribeReusable<StreamFrameData>(OnFrameReceive);
+            _packetProcessor.SubscribeReusable<StreamFrameChunkData>(OnFrameChunkReceived);
             _packetProcessor.SubscribeReusable<PlayerConnectionData>(OnClientConnected);
 
             _client = new NetManager(this, null)
@@ -127,13 +129,33 @@ namespace Code.Network.Stream
                 return;
             }
 
-            _writer.Reset();
-            _packetProcessor.Write(_writer, frameData);
-            _server.Send(_writer, DeliveryMethod.ReliableUnordered);
+            var chunks = FrameBuilder.GetFrameChunks(frameData);
+            foreach (var chunk in chunks)
+            {
+                if (debugLogs)
+                    Debug.Log($"[StreamingLiteNetLibPeer] Try send chunk №{chunk.ChunkIndex} {chunk.Payload.Length} bytes");
+                _writer.Reset();
+                _packetProcessor.Write(_writer, chunk);
+                _server.Send(_writer, DeliveryMethod.ReliableOrdered);
+            }
+            
+            
             if (debugLogs)
-                Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {frameData.Data.Length} bytes");
+                Debug.Log($"[StreamingLiteNetLibPeer] Try send frame {frameData.Data.Length} bytes {chunks.Length} chunks");
         }
 
+        private void OnFrameChunkReceived(StreamFrameChunkData chunkData)
+        {
+            StreamFramesDataAccumulator.AddChunk(chunkData);
+            var allChunksThisFrame = StreamFramesDataAccumulator.GetChunks(chunkData.SlotId, chunkData.FrameId);
+            
+            if(debugLogs)
+                Debug.Log($"[StreamingLiteNetLibPeer] Received chunk from user {chunkData.StreamerId} slot {chunkData.SlotId} ({chunkData.ChunkIndex}/{chunkData.ChunkCount}) Chunks from storage {allChunksThisFrame.Count}");
+            
+            if (FrameBuilder.TryGetFullFrame(allChunksThisFrame, out var frame))
+                OnFrameReceive(frame);
+        }
+        
         private void OnFrameReceive(StreamFrameData frameData)
         {
             OnFrameReceived?.Invoke(frameData);

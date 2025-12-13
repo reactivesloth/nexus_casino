@@ -216,7 +216,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerSpawner
   _addToDefaultScene: 1
-  Spawns: []
+  Spawns:
+  - {fileID: 0}
   playerPrefabs:
   - key: Male
     val: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
@@ -345,7 +346,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingLiteNetLibPeer
   serverPort: 9000
-  timeToReconnect: 15
+  timeToReconnect: 60
   debugLogs: 1
   debugPing: -1
 --- !u!1001 &1178301237822981492

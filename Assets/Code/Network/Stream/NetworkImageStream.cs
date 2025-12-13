@@ -53,6 +53,7 @@ namespace Code.Network.Stream
         private Texture2D _readTex;
         private Texture2D _recvTex;
 
+        private int _lastFrameId = 0;
         // Frame change detection
         private uint _lastFrameHash;
         private int _lastFrameLength;
@@ -303,12 +304,16 @@ namespace Code.Network.Stream
             if (showDebugLogs) Debug.Log($"[Client] Sending frame {data.Length} bytes");
 
             if (streamConnection != null && streamConnection.IsConnected)
+            {
                 streamConnection.SendStreamFrame(new StreamFrameData()
                 {
+                    FrameId = _lastFrameId,
                     Data = data,
                     SlotId = SlotNumber,
                     StreamerId = InstanceFinder.ClientManager.Connection.ClientId
                 });
+                _lastFrameId++;
+            }
 
             _isCapturing = false;
         }
@@ -378,6 +383,7 @@ namespace Code.Network.Stream
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
                 _isCapturing = false;
                 streamLoadBalancer?.RegisterStream();
+                _lastFrameId = 0;
             }
 
             if (Owner.ClientId == -1)
