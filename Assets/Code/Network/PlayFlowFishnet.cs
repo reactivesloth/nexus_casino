@@ -141,13 +141,13 @@ namespace Code.Network
         private void UpdateReadyPopup()
         {
             CursorManager.Instance.SetForceShowCursor(true);
-            _popupOpener.Title = "Требуется обновление";
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("errors.update_nexus_title");
             _popupOpener.Subtitle = "";
-            _popupOpener.Message = "Вышла новая версия Nexus Meta Club. Для того чтобы дальше пользоваться приложением ее необходимо скачать. Вы можете нажать на кнопку и в вашем браузере откроется страница с инструкцией по обновлению.";
+            _popupOpener.Message = LocalizationHelper.GetLocalizedString("errors.update_nexus");
             
             var okButton = new ButtonInfo
             {
-                Label = "Хорошо",
+                Label = LocalizationHelper.GetLocalizedString("buttons.update"),
                 ClosePopupWhenClicked = true,
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };

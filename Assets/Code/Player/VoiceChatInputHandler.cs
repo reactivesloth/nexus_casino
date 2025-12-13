@@ -1,5 +1,6 @@
 using Code.Network;
 using Code.UI.Popup;
+using Code.Utility;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
@@ -62,19 +63,19 @@ namespace Code.Player
                     break;
                 case Permission.ShouldAsk:
                 {
-                    _popupOpener.Title = "Разрешение записи голоса";
+                    _popupOpener.Title = LocalizationHelper.GetLocalizedString("labels.record.permission_title");
                     _popupOpener.Subtitle = "";
-                    _popupOpener.Message = "Вам необходимо разрешить использование микрофона для того чтобы работал голосовой чат";
+                    _popupOpener.Message = LocalizationHelper.GetLocalizedString("labels.record.permission_message");
             
                     var okButton = new ButtonInfo
                     {
-                        Label = "Ок",
+                        Label = LocalizationHelper.GetLocalizedString("buttons.ok"),
                         ClosePopupWhenClicked = true,
                         OnClickedEvent = new Button.ButtonClickedEvent()
                     };
                     var cancellButton = new ButtonInfo
                     {
-                        Label = "Нет",
+                        Label = LocalizationHelper.GetLocalizedString("buttons.cancel"),
                         ClosePopupWhenClicked = false,
                         OnClickedEvent = new Button.ButtonClickedEvent()
                     };
@@ -87,15 +88,12 @@ namespace Code.Player
                 }
                 case Permission.Denied:
                 {
-                    _popupOpener.Title = "Разрешение записи голоса";
+                    _popupOpener.Title = LocalizationHelper.GetLocalizedString("labels.record.permission_title");
                     _popupOpener.Subtitle = "";
-                    _popupOpener.Message = "Т.к. вы выбрали больше не спрашивать, то приложение не может снова вызвать разрешение для микрофона, " +
-                                           "необходимое для работы голосового чата. Вам необходимо зайти в настройки, в поиске найти Nexus Meta Club," +
-                                           " внутри зайти в пункт Разрешения и в разрешении для микрофона выбрать пункт Разрешить всегда";
-            
+                    _popupOpener.Message = LocalizationHelper.GetLocalizedString("labels.record.permission_instruction");
                     var okButton = new ButtonInfo
                     {
-                        Label = "Хорошо",
+                        Label = LocalizationHelper.GetLocalizedString("buttons.fine"),
                         ClosePopupWhenClicked = true,
                         OnClickedEvent = new Button.ButtonClickedEvent()
                     };
