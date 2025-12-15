@@ -109,9 +109,7 @@ namespace Code.Network.Stream
             server = new NetManager(this, null)
             {
                 AutoRecycle = true,
-                PacketPoolSize = 10_000,
-                PingInterval = 1000,
-                UpdateTime = 5,
+                PacketPoolSize = 50_000,
                 UseNativeSockets = true
             };
 
@@ -180,7 +178,7 @@ namespace Code.Network.Stream
                 {
                     writer.Reset();
                     packetProcessor.Write(writer, frameChunk);
-                    playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
+                    playerData.Peer.Send(writer, DeliveryMethod.Unreliable);
                 }
             }
         }
@@ -199,7 +197,7 @@ namespace Code.Network.Stream
                 
                 writer.Reset();
                 packetProcessor.Write(writer, chunkData);
-                playerData.Peer.Send(writer, DeliveryMethod.Sequenced);
+                playerData.Peer.Send(writer, DeliveryMethod.Unreliable);
             }
         }
         

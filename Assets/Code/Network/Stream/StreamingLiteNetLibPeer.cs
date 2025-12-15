@@ -84,9 +84,7 @@ namespace Code.Network.Stream
             _client = new NetManager(this, null)
             {
                 AutoRecycle = true,
-                PacketPoolSize = 10_000,
-                PingInterval = 1000,
-                UpdateTime = 5,
+                PacketPoolSize = 50_000,
                 UseNativeSockets = true,
             };
 
@@ -158,7 +156,7 @@ namespace Code.Network.Stream
                         $"[StreamingLiteNetLibPeer] Try send chunk №{chunk.ChunkIndex} {chunk.Payload.Length} bytes");
                 _writer.Reset();
                 _packetProcessor.Write(_writer, chunk);
-                _server.Send(_writer, DeliveryMethod.Sequenced);
+                _server.Send(_writer, DeliveryMethod.Unreliable);
             }
         }
 
