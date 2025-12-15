@@ -140,7 +140,7 @@ namespace Code.Network.Stream
             else
             {
                 _unreliableFramesCounter = 0;
-                SendFullFrame(frameData);
+                // SendFullFrame(frameData);
             }
 
             if (debugLogs)
