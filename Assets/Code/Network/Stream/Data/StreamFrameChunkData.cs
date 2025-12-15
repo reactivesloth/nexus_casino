@@ -4,6 +4,8 @@ namespace Code.Network.Stream.Data
 {
     public class StreamFrameChunkData: INetSerializable
     {
+        public const int HeaderSize = 32;
+        
         public int SlotId { get; set; }
         public int StreamerId { get; set; }
 
@@ -12,6 +14,7 @@ namespace Code.Network.Stream.Data
         public ushort ChunkIndex { get; set; }
         public ushort ChunkCount { get; set; }
         public byte[] Payload { get; set; }
+        
         
         public void Serialize(NetDataWriter writer)
         {

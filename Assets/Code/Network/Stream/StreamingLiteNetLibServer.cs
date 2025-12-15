@@ -160,7 +160,7 @@ namespace Code.Network.Stream
                 
                 writer.Reset();
                 packetProcessor.Write(writer, frameData);
-                playerData.Peer.Send(writer, DeliveryMethod.ReliableOrdered);
+                playerData.Peer.Send(writer, DeliveryMethod.ReliableUnordered);
             }
         }   
 

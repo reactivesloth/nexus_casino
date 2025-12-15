@@ -11,8 +11,10 @@ namespace Code.Network.Stream.Utility
     {
         public const int MaxPayloadSize = 768;
 
-        public static StreamFrameChunkData[] GetFrameChunks(StreamFrameData frameData)
+        public static StreamFrameChunkData[] GetFrameChunks(StreamFrameData frameData, int maxChunkSize = 0)
         {
+            maxChunkSize = maxChunkSize <= 0 ? MaxPayloadSize : maxChunkSize;
+            
             if (frameData == null)
                 throw new ArgumentNullException(nameof(frameData));
 
@@ -21,16 +23,16 @@ namespace Code.Network.Stream.Utility
 
             // Вычисляем количество чанков
             int dataLength = frameData.Data.Length;
-            int chunkCount = (dataLength + MaxPayloadSize - 1) / MaxPayloadSize; // Округление вверх
+            int chunkCount = (dataLength + maxChunkSize - 1) / maxChunkSize; // Округление вверх
 
             var chunks = new StreamFrameChunkData[chunkCount];
 
             for (ushort i = 0; i < chunkCount; i++)
             {
                 var chunkIndex = i;
-                int startIndex = i * MaxPayloadSize;
+                int startIndex = i * maxChunkSize;
                 int remainingBytes = dataLength - startIndex;
-                int payloadSize = Math.Min(remainingBytes, MaxPayloadSize);
+                int payloadSize = Math.Min(remainingBytes, maxChunkSize);
 
                 var payload = new byte[payloadSize];
                 Array.Copy(frameData.Data, startIndex, payload, 0, payloadSize);

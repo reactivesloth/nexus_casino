@@ -53,7 +53,8 @@ namespace Code.Network.Stream
         private Texture2D _readTex;
         private Texture2D _recvTex;
 
-        private int _lastFrameId = 0;
+        private int _lastSentFrameId = 0;
+        private int _lastRecvFrameId = 0;
         // Frame change detection
         private uint _lastFrameHash;
         private int _lastFrameLength;
@@ -85,11 +86,14 @@ namespace Code.Network.Stream
         
         private void StreamConnectionOnOnFrameReceived(StreamFrameData data)
         {
-            if (data == null)
+            if (data == null || data.SlotId != SlotNumber)
                 return;
 
-            if (data.SlotId == SlotNumber)
-                ApplyReceivedTexture(data.Data);
+            if (data.FrameId < _lastRecvFrameId)
+                return;
+            
+            _lastRecvFrameId = data.FrameId;
+            ApplyReceivedTexture(data.Data);
         }
 
         // =================================================================================
@@ -307,12 +311,12 @@ namespace Code.Network.Stream
             {
                 streamConnection.SendStreamFrame(new StreamFrameData()
                 {
-                    FrameId = _lastFrameId,
+                    FrameId = _lastSentFrameId,
                     Data = data,
                     SlotId = SlotNumber,
                     StreamerId = InstanceFinder.ClientManager.Connection.ClientId
                 });
-                _lastFrameId++;
+                _lastSentFrameId++;
             }
 
             _isCapturing = false;
@@ -346,6 +350,8 @@ namespace Code.Network.Stream
         {
             base.OnStartClient();
 
+            _lastRecvFrameId = 0;
+
             // Настройка видимости
             if (IsOwner)
             {
@@ -377,13 +383,14 @@ namespace Code.Network.Stream
         public override void OnOwnershipClient(NetworkConnection prevOwner)
         {
             base.OnOwnershipClient(prevOwner);
-
+            _lastRecvFrameId = 0;
+            
             if (IsOwner)
             {
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
                 _isCapturing = false;
                 streamLoadBalancer?.RegisterStream();
-                _lastFrameId = 0;
+                _lastSentFrameId = 0;
             }
 
             if (Owner.ClientId == -1)
