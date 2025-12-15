@@ -220,7 +220,11 @@ namespace Code.Player
                 jumpTimeoutDelta = jumpTimeout;
                 fallTimeoutDelta = fallTimeout;
              
-                EnsureInit();   
+                if (_initedPlayer)
+                    ResetOnReconnect();
+                else
+                    EnsureInit();
+    
                 CursorManager.Instance.HideCursor();
             }
         }
@@ -873,6 +877,21 @@ namespace Code.Player
                 animator.SetLookAtWeight(_syncWeight, 0f, _syncWeight, _syncWeight, lookAtClampWeight);
                 animator.SetLookAtPosition(_lookPos);
             }
+        }
+
+        public void ResetOnReconnect()
+        {
+            if (!IsOwner) return;
+            
+            if (spawnOnSawedPosition)
+            {
+                LoadingScreenUI.Instance?.Hide();
+                LoadSpawnPosition();
+                var playerInteract = gameObject.GetComponent<PlayerInteraction>();
+                playerInteract.ResetInteract();
+            }
+            
+            EnsureInit();   
         }
     }
 }

@@ -234,5 +234,10 @@ namespace Code.Player
 
             _selected = null;
         }
+
+        public void ResetInteract()
+        {
+            OnEndInteractCallbackClient(true);
+        }
     }
 }
