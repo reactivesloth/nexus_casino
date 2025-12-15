@@ -85,10 +85,13 @@ namespace Code.Network
             {
                 if (salsa != null)
                 {
-                    var audioEnergy = participant.AudioEnergy;
-                    if (participant.IsMuted) audioEnergy = 0f;
-                    if (audioEnergy < 0.01f) audioEnergy = 0f;
-                    salsa.analysisValue = (float)audioEnergy;
+                    if (participant != null)
+                    {
+                        var audioEnergy = participant.AudioEnergy;
+                        if (participant.IsMuted) audioEnergy = 0f;
+                        if (audioEnergy < 0.01f) audioEnergy = 0f;
+                        salsa.analysisValue = (float)audioEnergy;
+                    }
                 }
 
                 if (!IsOwner) return;
@@ -102,10 +105,9 @@ namespace Code.Network
                     VivoxVoiceManager.Instance.UnmuteLocalPlayer();
                 }
 
-                if (savedVolSettings != SettingsManager.Instance.VoiceChatVolume)
+                if (!Mathf.Approximately(savedVolSettings, SettingsManager.Instance.VoiceChatVolume))
                 {
-                    VivoxService.Instance.SetOutputDeviceVolume((int)(Mathf.Lerp(-40, 10,
-                        SettingsManager.Instance.VoiceChatVolume / 100)));
+                    VivoxService.Instance.SetOutputDeviceVolume((int)Mathf.Lerp(-40, 10, SettingsManager.Instance.VoiceChatVolume / 100));
                     savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
                 }
             }
