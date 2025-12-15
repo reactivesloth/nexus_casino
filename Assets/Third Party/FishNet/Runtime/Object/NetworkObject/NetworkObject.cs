@@ -637,8 +637,8 @@ namespace FishNet.Object
 
                 SetOwner(owner);
 
-                if (ObjectId != UNSET_OBJECTID_VALUE)
-                    NetworkManager.LogError($"Object was initialized twice without being reset. Object {ToString()}");
+                /*if (ObjectId != UNSET_OBJECTID_VALUE)
+                    NetworkManager.LogError($"Object was initialized twice without being reset. Object {ToString()}");*/
 
                 ObjectId = objectId;
 
