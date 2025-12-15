@@ -82,7 +82,7 @@ namespace Code.Network.Stream
             if (CurrentStreamSlot != null)
             {
                 CurrentStreamSlot.EndInteractCallback_Server += OnTargetEndInteraction;
-                SetConditionsEnable(true);
+                SetConditionsEnable(false);
             }
         }
 
