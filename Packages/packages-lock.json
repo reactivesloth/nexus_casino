@@ -7,22 +7,6 @@
       "dependencies": {},
       "hash": "1d8b49b3fee41c09a98141f1f1a5e4db47e14229"
     },
-    "com.firstgeargames.fishnet": {
-      "version": "https://github.com/FirstGearGames/FishNet.git?path=Assets/FishNet",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.unity.nuget.newtonsoft-json": "3.2.1",
-        "com.unity.ugui": "1.0.0",
-        "com.unity.modules.animation": "1.0.0",
-        "com.unity.modules.imgui": "1.0.0",
-        "com.unity.modules.particlesystem": "1.0.0",
-        "com.unity.modules.physics": "1.0.0",
-        "com.unity.modules.physics2d": "1.0.0",
-        "com.unity.modules.ui": "1.0.0"
-      },
-      "hash": "f68138d689a5d872141e6697b71e7098fbac9cf7"
-    },
     "com.playflow.multiplayer-unity-sdk": {
       "version": "https://github.com/PlayFlowCloud/PlayFlow-Multiplayer-Unity-SDK.git",
       "depth": 0,
@@ -260,6 +244,15 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.sdk.linux-x86_64": {
+      "version": "1.0.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.sysroot.base": "1.0.2"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.searcher": {
       "version": "4.9.4",
       "depth": 0,
@@ -329,6 +322,13 @@
       },
       "url": "https://packages.unity.com"
     },
+    "com.unity.sysroot.base": {
+      "version": "1.0.2",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
     "com.unity.test-framework": {
       "version": "1.6.0",
       "depth": 0,
@@ -358,6 +358,15 @@
         "com.unity.modules.director": "1.0.0",
         "com.unity.modules.animation": "1.0.0",
         "com.unity.modules.particlesystem": "1.0.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.toolchain.win-x86_64-linux": {
+      "version": "1.0.2",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.sysroot.base": "1.0.2"
       },
       "url": "https://packages.unity.com"
     },
