@@ -249,33 +249,6 @@ namespace Code.Player
         {
             if (!IsOwner) return;
 
-            /*CanMove = false;
-             getSpawnRequest = new RequestHelper
-            {
-                Uri = ApiRoutes.GetFileUrl($"SpawnPoint_{ClientDataStorage.UserData.id}.txt"),
-                Headers = ClientDataStorage.GetJwtHeader(),
-                Timeout = 5
-            };
-
-            RestClient.Get(getSpawnRequest).Then(spawnResponse =>
-            {
-                if (spawnResponse.StatusCode != 200)
-                    return;
-
-                var responseParts = spawnResponse.Text.Split(' ');
-                var posX = float.Parse(responseParts[0]);
-                var posY = float.Parse(responseParts[1]);
-                var posZ = float.Parse(responseParts[2]);
-                var rotX = float.Parse(responseParts[3]);
-                var rotY = float.Parse(responseParts[4]);
-                var rotZ = float.Parse(responseParts[5]);
-
-                transform.position = new Vector3(posX, posY, posZ);
-                Debug.Log($"[Spawn data] {spawnResponse.Text}");
-                Debug.Log($"[Spawn data] {transform.position} {CanMove}");
-                transform.rotation = Quaternion.Euler(rotX, rotY, rotZ);
-            }).Finally(() => CanMove = true);*/
-
             var spawnPos = Vector3.zero;
             
             if (PlayerPrefs.HasKey("SavedSpawnPosition"))
@@ -334,7 +307,7 @@ namespace Code.Player
             };
 
             RestClient.Post(loadSavedSpawnRequest);
-            /*
+            
             PlayerPrefs.SetFloat("SavedSpawnPositionX", spawnPos.x);
             PlayerPrefs.SetFloat("SavedSpawnPositionY", spawnPos.y);
             PlayerPrefs.SetFloat("SavedSpawnPositionZ", spawnPos.z);
@@ -342,7 +315,7 @@ namespace Code.Player
             PlayerPrefs.SetFloat("SavedSpawnRotationY", spawnRot.y);
             PlayerPrefs.SetFloat("SavedSpawnRotationZ", spawnRot.z);
             PlayerPrefs.SetInt("SavedSpawnPosition", 1);
-            PlayerPrefs.Save();*/
+            PlayerPrefs.Save();
         }
 
         private void Update()
