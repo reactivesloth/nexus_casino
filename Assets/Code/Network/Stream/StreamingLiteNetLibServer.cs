@@ -103,14 +103,6 @@ namespace Code.Network.Stream
         private void OnFrameChunkReceived(StreamFrameChunkData chunkData, NetPeer peer)
         {
             RetranslateChunk(chunkData, peer);
-            
-            StreamFramesDataAccumulator.AddChunk(chunkData);
-            var allChunksThisFrame = StreamFramesDataAccumulator.GetChunks(chunkData.SlotId, chunkData.FrameId);
-            if (FrameBuilder.TryGetFullFrame(allChunksThisFrame, out var frame))
-            {
-                _slotsLastFrame[chunkData.SlotId] = frame;
-                // RetranslateFrame(allChunksThisFrame, frame.StreamerId, frame.FrameId);
-            }
         }
 
         private void OnSlotConnected(SlotConnectionData data, NetPeer peer)
@@ -124,6 +116,9 @@ namespace Code.Network.Stream
             writer.Reset();
             packetProcessor.Write(writer, data);
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
+            
+            if(_slotsLastFrame.TryGetValue(data.SlotId, out var lastFrame))
+                RetranslateFrame(lastFrame, peer);
         }
         
         private void RetranslateFrame(StreamFrameData frameData, NetPeer senderPeer)

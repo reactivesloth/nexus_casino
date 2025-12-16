@@ -351,8 +351,6 @@ namespace Code.Network.Stream
             base.OnStartClient();
 
             _lastRecvFrameId = 0;
-
-            streamConnection.Connect(SlotNumber);
             
             // Настройка видимости
             if (IsOwner)
@@ -397,6 +395,9 @@ namespace Code.Network.Stream
                 targetImage.gameObject.SetActive(true);
                 streamLoadBalancer?.UnregisterStream();
             }
+            
+            if(Owner.ClientId != -1)
+                streamConnection.Connect(SlotNumber);
         }
 
         public override void OnStopClient()

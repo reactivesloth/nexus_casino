@@ -25,8 +25,9 @@ namespace Code.Network.Stream
 
         [SerializeField] private int debugPing = -1;
         
+        [field: SerializeField] public PeerState State { get; private set; }
+        
         private int _slotId = -1;
-        private int _unreliableFramesCounter = 0;
         
         private float _timeFromLastFrameReceived = 0f;
 
@@ -122,19 +123,15 @@ namespace Code.Network.Stream
                     Debug.LogWarning($"[StreamingLiteNetLibPeer] Connection state is {_server.ConnectionState}");
                 return;
             }
-
-            _timeFromLastFrameReceived = 0f;
             
-            if (_unreliableFramesCounter < unreliableFramesPerReliable && !forceReliable)
+            if (frameData.FrameId % unreliableFramesPerReliable != 0 && !forceReliable)
             {
-                _unreliableFramesCounter++;
                 var chunks = FrameBuilder.GetFrameChunks(frameData,
                     _server.GetMaxSinglePacketSize(DeliveryMethod.Sequenced) - StreamFrameChunkData.HeaderSize);
                 SendChunks(chunks);
             }
             else
             {
-                _unreliableFramesCounter = 0;
                 SendFullFrame(frameData);
             }
 
@@ -246,5 +243,12 @@ namespace Code.Network.Stream
         }
 
         #endregion
+    }
+
+    public enum PeerState
+    {
+        None,
+        Viewer,
+        Streamer
     }
 }
