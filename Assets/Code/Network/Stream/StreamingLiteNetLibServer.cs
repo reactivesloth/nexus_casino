@@ -20,14 +20,7 @@ namespace Code.Network.Stream
     /// </summary>
     public sealed class StreamingLiteNetLibServer : MonoBehaviour, INetEventListener
     {
-        private record PlayerData
-        {
-            public PlayerConnectionData Data { get; set; }
-            public NetPeer Peer { get; set; }
-        }
-
         [SerializeField] private int port = 7777;
-        [SerializeField] private int maxClients = 100;
         [SerializeField] private bool debugLogs = true;
 
         private NetManager server;
@@ -36,8 +29,8 @@ namespace Code.Network.Stream
         private NetPacketProcessor packetProcessor;
         private NetDataWriter writer;
 
-        private readonly Dictionary<int, PlayerData> _clients = new();
-        private readonly Dictionary<int, SlotMachineInteractable> _slots = new();
+        private readonly Dictionary<int, List<NetPeer>> _slotsPeers = new();
+        private readonly Dictionary<NetPeer, int> _connectedPeersSlots = new();
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
         public static string ServerAddress
@@ -75,26 +68,11 @@ namespace Code.Network.Stream
 #if UNITY_SERVER
             StartServer();
 #endif
-            foreach (var slot in FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                _slots.Add(slot.IDNumber, slot);
         }
 
         private void Update()
         {
             server?.PollEvents();
-        }
-        
-        public void OnPlayerObserverSlot(int playerId, int slotId)
-        {
-            var frameData = _slotsLastFrame[slotId];
-            var playerData = _clients[playerId];
-            
-            if(frameData == null || playerData == null)
-                return;
-            
-            writer.Reset();
-            packetProcessor.Write(writer, frameData);
-            playerData.Peer?.Send(writer, DeliveryMethod.ReliableUnordered);
         }
 
         private void StartServer()
@@ -104,7 +82,7 @@ namespace Code.Network.Stream
 
             packetProcessor.SubscribeReusable<StreamFrameData, NetPeer>(OnFrameReceived);
             packetProcessor.SubscribeReusable<StreamFrameChunkData, NetPeer>(OnFrameChunkReceived);
-            packetProcessor.SubscribeReusable<PlayerConnectionData, NetPeer>(OnClientConnected);
+            packetProcessor.SubscribeReusable<SlotConnectionData, NetPeer>(OnSlotConnected);
 
             server = new NetManager(this, null)
             {
@@ -119,12 +97,12 @@ namespace Code.Network.Stream
         private void OnFrameReceived(StreamFrameData frameData, NetPeer peer)
         {
             _slotsLastFrame[frameData.SlotId] = frameData;
-            RetranslateFrame(frameData);
+            RetranslateFrame(frameData, peer);
         }
         
         private void OnFrameChunkReceived(StreamFrameChunkData chunkData, NetPeer peer)
         {
-            RetranslateChunk(chunkData);
+            RetranslateChunk(chunkData, peer);
             
             StreamFramesDataAccumulator.AddChunk(chunkData);
             var allChunksThisFrame = StreamFramesDataAccumulator.GetChunks(chunkData.SlotId, chunkData.FrameId);
@@ -135,69 +113,53 @@ namespace Code.Network.Stream
             }
         }
 
-        private void OnClientConnected(PlayerConnectionData data, NetPeer peer)
+        private void OnSlotConnected(SlotConnectionData data, NetPeer peer)
         {
-            _clients[data.PlayerId] = new PlayerData{ Data = data, Peer = peer };
+            if(!_slotsPeers.TryGetValue(data.SlotId, out var peers))
+                _slotsPeers[data.SlotId] = new List<NetPeer>();
+            _slotsPeers[data.SlotId].Add(peer);
 
+            _connectedPeersSlots[peer] = data.SlotId;
+            
             writer.Reset();
             packetProcessor.Write(writer, data);
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
         }
         
-        private void RetranslateFrame(StreamFrameData frameData)
+        private void RetranslateFrame(StreamFrameData frameData, NetPeer senderPeer)
         {
-            foreach (var (id, playerData) in _clients)
+            if(!_slotsPeers.TryGetValue(frameData.SlotId, out var peers))
+                return;
+            
+            foreach (var peer in peers)
             {
-                if (playerData.Data.PlayerId == frameData.StreamerId)
-                    continue;
-                
-                var slotObserversIds = _slots[frameData.SlotId].Observers.Select(o => o.ClientId)
-                    .ToArray();
-                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
+                if (Equals(peer, senderPeer))
                     continue;
                 
                 writer.Reset();
                 packetProcessor.Write(writer, frameData);
-                playerData.Peer.Send(writer, DeliveryMethod.ReliableUnordered);
+                peer.Send(writer, DeliveryMethod.ReliableUnordered);
             }
         }   
 
         private void RetranslateFrame(List<StreamFrameChunkData> frameData, int streamerId, int slotId)
         {
-            foreach (var (id, playerData) in _clients)
-            {
-                if (playerData.Data.PlayerId == streamerId)
-                    continue;
-                
-                var slotObserversIds = _slots[slotId].Observers.Select(o => o.ClientId)
-                    .ToArray();
-                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
-                    continue;
-                
-                foreach (var frameChunk in frameData)
-                {
-                    writer.Reset();
-                    packetProcessor.Write(writer, frameChunk);
-                    playerData.Peer.Send(writer, DeliveryMethod.Unreliable);
-                }
-            }
+            // TODO: If need
         }
 
-        private void RetranslateChunk(StreamFrameChunkData chunkData)
+        private void RetranslateChunk(StreamFrameChunkData chunkData, NetPeer senderPeer)
         {
-            foreach (var (id, playerData) in _clients)
+            if(!_slotsPeers.TryGetValue(chunkData.SlotId, out var peers))
+                return;
+            
+            foreach (var peer in peers)
             {
-                if (playerData.Data.PlayerId == chunkData.StreamerId)
-                    continue;
-                
-                var slotObserversIds = _slots[chunkData.SlotId].Observers.Select(o => o.ClientId)
-                    .ToArray();
-                if(slotObserversIds.Length == 0 || !slotObserversIds.Contains(playerData.Data.PlayerId))
+                if (Equals(peer, senderPeer))
                     continue;
                 
                 writer.Reset();
                 packetProcessor.Write(writer, chunkData);
-                playerData.Peer.Send(writer, DeliveryMethod.Unreliable);
+                peer.Send(writer, DeliveryMethod.ReliableUnordered);
             }
         }
         
@@ -209,8 +171,12 @@ namespace Code.Network.Stream
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            var recordForRemove = _clients.FirstOrDefault(x => Equals(x.Value.Peer, peer));
-            _clients.Remove(recordForRemove.Key);
+            if (_connectedPeersSlots.TryGetValue(peer, out var slotId))
+            {
+                _slotsPeers[slotId]?.Remove(peer);
+            }
+            
+            _connectedPeersSlots.Remove(peer);
         }
 
         public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)

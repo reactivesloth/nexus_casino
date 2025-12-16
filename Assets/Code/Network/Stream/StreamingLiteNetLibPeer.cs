@@ -18,14 +18,17 @@ namespace Code.Network.Stream
     public sealed class StreamingLiteNetLibPeer : MonoBehaviour, INetEventListener
     {
         [SerializeField] private int serverPort = 7777;
-        [SerializeField] private float timeToReconnect = 60f;
         [SerializeField] private int unreliableFramesPerReliable = 10;
+        [SerializeField] private float frameReceiveTimeout = 1f;
 
         [SerializeField] private bool debugLogs = false;
 
         [SerializeField] private int debugPing = -1;
-
+        
+        private int _slotId = -1;
         private int _unreliableFramesCounter = 0;
+        
+        private float _timeFromLastFrameReceived = 0f;
 
         private NetManager _client;
         private NetPeer _server;
@@ -37,49 +40,39 @@ namespace Code.Network.Stream
 
         public event Action<StreamFrameData> OnFrameReceived;
 
-        public static StreamingLiteNetLibPeer Instance { get; private set; }
-
-        private void Awake()
-        {
-            Instance = this;
-            InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
-        }
-
         private void Update()
         {
-            _client?.PollEvents();
             debugPing = _server is { ConnectionState: ConnectionState.Connected } ? _server.Ping : -1;
+            
+            _client?.PollEvents();
+            
+            if(_server is not { ConnectionState: ConnectionState.Connected }) return;
+            
+            if(_timeFromLastFrameReceived > frameReceiveTimeout)
+                Reconnect();
+            else
+                _timeFromLastFrameReceived += Time.deltaTime;
         }
 
-        private void OnClientConnectionState(ClientConnectionStateArgs args)
+        private void OnDisable()
         {
-            if (args.ConnectionState == LocalConnectionState.Started)
-            {
-                Invoke(nameof(Connect), 1f);
-            }
-            else if (args.ConnectionState == LocalConnectionState.Stopped)
-            {
-                Disconnect();
-            }
+            debugPing = -1;
         }
 
         /// <summary>
         /// Подключиться к серверу стриминга.
         /// </summary>
-        public void Connect()
+        public void Connect(int slotId)
         {
-            if (InstanceFinder.ClientManager.Connection.ClientId < 0)
-            {
-                Invoke(nameof(Connect), 1f);
-                return;
-            }
-
+            _timeFromLastFrameReceived = 0f;
+            _slotId = slotId;
+            
             _packetProcessor = new NetPacketProcessor();
             _writer = new NetDataWriter();
 
             _packetProcessor.SubscribeReusable<StreamFrameData>(OnFrameReceive);
             _packetProcessor.SubscribeReusable<StreamFrameChunkData>(OnFrameChunkReceived);
-            _packetProcessor.SubscribeReusable<PlayerConnectionData>(OnClientConnected);
+            _packetProcessor.SubscribeReusable<SlotConnectionData>(OnClientConnected);
 
             _client = new NetManager(this, null)
             {
@@ -92,7 +85,7 @@ namespace Code.Network.Stream
             _client.Connect(StreamingLiteNetLibServer.ServerAddress, StreamingLiteNetLibServer.ServerStreamPort,
                 "stream_peer");
 
-            Invoke(nameof(Reconnect), timeToReconnect);
+            // (nameof(Reconnect), timeToReconnect);
             if (debugLogs)
                 Debug.Log(
                     $"[StreamingLiteNetLibPeer] Connecting to {StreamingLiteNetLibServer.ServerAddress}:{StreamingLiteNetLibServer.ServerStreamPort}");
@@ -102,7 +95,7 @@ namespace Code.Network.Stream
         public void Reconnect()
         {
             Disconnect();
-            Connect();
+            Connect(_slotId);
         }
 
         /// <summary>
@@ -130,6 +123,8 @@ namespace Code.Network.Stream
                 return;
             }
 
+            _timeFromLastFrameReceived = 0f;
+            
             if (_unreliableFramesCounter < unreliableFramesPerReliable && !forceReliable)
             {
                 _unreliableFramesCounter++;
@@ -140,7 +135,7 @@ namespace Code.Network.Stream
             else
             {
                 _unreliableFramesCounter = 0;
-                // SendFullFrame(frameData);
+                SendFullFrame(frameData);
             }
 
             if (debugLogs)
@@ -174,7 +169,7 @@ namespace Code.Network.Stream
 
             if (debugLogs)
                 Debug.Log(
-                    $"[StreamingLiteNetLibPeer] Received chunk from user {chunkData.StreamerId} slot {chunkData.SlotId} ({chunkData.ChunkIndex}/{chunkData.ChunkCount}) Chunks from storage {allChunksThisFrame.Count}");
+                    $"[StreamingLiteNetLibPeer] Received chunk slot {chunkData.SlotId} ({chunkData.ChunkIndex}/{chunkData.ChunkCount}) Chunks from storage {allChunksThisFrame.Count}");
 
             if (FrameBuilder.TryGetFullFrame(allChunksThisFrame, out var frame))
                 OnFrameReceive(frame);
@@ -183,18 +178,19 @@ namespace Code.Network.Stream
         private void OnFrameReceive(StreamFrameData frameData)
         {
             OnFrameReceived?.Invoke(frameData);
-
+            _timeFromLastFrameReceived = 0;
+            
             if (debugLogs)
             {
                 Debug.Log(
-                    $"[StreamingLiteNetLibPeer] Received frame {frameData.Data.Length} bytes from slot №{frameData.SlotId} user №{frameData.StreamerId}\n");
+                    $"[StreamingLiteNetLibPeer] Received frame {frameData.Data.Length} bytes from slot №{frameData.SlotId}\n");
             }
         }
 
-        private void OnClientConnected(PlayerConnectionData data)
+        private void OnClientConnected(SlotConnectionData data)
         {
             if (debugLogs)
-                Debug.Log($"[StreamingLiteNetLibPeer] I,m connected with id {data.PlayerId}");
+                Debug.Log($"[StreamingLiteNetLibPeer] I,m connected with id {data.SlotId}");
         }
 
         #region INetEventListener
@@ -202,11 +198,10 @@ namespace Code.Network.Stream
         public void OnPeerConnected(NetPeer peer)
         {
             _server = peer;
-            Debug.Log($"[StreamingLiteNetLibPeer] Client TTL {_client.Ttl}");
 
-            var data = new PlayerConnectionData
+            var data = new SlotConnectionData
             {
-                PlayerId = InstanceFinder.ClientManager.Connection.ClientId,
+                SlotId = _slotId,
             };
             _writer.Reset();
             _packetProcessor.Write(_writer, data);
@@ -214,12 +209,12 @@ namespace Code.Network.Stream
             IsConnected = true;
 
             if (debugLogs)
-                Debug.Log($"[StreamingLiteNetLibPeer] Peer {peer.Id} connected! Connection {data.PlayerId} sent");
+                Debug.Log($"[StreamingLiteNetLibPeer] Connection to slot {data.SlotId} sent");
         }
 
         public void OnPeerDisconnected(NetPeer peer, DisconnectInfo disconnectInfo)
         {
-            Connect();
+            Connect(_slotId);
 
             if (debugLogs) Debug.Log($"[StreamingLiteNetLibPeer] Peer disconnected. Reason: {disconnectInfo.Reason}");
         }

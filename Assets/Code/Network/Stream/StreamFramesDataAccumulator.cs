@@ -52,7 +52,6 @@ namespace Code.Network.Stream
             var chunkCopy = new StreamFrameChunkData
             {
                 SlotId = chunkData.SlotId,
-                StreamerId = chunkData.StreamerId,
                 FrameId = chunkData.FrameId,
                 ChunkIndex = chunkData.ChunkIndex,
                 ChunkCount = chunkData.ChunkCount,

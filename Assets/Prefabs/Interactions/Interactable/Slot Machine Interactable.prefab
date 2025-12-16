@@ -323,6 +323,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -493,6 +494,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -772,6 +774,7 @@ GameObject:
   - component: {fileID: 6668442221156157179}
   - component: {fileID: 8690079509221083420}
   - component: {fileID: 2377678613824972991}
+  - component: {fileID: 5256628607745242369}
   m_Layer: 9
   m_Name: Slot Interaction
   m_TagString: Untagged
@@ -856,7 +859,7 @@ MonoBehaviour:
   sendRate: 0.1
   enableFrameChangeDetection: 1
   frameHashCheckInterval: 1
-  streamConnection: {fileID: 0}
+  streamConnection: {fileID: 5256628607745242369}
   streamServer: {fileID: 0}
   enableAutoQuality: 1
   targetFrameSizeBytes: 10000
@@ -866,6 +869,23 @@ MonoBehaviour:
   maxSendRate: 0.5
   qualityAdjustInterval: 0.015
   showDebugLogs: 0
+--- !u!114 &5256628607745242369
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3836657926655847833}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c9ef9614fe7c44ec9a11f6db2d230756, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingLiteNetLibPeer
+  serverPort: 9000
+  unreliableFramesPerReliable: 10
+  frameReceiveTimeout: 2
+  debugLogs: 0
+  debugPing: -1
 --- !u!1 &4440273282103300431
 GameObject:
   m_ObjectHideFlags: 0
@@ -1042,6 +1062,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &4658051661201525424
 MonoBehaviour:
@@ -1101,6 +1122,7 @@ MonoBehaviour:
   m_VerticalAlignment: 1024
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

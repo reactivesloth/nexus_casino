@@ -28,8 +28,7 @@ namespace Code.Network.Stream
         [SerializeField] private bool enableFrameChangeDetection = true;
         [SerializeField] private int frameHashCheckInterval = 1; // Проверять каждый N-й кадр перед отправкой
 
-        [Header("Stream Connection"), SerializeField]
-        private StreamingLiteNetLibPeer streamConnection;
+        [Header("Stream Connection"), SerializeField] private StreamingLiteNetLibPeer streamConnection;
         [SerializeField] private StreamingLiteNetLibServer streamServer;
 
         [Header("Auto Quality")]
@@ -65,11 +64,13 @@ namespace Code.Network.Stream
         private int SlotNumber => slotMachineInteractable.IDNumber;
 
         public event Action<Texture> OnApplyTexture;
+        
+        public Texture2D RecvTexture => _recvTex;
 
         private void Start()
         {
             _savedJPGQuality = jpgQuality;
-            streamConnection = StreamingLiteNetLibPeer.Instance;
+            streamConnection ??= GetComponent<StreamingLiteNetLibPeer>();
             streamServer = StreamingLiteNetLibServer.Instance;
             
             streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
@@ -313,8 +314,7 @@ namespace Code.Network.Stream
                 {
                     FrameId = _lastSentFrameId,
                     Data = data,
-                    SlotId = SlotNumber,
-                    StreamerId = InstanceFinder.ClientManager.Connection.ClientId
+                    SlotId = SlotNumber
                 });
                 _lastSentFrameId++;
             }
@@ -352,6 +352,8 @@ namespace Code.Network.Stream
 
             _lastRecvFrameId = 0;
 
+            streamConnection.Connect(SlotNumber);
+            
             // Настройка видимости
             if (IsOwner)
             {
@@ -369,15 +371,7 @@ namespace Code.Network.Stream
             if (Owner.ClientId != -1)
             {
                 targetImage.gameObject.SetActive(true);
-                OnNewObserver(ClientManager.Connection);
             }
-        }
-
-        [ServerRpc(RequireOwnership = false)]
-        private void OnNewObserver(NetworkConnection newObserver)
-        {
-            if (newObserver == null) return;
-            streamServer.OnPlayerObserverSlot(newObserver.ClientId, SlotNumber);
         }
         
         public override void OnOwnershipClient(NetworkConnection prevOwner)
@@ -408,6 +402,8 @@ namespace Code.Network.Stream
         public override void OnStopClient()
         {
             base.OnStopClient();
+            
+            streamConnection.Disconnect();
             
             if (IsOwner)
                 streamLoadBalancer?.UnregisterStream();

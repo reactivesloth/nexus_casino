@@ -7,7 +7,6 @@ namespace Code.Network.Stream.Data
         public const int HeaderSize = 32;
         
         public int SlotId { get; set; }
-        public int StreamerId { get; set; }
 
         public int FrameId { get; set; }
         
@@ -19,7 +18,6 @@ namespace Code.Network.Stream.Data
         public void Serialize(NetDataWriter writer)
         {
             writer.Put(SlotId);
-            writer.Put(StreamerId);
             writer.Put(FrameId);
             writer.Put(ChunkIndex);
             writer.Put(ChunkCount);
@@ -29,7 +27,6 @@ namespace Code.Network.Stream.Data
         public void Deserialize(NetDataReader reader)
         {
             SlotId = reader.GetInt();
-            StreamerId = reader.GetInt();
             FrameId = reader.GetInt();
             ChunkIndex = reader.GetUShort();
             ChunkCount = reader.GetUShort();
@@ -38,7 +35,7 @@ namespace Code.Network.Stream.Data
 
         public override string ToString()
         {
-            return $"SlotId={SlotId}, StreamerId={StreamerId}, FrameId={FrameId}, " +
+            return $"SlotId={SlotId}, FrameId={FrameId}, " +
                    $"ChunkIndex={ChunkIndex}, ChunkCount={ChunkCount}, PayloadLength={Payload?.Length ?? 0}";
         }
     }

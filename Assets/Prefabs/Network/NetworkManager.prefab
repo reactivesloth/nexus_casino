@@ -295,7 +295,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3387913618576187554}
   - component: {fileID: 5804645131766813114}
-  - component: {fileID: 165506157183848823}
   m_Layer: 0
   m_Name: Streaming
   m_TagString: Untagged
@@ -331,25 +330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingUdpServer
   port: 9000
-  maxClients: 200
   debugLogs: 1
---- !u!114 &165506157183848823
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3799973681424323288}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c9ef9614fe7c44ec9a11f6db2d230756, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingLiteNetLibPeer
-  serverPort: 9000
-  timeToReconnect: 60
-  unreliableFramesPerReliable: 24
-  debugLogs: 1
-  debugPing: -1
 --- !u!1001 &1178301237822981492
 PrefabInstance:
   m_ObjectHideFlags: 0

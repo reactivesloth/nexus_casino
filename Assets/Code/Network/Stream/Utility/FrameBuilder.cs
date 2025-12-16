@@ -40,7 +40,6 @@ namespace Code.Network.Stream.Utility
                 chunks[i] = new StreamFrameChunkData
                 {
                     SlotId = frameData.SlotId,
-                    StreamerId = frameData.StreamerId,
                     FrameId = frameData.FrameId,
                     ChunkIndex = chunkIndex,
                     ChunkCount = (ushort)chunkCount,
@@ -61,7 +60,6 @@ namespace Code.Network.Stream.Utility
 
             // Все чанки должны быть от одного фрейма
             int frameId = chunks[0].FrameId;
-            int streamerId = chunks[0].StreamerId;
             int slotId = chunks[0].SlotId;
             ushort expectedChunkCount = chunks[0].ChunkCount;
 
@@ -79,7 +77,6 @@ namespace Code.Network.Stream.Utility
             {
                 // Проверяем консистентность метаданных
                 if (chunk.FrameId != frameId ||
-                    chunk.StreamerId != streamerId ||
                     chunk.SlotId != slotId ||
                     chunk.ChunkCount != expectedChunkCount)
                 {
@@ -129,7 +126,6 @@ namespace Code.Network.Stream.Utility
             frameData = new StreamFrameData
             {
                 FrameId = frameId,
-                StreamerId = streamerId,
                 SlotId = slotId,
                 Data = data
             };
