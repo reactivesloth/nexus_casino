@@ -103,6 +103,7 @@ namespace Code.Network.Stream
             }
             
             CurrentStreamSlot.NetworkImageStream.OnApplyTexture += ApplyTexture;
+            ApplyTexture(CurrentStreamSlot.NetworkImageStream.RecvTexture);
             slotIdText.text = $"Slot №{next}";
         }
 
