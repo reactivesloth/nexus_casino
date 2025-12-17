@@ -59,8 +59,10 @@ namespace Code.Network.Stream
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
         }
 
-        public void RequestStream(int slotId, string username) =>
+        public void RequestStream(int slotId, string username)
+        {
             SetStream_ServerRpc(slotId, username);
+        }
 
         public void RequestCancel() => SetStream_ServerRpc(-1, string.Empty);
 
@@ -88,6 +90,9 @@ namespace Code.Network.Stream
 
         private void OnStreamSlotIdChange(int prev, int next, bool asServer)
         {
+            if(asServer)
+                return;
+            
             if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
             
@@ -109,6 +114,9 @@ namespace Code.Network.Stream
 
         private void StreamerUsernameOnOnChange(string prev, string next, bool asServer)
         {
+            if(asServer)
+                return;
+            
             streamerNameText.text = $"{next}";
         }
         
