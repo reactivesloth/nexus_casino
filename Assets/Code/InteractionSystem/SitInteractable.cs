@@ -286,6 +286,11 @@ namespace Code.InteractionSystem
             {
                 wasFPV = move.FirstPersonView;
                 move.CanMove = true;
+                
+                Quaternion targetRotation = sitPoint ? sitPoint.rotation : transform.rotation;
+                move.cinemachineTargetYaw = targetRotation.eulerAngles.y;
+                move.cinemachineTargetPitch = 0f;
+                
                 yield return new WaitForEndOfFrame();
                 move.ForceEnterFPV(true, snap: true);
                 yield return new WaitForEndOfFrame();
