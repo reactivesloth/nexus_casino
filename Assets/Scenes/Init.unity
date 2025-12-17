@@ -986,6 +986,51 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 191481559}
   m_CullTransparentMesh: 0
+--- !u!1 &213180714
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 213180716}
+  - component: {fileID: 213180715}
+  m_Layer: 0
+  m_Name: GeoChecker
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &213180715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 213180714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4ed24d4760540759fd876ea3fd10a2a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GeoAccessControl
+  autoCheckOnStart: 1
+--- !u!4 &213180716
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 213180714}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &269488869 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6894909800837856291, guid: eff28b2ed3e134cf8b2f761ad686f671, type: 3}
@@ -10862,3 +10907,4 @@ SceneRoots:
   - {fileID: 458829556}
   - {fileID: 308637984}
   - {fileID: 389931497}
+  - {fileID: 213180716}

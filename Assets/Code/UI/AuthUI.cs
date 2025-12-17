@@ -48,7 +48,9 @@ namespace Code.UI
         private TMP_Text _resendText;
 
         private IPromise _currentCheckNamePromise;
-
+        
+        private GeoAccessControl _geoAccessControl;
+        
         private void Awake()
         {
             if (resendCodeButton != null)
@@ -83,6 +85,11 @@ namespace Code.UI
 
         private void Start()
         {
+            _geoAccessControl = FindAnyObjectByType<GeoAccessControl>();
+            _geoAccessControl.OnAccessGranted += GeoAccessControlOnOnAccessGranted;
+            _geoAccessControl.OnAccessDenied += GeoAccessControlOnOnAccessDenied;
+            _geoAccessControl.OnError += GeoAccessControlOnOnError;
+            
             InitializeResendButton();
 
             if (CursorManager.Instance != null)
@@ -100,6 +107,32 @@ namespace Code.UI
             {
                 ToStartState();
             }
+        }
+
+        private void GeoAccessControlOnOnError(string obj)
+        {
+            switch (obj)
+            {
+                case "json":
+                    HandleError("EXTERNAL_SERVICE_ERROR", "errors.error_unknown_message");
+                    break;
+                case "parse":
+                    HandleError("EXTERNAL_SERVICE_ERROR", "errors.error_unknown_message");
+                    break;
+                default:
+                    HandleError("EXTERNAL_SERVICE_ERROR", "errors.error_unknown_message");
+                    break;
+            }
+        }
+
+        private void GeoAccessControlOnOnAccessGranted()
+        {
+            
+        }
+
+        private void GeoAccessControlOnOnAccessDenied(string obj)
+        {
+            HandleError("errors.country_restricted", "errors.vpn_instruction");
         }
 
         private void Update()
@@ -164,7 +197,14 @@ namespace Code.UI
             if (phoneInput != null)
             {
                 phoneInput.interactable = true;
-                phoneInput.text = PlayerPrefs.GetString("auth_phoneInput", CountryCode.GetCodeByLocale(Application.systemLanguage).ToString());
+                if (PlayerPrefs.HasKey("auth_phoneInput"))
+                {
+                    phoneInput.text = PlayerPrefs.GetString("auth_phoneInput");
+                }
+                else
+                {
+                    phoneInput.text = _geoAccessControl?.GetCountryCallingCode();
+                }
             }
 
 
