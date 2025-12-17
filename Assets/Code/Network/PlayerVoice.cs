@@ -87,10 +87,17 @@ namespace Code.Network
                 {
                     if (participant != null)
                     {
-                        var audioEnergy = participant.AudioEnergy;
-                        if (participant.IsMuted) audioEnergy = 0f;
-                        if (audioEnergy < 0.01f) audioEnergy = 0f;
-                        salsa.analysisValue = (float)audioEnergy;
+                        if (participant.SpeechDetected)
+                        {
+                            var audioEnergy = participant.AudioEnergy;
+                            if (participant.IsMuted) audioEnergy = 0f;
+                            if (audioEnergy < 0.01f) audioEnergy = 0f;
+                            salsa.analysisValue = (float)audioEnergy;
+                        }
+                        else
+                        {
+                            salsa.analysisValue = 0;
+                        }
                     }
                 }
 
