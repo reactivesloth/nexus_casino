@@ -42,29 +42,32 @@ namespace Code.Player
                 return;
             }
 
-            if (!PlayerInput.Instance.VoiceHeld)
+            // Логика TOGGLE (по нажатию):
+            // Если кнопка нажата (и прошёл debounce saveTime):
+            // 1. Если микрофон уже включен (voiceHeld) -> выключаем.
+            // 2. Если выключен -> проверяем права и включаем.
+            if (PlayerInput.Instance.VoiceHeld)
             {
                 if (voiceHeld)
+                {
                     VoiceChatHandle(false);
-
-                return;
-            }
-
-            if (voiceHeld)
-                return;
-
+                }
+                else
+                {
 #if UNITY_ANDROID
-            if (HasMicPermission())
-            {
-                VoiceChatHandle(true);
-            }
-            else
-            {
-                TryRequestMicPermissionOrShowUI();
-            }
+                    if (HasMicPermission())
+                    {
+                        VoiceChatHandle(true);
+                    }
+                    else
+                    {
+                        TryRequestMicPermissionOrShowUI();
+                    }
 #else
-            VoiceChatHandle(true);
+                    VoiceChatHandle(true);
 #endif
+                }
+            }
         }
 
 #if UNITY_ANDROID
@@ -78,12 +81,14 @@ namespace Code.Player
             if (_permissionRequestInFlight)
                 return;
 
+            // Если Android говорит, что нужно объяснить (обычно после отказа, но до "Don't ask again")
             if (Permission.ShouldShowRequestPermissionRationale(MicPermission))
             {
                 ShowShouldAskPopup();
                 return;
             }
 
+            // Иначе - либо первый раз, либо уже заблокировано. Пробуем запросить.
             RequestMicPermission();
         }
 
@@ -98,6 +103,7 @@ namespace Code.Player
             _permissionCallbacks.PermissionGranted += OnPermissionGranted;
             _permissionCallbacks.PermissionDenied += OnPermissionDenied;
 
+            // Запоминаем, что мы хотя бы раз пытались запросить (для определения "Don't ask again" в будущем)
             PlayerPrefs.SetInt(MicRequestedOnceKey, 1);
             PlayerPrefs.Save();
 
@@ -123,14 +129,20 @@ namespace Code.Player
 
             if (shouldShowRationale)
             {
+                // Пользователь отказал, но "Don't ask again" не нажато -> предлагаем попробовать ещё раз
                 ShowShouldAskPopup();
                 return;
             }
 
+            // Если shouldShowRationale == false:
+            // 1. Либо это первый запрос (но мы уже сохранили requestedOnce=1 перед вызовом, так что этот кейс отсекаем проверкой requestedOnce,
+            //    но на всякий случай, если logic flow изменится, первый раз лучше не пугать настройками).
+            // 2. Либо "Don't ask again" (ведение в настройки).
+
             if (requestedOnce)
-                ShowDeniedPopup();
+                ShowDeniedPopup();    // Уже спрашивали, значит это блок -> настройки
             else
-                ShowShouldAskPopup();
+                ShowShouldAskPopup(); // На всякий случай fallback -> обычный попап
         }
 
         private void ShowShouldAskPopup()
@@ -183,7 +195,7 @@ namespace Code.Player
             _popupOpener.Buttons.Add(okButton);
             _popupOpener.OpenPopup();
         }
-        
+
         private static void OpenAppSettings()
         {
             using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -200,14 +212,16 @@ namespace Code.Player
                 uri
             );
 
-            intent.Call<AndroidJavaObject>("addFlags", 0x10000000);
+            intent.Call<AndroidJavaObject>("addFlags", 0x10000000); // FLAG_ACTIVITY_NEW_TASK
             activity.Call("startActivity", intent);
         }
 #endif
-        
+
         public void VoiceChatHandle(bool value)
         {
+            // Debounce, чтобы одно нажатие не переключало статус много раз подряд
             saveTime = 0.2f;
+
             voiceHeld = value;
 
             if (PlayerVoice.LocalPlayerVoiceInstance != null)
