@@ -528,7 +528,7 @@ namespace Code.InteractionSystem
         private IEnumerator RotateToTarget(Transform tf, Quaternion targetRot, float rotationSpeed = 360f,
             float maxDuration = 1f)
         {
-            while (Quaternion.Angle(tf.rotation, targetRot) > 3f)
+            while (Quaternion.Angle(tf.rotation, targetRot) > 10f)
             {
                 tf.rotation = Quaternion.RotateTowards(tf.rotation, targetRot, rotationSpeed * Time.deltaTime);
                 yield return null;
@@ -548,7 +548,7 @@ namespace Code.InteractionSystem
             float angle = Quaternion.Angle(tf.rotation, targetRotation);
             if (angle < angleThreshold) yield break;
 
-            while (Quaternion.Angle(tf.rotation, targetRotation) > 3f)
+            while (Quaternion.Angle(tf.rotation, targetRotation) > 10f)
             {
                 tf.rotation = Quaternion.RotateTowards(tf.rotation, targetRotation, rotationSpeed * Time.deltaTime);
                 yield return null;
