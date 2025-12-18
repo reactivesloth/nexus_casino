@@ -2,7 +2,6 @@ using Code.Network;
 using Code.UI.Popup;
 using Code.Utility;
 using Ricimi;
-using Unity.Services.Vivox;
 using UnityEngine;
 using UnityEngine.UI;
 using Gradient = Ricimi.Gradient;
@@ -224,9 +223,6 @@ namespace Code.Player
             saveTime = 0.2f;
 
             voiceHeld = value;
-
-            if (VivoxService.Instance != null && !VivoxService.Instance.IsLoggedIn && VivoxVoiceManager.Instance != null) 
-                VivoxVoiceManager.Instance.LoginToVivox();
 
             if (PlayerVoice.LocalPlayerVoiceInstance != null)
                 PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = !voiceHeld;
