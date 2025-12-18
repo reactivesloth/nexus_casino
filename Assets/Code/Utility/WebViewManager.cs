@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Code.API;
 using CurvedUI;
@@ -31,6 +32,8 @@ public class WebViewManager : MonoBehaviour
     private CanvasWebViewPrefab _view;
     private RawImage _image;
     private string agregator;
+
+    private List<CanvasWebViewPrefab> _webviews;
     
     private void Awake()
     {
@@ -42,6 +45,7 @@ public class WebViewManager : MonoBehaviour
 
         Instance = this;
         if (dontDestroyOnLoad) DontDestroyOnLoad(gameObject);
+        _webviews = new List<CanvasWebViewPrefab>();
     }
 
     private async void Start()
@@ -158,29 +162,14 @@ public class WebViewManager : MonoBehaviour
     {
         if (!_initialized || WebView == null || worldCanvas == null) return null;
 
-        if (_view != null)
-        {
-            if (_view.transform.parent != worldCanvas.transform)
-            {
-                bool isWorldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
-                                    worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
-                RebindToCanvas(_view, worldCanvas, bringToFront: false, worldSpace: isWorldSpace);
-            }
-            return _view;
-        }
+        _view = CanvasWebViewPrefab.Instantiate(WebView);
+        
+        _view.Resolution = Application.isMobilePlatform ? 0.5f : 1.0f;
+        _view.transform.SetParent(worldCanvas.transform, false);
 
-        var view = CanvasWebViewPrefab.Instantiate(WebView);
-        _view = view;
-        _view.Resolution = Application.isMobilePlatform ? 0.5f : 1f;
-
-        bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
-                          worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
-
-        if (worldSpace && worldCanvas.worldCamera == null)
-            worldCanvas.worldCamera = Camera.main;
-
-        if (!worldCanvas.TryGetComponent(out GraphicRaycaster _))
-            worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
+        bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace || worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
+        if (worldSpace && worldCanvas.worldCamera == null) worldCanvas.worldCamera = Camera.main;
+        if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _)) worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
         var curved = _view.GetComponentInChildren<CurvedUISettings>(true);
         if (curved != null) curved.enabled = true;
@@ -226,21 +215,6 @@ public class WebViewManager : MonoBehaviour
         _view.gameObject.SetActive(false);
     }
 
-    public void DestroyWorldView(int slotId)
-    {
-        _image = null;
-
-        if (_view != null)
-        {
-            _view.gameObject.SetActive(false);
-            if (parkingCanvas != null)
-            {
-                RebindToCanvas(_view, parkingCanvas, bringToFront: false, worldSpace: false);
-            }
-        }
-    }
-
-
     private void RebindToCanvas(CanvasWebViewPrefab prefab, Canvas canvas, bool bringToFront, bool worldSpace)
     {
         if (prefab == null || canvas == null) return;
@@ -252,8 +226,10 @@ public class WebViewManager : MonoBehaviour
 
         var rt = (RectTransform)prefab.transform;
 
-        rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.localRotation = Quaternion.identity;
+        rt.localScale = Vector3.one;
 
+        rt.pivot = new Vector2(0.5f, 0.5f);
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
 
@@ -261,13 +237,13 @@ public class WebViewManager : MonoBehaviour
         rt.offsetMax = Vector2.zero;
 
         rt.anchoredPosition = Vector2.zero;
-
-        rt.localScale = Vector3.one;
-        rt.localRotation = Quaternion.identity;
+        var localPos = rt.localPosition;
+        rt.localPosition = new Vector3(localPos.x, localPos.y, 0f);
 
         if (worldSpace)
         {
             if (canvas.worldCamera == null) canvas.worldCamera = Camera.main;
+            _view.transform.hasChanged = true; 
         }
         else
         {
@@ -297,7 +273,7 @@ public class WebViewManager : MonoBehaviour
 #endif
         Web.ClearAllData();
     }
-
+    
     private void OnDestroy()
     {
         if (clearAllDataOnClose) _ = ClearAllDataAsync(deepCleanupStandalone);

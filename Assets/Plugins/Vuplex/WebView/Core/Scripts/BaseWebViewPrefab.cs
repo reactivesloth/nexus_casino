@@ -21,6 +21,7 @@ using Vuplex.WebView.Internal;
 namespace Vuplex.WebView {
 
     public abstract class BaseWebViewPrefab : MonoBehaviour {
+        public bool Disposable { get; set;}
 
         /// <summary>
         /// Indicates that the prefab was clicked. Note that the prefab automatically
@@ -874,10 +875,14 @@ namespace Vuplex.WebView {
         bool _native2DModeEnabled(IWebView webView) => webView is IWithNative2DMode && (webView as IWithNative2DMode).Native2DModeEnabled;
 
         protected virtual void OnDestroy() {
-
-            if (WebView != null && !WebView.IsDisposed) {
-                WebView.Dispose();
+            if (Disposable)
+            {
+                if (WebView != null && !WebView.IsDisposed)
+                {
+                    WebView.Dispose();
+                }
             }
+
             if (KeyboardEnabled) {
                 var keyboardManager = Internal.KeyboardManager.Instance;
                 if (keyboardManager != null) {
