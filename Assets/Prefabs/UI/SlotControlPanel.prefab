@@ -11,8 +11,6 @@ GameObject:
   - component: {fileID: 1582785987408309896}
   - component: {fileID: 3781780529669185521}
   - component: {fileID: 3370263610769776291}
-  - component: {fileID: 3297921864244914748}
-  - component: {fileID: 5985639453827451652}
   m_Layer: 5
   m_Name: ResultText
   m_TagString: Untagged
@@ -105,6 +103,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -138,38 +137,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &3297921864244914748
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2542376064417453843}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0, y: 0, z: 0}
-  savedRectSize: {x: 0, y: 0}
-  savedColor: {r: 0, g: 0, b: 0, a: 0}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 0
---- !u!114 &5985639453827451652
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2542376064417453843}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 004b8ec0c25535c409b1f6115963d476, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Dirty: 1
 --- !u!1 &4421010603281315010
 GameObject:
   m_ObjectHideFlags: 0
@@ -181,7 +148,6 @@ GameObject:
   - component: {fileID: 5595937141333634471}
   - component: {fileID: 5892817768184934760}
   - component: {fileID: 2575232417921397127}
-  - component: {fileID: 178385748346862366}
   - component: {fileID: 1563458595969980545}
   m_Layer: 5
   m_Name: SlotControlPanel
@@ -248,25 +214,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &178385748346862366
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4421010603281315010}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0.000037791677, y: 334.9978, z: 0.000028357585}
-  savedUp: {x: 0, y: 1, z: 0}
-  savedRectSize: {x: 1280, y: 50.025}
-  savedColor: {r: 1, g: 1, b: 1, a: 0.392}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 1
 --- !u!114 &1563458595969980545
 MonoBehaviour:
   m_ObjectHideFlags: 0

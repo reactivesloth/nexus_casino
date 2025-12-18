@@ -1,6 +1,8 @@
 using System;
 using CurvedUI.Core.Utilities;
 using UnityEngine;
+using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+using TouchPhase = UnityEngine.TouchPhase;
 #if ENABLE_INPUT_SYSTEM && CURVEDUI_NEW_INPUT // we need both because enabled new input backends != imported package
 using UnityEngine.InputSystem;
 #endif
@@ -42,23 +44,10 @@ namespace CurvedUI.Core.ControlMethods
         
         
         #region SETTERS AND GETTERS
-        /// <summary>
-        /// What is the mouse position on screen now? Returns value from old or new Input System.
-        /// WARNING: Unity reports wrong on-screen mouse position if a VR headset is connected.
-        /// </summary>
-        public static Vector2 MousePosition => 
-        #if ENABLE_INPUT_SYSTEM && CURVEDUI_NEW_INPUT
-            Mouse.current?.position.ReadValue() ?? Vector2.zero;
-        #else
-            new Vector2(Input.mousePosition.x, Input.mousePosition.y);
-        #endif
-        
-        public static bool MouseLeftButtonIsPressed =>
-        #if ENABLE_INPUT_SYSTEM && CURVEDUI_NEW_INPUT
-            Mouse.current?.leftButton.isPressed ?? false;
-        #else
-            Input.GetButton("Fire1");
-        #endif
+        public static Vector2 MousePosition => Touch.activeTouches.Count > 0 ? Touch.activeTouches[0].screenPosition : Mouse.current.position.ReadValue();
+
+        public static bool MouseLeftButtonIsPressed => Touch.activeTouches.Count > 0 || Mouse.current.leftButton.isPressed;
+
         #endregion
     }
 }

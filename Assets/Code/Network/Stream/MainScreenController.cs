@@ -101,9 +101,14 @@ namespace Code.Network.Stream
                 slotIdText.text = string.Empty;
                 return;
             }
-            
-            CurrentStreamSlot.NetworkImageStream.OnApplyTexture += ApplyTexture;
-            ApplyTexture(CurrentStreamSlot.NetworkImageStream.RecvTexture);
+
+            if (CurrentStreamSlot.NetworkImageStream != null)
+            {
+                CurrentStreamSlot.NetworkImageStream.OnApplyTexture += ApplyTexture;
+                if (CurrentStreamSlot.NetworkImageStream.RecvTexture != null)
+                    ApplyTexture(CurrentStreamSlot.NetworkImageStream.RecvTexture);
+            }
+
             slotIdText.text = $"Slot №{next}";
         }
 

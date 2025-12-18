@@ -1124,7 +1124,7 @@ namespace FishNet.Object
         {
             int count = NetworkBehaviours.Count;
             for (int i = 0; i < count; i++)
-                NetworkBehaviours[i].ResetState(asServer);
+                NetworkBehaviours[i]?.ResetState(asServer);
 
             ResetState_Prediction(asServer);
             ResetState_Observers(asServer);

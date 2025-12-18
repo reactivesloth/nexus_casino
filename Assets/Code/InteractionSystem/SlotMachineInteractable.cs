@@ -248,6 +248,9 @@ namespace Code.InteractionSystem
 
         private void ToggleComputerUI(bool open, bool force = false)
         {
+            PlayerPrefs.SetInt("PlayerSlotMachineIsFullscreen", 0);
+            PlayerPrefs.Save();
+
             ApplyComputerStateImmediate(open, force);
         }
 

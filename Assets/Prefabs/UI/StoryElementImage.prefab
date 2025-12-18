@@ -103,6 +103,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -222,7 +223,6 @@ GameObject:
   - component: {fileID: 1044467810032587311}
   - component: {fileID: 6153098826159151969}
   - component: {fileID: 5952666354304105748}
-  - component: {fileID: 5634472592311299468}
   m_Layer: 0
   m_Name: StoryElementImage
   m_TagString: Untagged
@@ -290,26 +290,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &5634472592311299468
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7194879587814321640}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 22274f14ce3a4fbc97fa3275a53efe75, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  titleText: {fileID: 4273499433876356675}
-  automatNumberText: {fileID: 5932208462019756236}
-  screenshotImage: {fileID: 3014049359364727106}
-  Story:
-    playerName: 
-    automatId: 0
-    lobbyId: 
-    screenshotBytes: 
 --- !u!1 &7849502854812952752
 GameObject:
   m_ObjectHideFlags: 0
@@ -413,6 +393,7 @@ MonoBehaviour:
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0

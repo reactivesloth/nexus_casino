@@ -7,6 +7,7 @@ using CurvedUI.Core.Utilities.Editor;
 using UnityEditor;
 using UnityEngine.EventSystems;
 #if CURVEDUI_TMP || TMP_PRESENT
+using TMPro;
 #endif
 
 namespace CurvedUI

@@ -158,24 +158,28 @@ public class WebViewManager : MonoBehaviour
     {
         if (!_initialized || WebView == null || worldCanvas == null) return null;
 
+        if (_view != null)
+        {
+            if (_view.transform.parent != worldCanvas.transform)
+            {
+                bool isWorldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
+                                    worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
+                RebindToCanvas(_view, worldCanvas, bringToFront: false, worldSpace: isWorldSpace);
+            }
+            return _view;
+        }
+
         var view = CanvasWebViewPrefab.Instantiate(WebView);
         _view = view;
-        
-        _view.transform.SetParent(worldCanvas.transform, false);
-        var rt = _view.transform as RectTransform;
-        if (rt != null)
-        {
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
+        _view.Resolution = Application.isMobilePlatform ? 0.5f : 1f;
 
         bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
                           worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
+
         if (worldSpace && worldCanvas.worldCamera == null)
             worldCanvas.worldCamera = Camera.main;
-        if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _))
+
+        if (!worldCanvas.TryGetComponent(out GraphicRaycaster _))
             worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
         var curved = _view.GetComponentInChildren<CurvedUISettings>(true);
@@ -225,22 +229,41 @@ public class WebViewManager : MonoBehaviour
     public void DestroyWorldView(int slotId)
     {
         _image = null;
-        Destroy(_view.gameObject);
+
+        if (_view != null)
+        {
+            _view.gameObject.SetActive(false);
+            if (parkingCanvas != null)
+            {
+                RebindToCanvas(_view, parkingCanvas, bringToFront: false, worldSpace: false);
+            }
+        }
     }
+
 
     private void RebindToCanvas(CanvasWebViewPrefab prefab, Canvas canvas, bool bringToFront, bool worldSpace)
     {
         if (prefab == null || canvas == null) return;
 
         prefab.transform.SetParent(canvas.transform, false);
+
         if (bringToFront) prefab.transform.SetAsLastSibling();
         else prefab.transform.SetSiblingIndex(1);
 
         var rt = (RectTransform)prefab.transform;
+
+        rt.pivot = new Vector2(0.5f, 0.5f);
+
         rt.anchorMin = Vector2.zero;
         rt.anchorMax = Vector2.one;
+
         rt.offsetMin = Vector2.zero;
         rt.offsetMax = Vector2.zero;
+
+        rt.anchoredPosition = Vector2.zero;
+
+        rt.localScale = Vector3.one;
+        rt.localRotation = Quaternion.identity;
 
         if (worldSpace)
         {
@@ -251,9 +274,10 @@ public class WebViewManager : MonoBehaviour
             canvas.worldCamera = null;
         }
 
-        if (!canvas.TryGetComponent<GraphicRaycaster>(out _))
+        if (!canvas.TryGetComponent(out GraphicRaycaster _))
             canvas.gameObject.AddComponent<GraphicRaycaster>();
     }
+
 
     private IEnumerator ForceCanvasRebuildNextFrame(RectTransform rt)
     {

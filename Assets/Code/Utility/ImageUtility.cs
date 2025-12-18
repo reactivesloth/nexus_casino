@@ -63,6 +63,8 @@ namespace Code.Utility
         
         public static void AdjustAspect(RawImage target)
         {
+            if (target == null) return;
+            
             var texture = target.texture;
             var rectTransform = target.rectTransform;
             

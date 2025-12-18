@@ -160,7 +160,8 @@ namespace Code.Network
 
         private void UpdatePos()
         {
-            VivoxVoiceManager.Instance.SetLocalPosition(gameObject);
+            if (VivoxService.Instance?.ActiveChannels?.Count > 0)
+                VivoxVoiceManager.Instance.SetLocalPosition(gameObject);
         }
 
     }

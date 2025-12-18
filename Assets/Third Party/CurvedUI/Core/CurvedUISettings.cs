@@ -27,7 +27,7 @@ namespace CurvedUI
     [RequireComponent(typeof(Canvas))]
     public class CurvedUISettings : MonoBehaviour
     {
-        public const string Version = "4.0";
+        public const string Version = "4.0.1";
 
         #region SETTINGS
         //Global settings
