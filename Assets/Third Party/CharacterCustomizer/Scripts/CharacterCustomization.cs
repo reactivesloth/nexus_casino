@@ -22,11 +22,11 @@ namespace CC
 
         public List<scrObj_Hair> HairTables = new List<scrObj_Hair>(); //Available hair prefabs
 
-        private List<GameObject> HairObjects = new List<GameObject>(); //Active hair prefabs
+        public List<GameObject> HairObjects = new List<GameObject>(); //Active hair prefabs
 
         public List<scrObj_Apparel> ApparelTables = new List<scrObj_Apparel>(); //Available apparel prefabs
 
-        private List<GameObject> ApparelObjects = new List<GameObject>(); //Active apparel prefabs
+        public List<GameObject> ApparelObjects = new List<GameObject>(); //Active apparel prefabs
 
         public List<string> DefaultApparel = new List<string>(); //Default apparel, same order as ApparelTables
 

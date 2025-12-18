@@ -171,27 +171,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 141.29999
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 104
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 151.29999
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -52
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3434268101353160747, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_Name
@@ -465,6 +465,10 @@ PrefabInstance:
     - target: {fileID: -7946384610740316304, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: -7729781244482467411, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -7602735908647969516, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       propertyPath: m_Layer
@@ -934,6 +938,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 8
       objectReference: {fileID: 0}
+    - target: {fileID: 2154462827929693597, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2273937734282631616, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       propertyPath: m_Layer
       value: 8
@@ -993,6 +1001,10 @@ PrefabInstance:
     - target: {fileID: 3383462512875238731, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       propertyPath: m_Layer
       value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 3421920360683842739, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3752902485983887242, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       propertyPath: m_Layer
@@ -1333,6 +1345,11 @@ SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: 2154462827929693597, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
   m_PrefabInstance: {fileID: 6721300192181336531}
   m_PrefabAsset: {fileID: 0}
+--- !u!137 &5331300987332128894 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -7729781244482467411, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+  m_PrefabInstance: {fileID: 6721300192181336531}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &5874861292224152706 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
@@ -1395,6 +1412,10 @@ MonoBehaviour:
   spawnOnSawedPosition: 1
   cinemachineCameraTarget: {fileID: 6710016285786877112}
   hideForFirstPersonViewLocal:
+  - {fileID: 7402763017561253412}
+  - {fileID: 5331300987332128894}
+  - {fileID: 8231384511397959008}
+  hideForFirstPersonViewLocalGO:
   - {fileID: 7694004874126017968}
   minCameraDistance: 1
   maxCameraDistance: 4
@@ -2575,8 +2596,18 @@ MonoBehaviour:
   randomHoldDurationMax: 0.5
   configReady: 0
   warnOnNullRefs: 1
-  inspSalsaLinked: 1
+  inspSalsaLinked: 0
   inspStateFoldoutProcessing: 1
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0
   inspCollectionDisplayMode: 0
+--- !u!137 &7402763017561253412 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -4900691172896759817, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+  m_PrefabInstance: {fileID: 6721300192181336531}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &8231384511397959008 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 3421920360683842739, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+  m_PrefabInstance: {fileID: 6721300192181336531}
+  m_PrefabAsset: {fileID: 0}

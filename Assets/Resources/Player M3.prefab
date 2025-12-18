@@ -207,6 +207,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -690,6 +691,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -846,6 +848,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -1360,6 +1363,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -2073,7 +2077,7 @@ MonoBehaviour:
   randomHoldDurationMax: 0.5
   configReady: 0
   warnOnNullRefs: 1
-  inspSalsaLinked: 1
+  inspSalsaLinked: 0
   inspStateFoldoutProcessing: 0
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0
@@ -2317,6 +2321,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -3348,6 +3353,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -4039,6 +4045,8 @@ MonoBehaviour:
   cinemachineCameraTarget: {fileID: 2273771026992959726}
   hideForFirstPersonViewLocal:
   - {fileID: 2305505919387633001}
+  - {fileID: 6580841474740849113}
+  hideForFirstPersonViewLocalGO:
   - {fileID: 5496185558487826999}
   minCameraDistance: 1
   maxCameraDistance: 4
@@ -5101,6 +5109,7 @@ SkinnedMeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   serializedVersion: 2
   m_Quality: 0
   m_UpdateWhenOffscreen: 0
@@ -5367,27 +5376,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchorMax.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchorMin.y
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 141.29999
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 104
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 151.29999
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3347000451897490455, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -52
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3434268101353160747, guid: 3f81ca313e7f91d49b0c90ed30db7da9, type: 3}
       propertyPath: m_Name

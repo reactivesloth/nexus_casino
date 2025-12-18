@@ -1,5 +1,8 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using CC;
 using Unity.Cinemachine;
 using Code.API;
 using Code.UI;
@@ -33,7 +36,9 @@ namespace Code.Player
         [SerializeField] private bool spawnOnSawedPosition = true;
 
         [Header("Camera")] [SerializeField] private GameObject cinemachineCameraTarget;
-        [SerializeField] private GameObject[] hideForFirstPersonViewLocal;
+        [SerializeField] private Renderer[] hideForFirstPersonViewLocal;
+        [SerializeField] private GameObject[] hideForFirstPersonViewLocalGO;
+        private bool hiddenForFPVLocal;
         [SerializeField] private float minCameraDistance = 1f;
         [SerializeField] private float maxCameraDistance = 4f;
         [SerializeField] private float minFOV = 40;
@@ -186,6 +191,8 @@ namespace Code.Player
         private Quaternion smoothedHeadRot;
         private float headSmoothSpeed = 8f; 
         
+        private List<GameObject> playerThingsList;
+        
         private void Awake()
         {
             EnsureInit();
@@ -243,6 +250,31 @@ namespace Code.Player
             Own = this;
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
+
+            Invoke(nameof(PlayerGetHeadThings), 2);
+        }
+
+        private void PlayerGetHeadThings()
+        {
+            playerThingsList = new List<GameObject>();
+
+            foreach (GameObject go in hideForFirstPersonViewLocalGO)
+            {
+                playerThingsList.Add(go);
+            }
+
+            CharacterCustomization cc = gameObject.GetComponent<CharacterCustomization>();
+            if (cc != null)
+            {
+                if (cc.HairObjects != null) cc.HairObjects.ForEach(x => playerThingsList.Add(x));
+                if (cc.ApparelObjects != null)
+                    foreach (var g in cc.ApparelObjects)
+                    {
+                        if (g != null && (g.name.Contains("glasses") || g.name.Contains("eye") || g.name.Contains("head") ||
+                                          g.name.Contains("hair") || g.name.Contains("facial")))
+                            playerThingsList.Add(g);
+                    }
+            }
         }
 
         private void LoadSpawnPosition()
@@ -342,6 +374,23 @@ namespace Code.Player
             bool cursorHidden = (CursorManager.Instance != null && !CursorManager.Instance.IsVisible());
             _cursorUsable = usingMobile || cursorHidden;
 
+            if (hiddenForFPVLocal != !_firstPersonView)
+            {
+                hiddenForFPVLocal = !_firstPersonView;
+
+                if (hideForFirstPersonViewLocal != null)
+                    foreach (var rend in hideForFirstPersonViewLocal)
+                    {
+                        rend.enabled = hiddenForFPVLocal;
+                    }
+
+                if (playerThingsList != null)
+                    foreach (var o in playerThingsList)
+                    {
+                        if (o != null) o.SetActive(hiddenForFPVLocal);
+                    }
+            }            
+            
             if (CanMove || LookCameraLimitRotation)
                 UpdateCameraDistance();
             
