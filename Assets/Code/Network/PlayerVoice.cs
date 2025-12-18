@@ -38,9 +38,18 @@ namespace Code.Network
             {
                 LocalPlayerVoiceInstance = this;
                 if (!VivoxService.Instance.IsLoggedIn)
-                    LoginToVivox();
+                {
+                    VivoxVoiceManager.Instance.LoginToVivox();
+                    InvokeRepeating(nameof(UpdatePos), 0, 0.1f);
+                    savedVolSettings = 0;
+                    isInputMuted = true;
+                    VivoxVoiceManager.Instance.MuteLocalPlayer();
+                }
                 else
-                    LogoutOfVivoxServiceAsync(true);
+                {
+                    VivoxVoiceManager.Instance.LogoutOfVivoxServiceAsync(true);
+                    CancelInvoke(nameof(UpdatePos));
+                }
             }
 
             instances.Add(this);
@@ -51,7 +60,7 @@ namespace Code.Network
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = null;
-                LogoutOfVivoxServiceAsync();
+                VivoxVoiceManager.Instance.LogoutOfVivoxServiceAsync();
             }
 
             instances.Remove(this);
@@ -64,7 +73,7 @@ namespace Code.Network
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = null;
-                LogoutOfVivoxServiceAsync();
+                VivoxVoiceManager.Instance.LogoutOfVivoxServiceAsync();
             }
 
             instances.Remove(this);
@@ -117,44 +126,6 @@ namespace Code.Network
                     VivoxService.Instance.SetOutputDeviceVolume((int)Mathf.Lerp(-40, 10, SettingsManager.Instance.VoiceChatVolume / 100));
                     savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
                 }
-            }
-        }
-
-        private async void LoginToVivox()
-        {
-            var correctedDisplayName = ClientDataStorage.UserData.username;
-                
-            var loginOptions = new LoginOptions
-            {
-                DisplayName = correctedDisplayName,
-                ParticipantUpdateFrequency = ParticipantPropertyUpdateFrequency.FivePerSecond
-            };
-            await VivoxService.Instance.LoginAsync(loginOptions);
-            VivoxVoiceManager.Instance.ConnectToLobbyChannel();
-            InvokeRepeating(nameof(UpdatePos), 0, 0.1f);
-            savedVolSettings = 0;
-            isInputMuted = true;
-            VivoxVoiceManager.Instance.MuteLocalPlayer();
-
-            VivoxService.Instance.VivoxGlobalAudioSettings.PlatformAcousticEchoCancellationEnabled = false;
-            VivoxService.Instance.VivoxGlobalAudioSettings.AudioClippingProtectorEnabled = true;
-            VivoxService.Instance.VivoxGlobalAudioSettings.VivoxAcousticEchoCancellationEnabled = true;
-            VivoxService.Instance.VivoxGlobalAudioSettings.AutomaticGainControlEnabled = true;
-            VivoxService.Instance.VivoxGlobalAudioSettings.NoiseSuppressionEnabled = true;
-            
-            VivoxService.Instance.EnableAcousticEchoCancellation();
-        }
-
-        private void LogoutOfVivoxServiceAsync(bool rejoinAfter = false)
-        {
-            VivoxService.Instance.LogoutAsync();
-
-            VivoxVoiceManager.Instance.DisconnectFromLobbyChannel();
-            CancelInvoke(nameof(UpdatePos));
-
-            if (rejoinAfter)
-            {
-                LoginToVivox();
             }
         }
 
