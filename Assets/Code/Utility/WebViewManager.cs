@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Code.API;
 using CurvedUI;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Vuplex.WebView;
 
@@ -162,6 +163,8 @@ public class WebViewManager : MonoBehaviour
     {
         if (!_initialized || WebView == null || worldCanvas == null) return null;
 
+        if (_view != null) _view.gameObject.SetActive(false);
+        
         _view = CanvasWebViewPrefab.Instantiate(WebView);
         
         _view.Resolution = Application.isMobilePlatform ? 0.5f : 1.0f;
@@ -277,5 +280,26 @@ public class WebViewManager : MonoBehaviour
     private void OnDestroy()
     {
         if (clearAllDataOnClose) _ = ClearAllDataAsync(deepCleanupStandalone);
+    }
+    
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        // Получаем точку клика в локальных координатах WebView (0..1)
+        Vector2 localPoint;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            webViewPrefab.transform as RectTransform, 
+            eventData.position, 
+            eventData.pressEventCamera, 
+            out localPoint
+        );
+
+        // Нормализуем координаты (от 0 до 1)
+        Rect rect = ((RectTransform)webViewPrefab.transform).rect;
+        float x = (localPoint.x - rect.x) / rect.width;
+        float y = (localPoint.y - rect.y) / rect.height;
+
+        // Принудительно отправляем клик в браузер
+        webViewPrefab.WebView.Click(new Vector2(x, y));
+        Debug.Log($"Forced Click at {x}, {y}");
     }
 }
