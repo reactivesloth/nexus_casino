@@ -26,7 +26,7 @@ namespace Code.Utility
 
             // 0 -> -80 dB (почти mute), 1 -> 0 dB
             float v = Mathf.Clamp01(volume01);
-            float dB = v <= 0.0001f ? -80f : 20f * Mathf.Log10(v);
+            float dB = v <= 0.0001f ? -80f : 10f * Mathf.Log10(v);
             audioMixer.SetFloat($"{category}Volume", dB);
         }
 
@@ -36,7 +36,7 @@ namespace Code.Utility
             if (audioMixer != null && audioMixer.GetFloat($"{category}Volume", out float dB))
             {
                 if (dB <= -80f) return 0f;
-                return Mathf.Clamp01(Mathf.Pow(10f, dB / 20f));
+                return Mathf.Clamp01(Mathf.Pow(10f, dB / 10f));
             }
             return 1f;
         }

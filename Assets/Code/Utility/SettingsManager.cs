@@ -11,9 +11,9 @@ namespace Code.Utility
         public static SettingsManager Instance { get; private set; }
 
         // Храним «человеческие» проценты 0..100
-        private const float DefaultVoiceChatVolume = 50f;
-        private const float DefaultMusicVolume     = 30f;
-        private const float DefaultSlotsVolume     = 30f;
+        private const float DefaultVoiceChatVolume = 80f;
+        private const float DefaultMusicVolume     = 5f;
+        private const float DefaultSlotsVolume     = 15f;
         private const float DefaultSFXVolume       = 30f;
         private int DefaultGraphicsQuality => QualitySettings.GetQualityLevel();
         private const bool  DefaultEffectsEnabled  = true;
