@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Code.API;
 using PlayFlow;
 using Unity.Services.Core;
 using Unity.Services.Vivox;
@@ -78,14 +77,6 @@ namespace Code.Network
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
             Participants = new List<VivoxParticipant>();
-            
-            VivoxService.Instance.VivoxGlobalAudioSettings.PlatformAcousticEchoCancellationEnabled = false;
-            VivoxService.Instance.VivoxGlobalAudioSettings.AudioClippingProtectorEnabled = true;
-            VivoxService.Instance.VivoxGlobalAudioSettings.VivoxAcousticEchoCancellationEnabled = true;
-            VivoxService.Instance.VivoxGlobalAudioSettings.AutomaticGainControlEnabled = true;
-            VivoxService.Instance.VivoxGlobalAudioSettings.NoiseSuppressionEnabled = true;
-            
-            VivoxService.Instance.EnableAcousticEchoCancellation();
         }
 
         private void OnParticipantAdded(VivoxParticipant participant)
@@ -145,38 +136,6 @@ namespace Code.Network
         {
             VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
-            LogoutOfVivoxServiceAsync();
-        }
-        
-        public async void LoginToVivox()
-        {
-            var correctedDisplayName = ClientDataStorage.UserData.username;
-                
-            var loginOptions = new LoginOptions
-            {
-                DisplayName = correctedDisplayName,
-                ParticipantUpdateFrequency = ParticipantPropertyUpdateFrequency.FivePerSecond
-            };
-            await VivoxService.Instance.LoginAsync(loginOptions);
-            ConnectToLobbyChannel();
-            MuteLocalPlayer();
-        }
-
-        public void LogoutOfVivoxServiceAsync(bool rejoinAfter = false)
-        {
-            VivoxService.Instance.LogoutAsync();
-
-            DisconnectFromLobbyChannel();
-            
-            if (rejoinAfter)
-            {
-                LoginToVivox();
-            }
-        }
-
-        private void OnApplicationQuit()
-        {
-            LogoutOfVivoxServiceAsync();
         }
     }
 }

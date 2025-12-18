@@ -38,18 +38,9 @@ namespace Code.Network
             {
                 LocalPlayerVoiceInstance = this;
                 if (!VivoxService.Instance.IsLoggedIn)
-                {
-                    VivoxVoiceManager.Instance.LoginToVivox();
-                    InvokeRepeating(nameof(UpdatePos), 0, 0.1f);
-                    savedVolSettings = 0;
-                    isInputMuted = true;
-                    VivoxVoiceManager.Instance.MuteLocalPlayer();
-                }
+                    LoginToVivox();
                 else
-                {
-                    VivoxVoiceManager.Instance.LogoutOfVivoxServiceAsync(true);
-                    CancelInvoke(nameof(UpdatePos));
-                }
+                    LogoutOfVivoxServiceAsync(true);
             }
 
             instances.Add(this);
@@ -60,7 +51,7 @@ namespace Code.Network
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = null;
-                VivoxVoiceManager.Instance.LogoutOfVivoxServiceAsync();
+                LogoutOfVivoxServiceAsync();
             }
 
             instances.Remove(this);
@@ -73,7 +64,7 @@ namespace Code.Network
             if (IsOwner)
             {
                 LocalPlayerVoiceInstance = null;
-                VivoxVoiceManager.Instance.LogoutOfVivoxServiceAsync();
+                LogoutOfVivoxServiceAsync();
             }
 
             instances.Remove(this);
@@ -96,17 +87,10 @@ namespace Code.Network
                 {
                     if (participant != null)
                     {
-                        if (participant.SpeechDetected)
-                        {
-                            var audioEnergy = participant.AudioEnergy;
-                            if (participant.IsMuted) audioEnergy = 0f;
-                            if (audioEnergy < 0.01f) audioEnergy = 0f;
-                            salsa.analysisValue = (float)audioEnergy;
-                        }
-                        else
-                        {
-                            salsa.analysisValue = 0;
-                        }
+                        var audioEnergy = participant.AudioEnergy;
+                        if (participant.IsMuted) audioEnergy = 0f;
+                        if (audioEnergy < 0.01f) audioEnergy = 0f;
+                        salsa.analysisValue = (float)audioEnergy;
                     }
                 }
 
@@ -129,6 +113,31 @@ namespace Code.Network
             }
         }
 
+        private async void LoginToVivox()
+        {
+            var correctedDisplayName = ClientDataStorage.UserData.username;
+                
+            var loginOptions = new LoginOptions
+            {
+                DisplayName = correctedDisplayName,
+                ParticipantUpdateFrequency = ParticipantPropertyUpdateFrequency.FivePerSecond
+            };
+            await VivoxService.Instance.LoginAsync(loginOptions);
+            VivoxVoiceManager.Instance.ConnectToLobbyChannel();
+            InvokeRepeating(nameof(UpdatePos), 0, 0.1f);
+            savedVolSettings = 0;
+            isInputMuted = true;
+            VivoxVoiceManager.Instance.MuteLocalPlayer();
+
+            VivoxService.Instance.VivoxGlobalAudioSettings.PlatformAcousticEchoCancellationEnabled = false;
+            VivoxService.Instance.VivoxGlobalAudioSettings.AudioClippingProtectorEnabled = true;
+            VivoxService.Instance.VivoxGlobalAudioSettings.VivoxAcousticEchoCancellationEnabled = true;
+            VivoxService.Instance.VivoxGlobalAudioSettings.AutomaticGainControlEnabled = true;
+            VivoxService.Instance.VivoxGlobalAudioSettings.NoiseSuppressionEnabled = true;
+            
+            VivoxService.Instance.EnableAcousticEchoCancellation();
+        }
+
         private void LogoutOfVivoxServiceAsync(bool rejoinAfter = false)
         {
             VivoxService.Instance.LogoutAsync();
@@ -138,7 +147,7 @@ namespace Code.Network
 
             if (rejoinAfter)
             {
-                VivoxVoiceManager.Instance.LoginToVivox();
+                LoginToVivox();
             }
         }
 
