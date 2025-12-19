@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Code.API;
 using PlayFlow;
 using Unity.Services.Core;
 using Unity.Services.Vivox;
@@ -12,12 +13,9 @@ namespace Code.Network
     {
         public const string LobbyChannelName = "lobbyChannel";
 
-        // Check to see if we're about to be destroyed.
         private static object m_Lock = new object();
         private static VivoxVoiceManager m_Instance;
 
-        //These variables should be set to the projects Vivox credentials if the authentication package is not being used
-        //Credentials are available on the Vivox Developer Portal (developer.vivox.com) or the Unity Dashboard (dashboard.unity3d.com), depending on where the organization and project were made
         [SerializeField] private string key;
         [SerializeField] private string issuer;
         [SerializeField] private string domain;
@@ -25,9 +23,6 @@ namespace Code.Network
 
         public List <VivoxParticipant> Participants;
         
-        /// <summary>
-        /// Access singleton instance through this propriety.
-        /// </summary>
         public static VivoxVoiceManager Instance
         {
             get
@@ -36,20 +31,16 @@ namespace Code.Network
                 {
                     if (m_Instance == null)
                     {
-                        // Search for existing instance.
                         m_Instance = (VivoxVoiceManager)FindObjectOfType(typeof(VivoxVoiceManager));
 
-                        // Create new instance if one doesn't already exist.
                         if (m_Instance == null)
                         {
-                            // Need to create a new GameObject to attach the singleton to.
                             var singletonObject = new GameObject();
                             m_Instance = singletonObject.AddComponent<VivoxVoiceManager>();
                             singletonObject.name = typeof(VivoxVoiceManager).ToString() + " (Singleton)";
                         }
                     }
 
-                    // Make instance persistent even if its already in the scene
                     DontDestroyOnLoad(m_Instance.gameObject);
                     return m_Instance;
                 }
@@ -70,13 +61,43 @@ namespace Code.Network
             {
                 options.SetVivoxCredentials(server, domain, issuer, key);
             }
-
+            
             await UnityServices.InitializeAsync(options);
             await VivoxService.Instance.InitializeAsync();
 
+            VivoxService.Instance.AvailableInputDevicesChanged += OnAvailableInputDevicesChanged;
             VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
             VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
+            
             Participants = new List<VivoxParticipant>();
+            
+            TrySelectBestInputDevice(); 
+        }
+        
+        private void OnAvailableInputDevicesChanged()
+        {
+            Debug.Log("[VivoxVoiceManager] Input devices changed. Checking for valid microphone...");
+            TrySelectBestInputDevice();
+        }
+
+        private void TrySelectBestInputDevice()
+        {
+            if (!VivoxService.Instance.IsLoggedIn) return;
+
+            var current = VivoxService.Instance.ActiveInputDevice;
+            if (current != null && !current.DeviceName.Contains("No Device") && !string.IsNullOrEmpty(current.DeviceName))
+            {
+                return;
+            }
+
+            var devices = VivoxService.Instance.AvailableInputDevices;
+            var bestDevice = devices.FirstOrDefault(d => !d.DeviceName.Contains("No Device"));
+
+            if (bestDevice != null)
+            {
+                Debug.Log($"[VivoxVoiceManager] Auto-switching input to: {bestDevice.DeviceName}");
+                VivoxService.Instance.SetActiveInputDeviceAsync(bestDevice);
+            }
         }
 
         private void OnParticipantAdded(VivoxParticipant participant)
@@ -100,6 +121,9 @@ namespace Code.Network
 
         public void SetLocalPosition(GameObject localObject)
         {
+            if (PlayFlowLobbyManagerV2.Instance?.CurrentLobby == null) return;
+            if (VivoxService.Instance == null || !VivoxService.Instance.IsLoggedIn) return;
+
             VivoxService.Instance.Set3DPosition(localObject, PlayFlowLobbyManagerV2.Instance.CurrentLobby.id);
         }
 
@@ -113,6 +137,115 @@ namespace Code.Network
             VivoxService.Instance.UnmuteInputDevice();
         }
 
+        public async Task LoginToVivoxAsync(string displayName)
+        {
+            if (VivoxService.Instance.IsLoggedIn)
+            {
+                Debug.Log("[VivoxVoiceManager] Already logged in.");
+                return;
+            }
+
+            Debug.Log($"[VivoxVoiceManager] Logging in as {displayName}...");
+
+            var loginOptions = new LoginOptions
+            {
+                DisplayName = displayName,
+                ParticipantUpdateFrequency = ParticipantPropertyUpdateFrequency.FivePerSecond
+            };
+
+            try 
+            {
+                await VivoxService.Instance.LoginAsync(loginOptions);
+                Debug.Log("[VivoxVoiceManager] Login successful.");
+                
+                ApplyAudioProcessingSettings();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[VivoxVoiceManager] Login failed: {e.Message}");
+            }
+        }
+        
+        public void OnMicrophonePermissionGranted()
+        {
+        #if !UNITY_ANDROID
+            return; 
+        #endif
+            
+            Debug.Log("[VivoxVoiceManager] Permission granted. Force restarting session for Android...");
+            RestartVivoxSession();
+        }
+        
+        public async void RestartVivoxSession()
+        {
+            if (!VivoxService.Instance.IsLoggedIn) return;
+
+            Debug.Log("[VivoxVoiceManager] Restarting Vivox Session...");
+
+            string oldName = ClientDataStorage.UserData.username;
+
+            await VivoxService.Instance.LogoutAsync();
+
+            await Task.Delay(500);
+
+            await LoginToVivoxAsync(oldName);
+
+            ConnectToLobbyChannel();
+        }
+        
+        private void ApplyAudioProcessingSettings()
+        {
+            var audioSettings = VivoxService.Instance.VivoxGlobalAudioSettings;
+            bool hasHardwareAEC = IsHardwareAECSupported();
+
+            if (hasHardwareAEC)
+            {
+                Debug.Log("[VivoxVoiceManager] Configuring for Hardware AEC (Best Performance)");
+
+                audioSettings.PlatformAcousticEchoCancellationEnabled = true;
+
+                audioSettings.VivoxAcousticEchoCancellationEnabled = false;
+            }
+            else
+            {
+                Debug.Log("[VivoxVoiceManager] Configuring for Software AEC (Vivox Algorithm)");
+
+                audioSettings.PlatformAcousticEchoCancellationEnabled = false;
+
+                audioSettings.VivoxAcousticEchoCancellationEnabled = true;
+            }
+
+            audioSettings.NoiseSuppressionEnabled = true;
+        
+            audioSettings.AutomaticGainControlEnabled = true;
+            audioSettings.AudioClippingProtectorEnabled = true;
+
+            Debug.Log($"[VivoxVoiceManager] Audio Settings Applied: \n" +
+                      $"PlatformAEC: {audioSettings.PlatformAcousticEchoCancellationEnabled}, \n" +
+                      $"VivoxAEC: {audioSettings.VivoxAcousticEchoCancellationEnabled}");
+        }
+        
+        private bool IsHardwareAECSupported()
+        {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        try
+        {
+            using (var aecClass = new AndroidJavaClass("android.media.audiofx.AcousticEchoCanceler"))
+            {
+                bool available = aecClass.CallStatic<bool>("isAvailable");
+                Debug.Log($"[VivoxVoiceManager] Hardware AEC Support: {available}");
+                return available;
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"[VivoxVoiceManager] Failed to check Hardware AEC: {e.Message}");
+            return false;
+        }
+#else
+            return false;
+#endif
+        }
         public void ConnectToLobbyChannel()
         {
             Participants.Clear();
@@ -134,8 +267,12 @@ namespace Code.Network
 
         private void OnDestroy()
         {
-            VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
-            VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
+            if (VivoxService.Instance != null)
+            {
+                VivoxService.Instance.AvailableInputDevicesChanged -= OnAvailableInputDevicesChanged;
+                VivoxService.Instance.ParticipantAddedToChannel -= OnParticipantAdded;
+                VivoxService.Instance.ParticipantRemovedFromChannel -= OnParticipantRemoved;
+            }
         }
     }
 }

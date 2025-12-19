@@ -42,10 +42,6 @@ namespace Code.Player
                 return;
             }
 
-            // Логика TOGGLE (по нажатию):
-            // Если кнопка нажата (и прошёл debounce saveTime):
-            // 1. Если микрофон уже включен (voiceHeld) -> выключаем.
-            // 2. Если выключен -> проверяем права и включаем.
             if (PlayerInput.Instance.VoiceHeld)
             {
                 if (voiceHeld)
@@ -81,14 +77,12 @@ namespace Code.Player
             if (_permissionRequestInFlight)
                 return;
 
-            // Если Android говорит, что нужно объяснить (обычно после отказа, но до "Don't ask again")
             if (Permission.ShouldShowRequestPermissionRationale(MicPermission))
             {
                 ShowShouldAskPopup();
                 return;
             }
 
-            // Иначе - либо первый раз, либо уже заблокировано. Пробуем запросить.
             RequestMicPermission();
         }
 
@@ -103,7 +97,6 @@ namespace Code.Player
             _permissionCallbacks.PermissionGranted += OnPermissionGranted;
             _permissionCallbacks.PermissionDenied += OnPermissionDenied;
 
-            // Запоминаем, что мы хотя бы раз пытались запросить (для определения "Don't ask again" в будущем)
             PlayerPrefs.SetInt(MicRequestedOnceKey, 1);
             PlayerPrefs.Save();
 
@@ -115,6 +108,14 @@ namespace Code.Player
             if (permission != MicPermission) return;
 
             _permissionRequestInFlight = false;
+            
+#if UNITY_ANDROID
+            if (VivoxVoiceManager.Instance != null)
+            {
+                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
+            }
+#endif
+            
             VoiceChatHandle(true);
         }
 
@@ -129,20 +130,14 @@ namespace Code.Player
 
             if (shouldShowRationale)
             {
-                // Пользователь отказал, но "Don't ask again" не нажато -> предлагаем попробовать ещё раз
                 ShowShouldAskPopup();
                 return;
             }
 
-            // Если shouldShowRationale == false:
-            // 1. Либо это первый запрос (но мы уже сохранили requestedOnce=1 перед вызовом, так что этот кейс отсекаем проверкой requestedOnce,
-            //    но на всякий случай, если logic flow изменится, первый раз лучше не пугать настройками).
-            // 2. Либо "Don't ask again" (ведение в настройки).
-
             if (requestedOnce)
-                ShowDeniedPopup();    // Уже спрашивали, значит это блок -> настройки
+                ShowDeniedPopup();
             else
-                ShowShouldAskPopup(); // На всякий случай fallback -> обычный попап
+                ShowShouldAskPopup();
         }
 
         private void ShowShouldAskPopup()
@@ -167,7 +162,11 @@ namespace Code.Player
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
 
-            okButton.OnClickedEvent.AddListener(RequestMicPermission);
+            okButton.OnClickedEvent.AddListener( () =>
+            {
+                RequestMicPermission();
+                _popupOpener.ClosePopup();
+            });
             cancelButton.OnClickedEvent.AddListener(_popupOpener.ClosePopup);
 
             _popupOpener.Buttons.Add(okButton);
@@ -190,7 +189,11 @@ namespace Code.Player
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
 
-            okButton.OnClickedEvent.AddListener(OpenAppSettings);
+            okButton.OnClickedEvent.AddListener( () =>
+            {
+                OpenAppSettings();
+                _popupOpener.ClosePopup();
+            });
 
             _popupOpener.Buttons.Add(okButton);
             _popupOpener.OpenPopup();
@@ -212,20 +215,19 @@ namespace Code.Player
                 uri
             );
 
-            intent.Call<AndroidJavaObject>("addFlags", 0x10000000); // FLAG_ACTIVITY_NEW_TASK
+            intent.Call<AndroidJavaObject>("addFlags", 0x10000000);
             activity.Call("startActivity", intent);
         }
 #endif
 
         public void VoiceChatHandle(bool value)
         {
-            // Debounce, чтобы одно нажатие не переключало статус много раз подряд
             saveTime = 0.2f;
 
             voiceHeld = value;
 
             if (PlayerVoice.LocalPlayerVoiceInstance != null)
-                PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = !voiceHeld;
+                PlayerVoice.LocalPlayerVoiceInstance.SetMuteState (!voiceHeld);
 
             if (mobileButtonImage != null)
             {
