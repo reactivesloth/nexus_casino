@@ -36,7 +36,7 @@ public class PlayerInput : MonoBehaviour
     public GameObject mobileCanvas;
     public UltimateJoystick MoveJoystick;
     public UltimateTouchpad LookArea;
-    //public UltimateButton JumpButton;
+    public UltimateButton JumpButton;
     public UltimateButton InteractButton;
     public UltimateButton CameraSwitchButton;
     public UltimateButton PauseButton;
@@ -157,7 +157,7 @@ public class PlayerInput : MonoBehaviour
             if (HideMobileFallback != savedHideMobileFallback)
             {
                 if (MoveJoystick != null)      MoveJoystick.gameObject.SetActive(!HideMobileFallback);
-                //if (JumpButton != null)        JumpButton.gameObject.SetActive(!HideMobileFallback);
+                if (JumpButton != null)        JumpButton.gameObject.SetActive(!HideMobileFallback);
                 if (OpenEmoteWheelButton != null)   OpenEmoteWheelButton.gameObject.SetActive(!HideMobileFallback);
                 
                 savedHideMobileFallback = HideMobileFallback;
@@ -231,7 +231,7 @@ public class PlayerInput : MonoBehaviour
         IsRadialMenuOpen = value;
     }
     
-    public bool JumpDown  => false;//!IsChatOpened && !IsBusy && (IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : _player.Jump is { triggered: true });
+    public bool JumpDown  => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && JumpButton != null ? JumpButton.GetButtonDown() : _player.Jump is { triggered: true });
     public bool VoiceHeld => IsUsingMobileFallback && VoiceButton != null ? VoiceButton.GetButton() : _player.Voice is {triggered: true};
     public bool SprintHeld => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && MoveJoystick != null ? Mathf.Abs(MoveJoystick.VerticalAxis) > 0.85f || Mathf.Abs(MoveJoystick.HorizontalAxis) > 0.85f : _player.Sprint != null && _player.Sprint.ReadValue<float>() > 0.5f);
     public bool CameraSwitchDown => !IsChatOpened && !IsBusy && (IsUsingMobileFallback && CameraSwitchButton != null ? CameraSwitchButton.GetButtonDown() : _player.CameraSwitch is { triggered: true });
