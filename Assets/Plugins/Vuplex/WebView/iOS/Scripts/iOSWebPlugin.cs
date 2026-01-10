@@ -38,7 +38,7 @@ namespace Vuplex.WebView {
         // Deprecated
         public void CreateMaterial(Action<Material> callback) {
 
-            var material = new Material(Resources.Load<Material>("iOSWebMaterial"));
+            var material = new Material(Resources.Load<Material>("AppleWebMaterial"));
             callback(material);
         }
 

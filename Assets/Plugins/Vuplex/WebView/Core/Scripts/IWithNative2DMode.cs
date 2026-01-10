@@ -78,7 +78,9 @@ namespace Vuplex.WebView {
 
         /// <summary>
         /// Sets whether the native 2D webview's pinch-to-zoom behavior
-        /// is enabled. The default is `true`.
+        /// is enabled. The default is `true`. Native pinch-to-zoom
+        /// gestures are only supported on Android and iOS. On other platforms,
+        /// calls to this method are ignored.
         /// </summary>
         /// <example>
         /// <code>
@@ -96,8 +98,15 @@ namespace Vuplex.WebView {
         void SetRect(Rect rect);
 
         /// <summary>
-        /// Sets whether the native 2D webview is visible.
+        /// Sets whether the native 2D webview is visible. The default is `true`.
         /// </summary>
+        /// <example>
+        /// <code>
+        /// await canvasWebViewPrefab.WaitUntilInitialized();
+        /// var native2DWebView = canvasWebViewPrefab.WebView as IWithNative2DMode;
+        /// native2DWebView?.SetVisible(false);
+        /// </code>
+        /// </example>///
         /// <seealso cref="CanvasWebViewPrefab.Visible"/>
         /// <seealso cref="IWithNative2DMode.Visible"/>
         void SetVisible(bool visible);

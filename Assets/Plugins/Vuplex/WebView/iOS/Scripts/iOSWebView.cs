@@ -39,6 +39,7 @@ namespace Vuplex.WebView {
                               IWithNativeJavaScriptDialogs,
                               IWithNativeOnScreenKeyboard,
                               IWithPdfCreation,
+                              IWithPixelDensity,
                               IWithPointerDownAndUp,
                               IWithPopups,
                               IWithSettableUserAgent {
@@ -48,6 +49,9 @@ namespace Vuplex.WebView {
 
         /// <see cref="IWithNative2DMode"/>
         public bool Native2DModeEnabled { get => _native2DModeEnabled; }
+
+        /// <see cref="IWithPixelDensity"/>
+        public float PixelDensity { get; private set; } = 1f;
 
         public WebPluginType PluginType { get; } = WebPluginType.iOS;
 
@@ -150,17 +154,6 @@ namespace Vuplex.WebView {
         }
 
         public static void ClearAllData() => WebView_clearAllData();
-
-        public override void Click(int xInPixels, int yInPixels, bool preventStealingFocus = false) {
-
-            _assertValidState();
-            _assertPointIsWithinBounds(xInPixels, yInPixels);
-            if (preventStealingFocus) {
-                WebView_clickWithoutStealingFocus(_nativeWebViewPtr, xInPixels, yInPixels);
-            } else {
-                WebView_click(_nativeWebViewPtr, xInPixels, yInPixels);
-            }
-        }
 
         /// <see cref="IWithPdfCreation"/>
         public Task<string> CreatePdf() {
@@ -301,7 +294,7 @@ namespace Vuplex.WebView {
         }
 
         /// <see cref="IWithPointerDownAndUp"/>
-        public void PointerUp(Vector2 point) => _pointerUp(point, MouseButton.Left, 1);
+        public void PointerUp(Vector2 point) => _pointerUp(point, MouseButton.Left, 1, false);
 
         /// <see cref="IWithPointerDownAndUp"/>
         public void PointerUp(Vector2 point, PointerOptions options) {
@@ -309,18 +302,19 @@ namespace Vuplex.WebView {
             if (options == null) {
                 options = new PointerOptions();
             }
-            _pointerUp(point, options.Button, options.ClickCount);
+            _pointerUp(point, options.Button, options.ClickCount, options.PreventStealingFocus);
         }
 
         /// <summary>
-        /// Sets whether horizontal swipe gestures trigger backward and forward page navigation.
-        /// The default is `false`.
+        /// When Native 2D Mode is enabled, this method sets whether horizontal swipe
+        /// gestures trigger backward and forward page navigation. The default is `false`.
+        /// When Native 2D Mode is disabled, this method has no effect.
         /// </summary>
         /// <example>
         /// <code>
-        /// await webViewPrefab.WaitUntilInitialized();
+        /// await canvasWebViewPrefab.WaitUntilInitialized();
         /// #if UNITY_IOS &amp;&amp; !UNITY_EDITOR
-        ///     var iOSWebViewInstance = webViewPrefab.Webview as iOSWebView;
+        ///     var iOSWebViewInstance = canvasWebViewPrefab.Webview as iOSWebView;
         ///     iOSWebViewInstance.SetAllowsBackForwardNavigationGestures(true);
         /// #endif
         /// </code>
@@ -348,6 +342,8 @@ namespace Vuplex.WebView {
         public static void SetAllowsInlineMediaPlayback(bool allow) => WebView_setAllowsInlineMediaPlayback(allow);
 
         public static void SetAutoplayEnabled(bool enabled) => WebView_setAutoplayEnabled(enabled);
+
+        public static void SetCameraAndMicrophoneEnabled(bool enabled) => WebView_setCameraAndMicrophoneEnabled(enabled);
 
         /// <summary>
         /// Like Web.SetCameraAndMicrophoneEnabled(), but enables only the camera without enabling the microphone.
@@ -501,6 +497,18 @@ namespace Vuplex.WebView {
             _assertValidState();
             _assertNative2DModeEnabled();
             WebView_setNativeZoomEnabled(_nativeWebViewPtr, enabled);
+        }
+
+        /// <see cref="IWithPixelDensity"/>
+        public void SetPixelDensity(float pixelDensity) {
+
+            if (pixelDensity <= 0f || pixelDensity > 10) {
+                throw new ArgumentException($"Invalid pixel density: {pixelDensity}. The pixel density must be between 0 and 10 (exclusive).");
+            }
+            PixelDensity = pixelDensity;
+            if (IsInitialized) {
+                _resize();
+            }
         }
 
         /// <see cref="IWithPopups"/>
@@ -706,6 +714,7 @@ namespace Vuplex.WebView {
                 if (Native2DModeEnabled) {
                     await popupWebView._initIOS2D(Rect, nativePopupWebViewPtr);
                 } else {
+                    popupWebView.PixelDensity = PixelDensity;
                     await popupWebView._initIOS3D(Size.x, Size.y, nativePopupWebViewPtr);
                 }
             }
@@ -723,7 +732,7 @@ namespace Vuplex.WebView {
             _currentVideoNativeTexture = nativeTexture;
             VideoTexture.UpdateExternalTexture(_currentVideoNativeTexture);
             if (previousNativeTexture != IntPtr.Zero && previousNativeTexture != _currentVideoNativeTexture) {
-                WebView_destroyTexture(previousNativeTexture, SystemInfo.graphicsDeviceType.ToString());
+                _nativePlugin.DestroyTexture(previousNativeTexture, SystemInfo.graphicsDeviceType.ToString());
             }
         }
 
@@ -737,7 +746,7 @@ namespace Vuplex.WebView {
         )]
         static void _initializePlugin() {
 
-            WebView_setCookieCallbacks(
+            WebView_initializePlugin(
                 Marshal.GetFunctionPointerForDelegate<Action<string, string>>(_handleGetCookiesResult),
                 Marshal.GetFunctionPointerForDelegate<Action<string>>(_handleDeleteCookiesResult)
             );
@@ -767,6 +776,7 @@ namespace Vuplex.WebView {
                 gameObject.name,
                 width,
                 height,
+                PixelDensity,
                 FallbackVideoEnabled,
                 SystemInfo.graphicsDeviceType != GraphicsDeviceType.Metal,
                 popupNativeWebView
@@ -785,11 +795,11 @@ namespace Vuplex.WebView {
             WebView_pointerDown(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount, preventStealingFocus);
         }
 
-        void _pointerUp(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount) {
+        void _pointerUp(Vector2 normalizedPoint, MouseButton mouseButton, int clickCount, bool preventStealingFocus) {
 
             _assertValidState();
             var pixelsPoint = _normalizedToPointAssertValid(normalizedPoint);
-            WebView_pointerUp(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount);
+            WebView_pointerUp(_nativeWebViewPtr, pixelsPoint.x, pixelsPoint.y, (int)mouseButton, clickCount, preventStealingFocus);
         }
 
         IEnumerator _renderPluginOncePerFrame() {
@@ -806,6 +816,8 @@ namespace Vuplex.WebView {
                 GL.IssuePluginEvent(WebView_getRenderFunction(), pointerId);
             }
         }
+
+        protected override void _resize() => WebView_resizeWithPixelDensity(_nativeWebViewPtr, Size.x, Size.y, PixelDensity);
 
         #pragma warning disable CS0649
         [Serializable]
@@ -837,9 +849,6 @@ namespace Vuplex.WebView {
         static extern void WebView_clearAllData();
 
         [DllImport(_dllName)]
-        static extern void WebView_clickWithoutStealingFocus(IntPtr webViewPtr, int x, int y);
-
-        [DllImport(_dllName)]
         static extern void WebView_createPdf(IntPtr webViewPtr, string resultCallbackId, string filePath);
 
         [DllImport(_dllName)]
@@ -869,6 +878,9 @@ namespace Vuplex.WebView {
         [DllImport(_dllName)]
         static extern void WebView_globallySetUserAgent(string userAgent);
 
+        [DllImport(_dllName)]
+        static extern int WebView_initializePlugin(IntPtr getCookiesCallback, IntPtr deleteCookiesCallback);
+
         [DllImport (_dllName)]
         static extern void WebView_movePointer(IntPtr webViewPtr, int x, int y, bool pointerLeave);
 
@@ -877,6 +889,7 @@ namespace Vuplex.WebView {
             string gameObjectName,
             int width,
             int height,
+            float pixelDensity,
             bool fallbackVideoSupportEnabled,
             bool useOpenGL,
             IntPtr popupNativeWebView
@@ -896,7 +909,10 @@ namespace Vuplex.WebView {
         static extern void WebView_pointerDown(IntPtr webViewPtr, int x, int y, int mouseButton, int clickCount, bool preventStealingFocus);
 
         [DllImport (_dllName)]
-        static extern void WebView_pointerUp(IntPtr webViewPtr, int x, int y, int mouseButton, int clickCount);
+        static extern void WebView_pointerUp(IntPtr webViewPtr, int x, int y, int mouseButton, int clickCount, bool preventStealingFocus);
+
+        [DllImport (_dllName)]
+        static extern void WebView_resizeWithPixelDensity(IntPtr webViewPtr, int width, int height, float pixelDensity);
 
         [DllImport(_dllName)]
         static extern void WebView_setAllowsBackForwardNavigationGestures(IntPtr webViewPtr, bool allow);
@@ -914,10 +930,10 @@ namespace Vuplex.WebView {
         static extern void WebView_setCameraEnabled(bool enabled);
 
         [DllImport(_dllName)]
-        static extern void WebView_setCookie(string serializedCookie);
+        static extern void WebView_setCameraAndMicrophoneEnabled(bool enabled);
 
         [DllImport(_dllName)]
-        static extern int WebView_setCookieCallbacks(IntPtr getCookiesCallback, IntPtr deleteCookiesCallback);
+        static extern void WebView_setCookie(string serializedCookie);
 
         [DllImport(_dllName)]
         static extern void WebView_setDeepLinkingEnabled(IntPtr webViewPtr, bool enabled);

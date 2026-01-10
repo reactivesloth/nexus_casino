@@ -43,6 +43,28 @@ namespace Vuplex.WebView.Editor {
             }
         }
 
+        public static void DeleteAssets(string[] fileNamesWithoutExtensions) {
+
+            // By default, FindAssets() searches both the Assets and Packages folders of the project.
+            // Unity's documentation for AssetsDatabase.FindAssets() makes it sound like you can search for multiple
+            // files at once by providing a space-delimited list of file names. However, I've found that this is not
+            // the case, as that will return zero results, not matching any of the files listed. So, it's necessary
+            // to call AssetDatabase.FindAssets() separately for each file name.
+            foreach (var fileNameWithoutExtension in fileNamesWithoutExtensions) {
+                var guids = AssetDatabase.FindAssets(fileNameWithoutExtension);
+                foreach (var guid in guids) {
+                    var filePath = AssetDatabase.GUIDToAssetPath(guid);
+                    // The AssetDatabase.DeleteAssets() method for deleting multiple assets at once requires Unity 2020.1 or newer.
+                    // So, in order to support Unity 2019.4, use multiple calls to AssetDatabase.DeleteAsset() for now.
+                    var fileName = Path.GetFileName(filePath);
+                    var successfullyDeleted = AssetDatabase.DeleteAsset(filePath);
+                    if (successfullyDeleted) {
+                        WebViewLogger.Log($"Automatically deleted obsolete file {fileName} as part of an upgrade. (Path: {filePath})");
+                    }
+                }
+            }
+        }
+
         public static void DrawLink(string linkText, string url, int underlineLength) {
 
             var linkStyle = new GUIStyle {
@@ -121,6 +143,38 @@ namespace Vuplex.WebView.Editor {
         }
 
         public static string GetLinkColor() => EditorGUIUtility.isProSkin ? "#7faef0ff" : "#11468aff";
+
+        public static void SetPluginEnabled(string pluginExpectedPath, bool enable, BuildTarget platform) {
+
+            string absolutePath;
+            try {
+                var expectedAbsolutePath = Path.Combine(Application.dataPath, pluginExpectedPath);
+                if (Path.GetExtension(pluginExpectedPath) == ".bundle") {
+                    absolutePath = FindDirectory(expectedAbsolutePath);
+                } else {
+                    absolutePath = FindFile(expectedAbsolutePath);
+                }
+            } catch (Exception ex) {
+                #if VUPLEX_INTERNAL
+                    return;
+                #else
+                    throw ex;
+                #endif
+            }
+            var relativePath = absolutePath.Replace(Application.dataPath, "Assets");
+            var pluginImporter = (PluginImporter)PluginImporter.GetAtPath(relativePath);
+            // Note: this script used to only update the settings if
+            // `pluginImporter.GetCompatibleWithPlatform(platform) != enable`, but some users
+            // reported that GetCompatibleWithPlatform() returned an incorrect value, so as a workaround,
+            // it updates the settings on every build.
+            pluginImporter.SetCompatibleWithAnyPlatform(false);
+            pluginImporter.SetCompatibleWithPlatform(platform, enable);
+            if (platform == BuildTarget.StandaloneWindows64 || platform == BuildTarget.StandaloneOSX) {
+                pluginImporter.SetCompatibleWithEditor(enable);
+            }
+            pluginImporter.SetPlatformData(platform, "CPU", "AnyCPU");
+            pluginImporter.SaveAndReimport();
+        }
 
         public static string TextWithColor(string text, string color) => $"<color={color}>{text}</color>";
 

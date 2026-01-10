@@ -25,7 +25,6 @@ namespace Vuplex.WebView.Editor {
     /// </summary>
     public class StandaloneVideoCodecsWindow : EditorWindow {
 
-        [MenuItem("Vuplex/Enable Proprietary Video Codecs")]
         public static void ShowWindow() {
 
             // Use GetWindow() instead of GetWindowWithRect() because the latter
@@ -207,7 +206,7 @@ However, 3D WebView also includes a second, optional build of Chromium with prop
                 GUILayout.FlexibleSpace();
                 GUI.enabled = _checkboxEnabled;
                 var enableCodecsButtonClicked = GUILayout.Button(
-                    "Enable Proprietary Video Codecs",
+                    "Enable proprietary video codecs",
                     new GUILayoutOption[] { GUILayout.ExpandWidth(false) }
                 );
                 GUI.enabled = true;

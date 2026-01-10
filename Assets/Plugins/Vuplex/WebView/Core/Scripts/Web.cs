@@ -32,6 +32,25 @@ namespace Vuplex.WebView {
     public static class Web {
 
         /// <summary>
+        /// Sets whether 3D WebView automatically enables Input Method Editor (IME) on Windows and macOS
+        /// when it detects that the system language is Chinese, Japanese, or Korean. The default is `true`.
+        /// When this is enabled, 3D WebView automatically enables IME by setting Input.imeCompositionMode to IMECompositionMode.On.
+        /// Set this field to `false` if you instead want your application to manually handle enabling and disabling IME.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// void Awake() {
+        ///     // Disable IME.
+        ///     Input.imeCompositionMode = IMECompositionMode.Off;
+        ///     // Prevent 3D WebView from automatically re-enabling IME.
+        ///     Web.AutoEnableIme = false;
+        /// }
+        /// </code>
+        /// </example>
+        /// <seealso href="https://support.vuplex.com/articles/chinese-japanese-and-korean">How to enable IME for entering Chinese, Japanese, and Korean text input?</seealso>
+        public static bool AutoEnableIme = true;
+
+        /// <summary>
         /// Returns the ICookieManager for managing HTTP cookies, or `null` if ICookieManager
         /// isn't supported on the current platform.
         /// </summary>
@@ -182,7 +201,7 @@ namespace Vuplex.WebView {
         ///     On Windows and macOS, this method cannot be executed while the Chromium browser process is running. So, you will likely need to call it from Awake() to ensure that it's executed before Chromium is started. Alternatively, you can manually terminate Chromium prior to calling this method using StandaloneWebView.TerminateBrowserProcess().
         ///   </item>
         ///   <item>
-        ///     On iOS, enabling the camera and microphone is only supported in iOS 14.3 or newer
+        ///     On iOS, enabling the camera and microphone is only supported in iOS 15 or newer
         ///     and is only supported in Native 2D Mode.
         ///   </item>
         /// </list>

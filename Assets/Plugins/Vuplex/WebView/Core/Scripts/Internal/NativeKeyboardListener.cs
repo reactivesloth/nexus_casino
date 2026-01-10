@@ -137,6 +137,9 @@ namespace Vuplex.WebView.Internal {
 
         void _enableImeIfNeeded() {
 
+            if (!Web.AutoEnableIme) {
+                return;
+            }
             if (_imeShouldBeEnabled == null) {
                 _imeShouldBeEnabled = _determineIfImeShouldBeEnabled();
             }
@@ -416,7 +419,7 @@ namespace Vuplex.WebView.Internal {
                     var emitKeyUp = true;
                     // See the comments above _repeatKey().
                     if (_keyRepeatState?.Key == key) {
-                        CancelInvoke(REPEAT_KEY_METHOD_NAME);
+                        CancelInvoke(nameof(_repeatKey));
                         if (_keyRepeatState.HasRepeated) {
                             // KeyUpReceived has already been emitted for the key.
                             emitKeyUp = false;
@@ -446,10 +449,10 @@ namespace Vuplex.WebView.Internal {
                             oneOrMoreKeysProcessed = true;
                             // See the comments above _repeatKey().
                             if (_keyRepeatState != null) {
-                                CancelInvoke(REPEAT_KEY_METHOD_NAME);
+                                CancelInvoke(nameof(_repeatKey));
                             }
                             _keyRepeatState = new KeyRepeatState { Key = key };
-                            InvokeRepeating(REPEAT_KEY_METHOD_NAME, 0.5f, 0.1f);
+                            InvokeRepeating(nameof(_repeatKey), 0.5f, 0.1f);
                             break;
                         }
                     }
@@ -476,13 +479,12 @@ namespace Vuplex.WebView.Internal {
         // Whereas Input.inputString automatically handles repeating keys when they are pressed down,
         // Input.GetKeyDown() doesn't implement that repeating functionality. So, this class uses
         // InvokeRepeating() to implement repeating for keys in _keyValuesUndetectableThroughInputString.
-        const string REPEAT_KEY_METHOD_NAME = "_repeatKey";
         void _repeatKey() {
 
             var key = _keyRepeatState?.Key;
             if (key == null) {
                 // This shouldn't happen.
-                CancelInvoke(REPEAT_KEY_METHOD_NAME);
+                CancelInvoke(nameof(_repeatKey));
                 return;
             }
             var eventArgs = new KeyboardEventArgs(key, _modifiersDown);

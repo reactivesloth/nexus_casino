@@ -47,6 +47,8 @@ public class WebViewManager : MonoBehaviour
         Instance = this;
         if (dontDestroyOnLoad) DontDestroyOnLoad(gameObject);
         _webviews = new List<CanvasWebViewPrefab>();
+        
+        Web.SetAutoplayEnabled(true);
     }
 
     private async void Start()
@@ -82,6 +84,46 @@ public class WebViewManager : MonoBehaviour
         await WebViewPrefabInstance.WaitUntilInitialized();
         _initialized = true;
 
+        string fixAudioContextScript = @"
+        (function() {
+            // 1. Пытаемся восстановить AudioContext сразу
+            var resumeAudio = function() {
+                var contexts = [window.AudioContext, window.webkitAudioContext];
+                contexts.forEach(function(Ctx) {
+                    if (Ctx && Ctx.prototype.resume) {
+                        // Перехватываем создание новых контекстов
+                        var realCreate = Ctx.prototype.constructor;
+                        // Пробуем возобновить существующие, если есть доступ к экземплярам (обычно нет, но для глобальных переменных поможет)
+                    }
+                });
+            };
+
+            // 2. Агрессивная симуляция клика для скрытия оверлея
+            // Ищем элементы, похожие на оверлеи (обычно они на весь экран) и кликаем по центру
+            setTimeout(function() {
+                // Эмулируем клик по центру экрана
+                var x = window.innerWidth / 2;
+                var y = window.innerHeight / 2;
+                var element = document.elementFromPoint(x, y);
+                if (element) {
+                    console.log('Auto-clicking element:', element);
+                    element.click();
+                    // Дополнительно шлем события мыши, так как некоторые фреймворки слушают их
+                    var ev = new MouseEvent('click', {
+                        'view': window,
+                        'bubbles': true,
+                        'cancelable': true,
+                        'clientX': x,
+                        'clientY': y
+                    });
+                    element.dispatchEvent(ev);
+                }
+            }, 500); // Небольшая задержка, чтобы сайт успел отрендерить оверлей
+        })();
+    ";
+    
+        WebViewPrefabInstance.WebView.PageLoadScripts.Add(fixAudioContextScript);
+        
         WebViewRawImage = WebViewPrefabInstance.GetComponentInChildren<RawImage>(true);
         if (WebViewRawImage == null)
             Debug.LogWarning("[WebViewManager] RawImage inside CanvasWebViewPrefab (base) not found.");
@@ -145,6 +187,9 @@ public class WebViewManager : MonoBehaviour
         if (WebViewPrefabInstance == null) return;
 
         WebViewPrefabInstance.gameObject.SetActive(false);
+        // TODO: Find a way to destroy WebViewPrefabInstance without disposing WebView
+        //Destroy(WebViewPrefabInstance.gameObject);
+        
         if (parkingCanvas != null)
         {
             RebindToCanvas(WebViewPrefabInstance, parkingCanvas, bringToFront: false, worldSpace: false);

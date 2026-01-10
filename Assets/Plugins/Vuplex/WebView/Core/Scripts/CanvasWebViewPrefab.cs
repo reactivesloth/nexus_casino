@@ -86,14 +86,14 @@ namespace Vuplex.WebView {
         /// Important notes:
         /// <list type="bullet">
         ///   <item>
-        ///     Native 2D Mode is only supported for 3D WebView for Android (non-Gecko) and 3D WebView for iOS.
+        ///     Native 2D Mode is only supported for Android (non-Gecko), iOS, macOS WebKit, WebGL, and UWP.
         ///     For other packages, the default render mode is used instead.
         ///   </item>
         ///   <item>Native 2D Mode requires that the canvas's render mode be set to "Screen Space - Overlay".</item>
         /// </list>
         /// </remarks>
-        [Label("Native 2D Mode (Android, iOS, WebGL, & UWP only)")]
-        [Tooltip("Native 2D Mode positions a native 2D webview in front of the Unity game view instead of rendering web content as a texture in the Unity scene. Native 2D Mode provides better performance on iOS and UWP, because the default mode of rendering web content to a texture is slower. \n\nImportant notes:\n• Native 2D Mode is only supported for Android (non-Gecko), iOS, WebGL, and UWP. For the other 3D WebView packages, the default render mode is used instead.\n• Native 2D Mode requires that the canvas's render mode be set to \"Screen Space - Overlay\".")]
+        [Label("Native 2D Mode (Android, iOS, macOS WebKit, WebGL, & UWP only)")]
+        [Tooltip("Native 2D Mode positions a native 2D webview in front of the Unity game view instead of rendering web content as a texture in the Unity scene. Native 2D Mode provides better performance on iOS and UWP, because the default mode of rendering web content to a texture is slower. \n\nImportant notes:\n• Native 2D Mode is only supported for Android (non-Gecko), iOS, macOS WebKit, WebGL, and UWP. For the other 3D WebView packages, the default render mode is used instead.\n• Native 2D Mode requires that the canvas's render mode be set to \"Screen Space - Overlay\".")]
         [HideInInspector]
         [Header("Platform-specific")]
         public bool Native2DModeEnabled;
@@ -134,10 +134,10 @@ namespace Vuplex.WebView {
         /// of making web content appear larger. Setting a higher resolution increases
         /// the pixel density, but has the effect of making content appear smaller.
         /// For more information on scaling web content, see
-        /// [this support article](https://support.vuplex.com/articles/how-to-scale-web-content).
+        /// <see href="https://support.vuplex.com/articles/how-to-scale-web-content">this support article</see>.
         /// </para>
         /// <para>
-        /// When running in [Native 2D Mode](https://support.vuplex.com/articles/native-2d-mode), the Resolution field
+        /// When running in <see href="https://support.vuplex.com/articles/native-2d-mode">Native 2D Mode</see>, the Resolution field
         /// isn't used because the device's native resolution is used instead. So, the Resolution field's value is inaccurate and changes to it are ignored.
         /// </para>
         /// </remarks>
@@ -148,7 +148,7 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         [Label("Resolution (px / Unity unit)")]
-        [Tooltip("You can change this to make web content appear larger or smaller. Note that This property is ignored when running in Native 2D Mode.")]
+        [Tooltip("You can change this to make web content appear larger or smaller. Note that this property is ignored when running in Native 2D Mode.")]
         [HideInInspector]
         [FormerlySerializedAs("InitialResolution")]
         public float Resolution = 1;
@@ -157,7 +157,7 @@ namespace Vuplex.WebView {
         /// Determines the scroll sensitivity. The default sensitivity for CanvasWebViewPrefab is `15`.
         /// </summary>
         /// <remarks>
-        /// This property is ignored when running in [Native 2D Mode](https://support.vuplex.com/articles/native-2d-mode).
+        /// This property is ignored when running in <see href="https://support.vuplex.com/articles/native-2d-mode">Native 2D Mode</see>.
         /// </remarks>
         [HideInInspector]
         [Tooltip("Determines the scroll sensitivity. Note that This property is ignored when running in Native 2D Mode.")]

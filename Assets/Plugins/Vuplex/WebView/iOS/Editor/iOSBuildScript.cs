@@ -41,13 +41,9 @@ namespace Vuplex.WebView.Editor {
                 return;
             }
             var isDeviceSdk = PlayerSettings.iOS.sdkVersion == iOSSdkVersion.DeviceSDK;
-            AppleEditorUtils.SetActivePlugin(
-                isDeviceSdk,
-                "Vuplex/WebView/iOS/Plugins/libVuplexWebViewiOS_device.a",
-                "Vuplex/WebView/iOS/Plugins/libVuplexWebViewiOS_simulator.a",
-                BuildTarget.iOS
-            );
-        }        
+            EditorUtils.SetPluginEnabled("Vuplex/WebView/iOS/Plugins/libVuplexWebViewiOS_device.a", isDeviceSdk, BuildTarget.iOS);
+            EditorUtils.SetPluginEnabled("Vuplex/WebView/iOS/Plugins/libVuplexWebViewiOS_simulator.a", !isDeviceSdk, BuildTarget.iOS);
+        }
 
         [PostProcessBuild]
         public static void OnPostProcessBuild(BuildTarget target, string pathToBuiltProject) {

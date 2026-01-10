@@ -263,18 +263,64 @@ namespace Vuplex.WebView {
         /// </example>
         public void ClearHistory() => _callInstanceMethod("clearHistory");
 
-        public override void Click(int xInPixels, int yInPixels, bool preventStealingFocus = false) {
-
-            _assertPointIsWithinBounds(xInPixels, yInPixels);
-            _callInstanceMethod("click", xInPixels, yInPixels, preventStealingFocus);
-        }
-
         /// <see cref="IWithPdfCreation"/>
-        public Task<string> CreatePdf() {
+        public Task<string> CreatePdf() => CreatePdf(null);
+
+        /// <summary>
+        /// Like IWithPdfCreation.CreatePdf(), but accepts an additional
+        /// native <see href="https://developer.android.com/reference/android/print/PrintAttributes">android.print.PrintAttributes</see>
+        /// parameter for specifying how to format the PDF. The application can use this to customize
+        /// the PDF's media size, resolution, and margins. Note that when using this method, the application must set
+        /// the media size, resolution, and margins for the PrintAttributes, otherwise PDF creation will fail with an exception.
+        /// The default values that IWithPdfCreation.CreatePdf() uses for media size, resolution, and margins are ISO_A4, 600x600, and
+        /// NO_MARGINS, respectively.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// await webViewPrefab.WaitUntilInitialized();
+        /// await webViewPrefab.WebView.WaitForNextPageLoadToFinish();
+        ///
+        /// // Instantiate a builder for the native android.print.PrintAttributes.
+        /// var printAttributesBuilder = new AndroidJavaObject("android.print.PrintAttributes$Builder");
+        ///
+        /// // Create a custom media size that has the same width as ISO_A4 (8,267 mils), but has a very long height (60,000 mils).
+        /// var mediaSize = new AndroidJavaObject(
+        ///     "android.print.PrintAttributes$MediaSize",
+        ///     "custom media size",
+        ///     "custom media size",
+        ///     8267,
+        ///     60000
+        /// );
+        /// printAttributesBuilder.Call<AndroidJavaObject>("setMediaSize", mediaSize);
+        ///
+        /// // Specify a resolution of 600x600 DPI.
+        /// var resolution = new AndroidJavaObject(
+        ///     "android.print.PrintAttributes$Resolution",
+        ///     "custom resolution",
+        ///     "custom resolution",
+        ///     600,
+        ///     600
+        /// );
+        /// printAttributesBuilder.Call<AndroidJavaObject>("setResolution", resolution);
+        ///
+        /// // Specify no margins.
+        /// var margins = new AndroidJavaClass("android.print.PrintAttributes$Margins").GetStatic<AndroidJavaObject>("NO_MARGINS");
+        /// printAttributesBuilder.Call<AndroidJavaObject>("setMinMargins", margins);
+        ///
+        /// // Build the PrintAttributes from the builder.
+        /// var printAttributes = printAttributesBuilder.Call<AndroidJavaObject>("build");
+        /// #if UNITY_ANDROID &amp;&amp; !UNITY_EDITOR
+        ///     var androidWebView = webViewPrefab.WebView as AndroidWebView;
+        ///     var filePath = await androidWebView.CreatePdf(printAttributes);
+        ///     Debug.Log("Created PDF at file path: " + filePath)
+        /// #endif
+        /// </code>
+        /// </example>
+        public Task<string> CreatePdf(AndroidJavaObject printAttributes) {
 
             _assertValidState();
             var taskSource = new TaskCompletionSource<string>();
-            _callInstanceMethod("createPdf", new AndroidConsumer<string>(_consumerClassName, filePath => {
+            _callInstanceMethod("createPdf", printAttributes, new AndroidConsumer<string>(_consumerClassName, filePath => {
                 if (filePath.Length == 0) {
                     taskSource.SetException(new Exception("Failed to create PDF. Please check the Logcat logs for more details."));
                 } else {
@@ -404,10 +450,6 @@ namespace Vuplex.WebView {
 
         public static void GloballySetUserAgent(string userAgent) => _callStaticMethod("globallySetUserAgent", userAgent);
 
-        public override void GoBack() => _callInstanceMethod("goBack");
-
-        public override void GoForward() => _callInstanceMethod("goForward");
-
         public async Task Init(int width, int height) {
 
             AssertWebViewIsAvailable();
@@ -447,8 +489,6 @@ namespace Vuplex.WebView {
             return (bool)_webViewPackageIsAvailable;
         }
 
-        public override void LoadHtml(string html) => _callInstanceMethod("loadHtml", html);
-
         /// <summary>
         /// Like IWebView.LoadHtml(), but also allows a virtual base URL
         /// to be specified. Setting a base URL allows, for example, for
@@ -479,6 +519,7 @@ namespace Vuplex.WebView {
 
         public override void LoadUrl(string url) {
 
+            _assertValidState();
             var transformedUrl = _transformUrlIfNeeded(url);
             if (_splitApplicationBinaryEnabled && transformedUrl.Contains(Application.streamingAssetsPath)) {
                 var warningPageHtml = AndroidWarnings.LogStreamingAssetsErrorAndGetWarningPageHtml();
@@ -588,8 +629,6 @@ namespace Vuplex.WebView {
         /// </example>
         public void PostUrl(string url, byte[] data) => _callInstanceMethod("postUrl", url, data);
 
-        public override void Reload() => _callInstanceMethod("reload");
-
         /// <summary>
         /// Resumes rendering for this webview instance
         /// after a previous call to Pause().
@@ -646,17 +685,6 @@ namespace Vuplex.WebView {
         /// </example>
         public static void RunOnAndroidUIThread(Action function) => AndroidUtils.RunOnAndroidUIThread(function);
 
-        public override void Scroll(int x, int y) => _callInstanceMethod("scroll", x, y);
-
-        public override void Scroll(Vector2 normalizedScrollDelta, Vector2 normalizedPoint) {
-
-            var scrollDeltaInPixels = NormalizedToPoint(normalizedScrollDelta);
-            var pointInPixels = _normalizedToPointAssertValid(normalizedPoint);
-            _callInstanceMethod("scroll", scrollDeltaInPixels.x, scrollDeltaInPixels.y, pointInPixels.x, pointInPixels.y);
-        }
-
-        public override void SendKey(string key) => _callInstanceMethod("sendKey", key);
-
         public static void SetAlternativeKeyboardInputSystemEnabled(bool enabled) {
 
             _callStaticMethod("setAlternativeKeyboardInputSystemEnabled", enabled);
@@ -675,7 +703,7 @@ namespace Vuplex.WebView {
 
         public static void SetAutoplayEnabled(bool enabled) => _callStaticMethod("setAutoplayEnabled", enabled);
 
-        public static new void SetCameraAndMicrophoneEnabled(bool enabled) => _callStaticMethod("setCameraAndMicrophoneEnabled", enabled);
+        public static void SetCameraAndMicrophoneEnabled(bool enabled) => _callStaticMethod("setCameraAndMicrophoneEnabled", enabled);
 
         /// <summary>
         /// Like Web.SetCameraAndMicrophoneEnabled(), but enables only the camera without enabling the microphone.
@@ -705,8 +733,6 @@ namespace Vuplex.WebView {
         /// <see cref="IWithDeepLinking"/>
         public void SetDeepLinkingEnabled(bool enabled) => _callInstanceMethod("setDeepLinkingEnabled", enabled);
 
-        public override void SetDefaultBackgroundEnabled(bool enabled) => _callInstanceMethod("setDefaultBackgroundEnabled", enabled);
-
         /// <see cref="IWithDownloads"/>
         public void SetDownloadsEnabled(bool enabled) => _callInstanceMethod("setDownloadsEnabled", enabled);
 
@@ -726,8 +752,6 @@ namespace Vuplex.WebView {
         /// </code>
         /// </example>
         public static void SetDrmEnabled(bool enabled) => _callStaticMethod("setDrmEnabled", enabled);
-
-        public override void SetFocused(bool focused) => _callInstanceMethod("setFocused", focused);
 
         /// <summary>
         /// Sets the force dark mode for this WebView. Note that this API is only supported on Android API level >= 29
@@ -943,16 +967,6 @@ namespace Vuplex.WebView {
             }
         }
 
-        public override void SetRenderingEnabled(bool enabled) {
-
-            if (Native2DModeEnabled) {
-                VXUtils.LogNative2DModeWarning("SetRenderingEnabled");
-                return;
-            }
-            _callInstanceMethod("setRenderingEnabled", enabled);;
-            _renderingEnabled = enabled;
-        }
-
         /// <summary>
         /// When Native 2D Mode is enabled, this method sets whether scrollbars
         /// are enabled. The default is `true`. When Native 2D Mode is
@@ -1029,8 +1043,6 @@ namespace Vuplex.WebView {
             _visible = visible;
         }
 
-        public override void StopLoad() => _callInstanceMethod("stopLoad");
-
         /// <summary>
         /// Zooms in or out by the given factor, which is multiplied by the current zoom level
         /// to reach the new zoom level.
@@ -1057,10 +1069,6 @@ namespace Vuplex.WebView {
         /// </example>
         public void ZoomBy(float zoomFactor) => _callInstanceMethod("zoomBy", zoomFactor);
 
-        public override void ZoomIn() => _callInstanceMethod("zoomIn");
-
-        public override void ZoomOut() => _callInstanceMethod("zoomOut");
-
     #region Non-public members
         const string _2dWebViewClassName = "com.vuplex.webview.WebView";
         const string _3dWebViewClassName = "com.vuplex.webview.WebView3D";
@@ -1083,38 +1091,26 @@ namespace Vuplex.WebView {
 
             _assertValidState();
             AndroidUtils.AssertMainThread(methodName);
-            _webView.Call(methodName, _convertNullArgsIfNeeded(args));
+            _webView.Call(methodName, AndroidUtils.ConvertNullArgsIfNeeded(args));
         }
 
         TReturn _callInstanceMethod<TReturn>(string methodName, params object[] args) {
 
             _assertValidState();
             AndroidUtils.AssertMainThread(methodName);
-            return _webView.Call<TReturn>(methodName, _convertNullArgsIfNeeded(args));
+            return _webView.Call<TReturn>(methodName, AndroidUtils.ConvertNullArgsIfNeeded(args));
         }
 
         static void _callStaticMethod(string methodName, params object[] args) {
 
             AndroidUtils.AssertMainThread(methodName);
-            _class.CallStatic(methodName, _convertNullArgsIfNeeded(args));
+            _class.CallStatic(methodName, AndroidUtils.ConvertNullArgsIfNeeded(args));
         }
 
         static TReturn _callStaticMethod<TReturn>(string methodName, params object[] args) {
 
             AndroidUtils.AssertMainThread(methodName);
-            return _class.CallStatic<TReturn>(methodName, _convertNullArgsIfNeeded(args));
-        }
-
-        // If code calls _callInstanceMethod() with a null second parameter to pass a null Java object reference,
-        // the args parameter itself ends up being a null array (as opposed to an array containing null).
-        // This method converts the null args array to an array containing null because otherwise
-        // AndroidJavaObject.Call() will ignore the parameter completely.
-        static object[] _convertNullArgsIfNeeded(object[] args) {
-
-            if (args == null) {
-                return new object[] { null };
-            }
-            return args;
+            return _class.CallStatic<TReturn>(methodName, AndroidUtils.ConvertNullArgsIfNeeded(args));
         }
 
         protected override Material _createMaterial() => AndroidUtils.CreateAndroidMaterial();
@@ -1126,8 +1122,6 @@ namespace Vuplex.WebView {
             }
             return AndroidOpenGLTextureCreator.GetInstance(WebView_getCreateOpenGLTextureFunction()).CreateTexture(width, height);
         }
-
-        protected override void _destroyNativeTexture(IntPtr nativeTexture) => VulkanDelayedTextureDestroyer.GetInstance(WebView_destroyVulkanTexture).DestroyTexture(nativeTexture);
 
         void _handleAuthRequested(string host, AndroidJavaObject httpAuthHandler) {
 
@@ -1241,6 +1235,7 @@ namespace Vuplex.WebView {
                     new AndroidBiConsumer<string, AndroidJavaObject>(_biConsumerClassName, _handlePopup),
                     popupResultMessage
                 );
+                _nativePlugin = new AndroidNativeWebViewPlugin(_webView, VulkanDelayedTextureDestroyer.GetInstance(WebView_destroyVulkanTexture));
             } catch (AndroidJavaException ex) {
                 if (ex.Message.Contains("trial")) {
                     throw new TrialExpiredException(ex.Message);
@@ -1269,6 +1264,7 @@ namespace Vuplex.WebView {
                     new AndroidBiConsumer<string, AndroidJavaObject>(_biConsumerClassName, _handlePopup),
                     popupResultMessage
                 );
+                _nativePlugin = new AndroidNativeWebViewPlugin(_webView, VulkanDelayedTextureDestroyer.GetInstance(WebView_destroyVulkanTexture));
             } catch (AndroidJavaException ex) {
                 if (ex.Message.Contains("trial")) {
                     throw new TrialExpiredException(ex.Message);
@@ -1311,12 +1307,6 @@ namespace Vuplex.WebView {
                 }
             }
         }
-
-        protected override void _resize() => _callInstanceMethod("resize", Size.x, Size.y);
-
-        protected override void _setConsoleMessageEventsEnabled(bool enabled) => _callInstanceMethod("setConsoleMessageEventsEnabled", enabled);
-
-        protected override void _setFocusedInputFieldEventsEnabled(bool enabled) => _callInstanceMethod("setFocusedInputFieldEventsEnabled", enabled);
 
         [DllImport(DllName)]
         static extern void WebView_destroyVulkanTexture(IntPtr texture);

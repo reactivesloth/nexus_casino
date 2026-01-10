@@ -13,8 +13,11 @@
 // limitations under the License.
 Shader "Vuplex/Default Web Shader" {
     Properties {
+        // Properties that get treated as multi-compile constants for performance.
         [Toggle(FLIP_X)] _FlipX ("Flip X", Float) = 0
         [Toggle(FLIP_Y)] _FlipY ("Flip Y", Float) = 0
+        [Toggle(GAMMA_TO_LINEAR_CORRECTION_ENABLED)] _GammaToLinearCorrectionEnabled ("Gamma to Linear Space Correction Enabled", Float) = 1
+        [Toggle(FALLBACK_VIDEO_ENABLED)] _FallbackVideoEnabled ("Fallback Video Enabled", Float) = 0
 
         [Header(Properties set programmatically)]
         _FallbackVideoRect ("Video Cutout Rect", Vector) = (0, 0, 0, 0)
@@ -52,8 +55,10 @@ Shader "Vuplex/Default Web Shader" {
             ColorMask [_ColorMask]
 
             CGPROGRAM
+                #pragma multi_compile ___ FALLBACK_VIDEO_ENABLED
                 #pragma multi_compile ___ FLIP_X
                 #pragma multi_compile ___ FLIP_Y
+                #pragma multi_compile ___ GAMMA_TO_LINEAR_CORRECTION_ENABLED
                 #pragma vertex vert
                 #pragma fragment frag
                 #include "UnityCG.cginc"
@@ -143,27 +148,42 @@ Shader "Vuplex/Default Web Shader" {
 
                     // Sample the main view texture.
                     fixed4 color = _MainTex.Sample(linear_clamp_sampler, i.uv);
-                    if (_pointIsInRect(i.uv, _FallbackVideoRect)) {
-                        // In order to allow a web page to display content on top of a video, only
-                        // render video on black pixels.
-                        if (_isBlack(color)) {
-                            // Sample the fallback video texture.
-                            // Convert from normalized coordinates within the view to normalized coordinates within the fallback video texture.
-                            float2 fallbackVideoTextureCoordinates = (float2(i.uv.x, 1.0 - i.uv.y) - _FallbackVideoRect.xy) / _FallbackVideoRect.zw;
-                            fixed4 videoColor = _FallbackVideoTexture.Sample(linear_clamp_sampler, fallbackVideoTextureCoordinates);
-                            // Don't render the video if the video texture is transparent.
-                            if (videoColor[3] != 0) {
-                                color = videoColor;
+                    // On all platforms, alpha is pre-multiplied in the texture data's colors. To render the colors accurately in Unity,
+                    // we need to get rid of the pre-multiplied alpha by dividing the colors by the alpha.
+                    // Otherwise, when displaying the following HTML test page, the semi-transparent
+                    // section would appear darker than it should:
+                    // <html>
+                    //   <head><meta name="transparent" content="true"></head>
+                    //   <body><style>html {background: linear-gradient(90deg, white 34%, transparent 100%);}</style></body>
+                    // </html>
+                    if (color.w != 0.0) {
+                        color = float4(color.xyz / color.w, color.w);
+                    }
+
+                    #ifdef FALLBACK_VIDEO_ENABLED
+                        if (_pointIsInRect(i.uv, _FallbackVideoRect)) {
+                            // In order to allow a web page to display content on top of a video, only
+                            // render video on black pixels.
+                            if (_isBlack(color)) {
+                                // Sample the fallback video texture.
+                                // Convert from normalized coordinates within the view to normalized coordinates within the fallback video texture.
+                                float2 fallbackVideoTextureCoordinates = (float2(i.uv.x, 1.0 - i.uv.y) - _FallbackVideoRect.xy) / _FallbackVideoRect.zw;
+                                fixed4 videoColor = _FallbackVideoTexture.Sample(linear_clamp_sampler, fallbackVideoTextureCoordinates);
+                                // Don't render the video if the video texture is transparent.
+                                if (videoColor[3] != 0) {
+                                    color = videoColor;
+                                }
                             }
                         }
-                    }
+                    #endif
+
                     if (_RenderBlackAsTransparent && _isBlack(color)) {
                         color = float4(0.0, 0.0, 0.0, 0.0);
                     }
 
                     // Color correction to convert gamma to linear space.
                     // This is performed last so it doesn't effect cutout rect functionality.
-                    #if !defined(UNITY_COLORSPACE_GAMMA)
+                    #if !defined(UNITY_COLORSPACE_GAMMA) && GAMMA_TO_LINEAR_CORRECTION_ENABLED
                         color = float4(GammaToLinearSpace(color.xyz), color.w);
                     #endif
 

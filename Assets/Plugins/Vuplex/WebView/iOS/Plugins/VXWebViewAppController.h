@@ -11,10 +11,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-#import <UIKit/UIKit.h>
-#import <Metal/Metal.h>
 #import "UnityAppController.h"
-#import "UnityInterface.h"
 
 /**
 * Extends UnityAppController to override shouldAttachRenderDelegate
@@ -29,13 +26,5 @@
 * please see this support article: https://support.vuplex.com/articles/apple-graphics-plugin-conflict
 */
 @interface VXWebViewAppController : UnityAppController
-
-/**
-* Overrides [UnityAppController shouldAttachRenderDelegate]
-* to hook into the Unity trampoline.
-*/
-- (void)shouldAttachRenderDelegate;
-
-+ (id<MTLDevice>)metalDevice;
 
 @end

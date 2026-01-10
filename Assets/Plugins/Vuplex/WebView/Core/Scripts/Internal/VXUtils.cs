@@ -53,12 +53,23 @@ namespace Vuplex.WebView.Internal {
         }
 
         /// <summary>
-        /// Polyfill for IntPtr.Parse(), which only exists in .NET 5+.
+        /// Polyfill for IntPtr.Parse(), which only exists in .NET 5+. Also, unlike IntPtr.Parse(),
+        /// which only supports signed ints (it will throw an OverflowException if given a value over
+        /// Int64.Max), this method also supports unsigned values because some of the 3D WebView plugins
+        /// emit textures as unsigned. In other words, this method supports parsing values in the range
+        /// from Int64.Min to UInt64.Max.
         /// </summary>
         public static IntPtr ParseIntPtr(string ptrString) {
 
-            // Use UInt64.Parse() because Int64.Parse() can result in an OverflowException.
-            return new IntPtr((Int64)UInt64.Parse(ptrString));
+            // First, try to parse as a signed integer. This will fail if the value exceeds Int64.Max.
+            if (Int64.TryParse(ptrString, out Int64 int64Ptr)) {
+                return new IntPtr(int64Ptr);
+            }
+            // For values > Int64.Max, fallback to parsing as an unsigned integer.
+            if (UInt64.TryParse(ptrString, out UInt64 uint64Ptr)) {
+                return new IntPtr((Int64)uint64Ptr);
+            }
+            throw new ArgumentException("Unable to parse value into IntPtr: " + ptrString);
         }
     }
 }

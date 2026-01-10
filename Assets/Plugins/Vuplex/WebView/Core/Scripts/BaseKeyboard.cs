@@ -94,7 +94,19 @@ namespace Vuplex.WebView {
             // Scrolling and dragging can also cause the keyboard
             // to steal focus on Android Gecko, so just disable them.
             _webViewPrefab.ScrollingEnabled = false;
-            _webViewPrefab.DragMode = DragMode.Disabled;
+            // For most platforms, disable dragging on the keyboard because dragging is not needed.
+            // However, for the macOS WebKit plugin in the editor, there's an issue that necessitates using the default
+            // DragToScroll DragMode as a workaround. The issue is that when the DragMode is set to Disabled,
+            // a pointer down event on the keyboard causes SendKey() to be called on a content webview, which
+            // internally makes the WKWebView the first responder (because KeyDown() must internally call SetFocused(true)).
+            // That prevents Unity from detecting the pointer up event (i.e. DefaultPointerInputDetector.OnPointerUp() is never called),
+            // which causes the keyboard key to get stuck in the down position and repeat endlessly. Note that this first responder
+            // issue only occurs in the editor, not the player. As a workaround, we leave the DragMode set to DragToScroll
+            // so that PointerDown() and PointerUp() are called back-to-back on the keyboard when the mouse button is released,
+            // which avoids the issue.
+            if (!(pluginType == WebPluginType.MacWebKit && Application.isEditor)) {
+                _webViewPrefab.DragMode = DragMode.Disabled;
+            }
             _webViewPrefab.WebView.MessageEmitted += WebView_MessageEmitted;
             // Android Gecko and Hololens don't support transparent webviews, so as a workaround, set the
             // the shader to turn black pixels transparent.

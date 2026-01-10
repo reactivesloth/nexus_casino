@@ -12,11 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 #if UNITY_ANDROID
-using System.IO;
-using UnityEngine;
 using UnityEditor;
 
-namespace Vuplex.WebViewUpgrade {
+namespace Vuplex.WebView.Editor {
 
     /// <summary>
     /// Deletes old files from previous versions of 3D WebView that must
@@ -25,21 +23,14 @@ namespace Vuplex.WebViewUpgrade {
     [InitializeOnLoad]
     class AndroidUpgradeAssistant {
 
-        static string[] _filesToDelete = new string[] {
-            "AndroidTextureCreator.cs" // Removed in v4.7
-        };
-
         static AndroidUpgradeAssistant() {
 
-            foreach (var fileName in _filesToDelete) {
-                var filePaths = Directory.GetFiles(Application.dataPath, fileName, SearchOption.AllDirectories);
-                if (filePaths.Length > 0) {
-                    Vuplex.WebView.Internal.WebViewLogger.Log($"Just a heads-up: 3D WebView is automatically deleting an old {fileName} file that is no longer part of 3D WebView.");
-                    foreach (var filePath in filePaths) {
-                        File.Delete(filePath);
-                    }
-                }
-            }
+            EditorUtils.DeleteAssets(new string[] {
+                // Removed in v4.7.
+                "AndroidTextureCreator",
+                // Removed in v4.9. Delete to avoid the compiler error "'AndroidUtils' does not contain a definition for 'ConvertFromJavaByteArray'".
+                "AndroidByteArrayCallback"
+            });
         }
     }
 }

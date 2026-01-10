@@ -23,8 +23,9 @@ namespace Vuplex.WebView {
     /// </summary>
     public class StandaloneX509Certificate {
 
-        internal StandaloneX509Certificate(MessageCertificate cert) {
+        internal StandaloneX509Certificate(int requestID, MessageCertificate cert) {
 
+            RequestID = requestID;
             ID = cert.ID;
             Issuer = new StandaloneX509CertificatePrincipal(cert.Issuer);
             Subject = new StandaloneX509CertificatePrincipal(cert.Subject);
@@ -37,14 +38,14 @@ namespace Vuplex.WebView {
         }
 
         /// <summary>
-        /// An internal ID that 3D WebView uses to identify the certificate.
-        /// </summary>
-        public readonly int ID;
-
-        /// <summary>
         /// The issuer of the X.509 certificate.
         /// </summary>
         public readonly StandaloneX509CertificatePrincipal Issuer;
+
+        /// <summary>
+        /// An internal ID that 3D WebView uses to identify the certificate request.
+        /// </summary>
+        public readonly int RequestID;
 
         /// <summary>
         /// The subject of the X.509 certificate. For HTTPS server
@@ -67,8 +68,13 @@ namespace Vuplex.WebView {
 
         public override string ToString() {
 
-            return $"(StandaloneX509Certificate)\nID = {ID},\nValidStart = {ValidStart},\nValidExpiry = {ValidExpiry},\nSubject = {Subject},\nIssuer = {Issuer}";
+            return $"(StandaloneX509Certificate)\nRequestID = {RequestID},\nID = {ID},\nValidStart = {ValidStart},\nValidExpiry = {ValidExpiry},\nSubject = {Subject},\nIssuer = {Issuer}";
         }
+
+        /// <summary>
+        /// An internal ID that 3D WebView uses to identify the certificate.
+        /// </summary>
+        internal readonly int ID;        
     }
 
     /// <summary>
@@ -124,13 +130,14 @@ namespace Vuplex.WebView {
     [Serializable]
     public class StandaloneClientCertificateRequestedEventArgs : EventArgs {
 
-        private StandaloneClientCertificateRequestedEventArgs(CertificateRequestedMessage message, Action<StandaloneX509Certificate> selectCallback) {
+        private StandaloneClientCertificateRequestedEventArgs(CertificateRequestMessage message, Action<int, int> selectCallback) {
 
-            Certificates = message.Certificates.ToList().Select(c => new StandaloneX509Certificate(c)).ToArray();
+            Certificates = message.Certificates.ToList().Select(c => new StandaloneX509Certificate(message.ID, c)).ToArray();
             Host = message.Host;
             Port = message.Port;
             IsProxy = message.IsProxy;
-            Select = selectCallback;
+            _id = message.ID;
+            _selectCallback = selectCallback;
         }
 
         /// <summary>
@@ -160,7 +167,7 @@ namespace Vuplex.WebView {
         /// can either be one of the certificates from the Certificates array or `null`
         /// to continue without a certificate.
         /// </summary>
-        public readonly Action<StandaloneX509Certificate> Select;
+        public void Select(StandaloneX509Certificate certificate) => _selectCallback(_id, certificate == null ? 0 : certificate.ID);
 
         public override string ToString() {
 
@@ -168,18 +175,22 @@ namespace Vuplex.WebView {
             return $"(StandaloneClientCertificateRequestedEventArgs)\nHost = {Host},\nPort = {Port},\nIsProxy = {IsProxy},\nCertificates = {certificatesString}";
         }
 
-        internal static StandaloneClientCertificateRequestedEventArgs FromMessageJson(string serializedMessage, Action<StandaloneX509Certificate> selectCallback) {
+        internal static StandaloneClientCertificateRequestedEventArgs FromMessageJson(string serializedMessage, Action<int, int> selectCallback) {
 
-            var message = JsonUtility.FromJson<CertificateRequestedMessage>(serializedMessage);
+            var message = JsonUtility.FromJson<CertificateRequestMessage>(serializedMessage);
             return new StandaloneClientCertificateRequestedEventArgs(message, selectCallback);
         }
+
+        Action<int, int> _selectCallback;
+        int _id;
     }
 }
 
 namespace Vuplex.WebView.Internal {
 
     [Serializable]
-    class CertificateRequestedMessage {
+    class CertificateRequestMessage {
+        public int ID;
         public MessageCertificate[] Certificates;
         public string Host;
         public int Port;

@@ -142,6 +142,8 @@ Shader "Vuplex/Android Web Shader" {
                     void main() {
 
                         vec4 color = texture2D(_MainTex, uv);
+                        // See the comments in DefaultWebShader.shader about pre-multiplied alpha.
+                        color = vec4(color.xyz / color.w, color.w);
                         // Use a threshold of 0.15 to consider a pixel as black.
                         if (_RenderBlackAsTransparent != 0.0 && all(lessThan(color.xyz, vec3(0.15, 0.15, 0.15)))) {
                             color = vec4(0.0, 0.0, 0.0, 0.0);

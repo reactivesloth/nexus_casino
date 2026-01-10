@@ -20,6 +20,21 @@ namespace Vuplex.WebView.Internal {
 
     public class WebPluginFactory {
 
+        /// <summary>
+        /// If the corresponding 3D WebView package for the current build platform isn't installed and the application attempts to instantiate a webview,
+        /// then by default, 3D WebView throws an exception warning about the missing package. The application can set this field to true to cause 3D WebView
+        /// to ignore the missing package in the Editor and instead use 3D WebView for Windows and macOS if it's installed or the mock webview implementation if it's not.
+        /// This option only impacts the Editor and doesn't affect the Player, so an exception is still thrown in the Player at runtime in this scenario.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// void Awake() {
+        ///     Vuplex.WebView.Internal.WebPluginFactory.IgnoreMissingPluginInEditor = true;
+        /// }
+        /// </code>
+        /// </example>
+        public static bool IgnoreMissingPluginInEditor;
+
         public virtual List<IWebPlugin> GetAllPlugins() {
 
             _assertNotTooEarly();
@@ -39,7 +54,7 @@ namespace Vuplex.WebView.Internal {
             }
 
             #if UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX
-                return _choosePlugin(_standalonePlugin, "Windows or macOS", "3D WebView for Windows and macOS", "windows-mac");
+                return _choosePlugin(_getCorrectPluginForStandalone(preferredPlugins), "Windows or macOS", "3D WebView for Windows and macOS", "windows-mac", preferredPlugins);
             #elif UNITY_ANDROID
                 var preferChromiumAndroidPlugin = preferredPlugins != null && preferredPlugins.Contains(WebPluginType.Android);
                 IWebPlugin selectedAndroidPlugin = null;
@@ -48,15 +63,15 @@ namespace Vuplex.WebView.Internal {
                 } else if (_androidGeckoPlugin != null) {
                     selectedAndroidPlugin = _androidGeckoPlugin;
                 }
-                return _choosePlugin(selectedAndroidPlugin, "Android", "3D WebView for Android", "android");
+                return _choosePlugin(selectedAndroidPlugin, "Android", "3D WebView for Android", "android", preferredPlugins);
             #elif UNITY_IOS
-                return _choosePlugin(_iosPlugin, "iOS", "3D WebView for iOS", "ios");
+                return _choosePlugin(_iosPlugin, "iOS", "3D WebView for iOS", "ios", preferredPlugins);
             #elif UNITY_WSA
-                return _choosePlugin(_uwpPlugin, "UWP", "3D WebView for UWP", "uwp");
+                return _choosePlugin(_uwpPlugin, "UWP", "3D WebView for UWP", "uwp", preferredPlugins);
             #elif UNITY_VISIONOS
-                return _choosePlugin(_visionOSPlugin, "visionOS", "3D WebView for visionOS", "visionos");
+                return _choosePlugin(_visionOSPlugin, "visionOS", "3D WebView for visionOS", "visionos", preferredPlugins);
             #elif UNITY_WEBGL
-                return _choosePlugin(_webGLPlugin, "WebGL", "2D WebView for WebGL", "webgl");
+                return _choosePlugin(_webGLPlugin, "WebGL", "2D WebView for WebGL", "webgl", preferredPlugins);
             #else
                 throw new WebViewUnavailableException("3D WebView is not supported on the current build platform. For more info, please visit https://developer.vuplex.com .");
             #endif
@@ -75,6 +90,11 @@ namespace Vuplex.WebView.Internal {
         public static void RegisterIOSPlugin(IWebPlugin plugin) {
 
             _addPlugin(_iosPlugin = plugin);
+        }
+
+        public static void RegisterMacWebKitPlugin(IWebPlugin plugin) {
+
+            _addPlugin(_macWebKitPlugin = plugin);
         }
 
         public static void RegisterStandalonePlugin(IWebPlugin plugin) {
@@ -102,6 +122,7 @@ namespace Vuplex.WebView.Internal {
         protected static IWebPlugin _androidGeckoPlugin;
         static bool _beforeSceneLoadCalled;
         protected static IWebPlugin _iosPlugin;
+        protected static IWebPlugin _macWebKitPlugin;
         bool _mockWarningLogged;
         protected static IWebPlugin _standalonePlugin;
         protected static IWebPlugin _uwpPlugin;
@@ -128,45 +149,45 @@ namespace Vuplex.WebView.Internal {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void _beforeSceneLoad() => _beforeSceneLoadCalled = true;
 
-        IWebPlugin _choosePlugin(IWebPlugin plugin, string buildPlatform, string packageName, string storeUrlPath) {
+        IWebPlugin _choosePlugin(IWebPlugin originalPlugin, string buildPlatformName, string packageName, string storeUrlPath, WebPluginType[] preferredPlugins) {
 
-            #if UNITY_EDITOR
-                if (IgnoreMissingPluginInEditor && plugin == null) {
-                    plugin = MockWebPlugin.Instance;
+            if (originalPlugin == null) {
+                if (Application.isEditor && IgnoreMissingPluginInEditor) {
+                    originalPlugin = MockWebPlugin.Instance;
+                } else {
+                    throw new WebViewUnavailableException($"The build platform is set to {buildPlatformName}, but {packageName} isn't installed in the project. {packageName} is required in order for 3D WebView to work on {buildPlatformName}." + _getMoreInfoText(storeUrlPath));
+                }
+            }
+            #if UNITY_EDITOR && !(UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX)
+                // Use the Standalone plugin in the editor if it is installed.
+                var editorPlugin = _getCorrectPluginForStandalone(preferredPlugins);
+                if (editorPlugin != null) {
+                    return editorPlugin;
                 }
             #endif
-            if (plugin == null) {
-                throw new WebViewUnavailableException($"The build platform is set to {buildPlatform}, but {packageName} isn't installed in the project. {packageName} is required in order for 3D WebView to work on {buildPlatform}." + _getMoreInfoText(storeUrlPath));
-            }
-            if ((Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.OSXEditor) && _standalonePlugin != null) {
-                return _standalonePlugin;
-            }
-            if (plugin is MockWebPlugin) {
+            if (originalPlugin is MockWebPlugin) {
                 if (Application.platform == RuntimePlatform.LinuxEditor) {
                     _logMockWarningOnce("3D WebView doesn't support the Linux Unity Editor");
                 } else {
                     _logMockWarningOnce("3D WebView for Windows and macOS is not currently installed");
                 }
             }
-            return plugin;
+            return originalPlugin;
         }
 
-        /// <summary>
-        /// If the corresponding 3D WebView package for the current build platform isn't installed and the application attempts to instantiate a webview,
-        /// then by default, 3D WebView throws an exception warning about the missing package. The application can set this field to true to cause 3D WebView
-        /// to ignore the missing package in the Editor and instead use 3D WebView for Windows and macOS if it's installed or the mock webview implementation if it's not.
-        /// This option only impacts the Editor and doesn't affect the Player, so an exception is still thrown in the Player at runtime in this scenario.
-        /// </summary>
-        /// <example>
-        /// <code>
-        /// void Awake() {
-        ///     Vuplex.WebView.Internal.WebPluginFactory.IgnoreMissingPluginInEditor = true;
-        /// }
-        /// </code>
-        /// </example>
-        public static bool IgnoreMissingPluginInEditor;
-
         string _getMoreInfoText(string storeUrlPath) => $" For more info, please visit https://store.vuplex.com/webview/{storeUrlPath} .";
+
+        IWebPlugin _getCorrectPluginForStandalone(WebPluginType[] preferredPlugins) {
+
+            var preferMacWebKitPlugin = preferredPlugins != null && preferredPlugins.Contains(WebPluginType.MacWebKit);
+            if (preferMacWebKitPlugin && _macWebKitPlugin != null) {
+                return _macWebKitPlugin;
+            }
+            if (_standalonePlugin != null) {
+                return _standalonePlugin;
+            }
+            return _macWebKitPlugin;
+        }
 
         /// <summary>
         /// Logs the warning once so that it doesn't spam the console.

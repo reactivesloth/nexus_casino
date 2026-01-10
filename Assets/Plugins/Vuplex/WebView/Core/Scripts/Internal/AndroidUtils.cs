@@ -35,6 +35,18 @@ namespace Vuplex.WebView.Internal {
             }
         }
 
+        // If code calls _callInstanceMethod() with a null second parameter to pass a null Java object reference,
+        // the args parameter itself ends up being a null array (as opposed to an array containing null).
+        // This method converts the null args array to an array containing null because otherwise
+        // AndroidJavaObject.Call() will ignore the parameter completely.
+        public static object[] ConvertNullArgsIfNeeded(object[] args) {
+
+            if (args == null) {
+                return new object[] { null };
+            }
+            return args;
+        }
+
         public static Material CreateAndroidMaterial() {
 
             if (SystemInfo.graphicsDeviceType == GraphicsDeviceType.Vulkan) {
@@ -51,6 +63,7 @@ namespace Vuplex.WebView.Internal {
             return SystemInfo.deviceModel.Contains("Quest");
         }
 
+        // Note: Unity 6 added an API for this: https://docs.unity3d.com/6000.0/Documentation/ScriptReference/Android.AndroidApplication.InvokeOnUIThread.html
         public static void RunOnAndroidUIThread(Action function) {
 
             _getActivity().Call("runOnUiThread", new AndroidJavaRunnable(function));

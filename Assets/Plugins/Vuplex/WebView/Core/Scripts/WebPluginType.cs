@@ -11,17 +11,34 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+using System;
+
 namespace Vuplex.WebView {
 
     public enum WebPluginType {
+
         Android,
+
         AndroidGecko,
+
         iOS,
+
+        [Obsolete("WebPluginType.Mac is now obsolete and is no longer used. Please use WebPluginType.Standalone instead.", true)]
         Mac,
+
+        MacWebKit,
+
         Mock,
+
         WebGL,
+
+        [Obsolete("WebPluginType.Windows is now obsolete and is no longer used. Please use WebPluginType.Standalone instead.", true)]
         Windows,
+
+        Standalone,
+
         UniversalWindowsPlatform,
+
         VisionOS
     }
 }

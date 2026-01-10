@@ -11,15 +11,11 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-// Only define BaseWebView.cs on supported platforms to avoid IL2CPP linking
-// errors on unsupported platforms.
-#if UNITY_EDITOR || UNITY_STANDALONE_WIN || UNITY_STANDALONE_OSX || UNITY_ANDROID || (UNITY_IOS && !VUPLEX_OMIT_IOS) || (UNITY_VISIONOS && !VUPLEX_OMIT_VISIONOS) || (UNITY_WEBGL && !VUPLEX_OMIT_WEBGL) || UNITY_WSA
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -38,13 +34,15 @@ namespace Vuplex.WebView.Internal {
             add {
                 _consoleMessageLogged += value;
                 if (_consoleMessageLogged != null && _consoleMessageLogged.GetInvocationList().Length == 1) {
-                    _setConsoleMessageEventsEnabled(true);
+                    _assertValidState();
+                    _nativePlugin.SetConsoleMessageEventsEnabled(_nativeWebViewPtr, true);
                 }
             }
             remove {
                 _consoleMessageLogged -= value;
                 if (_consoleMessageLogged == null) {
-                    _setConsoleMessageEventsEnabled(false);
+                    _assertValidState();
+                    _nativePlugin.SetConsoleMessageEventsEnabled(_nativeWebViewPtr, false);
                 }
             }
         }
@@ -55,13 +53,15 @@ namespace Vuplex.WebView.Internal {
             add {
                 _focusedInputFieldChanged += value;
                 if (_focusedInputFieldChanged != null && _focusedInputFieldChanged.GetInvocationList().Length == 1) {
-                    _setFocusedInputFieldEventsEnabled(true);
+                    _assertValidState();
+                    _nativePlugin.SetFocusedInputFieldEventsEnabled(_nativeWebViewPtr, true);
                 }
             }
             remove {
                 _focusedInputFieldChanged -= value;
                 if (_focusedInputFieldChanged == null) {
-                    _setFocusedInputFieldEventsEnabled(false);
+                    _assertValidState();
+                    _nativePlugin.SetFocusedInputFieldEventsEnabled(_nativeWebViewPtr, false);
                 }
             }
         }
@@ -97,7 +97,7 @@ namespace Vuplex.WebView.Internal {
             _assertValidState();
             var taskSource = new TaskCompletionSource<bool>();
             _pendingCanGoBackCallbacks.Add(taskSource.SetResult);
-            WebView_canGoBack(_nativeWebViewPtr);
+            _nativePlugin.CanGoBack(_nativeWebViewPtr);
             return taskSource.Task;
         }
 
@@ -106,7 +106,7 @@ namespace Vuplex.WebView.Internal {
             _assertValidState();
             var taskSource = new TaskCompletionSource<bool>();
             _pendingCanGoForwardCallbacks.Add(taskSource.SetResult);
-            WebView_canGoForward(_nativeWebViewPtr);
+            _nativePlugin.CanGoForward(_nativeWebViewPtr);
             return taskSource.Task;
         }
 
@@ -122,9 +122,7 @@ namespace Vuplex.WebView.Internal {
 
             _assertValidState();
             _assertPointIsWithinBounds(xInPixels, yInPixels);
-            // On most platforms, the regular Click() method doesn't steal focus,
-            // So, the default is to ignore preventStealingFocus.
-            WebView_click(_nativeWebViewPtr, xInPixels, yInPixels);
+            _nativePlugin.Click(_nativeWebViewPtr, xInPixels, yInPixels, preventStealingFocus);
         }
 
         public void Click(Vector2 normalizedPoint, bool preventStealingFocus = false) {
@@ -134,10 +132,10 @@ namespace Vuplex.WebView.Internal {
             Click(pixelsPoint.x, pixelsPoint.y, preventStealingFocus);
         }
 
-        public virtual async void Copy() {
+        public virtual void Copy() {
 
             _assertValidState();
-            GUIUtility.systemCopyBuffer = await _getSelectedText();
+            _nativePlugin.Copy(_nativeWebViewPtr);
         }
 
         public virtual Material CreateMaterial() {
@@ -151,18 +149,17 @@ namespace Vuplex.WebView.Internal {
             return material;
         }
 
-        public virtual async void Cut() {
+        public virtual void Cut() {
 
             _assertValidState();
-            GUIUtility.systemCopyBuffer = await _getSelectedText();
-            SendKey("Backspace");
+            _nativePlugin.Cut(_nativeWebViewPtr);
         }
 
         public virtual void Dispose() {
 
             _assertValidState();
             IsDisposed = true;
-            WebView_destroy(_nativeWebViewPtr);
+            _nativePlugin.Destroy(_nativeWebViewPtr);
             _nativeWebViewPtr = IntPtr.Zero;
             // To avoid a MissingReferenceException, verify that this script
             // hasn't already been destroyed prior to accessing gameObject.
@@ -181,12 +178,12 @@ namespace Vuplex.WebView.Internal {
         public virtual void ExecuteJavaScript(string javaScript, Action<string> callback) {
 
             _assertValidState();
-            string resultCallbackId = null;
+            string resultCallbackID = null;
             if (callback != null) {
-                resultCallbackId = Guid.NewGuid().ToString();
-                _pendingJavaScriptResultCallbacks[resultCallbackId] = callback;
+                resultCallbackID = Guid.NewGuid().ToString();
+                _pendingJavaScriptResultCallbacks[resultCallbackID] = callback;
             }
-            WebView_executeJavaScript(_nativeWebViewPtr, javaScript, resultCallbackId);
+            _nativePlugin.ExecuteJavaScript(_nativeWebViewPtr, javaScript, resultCallbackID);
         }
 
         public virtual Task<byte[]> GetRawTextureData() {
@@ -200,25 +197,25 @@ namespace Vuplex.WebView.Internal {
         public virtual void GoBack() {
 
             _assertValidState();
-            WebView_goBack(_nativeWebViewPtr);
+            _nativePlugin.GoBack(_nativeWebViewPtr);
         }
 
         public virtual void GoForward() {
 
             _assertValidState();
-            WebView_goForward(_nativeWebViewPtr);
+            _nativePlugin.GoForward(_nativeWebViewPtr);
         }
 
         public virtual void LoadHtml(string html) {
 
             _assertValidState();
-            WebView_loadHtml(_nativeWebViewPtr, html);
+            _nativePlugin.LoadHtml(_nativeWebViewPtr, html);
         }
 
         public virtual void LoadUrl(string url) {
 
             _assertValidState();
-            WebView_loadUrl(_nativeWebViewPtr, _transformUrlIfNeeded(url));
+            _nativePlugin.LoadUrl(_nativeWebViewPtr, _transformUrlIfNeeded(url));
         }
 
         public virtual void LoadUrl(string url, Dictionary<string, string> additionalHttpHeaders) {
@@ -229,7 +226,7 @@ namespace Vuplex.WebView.Internal {
             } else {
                 var headerStrings = additionalHttpHeaders.Keys.Select(key => $"{key}: {additionalHttpHeaders[key]}").ToArray();
                 var newlineDelimitedHttpHeaders = String.Join("\n", headerStrings);
-                WebView_loadUrlWithHeaders(_nativeWebViewPtr, _transformUrlIfNeeded(url), newlineDelimitedHttpHeaders);
+                _nativePlugin.LoadUrlWithHeaders(_nativeWebViewPtr, _transformUrlIfNeeded(url), newlineDelimitedHttpHeaders);
             }
         }
 
@@ -244,10 +241,7 @@ namespace Vuplex.WebView.Internal {
         public virtual void Paste() {
 
             _assertValidState();
-            var text = GUIUtility.systemCopyBuffer;
-            foreach (var character in text) {
-                SendKey(char.ToString(character));
-            }
+            _nativePlugin.Paste(_nativeWebViewPtr);
         }
 
         public Vector2 PointToNormalized(int xInPixels, int yInPixels) {
@@ -273,7 +267,7 @@ namespace Vuplex.WebView.Internal {
         public virtual void Reload() {
 
             _assertValidState();
-            WebView_reload(_nativeWebViewPtr);
+            _nativePlugin.Reload(_nativeWebViewPtr);
         }
 
         public virtual void Resize(int width, int height) {
@@ -291,7 +285,7 @@ namespace Vuplex.WebView.Internal {
         public virtual void Scroll(int scrollDeltaXInPixels, int scrollDeltaYInPixels) {
 
             _assertValidState();
-            WebView_scroll(_nativeWebViewPtr, scrollDeltaXInPixels, scrollDeltaYInPixels);
+            _nativePlugin.Scroll(_nativeWebViewPtr, scrollDeltaXInPixels, scrollDeltaYInPixels);
         }
 
         public void Scroll(Vector2 normalizedScrollDelta) {
@@ -306,53 +300,31 @@ namespace Vuplex.WebView.Internal {
             _assertValidState();
             var scrollDeltaInPixels = NormalizedToPoint(normalizedScrollDelta);
             var pointInPixels = _normalizedToPointAssertValid(normalizedPoint);
-            WebView_scrollAtPoint(_nativeWebViewPtr, scrollDeltaInPixels.x, scrollDeltaInPixels.y, pointInPixels.x, pointInPixels.y);
+            _nativePlugin.ScrollAtPoint(_nativeWebViewPtr, scrollDeltaInPixels.x, scrollDeltaInPixels.y, pointInPixels.x, pointInPixels.y);
         }
 
         public virtual void SelectAll() {
 
             _assertValidState();
-            // If the focused element is an input with a select() method, then use that.
-            // Otherwise, travel up the DOM until we get to the body or a contenteditable
-            // element, and then select its contents.
-            ExecuteJavaScript(
-                @"(function() {
-                    var element = document.activeElement || document.body;
-                    while (!(element === document.body || element.getAttribute('contenteditable') === 'true')) {
-                        if (typeof element.select === 'function') {
-                            element.select();
-                            return;
-                        }
-                        element = element.parentElement;
-                    }
-                    var range = document.createRange();
-                    range.selectNodeContents(element);
-                    var selection = window.getSelection();
-                    selection.removeAllRanges();
-                    selection.addRange(range);
-                })();",
-                null
-            );
+            _nativePlugin.SelectAll(_nativeWebViewPtr);
         }
 
         public virtual void SendKey(string key) {
 
             _assertValidState();
-            WebView_sendKey(_nativeWebViewPtr, key);
+            _nativePlugin.SendKey(_nativeWebViewPtr, key);
         }
-
-        public static void SetCameraAndMicrophoneEnabled(bool enabled) => WebView_setCameraAndMicrophoneEnabled(enabled);
 
         public virtual void SetDefaultBackgroundEnabled(bool enabled) {
 
             _assertValidState();
-            WebView_setDefaultBackgroundEnabled(_nativeWebViewPtr, enabled);
+            _nativePlugin.SetDefaultBackgroundEnabled(_nativeWebViewPtr, enabled);
         }
 
         public virtual void SetFocused(bool focused) {
 
             _assertValidState();
-            WebView_setFocused(_nativeWebViewPtr, focused);
+            _nativePlugin.SetFocused(_nativeWebViewPtr, focused);
             FocusChanged?.Invoke(this, new EventArgs<bool>(focused));
         }
 
@@ -363,14 +335,14 @@ namespace Vuplex.WebView.Internal {
                 VXUtils.LogNative2DModeWarning("SetRenderingEnabled");
                 return;
             }
-            WebView_setRenderingEnabled(_nativeWebViewPtr, enabled);
+            _nativePlugin.SetRenderingEnabled(_nativeWebViewPtr, enabled);
             _renderingEnabled = enabled;
         }
 
         public virtual void StopLoad() {
 
             _assertValidState();
-            WebView_stopLoad(_nativeWebViewPtr);
+            _nativePlugin.StopLoad(_nativeWebViewPtr);
         }
 
         public Task WaitForNextPageLoadToFinish() {
@@ -384,13 +356,13 @@ namespace Vuplex.WebView.Internal {
         public virtual void ZoomIn() {
 
             _assertValidState();
-            WebView_zoomIn(_nativeWebViewPtr);
+            _nativePlugin.ZoomIn(_nativeWebViewPtr);
         }
 
         public virtual void ZoomOut() {
 
             _assertValidState();
-            WebView_zoomOut(_nativeWebViewPtr);
+            _nativePlugin.ZoomOut(_nativeWebViewPtr);
         }
 
     #region Non-public members
@@ -400,23 +372,11 @@ namespace Vuplex.WebView.Internal {
             Initialized
         }
 
-        // Anything over 19.4 megapixels (6k) is almost certainly a mistake.
+        // Anything over 19.4 megapixels (6k) is probably a mistake.
         protected virtual int _abnormallyLargeThreshold { get => 19400000; }
         EventHandler<ConsoleMessageEventArgs> _consoleMessageLogged;
         protected IntPtr _currentNativeTexture;
-
-    #if (UNITY_STANDALONE_WIN && !UNITY_EDITOR) || UNITY_EDITOR_WIN
-        protected const string _dllName = "VuplexWebViewWindows";
-    #elif (UNITY_STANDALONE_OSX && !UNITY_EDITOR) || UNITY_EDITOR_OSX
-        protected const string _dllName = "VuplexWebViewMac";
-    #elif UNITY_WSA
-        protected const string _dllName = "VuplexWebViewUwp";
-    #elif UNITY_ANDROID
-        protected const string _dllName = "VuplexWebViewAndroid";
-    #else
-        protected const string _dllName = "__Internal";
-    #endif
-
+        protected const string _dllName = DefaultNativeWebViewPlugin.DllName; // Used by subclasses.
         EventHandler<FocusedInputFieldChangedEventArgs> _focusedInputFieldChanged;
         protected InitState _initState = InitState.Uninitialized;
         TaskCompletionSource<bool> _initTaskSource;
@@ -424,6 +384,7 @@ namespace Vuplex.WebView.Internal {
         protected bool _native2DModeEnabled;  // Used for Native 2D Mode.
         protected Vector2Int _native2DPosition; // Used for Native 2D Mode.
         protected IntPtr _nativeWebViewPtr;
+        protected INativeWebViewPlugin _nativePlugin = new DefaultNativeWebViewPlugin();
         TaskCompletionSource<bool> _pageLoadFinishedTaskSource;
         List<Action<bool>> _pendingCanGoBackCallbacks = new List<Action<bool>>();
         List<Action<bool>> _pendingCanGoForwardCallbacks = new List<Action<bool>>();
@@ -438,7 +399,7 @@ namespace Vuplex.WebView.Internal {
                 _native2DPosition = new Vector2Int((int)value.x, (int)value.y);
             }
         }
-        static string[] STANDARD_URI_SCHEMES = new string[] { "http:", "https:", "file:", "about:" };
+        static readonly string[] STANDARD_URI_SCHEMES = new string[] { "http:", "https:", "file:", "about:" };
         static readonly Regex _streamingAssetsUrlRegex = new Regex(@"^streaming-assets:(//)?(.*)$", RegexOptions.IgnoreCase);
         // Used for Native 2D Mode.
         protected bool _visible;
@@ -551,11 +512,6 @@ namespace Vuplex.WebView.Internal {
             return Task.FromResult(texture);
         }
 
-        protected virtual void _destroyNativeTexture(IntPtr nativeTexture) {
-
-            WebView_destroyTexture(nativeTexture, SystemInfo.graphicsDeviceType.ToString());
-        }
-
         Texture2D _getReadableTexture() {
 
             // https://support.unity3d.com/hc/en-us/articles/206486626-How-can-I-get-pixels-from-unreadable-textures-
@@ -593,21 +549,6 @@ namespace Vuplex.WebView.Internal {
             #else
                 return GraphicsSettings.renderPipelineAsset?.ToString() ?? "default";
             #endif
-        }
-
-        Task<string> _getSelectedText() {
-
-            // window.getSelection() doesn't work on the content of <textarea> and <input> elements in
-            // Gecko and legacy Edge.
-            // https://developer.mozilla.org/en-US/docs/Web/API/Window/getSelection#Related_objects
-            return ExecuteJavaScript(
-                @"var element = document.activeElement;
-                if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement) {
-                    element.value.substring(element.selectionStart, element.selectionEnd);
-                } else {
-                    window.getSelection().toString();
-                }"
-            );
         }
 
         protected virtual GraphicsDeviceType[] _getSupportedGraphicsApis() => null;
@@ -668,15 +609,15 @@ namespace Vuplex.WebView.Internal {
         void HandleJavaScriptResult(string message) {
 
             var components = message.Split(new char[] { ',' }, 2);
-            var resultCallbackId = components[0];
+            var resultCallbackID = components[0];
             var result = components[1];
-            _handleJavaScriptResult(resultCallbackId, result);
+            _handleJavaScriptResult(resultCallbackID, result);
         }
 
-        void _handleJavaScriptResult(string resultCallbackId, string result) {
+        void _handleJavaScriptResult(string resultCallbackID, string result) {
 
-            var callback = _pendingJavaScriptResultCallbacks[resultCallbackId];
-            _pendingJavaScriptResultCallbacks.Remove(resultCallbackId);
+            var callback = _pendingJavaScriptResultCallbacks[resultCallbackID];
+            _pendingJavaScriptResultCallbacks.Remove(resultCallbackID);
             callback(result);
         }
 
@@ -822,7 +763,7 @@ namespace Vuplex.WebView.Internal {
             }
             Texture.UpdateExternalTexture(nativeTexture);
             if (previousNativeTexture != IntPtr.Zero) {
-                _destroyNativeTexture(previousNativeTexture);
+                _nativePlugin.DestroyTexture(previousNativeTexture, SystemInfo.graphicsDeviceType.ToString());
             }
         }
 
@@ -943,19 +884,8 @@ namespace Vuplex.WebView.Internal {
             }
         }
 
-        protected virtual void _resize() => WebView_resize(_nativeWebViewPtr, Size.x, Size.y);
-
-        protected virtual void _setConsoleMessageEventsEnabled(bool enabled) {
-
-            _assertValidState();
-            WebView_setConsoleMessageEventsEnabled(_nativeWebViewPtr, enabled);
-        }
-
-        protected virtual void _setFocusedInputFieldEventsEnabled(bool enabled) {
-
-            _assertValidState();
-            WebView_setFocusedInputFieldEventsEnabled(_nativeWebViewPtr, enabled);
-        }
+        // Overridden by StandaloneWebView so that it can pass the pixel density.
+        protected virtual void _resize() => _nativePlugin.Resize(_nativeWebViewPtr, Size.x, Size.y);
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void _staticInit() {
@@ -1009,81 +939,6 @@ namespace Vuplex.WebView.Internal {
                 #endif
             }
         }
-
-        [DllImport(_dllName)]
-        static extern void WebView_canGoBack(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        static extern void WebView_canGoForward(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        protected static extern void WebView_click(IntPtr webViewPtr, int x, int y);
-
-        [DllImport(_dllName)]
-        protected static extern void WebView_destroyTexture(IntPtr texture, string graphicsApi);
-
-        [DllImport(_dllName)]
-        static extern void WebView_destroy(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        static extern void WebView_executeJavaScript(IntPtr webViewPtr, string javaScript, string resultCallbackId);
-
-        [DllImport(_dllName)]
-        static extern void WebView_goBack(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        static extern void WebView_goForward(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        static extern void WebView_sendKey(IntPtr webViewPtr, string input);
-
-        [DllImport(_dllName)]
-        static extern void WebView_loadHtml(IntPtr webViewPtr, string html);
-
-        [DllImport(_dllName)]
-        static extern void WebView_loadUrl(IntPtr webViewPtr, string url);
-
-        [DllImport(_dllName)]
-        static extern void WebView_loadUrlWithHeaders(IntPtr webViewPtr, string url, string newlineDelimitedHttpHeaders);
-
-        [DllImport(_dllName)]
-        static extern void WebView_reload(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        protected static extern void WebView_resize(IntPtr webViewPtr, int width, int height);
-
-        [DllImport(_dllName)]
-        static extern void WebView_scroll(IntPtr webViewPtr, int deltaX, int deltaY);
-
-        [DllImport(_dllName)]
-        static extern void WebView_scrollAtPoint(IntPtr webViewPtr, int deltaX, int deltaY, int pointerX, int pointerY);
-
-        [DllImport(_dllName)]
-        static extern void WebView_setCameraAndMicrophoneEnabled(bool enabled);
-
-        [DllImport(_dllName)]
-        static extern void WebView_setConsoleMessageEventsEnabled(IntPtr webViewPtr, bool enabled);
-
-        [DllImport(_dllName)]
-        static extern void WebView_setDefaultBackgroundEnabled(IntPtr webViewPtr, bool enabled);
-
-        [DllImport(_dllName)]
-        static extern void WebView_setFocused(IntPtr webViewPtr, bool focused);
-
-        [DllImport(_dllName)]
-        static extern void WebView_setFocusedInputFieldEventsEnabled(IntPtr webViewPtr, bool enabled);
-
-        [DllImport(_dllName)]
-        static extern void WebView_setRenderingEnabled(IntPtr webViewPtr, bool enabled);
-
-        [DllImport(_dllName)]
-        static extern void WebView_stopLoad(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        static extern void WebView_zoomIn(IntPtr webViewPtr);
-
-        [DllImport(_dllName)]
-        static extern void WebView_zoomOut(IntPtr webViewPtr);
     #endregion
 
     #region Obsolete APIs
@@ -1120,7 +975,7 @@ namespace Vuplex.WebView.Internal {
         [Obsolete(ObsoletionMessages.Init2, true)]
         public void Init(Texture2D texture, float width, float height, Texture2D videoTexture) {}
 
-        Dictionary<EventHandler, EventHandler<LoadFailedEventArgs>> _legacyPageLoadFailedHandlerMap;
+        Dictionary<EventHandler, EventHandler<LoadFailedEventArgs>> _legacyPageLoadFailedHandlerMap = new Dictionary<EventHandler, EventHandler<LoadFailedEventArgs>>();
         [Obsolete(ObsoletionMessages.PageLoadFailed)]
         public event EventHandler PageLoadFailed {
             add {
@@ -1129,13 +984,10 @@ namespace Vuplex.WebView.Internal {
                 _legacyPageLoadFailedHandlerMap[value] = newHandler;
             }
             remove {
-                EventHandler<LoadFailedEventArgs> newHandler;
-                _legacyPageLoadFailedHandlerMap.TryGetValue(value, out newHandler);
-                if (newHandler == null) {
-                    return;
+                if (_legacyPageLoadFailedHandlerMap.TryGetValue(value, out EventHandler<LoadFailedEventArgs> newHandler)) {
+                    LoadFailed -= newHandler;
+                    _legacyPageLoadFailedHandlerMap.Remove(value);
                 }
-                LoadFailed -= newHandler;
-                _legacyPageLoadFailedHandlerMap.Remove(value);
             }
         }
 
@@ -1157,4 +1009,3 @@ namespace Vuplex.WebView.Internal {
     #endregion
     }
 }
-#endif

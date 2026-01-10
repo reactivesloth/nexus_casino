@@ -19,16 +19,30 @@ using Vuplex.WebView.Internal;
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// The base class for WindowsWebPlugin and MacWebPlugin.
+    /// The IWebPlugin implementation for Windows and macOS.
     /// </summary>
-    public class StandaloneWebPlugin : MonoBehaviour {
+    public class StandaloneWebPlugin : MonoBehaviour, IWebPlugin {
 
         public ICookieManager CookieManager { get; } = StandaloneCookieManager.Instance;
+
+        public static StandaloneWebPlugin Instance {
+            get {
+                if (_instance == null) {
+                    _instance = new GameObject("StandaloneWebPlugin").AddComponent<StandaloneWebPlugin>();
+                    DontDestroyOnLoad(_instance.gameObject);
+                }
+                return _instance;
+            }
+        }
+
+        public WebPluginType Type { get; } = WebPluginType.Standalone;
 
         public void ClearAllData() => StandaloneWebView.ClearAllData();
 
         // Deprecated
         public void CreateMaterial(Action<Material> callback) => callback(VXUtils.CreateDefaultMaterial());
+
+        public virtual IWebView CreateWebView() => StandaloneWebView.Instantiate();
 
         // 9222 is Chromium's default remote debugging port, which chrome://inspect already listens to by default.
         public void EnableRemoteDebugging() => StandaloneWebView.EnableRemoteDebugging(9222);
@@ -44,6 +58,20 @@ namespace Vuplex.WebView {
         public void SetUserAgent(bool mobile) => StandaloneWebView.GloballySetUserAgent(mobile);
 
         public void SetUserAgent(string userAgent) => StandaloneWebView.GloballySetUserAgent(userAgent);
+
+        static StandaloneWebPlugin _instance;
+
+        // Note: This needs to be BeforeSceneLoad because using earlier callbacks (like BeforeSplashScreen),
+        //       prevents the StandaloneWebPlugin script's MonoBehaviour methods like Start() from being called.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        static void _registerPlugin() {
+
+            var chromiumPluginDisabled = (Application.platform == RuntimePlatform.OSXPlayer || Application.platform == RuntimePlatform.OSXEditor)
+                                         && StandaloneRuntimeSettings.Load().MacChromiumPluginDisabled;
+            if (!chromiumPluginDisabled) {
+                WebPluginFactory.RegisterStandalonePlugin(Instance);
+            }
+        }
 
     #if UNITY_2020_3_OR_NEWER
         void Start() {

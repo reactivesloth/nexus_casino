@@ -35,6 +35,13 @@ namespace Vuplex.WebView {
                 _canvasGetter = new CachingGetter<Canvas>(GetComponentInParent<Canvas>, 1, this);
             }
             var canvas = _canvasGetter.GetValue();
+            // When running in visionOS's RealityKit app mode, there's an issue where PointerEventData.position is incorrect
+            // (at least as of PolySpatial v2.3). As a workaround, use PointerEventData.pointerCurrentRaycast.worldPosition instead.
+            // Note: 50 = RuntimePlatform.VisionOS. This code evaluates it as an int because RuntimePlatform.VisionOS only exists in Unity 2022.3 and newer.
+            var isVisionOS = (int)Application.platform == 50;
+            if (isVisionOS && canvas != null && canvas.renderMode == RenderMode.WorldSpace) {
+                return _convertToNormalizedPoint(pointerEventData.pointerCurrentRaycast.worldPosition);
+            }
             var camera = canvas == null || canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
             Vector2 localPoint;
             var mousePosition = pointerEventData.position;

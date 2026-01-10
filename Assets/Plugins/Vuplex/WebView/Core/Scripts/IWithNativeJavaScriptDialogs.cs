@@ -18,7 +18,8 @@ namespace Vuplex.WebView {
 
     /// <summary>
     /// An interface implemented by a webview if it supports showing native popups
-    /// triggered by JavaScript dialog APIs like window.alert() and confirm().
+    /// triggered by JavaScript dialog APIs like, window.alert(), window.confirm(),
+    /// and beforeunload.
     /// </summary>
     /// <example>
     /// <code>
