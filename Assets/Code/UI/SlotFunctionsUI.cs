@@ -1,11 +1,9 @@
 using System;
 using System.Collections;
 using Code.API;
-using Code.API.Models;
-using Code.InteractionSystem;
+using Code.Network;
+using Code.Network.InteractionSystem;
 using Code.Network.Stream;
-using FishNet;
-using FishNet.Transporting;
 using PlayFlow;
 using Proyecto26;
 using UnityEngine;
@@ -34,28 +32,27 @@ namespace Code.UI
         private void Awake()
         {
             _mainScreenController = FindAnyObjectByType<MainScreenController>();
-            InstanceFinder.ClientManager.OnClientConnectionState += OnClientStarted;
         }
 
-        private void OnClientStarted(ClientConnectionStateArgs args)
-        {
-            if(args.ConnectionState != LocalConnectionState.Started) return;
-            if(_mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber)
-                _mainScreenController.RequestCancel();
-            StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
-        }
+        // private void OnClientStarted(ClientConnectionStateArgs args)
+        // {
+        //     if(args.ConnectionState != LocalConnectionState.Started) return;
+        //     if(_mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber)
+        //         _mainScreenController.RequestCancel();
+        //     StreamSlotIdOnOnChange(-1, _mainScreenController.StreamSlotId.Value, false);
+        // }
 
         private void OnEnable()
         {
-            if (!slotMachineInteractable.IsOwner) return;
+            if (!slotMachineInteractable.isOwner) return;
             if (PlayerInput.Instance.feedbackText != null) PlayerInput.Instance.feedbackText.text = string.Empty;
 
-            _mainScreenController.StreamSlotId.OnChange += StreamSlotIdOnOnChange;
+            _mainScreenController.StreamSlotId.onChanged += StreamSlotIdOnOnChange;
         }
 
         private void Update()
         {
-            if (!slotMachineInteractable.IsOwner) return;
+            if (!slotMachineInteractable.isOwner) return;
 
             if (PlayerInput.Instance.IsSlotsFullscreen) SwitchFullscreen();
             if (PlayerInput.Instance.IsSlotsScreenshot && !_screenShotBusy) OnScreenshotClicked();
@@ -91,7 +88,7 @@ namespace Code.UI
                 _resultShowCoroutine = null;
             }
 
-            _mainScreenController.StreamSlotId.OnChange -= StreamSlotIdOnOnChange;
+            _mainScreenController.StreamSlotId.onChanged -= StreamSlotIdOnOnChange;
             _streaming = false;
         }
 
@@ -216,7 +213,7 @@ namespace Code.UI
         {
             var nickname = !string.IsNullOrEmpty(ClientDataStorage.UserData.username) ? ClientDataStorage.UserData.username : "unknown";
             
-            bool isThisSlotNow = _mainScreenController.StreamSlotId.Value == slotMachineInteractable.IDNumber;
+            bool isThisSlotNow = _mainScreenController.StreamSlotId.value == slotMachineInteractable.IDNumber;
             
             if(!isThisSlotNow) 
                 _mainScreenController.RequestStream(slotMachineInteractable.IDNumber, nickname);
@@ -224,13 +221,13 @@ namespace Code.UI
                 _mainScreenController.RequestCancel();
         }
 
-        private void StreamSlotIdOnOnChange(int prevId, int newId, bool asServer)
+        private void StreamSlotIdOnOnChange(int newId)
         {
             var thisId = slotMachineInteractable.IDNumber;
 
             if (newId == thisId)
                 OnStartStreaming();
-            else if (prevId == thisId && newId != thisId)
+            else //if (prevId == thisId && newId != thisId)
                 OnEndStreaming();
         }
 

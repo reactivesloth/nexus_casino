@@ -46,9 +46,9 @@ namespace Code.UI
                     if (hostIndicator != null) hostIndicator.SetActive(_playerUI.IsHost);
                     if (voiceImage != null)
                     {
-                        voiceImage.color = _playerUI.IsVoiceMuted.Value ? Color.red :
-                            _playerUI.IsVoiceHeld.Value ? Color.white : Color.clear;
-                        voiceImage.gameObject.SetActive(_playerUI.IsVoiceHeld.Value || _playerUI.IsVoiceMuted.Value);
+                        voiceImage.color = _playerUI.IsVoiceMuted.value ? Color.red :
+                            _playerUI.IsVoiceHeld.value ? Color.white : Color.clear;
+                        voiceImage.gameObject.SetActive(_playerUI.IsVoiceHeld.value || _playerUI.IsVoiceMuted.value);
                     }
                 }
             }
@@ -61,7 +61,7 @@ namespace Code.UI
         private static PlayerMovementController FindLocalOwnerMovement()
         {
             var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            return all.FirstOrDefault(m => m != null && m.Owner.IsLocalClient);
+            return all.FirstOrDefault(m => m != null && m.isOwner);
         }
     }
 }

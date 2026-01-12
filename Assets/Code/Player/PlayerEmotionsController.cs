@@ -1,5 +1,5 @@
 using Code.Utility;
-using FishNet.Object;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Player
@@ -29,7 +29,7 @@ namespace Code.Player
 
         private void Update()
         {
-            if (!IsOwner || !playerMovementController.CanMove)
+            if (!isOwner || !playerMovementController.CanMove)
             {
                 return;
             }

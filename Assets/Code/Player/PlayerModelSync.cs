@@ -1,10 +1,6 @@
 using System.Collections;
 using CC;
-using FishNet.Component.Animating;
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Player
@@ -18,65 +14,46 @@ namespace Code.Player
         private NetworkAnimator _networkAnimator;
         private Coroutine _updateAvatarCoroutine;
 
-        private readonly SyncVar<string> _characterJson = new(new SyncTypeSettings
-        {
-            ReadPermission = ReadPermission.Observers,
-            WritePermission = WritePermission.ServerOnly
-        });
+        private readonly SyncVar<string> _characterJson;
         
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
             _networkAnimator = GetComponent<NetworkAnimator>();
-            _characterJson.OnChange += OnCharacterJsonChanged;
+            _characterJson.onChanged += OnCharacterJsonChanged;
             _characterCustomization.Initialize();
         }
 
-        private void Start()
+        protected override void OnDestroy()
         {
-            ServerManager.OnRemoteConnectionState += OnConnectionState;
+            base.OnDestroy();
+            _characterJson.onChanged -= OnCharacterJsonChanged;
         }
 
-        private void OnDestroy()
+        private void OnCharacterJsonChanged(string obj)
         {
-            ServerManager.OnRemoteConnectionState -= OnConnectionState;
-            _characterJson.OnChange -= OnCharacterJsonChanged;
-        }
-
-        private void OnConnectionState(NetworkConnection arg1, RemoteConnectionStateArgs arg2)
-        {
-            if(arg2.ConnectionState == RemoteConnectionState.Started)
-            {
-                _networkAnimator.SendAll();
-            }
-        }
-        
-        private void OnCharacterJsonChanged(string prev, string next, bool asServer)
-        {
-            //Debug.Log($"[Client] Получил JSON ({(next != null ? next.Length : 0)} симв.)");
-
             _characterCustomization.Autoload = false;
             _characterCustomization.Initialize();
-            if (!string.IsNullOrEmpty(next))
-                _characterCustomization.LoadFromJSON(next);
+            if (!string.IsNullOrEmpty(obj))
+                _characterCustomization.LoadFromJSON(obj);
         }
+        
+        // public override void OnOwnershipClient(NetworkConnection prevOwner)
+        // {
+        //      base.OnOwnershipClient(prevOwner);
+        //      if (isOwner) StartCoroutine(WaitAndSendLocalCharacter());
+        // }
 
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
-        {
-            base.OnOwnershipClient(prevOwner);
-            if (IsOwner) StartCoroutine(WaitAndSendLocalCharacter());
-        }
-
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(requireOwnership: false)]
         public void SendCharacterJsonServerRpc(string json)
         {
             //Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
-            _characterJson.Value = json ?? string.Empty;
+            _characterJson.value = json ?? string.Empty;
         }
 
         private IEnumerator WaitAndSendLocalCharacter()
         {
-            while (!IsClientInitialized || !IsClientStarted || !IsSpawned)
+            while (!isClientAndObserving || !isFullySpawned)
                 yield return null;
             yield return null;
             
@@ -97,7 +74,7 @@ namespace Code.Player
         
         public void TransmitLocalCharacter()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             //Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
             SendCharacterJsonServerRpc(json);

@@ -1,11 +1,7 @@
-using System.Collections.Generic;
-using Code.API;
-using Code.API.Models;
-using Code.Chat;
+using Code.Network;
 using Code.UI.Popup;
 using Code.Utility;
-using FishNet.Object.Synchronizing;
-using PlayFlow;
+using PurrNet;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -49,7 +45,7 @@ namespace Code.UI.Admin
 
         private void OnEnable()
         {
-            _adminPanelHandler.MutedDictionary.OnChange += OnMutedDictionaryChange;
+            _adminPanelHandler.MutedDictionary.onChanged += OnMutedDictionaryChange;
 
             kickButton.onClick.AddListener(OnKickClicked);
             banButton.onClick.AddListener(OnBanClicked);
@@ -62,7 +58,7 @@ namespace Code.UI.Admin
 
         private void OnDisable()
         {
-            _adminPanelHandler.MutedDictionary.OnChange -= OnMutedDictionaryChange;
+            _adminPanelHandler.MutedDictionary.onChanged -= OnMutedDictionaryChange;
 
             kickButton.onClick.RemoveListener(OnKickClicked);
             banButton.onClick.RemoveListener(OnBanClicked);
@@ -77,16 +73,15 @@ namespace Code.UI.Admin
         {
             if(_playerUI != null)
             {
-                _playerUI.IsVoiceHeld.OnChange -= IsVoiceHeldOnOnChange;
-                _playerUI.IsVoiceMuted.OnChange -= IsVoiceMutedOnOnChange;
+                _playerUI.IsVoiceHeld.onChanged -= IsVoiceHeldOnOnChange;
+                _playerUI.IsVoiceMuted.onChanged -= IsVoiceMutedOnOnChange;
             }
         }
 
-        private void OnMutedDictionaryChange(SyncDictionaryOperation operation, string key,
-            AdminPanelHandler.MuteStateSync value, bool asServer)
+        private void OnMutedDictionaryChange(SyncDictionaryChange<string, AdminPanelHandler.MuteStateSync> change)
         {
-            if (key == _username)
-                SetMutedButtonsState(value.muteChat, value.muteVoice);
+            if (change.key == _username)
+                SetMutedButtonsState(change.value.muteChat, change.value.muteVoice);
         }
 
 
@@ -111,21 +106,21 @@ namespace Code.UI.Admin
             _playerUI = PlayerUI.GetByPlayerName(_username);
             if(_playerUI != null)
             {
-                _playerUI.IsVoiceHeld.OnChange += IsVoiceHeldOnOnChange;
-                _playerUI.IsVoiceMuted.OnChange += IsVoiceMutedOnOnChange;
+                _playerUI.IsVoiceHeld.onChanged += IsVoiceHeldOnOnChange;
+                _playerUI.IsVoiceMuted.onChanged += IsVoiceMutedOnOnChange;
                 hostIndicator.SetActive(_playerUI.IsHost);
                 UpdateVoiceStatus();
             }
         }
         
-        private void IsVoiceHeldOnOnChange(bool prev, bool next, bool asServer) => UpdateVoiceStatus();
+        private void IsVoiceHeldOnOnChange(bool next) => UpdateVoiceStatus();
         
-        private void IsVoiceMutedOnOnChange(bool prev, bool next, bool asServer) => UpdateVoiceStatus();
+        private void IsVoiceMutedOnOnChange(bool next) => UpdateVoiceStatus();
 
         private void UpdateVoiceStatus()
         {
-            var isVoiceMuted = _playerUI.IsVoiceMuted.Value;
-            var isVoiceHeld = _playerUI.IsVoiceHeld.Value;
+            var isVoiceMuted = _playerUI.IsVoiceMuted.value;
+            var isVoiceHeld = _playerUI.IsVoiceHeld.value;
             voiceImage.color = isVoiceMuted ? Color.red : isVoiceHeld ? Color.green : Color.clear;
         }
 
@@ -146,7 +141,10 @@ namespace Code.UI.Admin
             _popupOpener.OpenPopup();
         }
 
-        private void KickAction() => _adminPanelHandler.Kick(_username);
+        private void KickAction()
+        {
+            //_adminPanelHandler.Kick(_username);
+        }
 
         private void OnBanClicked()
         {
@@ -174,31 +172,34 @@ namespace Code.UI.Admin
                 () => BanAction(int.Parse(_popupOpener.LastPopup.GetInputValue(0))));
         }
 
-        private void BanAction(int time) => _adminPanelHandler.BanUser(_username, time);
+        private void BanAction(int time)
+        {
+            //_adminPanelHandler.BanUser(_username, time);
+        }
 
         private void OnMuteChatClicked()
         {
-            _adminPanelHandler.MuteChat(_username);
+            //_adminPanelHandler.MuteChat(_username);
         }
 
         private void OnUnmuteChatClicked()
         {
-            _adminPanelHandler.UnmuteChat(_username);
+            //_adminPanelHandler.UnmuteChat(_username);
         }
 
         private void OnMuteVoiceClicked()
         {
-            _adminPanelHandler.MuteVoice(_username);
+            //_adminPanelHandler.MuteVoice(_username);
         }
 
         private void OnUnmuteVoiceClicked()
         {
-            _adminPanelHandler.UnmuteVoice(_username);
+            //_adminPanelHandler.UnmuteVoice(_username);
         }
 
         private void OnToggleOffVoiceClicked()
         {
-            _adminPanelHandler.ToggleOffVoice(_username);
+            //_adminPanelHandler.ToggleOffVoice(_username);
         }
 
         private void SetMutedButtonsState(bool isMuteChat, bool isUnmuteVoice)

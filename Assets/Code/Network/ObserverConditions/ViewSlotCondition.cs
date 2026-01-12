@@ -1,19 +1,11 @@
-using System;
-using Code.InteractionSystem;
-using FishNet.Connection;
-using FishNet.Observing;
 using UnityEngine;
 
 namespace Code.Network.ObserverConditions
 {
-    /// <summary>
-    /// Без LINQ/аллоцирующих Contains; аккуратные null-чекаи.
-    /// Возвращает true, если для данного слота игрок сообщил видимость (по кэшу на сервере).
-    /// </summary>
     [CreateAssetMenu(menuName = "Nexus/Observers/View Slot Condition", fileName = "View Slot Condition")]
-    public sealed class ViewSlotCondition : ObserverCondition
+    public sealed class ViewSlotCondition// : ObserverCondition
     {
-        public override bool ConditionMet(NetworkConnection connection, bool currentlyAdded, out bool notProcessed)
+        /*public override bool ConditionMet(NetworkConnection connection, bool currentlyAdded, out bool notProcessed)
         {
             notProcessed = false;
 
@@ -44,6 +36,6 @@ namespace Code.Network.ObserverConditions
             return false;
         }
 
-        public override ObserverConditionType GetConditionType() => ObserverConditionType.Timed;
+        public override ObserverConditionType GetConditionType() => ObserverConditionType.Timed;*/
     }
 }

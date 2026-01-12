@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.Chat;
-using Code.InteractionSystem;
+using Code.Network;
+using Code.Network.InteractionSystem;
 using Code.Scene.SceneObjectControl;
 using Code.UI.Popup;
 using Code.Utility;
@@ -344,7 +345,7 @@ namespace Code.UI.Admin
                 ? null
                 : _popupOpener.LastPopup.GetInputValue(2);
 
-            _adminPanelHandler.NewRoomHandle(roomName, isPrivate, hostName);
+            //_adminPanelHandler.NewRoomHandle(roomName, isPrivate, hostName);
 
             _popupOpener.ClosePopup();
         }

@@ -2,14 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using Code.InteractionSystem;
 using Code.Network.Stream.Data;
 using Code.Network.Stream.Utility;
 using LiteNetLib;
-using FishNet;
-using FishNet.Transporting.Tugboat;
 using LiteNetLib.Utils;
 using PlayFlow;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.Stream
@@ -37,11 +35,12 @@ namespace Code.Network.Stream
         {
             get
             {
-                var tugboat = InstanceFinder.TransportManager.Transport as Tugboat;
-                if (tugboat == null)
-                    return string.Empty;
-                var addr = tugboat.GetClientAddress();
-                return addr;
+                // var transport = InstanceHandler.NetworkManager.currentTransport;
+                // if (transport == null)
+                //     return string.Empty;
+                // var addr = transport.GetClientAddress();
+                // return addr;
+                return null;
             }
         }
 

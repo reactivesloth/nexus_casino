@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Code.Chat;
+using Code.Network;
 using Code.UI.Popup;
 using Code.Utility;
 using PlayFlow;
@@ -262,7 +262,7 @@ namespace Code.UI.Admin
             // Перемещаем каждого уникального игрока
             foreach (var playerName in uniquePlayers)
             {
-                _adminPanelHandler.MoveUserToRoom(playerName, _lobbyId);
+            //    _adminPanelHandler.MoveUserToRoom(playerName, _lobbyId);
             }
 
             _popupOpener.ClosePopup();

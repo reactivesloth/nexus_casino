@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using Code.API;
 using Code.API.Models;
-using Code.InteractionSystem;
+using Code.Network;
+using Code.Network.InteractionSystem;
 using Code.Utility;
 using Proyecto26;
 using TMPro;

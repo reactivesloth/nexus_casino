@@ -4,8 +4,8 @@ using Code.API;
 using Code.UI;
 using Code.UI.Popup;
 using Code.Utility;
-using FishNet;
 using PlayFlow;
+using PurrNet;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
@@ -226,7 +226,7 @@ namespace Code.Network
         private IEnumerator ConnectToServer(string ip, ushort port)
         {
             yield return new WaitForSeconds(2f);
-            InstanceFinder.NetworkManager.ClientManager.StartConnection(ip, port);
+            InstanceHandler.NetworkManager.currentTransport.Connect(ip, port);
         }
 
         private void InitPlayerDataOnLobby()

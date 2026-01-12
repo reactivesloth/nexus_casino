@@ -5,12 +5,11 @@ using System.Text;
 using CC;
 using Unity.Cinemachine;
 using Code.API;
+using Code.Network.InteractionSystem;
 using Code.UI;
 using Code.Utility;
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using Proyecto26;
+using PurrNet;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -152,17 +151,8 @@ namespace Code.Player
         private float _animSpeed;
         private float _animTurn;
 
-        private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ClientUnsynchronized,
-            ReadPermission = ReadPermission.Observers
-        });
-
-        private readonly SyncVar<float> networkIkWeight = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ClientUnsynchronized,
-            ReadPermission = ReadPermission.Observers
-        });
+        private readonly SyncVar<Vector3> networkLookAtPos;
+        private readonly SyncVar<float> networkIkWeight;
 
         private int animIDSpeed;
         private int animIDGrounded;
@@ -218,10 +208,9 @@ namespace Code.Player
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
         }
 
-        public override void OnStartClient()
+        public void OnStartClient()
         {
-            base.OnStartClient();
-            if (IsOwner)
+            if (isOwner)
             {
                 Own = this;
                 jumpTimeoutDelta = jumpTimeout;
@@ -236,7 +225,7 @@ namespace Code.Player
             }
         }
 
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        /*public override void OnOwnershipClient()
         {
             base.OnOwnershipClient(prevOwner);
             if (!IsOwner) return;
@@ -252,7 +241,7 @@ namespace Code.Player
             fallTimeoutDelta = fallTimeout;
 
             Invoke(nameof(PlayerGetHeadThings), 2);
-        }
+        }*/
 
         private void PlayerGetHeadThings()
         {
@@ -279,7 +268,7 @@ namespace Code.Player
 
         private void LoadSpawnPosition()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
 
             var spawnPos = Vector3.zero;
             
@@ -305,7 +294,7 @@ namespace Code.Player
 
         private void UpdateSpawnPositionTimer()
         {
-            if (!IsOwner)
+            if (!isOwner)
                 return;
             
             if (_spawnPositionTimer > 0f)
@@ -321,7 +310,7 @@ namespace Code.Player
 
         private void SaveSpawnPosition()
         {
-            if (!IsOwner || !CanMove) return;
+            if (!isOwner || !CanMove) return;
             var spawnPos = transform.position;
             var spawnRot = transform.rotation.eulerAngles;
 
@@ -363,7 +352,7 @@ namespace Code.Player
                 return;
             }
             
-            if (!IsOwner) return;
+            if (!isOwner) return;
             if (!_initedPlayer) EnsureInit();
             
             if (_mainCamera == null) _mainCamera = Camera.main;
@@ -406,7 +395,7 @@ namespace Code.Player
 
         private void LateUpdate()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             if (!_initedPlayer) EnsureInit();
 
             if (LookCameraLimitRotation)
@@ -716,11 +705,11 @@ namespace Code.Player
         private float _lastSentWeight;
         private bool spawned = false;
 
-        [ServerRpc(RunLocally = true)]
+        //[ServerRpc(RunLocally = true)]
         private void SyncIKServerRpc(Vector3 lookPos, float weight)
         {
-            networkLookAtPos.Value = lookPos;
-            networkIkWeight.Value = weight;
+            networkLookAtPos.value = lookPos;
+            networkIkWeight.value = weight;
         }
 
         public void SnapAimToCurrentCamera()
@@ -768,7 +757,7 @@ namespace Code.Player
 
         public void PlayEmotionAnimation(int index)
         {
-            if (!IsOwner) return; // только локальный владелец
+            if (!isOwner) return; // только локальный владелец
             if (animator == null) return; // защитная проверка
 
             // Перезапуск, если уже играется
@@ -835,7 +824,7 @@ namespace Code.Player
             while (timer < clipLength)
             {
                 // Если объект потерял владение/Animator исчез — выходим
-                if (!IsOwner || animator == null) break;
+                if (!isOwner || animator == null) break;
 
                 timer += Time.deltaTime;
                 yield return null;
@@ -863,7 +852,7 @@ namespace Code.Player
         {
             if (animator == null) return;
 
-            if (IsOwner)
+            if (isOwner)
             {
                 if (SuppressLookAtIK || Time.time < _ikSuppressUntil)
                 {
@@ -894,8 +883,8 @@ namespace Code.Player
             }
             else
             {
-                _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.Value, Time.deltaTime * 5f);
-                _lookPos = Vector3.Lerp(_lookPos, networkLookAtPos.Value, Time.deltaTime * 5f);
+                _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.value, Time.deltaTime * 5f);
+                _lookPos = Vector3.Lerp(_lookPos, networkLookAtPos.value, Time.deltaTime * 5f);
                 animator.SetLookAtWeight(_syncWeight, 0f, _syncWeight, _syncWeight, lookAtClampWeight);
                 animator.SetLookAtPosition(_lookPos);
             }
@@ -903,7 +892,7 @@ namespace Code.Player
 
         public void ResetOnReconnect()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             
             if (spawnOnSawedPosition)
             {

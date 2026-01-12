@@ -1,10 +1,8 @@
 using System;
-using Code.InteractionSystem;
+using Code.Network.InteractionSystem;
 using Code.Network.Stream.Data;
 using Code.Utility;
-using FishNet;
-using FishNet.Connection;
-using FishNet.Object;
+using PurrNet;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -103,7 +101,7 @@ namespace Code.Network.Stream
 
         private void Update()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             if (Time.time < _nextTime) return;
             if (_isCapturing) return;
             
@@ -346,7 +344,7 @@ namespace Code.Network.Stream
         // СТАНДАРТНЫЕ МЕТОДЫ FISHNET
         // =================================================================================
 
-        public override void OnStartClient()
+        /*public override void OnStartClient()
         {
             base.OnStartClient();
 
@@ -416,7 +414,7 @@ namespace Code.Network.Stream
 
             _lastFrameHash = 0;
             _frameCheckCounter = 0;
-        }
+        }*/
         
         // API
         public void SetQualitySettings(float res, int quality)

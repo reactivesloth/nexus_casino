@@ -1,9 +1,6 @@
-using Code.InteractionSystem;
+using Code.Network.InteractionSystem;
 using Code.Utility;
-using FishNet.Component.Observing;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
+using PurrNet;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,42 +15,33 @@ namespace Code.Network.Stream
         [SerializeField] private TMP_Text slotIdText;
         [SerializeField] private TMP_Text streamerNameText;
 
-        private SlotMachineInteractable CurrentStreamSlot => GetCurrentStream(StreamSlotId.Value);
+        private SlotMachineInteractable CurrentStreamSlot => GetCurrentStream(StreamSlotId.value);
         private SlotMachineInteractable _prevStreamSlot;
 
-        public readonly SyncVar<int> StreamSlotId = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
+        public readonly SyncVar<int> StreamSlotId;
 
-        public readonly SyncVar<string> StreamerUsername = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
+        public readonly SyncVar<string> StreamerUsername;
 
-        protected override void OnValidate()
+        protected void OnValidate()
         {
-            base.OnValidate();
             elementsParent ??= screenRawImage.transform.parent.gameObject;
         }
 
-        private void Awake()
-        {
-            StreamSlotId.SetInitialValues(-1);
-        }
+        // private void Awake()
+        // {
+        //     StreamSlotId.SetInitialValues(-1);
+        // }
 
         private void OnEnable()
         {
-            StreamSlotId.OnChange += OnStreamSlotIdChange;
-            StreamerUsername.OnChange += StreamerUsernameOnOnChange;
+            StreamSlotId.onChanged += OnStreamSlotIdChange;
+            StreamerUsername.onChanged += StreamerUsernameOnOnChange;
         }
 
         private void OnDisable()
         {
-            StreamSlotId.OnChange -= OnStreamSlotIdChange;
-            StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
+            StreamSlotId.onChanged -= OnStreamSlotIdChange;
+            StreamerUsername.onChanged -= StreamerUsernameOnOnChange;
             
             if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
@@ -66,7 +54,7 @@ namespace Code.Network.Stream
 
         public void RequestCancel() => SetStream_ServerRpc(-1, string.Empty);
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(requireOwnership: false)]
         private void SetStream_ServerRpc(int slotId, string username) =>
             SetStream(slotId, username); //TODO: request mechanic, if its need
 
@@ -78,8 +66,8 @@ namespace Code.Network.Stream
                 SetConditionsEnable(true);
             }
             
-            StreamSlotId.Value = slotId;
-            StreamerUsername.Value = username;
+            StreamSlotId.value = slotId;
+            StreamerUsername.value = username;
             
             if (CurrentStreamSlot != null)
             {
@@ -88,11 +76,8 @@ namespace Code.Network.Stream
             }
         }
 
-        private void OnStreamSlotIdChange(int prev, int next, bool asServer)
+        private void OnStreamSlotIdChange(int next)
         {
-            if(asServer)
-                return;
-            
             if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
             
@@ -117,11 +102,8 @@ namespace Code.Network.Stream
             slotIdText.text = $"Slot №{next}";
         }
 
-        private void StreamerUsernameOnOnChange(string prev, string next, bool asServer)
+        private void StreamerUsernameOnOnChange(string next)
         {
-            if(asServer)
-                return;
-            
             streamerNameText.text = $"{next}";
         }
         
@@ -140,9 +122,8 @@ namespace Code.Network.Stream
             if (CurrentStreamSlot == null)
                 return;
 
-            var observerCondition =
-                CurrentStreamSlot.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
-            observerCondition.SetIsEnabled(enable);
+            //var observerCondition = CurrentStreamSlot.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
+            //observerCondition.SetIsEnabled(enable);
         }
         
         private void ApplyTexture(Texture texture)

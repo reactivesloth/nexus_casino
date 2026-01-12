@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Code.Chat;
+using Code.Network;
 using Code.Scene.SceneObjectControl;
 using TMPro;
 using UnityEngine;
@@ -51,7 +52,7 @@ namespace Code.UI.Admin
         private void OnDropDownValueChanged(int index)
         {
             var indexText = statesDropdown.options[index].text;
-            _adminPanelHandler.SceneControl(_sceneObject.Key, indexText);
+        //    _adminPanelHandler.SceneControl(_sceneObject.Key, indexText);
         }
     }
 }

@@ -1,10 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Code.InteractionSystem;
-using FishNet;
-using FishNet.Broadcast;
-using FishNet.Connection;
-using FishNet.Transporting;
+using Code.Network.InteractionSystem;
 using UnityEngine;
 
 namespace Code.Network
@@ -13,21 +9,21 @@ namespace Code.Network
     {
         [SerializeField] private float updateIntervalSecs = 1f;
 
-        public static readonly Dictionary<NetworkConnection, PlayerSlotViewInfo> ServerInfoForPlayerViewSlots = new();
+        //public static readonly Dictionary<NetworkConnection, PlayerSlotViewInfo> ServerInfoForPlayerViewSlots = new();
 
         private float _currentIntervalSecs = 0;
 
-        private void OnEnable()
-        {
-            InstanceFinder.ServerManager.RegisterBroadcast<PlayerSlotViewInfo>(PlayerSlotViewReceive);
-            InstanceFinder.ServerManager.OnRemoteConnectionState += ServerManagerOnOnRemoteConnectionState;
-        }
-
-        private void OnDisable()
-        {
-            InstanceFinder.ServerManager.UnregisterBroadcast<PlayerSlotViewInfo>(PlayerSlotViewReceive);
-            InstanceFinder.ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
-        }
+        // private void OnEnable()
+        // {
+        //     InstanceFinder.ServerManager.RegisterBroadcast<PlayerSlotViewInfo>(PlayerSlotViewReceive);
+        //     InstanceFinder.ServerManager.OnRemoteConnectionState += ServerManagerOnOnRemoteConnectionState;
+        // }
+        //
+        // private void OnDisable()
+        // {
+        //     InstanceFinder.ServerManager.UnregisterBroadcast<PlayerSlotViewInfo>(PlayerSlotViewReceive);
+        //     InstanceFinder.ServerManager.OnRemoteConnectionState -= ServerManagerOnOnRemoteConnectionState;
+        // }
 
         private void Update()
         {
@@ -48,10 +44,10 @@ namespace Code.Network
             for (var i = 0; i < visibleSlots.Count; i++)
                 ids[i] = (byte)visibleSlots[i].IDNumber;
 
-            InstanceFinder.ClientManager.Broadcast(new PlayerSlotViewInfo
-            {
-                viewSlotsNumbers = ids
-            });
+            // InstanceFinder.ClientManager.Broadcast(new PlayerSlotViewInfo
+            // {
+            //     viewSlotsNumbers = ids
+            // });
         }
 
         public List<SlotMachineInteractable> GetVisibleTargets()
@@ -73,21 +69,21 @@ namespace Code.Network
             return visibleTargets;
         }
 
-        private void PlayerSlotViewReceive(NetworkConnection sender, PlayerSlotViewInfo slotViewInfo, Channel channel)
-        {
-            if (!ServerInfoForPlayerViewSlots.TryAdd(sender, slotViewInfo))
-                ServerInfoForPlayerViewSlots[sender] = slotViewInfo;
-        }
-
-        private void ServerManagerOnOnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs stateArgs)
-        {
-            if (stateArgs.ConnectionState == RemoteConnectionState.Stopped)
-                ServerInfoForPlayerViewSlots.Remove(conn);
-        }
+        // private void PlayerSlotViewReceive(NetworkConnection sender, PlayerSlotViewInfo slotViewInfo, Channel channel)
+        // {
+        //     if (!ServerInfoForPlayerViewSlots.TryAdd(sender, slotViewInfo))
+        //         ServerInfoForPlayerViewSlots[sender] = slotViewInfo;
+        // }
+        //
+        // private void ServerManagerOnOnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs stateArgs)
+        // {
+        //     if (stateArgs.ConnectionState == RemoteConnectionState.Stopped)
+        //         ServerInfoForPlayerViewSlots.Remove(conn);
+        // }
     }
 
     [Serializable]
-    public struct PlayerSlotViewInfo : IBroadcast
+    public struct PlayerSlotViewInfo// : IBroadcast
     {
         public byte[] viewSlotsNumbers;
     }

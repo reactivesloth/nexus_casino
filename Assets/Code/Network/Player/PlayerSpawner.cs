@@ -1,28 +1,21 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Code.API;
-using Code.API.Models;
 using Code.Player;
-using FishNet;
-using FishNet.Broadcast;
-using FishNet.Connection;
-using FishNet.Managing;
-using FishNet.Object;
-using FishNet.Transporting;
 using PlayFlow;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.Player
 {
-    public struct PlayerTypeBroadcast : IBroadcast
+    public struct PlayerTypeBroadcast //: IBroadcast
     {
         public MeSchema PlayerData;
         public string PlayerType;
     }
 
-    public struct DisconnectBroadcast : IBroadcast
+    public struct DisconnectBroadcast //: IBroadcast
     {
         public string Reason;
     }
@@ -31,7 +24,7 @@ namespace Code.Network.Player
     public class PlayerSpawnableModelKeyValuePair
     {
         public string key;
-        public NetworkObject val;
+        //public NetworkObject val;
     }
 
     /// <summary>
@@ -40,7 +33,7 @@ namespace Code.Network.Player
     public sealed class PlayerSpawner : MonoBehaviour
     {
         /// <summary>Вызывается на сервере сразу после спавна игрока.</summary>
-        public event Action<NetworkObject> OnSpawned;
+        //public event Action<NetworkObject> OnSpawned;
 
         [Tooltip(
             "True to add player to the active scene when no global scenes are specified through the SceneManager.")]
@@ -51,16 +44,16 @@ namespace Code.Network.Player
         public Transform[] Spawns = Array.Empty<Transform>();
 
         [SerializeField] private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new();
-        private readonly Dictionary<string, NetworkObject> _playerSpawnables = new(StringComparer.Ordinal);
+        //private readonly Dictionary<string, NetworkObject> _playerSpawnables = new(StringComparer.Ordinal);
 
         private NetworkManager _networkManager;
         private int _nextSpawn;
 
-        private readonly List<NetworkConnection> _dontSpawn = new(8);
-        private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
+        //private readonly List<NetworkConnection> _dontSpawn = new(8);
+        //private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
 
-        public static readonly Dictionary<NetworkConnection, MeSchema> SpawnedPlayerData_Server = new();
-        public static readonly Dictionary<string, NetworkConnection> NameConnectionsData_Server = new();
+       // public static readonly Dictionary<NetworkConnection, MeSchema> SpawnedPlayerData_Server = new();
+        //public static readonly Dictionary<string, NetworkConnection> NameConnectionsData_Server = new();
 
         private void Awake()
         {
@@ -68,22 +61,22 @@ namespace Code.Network.Player
             for (int i = 0; i < playerPrefabs.Count; i++)
             {
                 var kvp = playerPrefabs[i];
-                if (kvp != null && !string.IsNullOrEmpty(kvp.key) && kvp.val != null)
-                    _playerSpawnables[kvp.key] = kvp.val;
+          //      if (kvp != null && !string.IsNullOrEmpty(kvp.key) && kvp.val != null)
+           //         _playerSpawnables[kvp.key] = kvp.val;
             }
         }
 
         private void OnEnable()
         {
-            _networkManager = GetComponentInParent<NetworkManager>() ?? InstanceFinder.NetworkManager;
+         //   _networkManager = GetComponentInParent<NetworkManager>() ?? InstanceFinder.NetworkManager;
             if (_networkManager == null)
             {
-                NetworkManagerExtensions.LogWarning(
-                    $"PlayerSpawner on {gameObject.name} cannot work as NetworkManager wasn't found on this object or within parent objects.");
+         //       NetworkManagerExtensions.LogWarning(
+         //           $"PlayerSpawner on {gameObject.name} cannot work as NetworkManager wasn't found on this object or within parent objects.");
                 return;
             }
             // серверная подписка: принимаем тип игрока + спавн по загрузке стартовых сцен
-            if (InstanceFinder.ServerManager != null)
+            /*if (InstanceFinder.ServerManager != null)
             {
                 InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived,
                     true);
@@ -97,7 +90,7 @@ namespace Code.Network.Player
 
             // клиентская подписка: отправим свой тип после установления соединения
             if (InstanceFinder.ClientManager != null)
-                InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
+                InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;*/
         }
 
         private void OnDisable()
@@ -105,7 +98,7 @@ namespace Code.Network.Player
             if (_networkManager == null)
                 return;
 
-            if (InstanceFinder.ServerManager != null)
+            /*if (InstanceFinder.ServerManager != null)
             {
                 InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived);
                 InstanceFinder.ClientManager.UnregisterBroadcast<DisconnectBroadcast>(
@@ -117,11 +110,11 @@ namespace Code.Network.Player
             }
 
             if (InstanceFinder.ClientManager != null)
-                InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;
+                InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;*/
         }
 
         // === сервер: получили от клиента тип модели ===
-        private void OnPlayerTypeBroadcastReceived(NetworkConnection conn, PlayerTypeBroadcast msg, Channel _)
+        /*private void OnPlayerTypeBroadcastReceived(NetworkConnection conn, PlayerTypeBroadcast msg, Channel _)
         {
             if (conn == null)
                 return;
@@ -229,7 +222,7 @@ namespace Code.Network.Player
                 InstanceFinder.ServerManager.Broadcast(networkConnection,
                     new DisconnectBroadcast { Reason = "You connect twice" });
             }
-        }
+        }*/
 
         /// <summary>Определяет позицию/поворот спавна.</summary>
         private void SetSpawn(Transform prefab, out Vector3 pos, out Quaternion rot)
@@ -265,8 +258,7 @@ namespace Code.Network.Player
             rot = point.rotation;
         }
 
-        /// <summary>Запретить спавн для соединения на ближайшее событие OnClientLoadedStartScenes.</summary>
-        public void DontSpawnOnConnect(NetworkConnection conn)
+        /*public void DontSpawnOnConnect(NetworkConnection conn)
         {
             if (conn == null) return;
             for (int i = 0; i < _dontSpawn.Count; i++)
@@ -294,6 +286,6 @@ namespace Code.Network.Player
             }
 
             Debug.Log($"[Client] Отправил Broadcast с моделью игрока '{playerModelType}'");
-        }
+        }*/
     }
 }
