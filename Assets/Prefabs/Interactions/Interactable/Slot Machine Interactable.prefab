@@ -812,9 +812,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 01d5031605c34aacb6ca9fe18292cb67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 1
-  _addedNetworkObject: {fileID: 791084595948481418}
-  _networkObjectCache: {fileID: 791084595948481418}
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   interactableKey: slot_machine_0
   _interactionDistance: 3
   _interactableEnabled: 1
@@ -847,9 +853,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61313445752b0b948a4474e68d095f5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 255
-  _addedNetworkObject: {fileID: 791084595948481418}
-  _networkObjectCache: {fileID: 0}
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   slotMachineInteractable: {fileID: 8690079509221083420}
   streamLoadBalancer: {fileID: 0}
   rawImage: {fileID: 0}
@@ -1170,9 +1182,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2015657308730844265}
   - component: {fileID: 2452543488078972824}
-  - component: {fileID: 791084595948481418}
   - component: {fileID: 8199382324019828225}
-  - component: {fileID: 5211295989168695212}
   m_Layer: 9
   m_Name: Slot Machine Interactable
   m_TagString: Untagged
@@ -1219,62 +1229,6 @@ MeshCollider:
   m_Convex: 1
   m_CookingOptions: 30
   m_Mesh: {fileID: -1220941457093099319, guid: 406f16aadab8ed049852f775713b8fd8, type: 3}
---- !u!114 &791084595948481418
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6154966392846168794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 26b716c41e9b56b4baafaf13a523ba2e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  <IsNested>k__BackingField: 0
-  WasActiveDuringEdit: 0
-  WasActiveDuringEdit_Set1: 1
-  <ComponentIndex>k__BackingField: 0
-  <PredictedSpawn>k__BackingField: {fileID: 0}
-  <PredictedOwner>k__BackingField: {fileID: 0}
-  NetworkBehaviours:
-  - {fileID: 8199382324019828225}
-  - {fileID: 8690079509221083420}
-  - {fileID: 0}
-  InitializedParentNetworkBehaviour: {fileID: 0}
-  InitializedNestedNetworkObjects: []
-  RuntimeParentNetworkBehaviour: {fileID: 0}
-  RuntimeChildNetworkBehaviours: []
-  _isNetworked: 1
-  _isSpawnable: 1
-  _isGlobal: 0
-  _initializeOrder: 0
-  _preventDespawnOnDisconnect: 0
-  _defaultDespawnType: 0
-  _initializedTimestamp: 0
-  NetworkObserver: {fileID: 0}
-  _enablePrediction: 0
-  _predictionType: 0
-  _graphicalObject: {fileID: 0}
-  _detachGraphicalObject: 0
-  _enableStateForwarding: 1
-  _networkTransform: {fileID: 0}
-  _ownerInterpolation: 1
-  _ownerSmoothedProperties: 4294967295
-  _adaptiveInterpolation: 3
-  _spectatorSmoothedProperties: 4294967295
-  _spectatorInterpolation: 2
-  _enableTeleport: 0
-  _teleportThreshold: 1
-  <PrefabId>k__BackingField: 7
-  <SpawnableCollectionId>k__BackingField: 0
-  <AssetPathHash>k__BackingField: 9692150391060675242
-  SceneId: 0
-  SerializedTransformProperties:
-    Position: {x: 0, y: 0, z: 0}
-    Rotation: {x: -0.7071068, y: -2.0800596e-16, z: 2.0800593e-16, w: 0.7071067}
-    Scale: {x: 65.12697, y: 65.12697, z: 65.126976}
-    IsValid: 1
 --- !u!114 &8199382324019828225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1287,9 +1241,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: df978f810fd94054a08d206d3eb3d6e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _componentIndexCache: 0
-  _addedNetworkObject: {fileID: 791084595948481418}
-  _networkObjectCache: {fileID: 791084595948481418}
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   interactableKey: slot_machine_0
   _interactionDistance: 3
   _interactableEnabled: 1
@@ -1301,22 +1261,6 @@ MonoBehaviour:
   - {fileID: 8690079509221083420}
   - {fileID: 0}
   generateColliderFromChildren: 0
---- !u!114 &5211295989168695212
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6154966392846168794}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c71fd7f855ec523429999fc4e14a1928, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _overrideType: 1
-  _updateHostVisibility: 1
-  _observerConditions:
-  - {fileID: 11400000, guid: 77980fe7b99a848428ea623c92c8f466, type: 2}
 --- !u!1 &7428642365710054699
 GameObject:
   m_ObjectHideFlags: 0
