@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using CC;
 using Unity.Cinemachine;
@@ -208,40 +207,27 @@ namespace Code.Player
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
         }
 
-        public void OnStartClient()
+        public void OnConnectedToServer()
         {
-            if (isOwner)
-            {
-                Own = this;
-                jumpTimeoutDelta = jumpTimeout;
-                fallTimeoutDelta = fallTimeout;
-             
-                if (_initedPlayer)
-                    ResetOnReconnect();
-                else
-                    EnsureInit();
-    
-                CursorManager.Instance.HideCursor();
-            }
-        }
+            Own = this;
+            jumpTimeoutDelta = jumpTimeout;
+            fallTimeoutDelta = fallTimeout;
 
-        /*public override void OnOwnershipClient()
-        {
-            base.OnOwnershipClient(prevOwner);
-            if (!IsOwner) return;
+            if (_initedPlayer)
+                ResetOnReconnect();
+            else
+                EnsureInit();
+
+            CursorManager.Instance.HideCursor();
+            
             if (spawnOnSawedPosition)
             {
                 LoadingScreenUI.Instance?.Hide();
                 LoadSpawnPosition();
             }
-
-            EnsureInit();
-            Own = this;
-            jumpTimeoutDelta = jumpTimeout;
-            fallTimeoutDelta = fallTimeout;
-
+            
             Invoke(nameof(PlayerGetHeadThings), 2);
-        }*/
+        }
 
         private void PlayerGetHeadThings()
         {
@@ -705,7 +691,7 @@ namespace Code.Player
         private float _lastSentWeight;
         private bool spawned = false;
 
-        //[ServerRpc(RunLocally = true)]
+        [ServerRpc(runLocally: true)]
         private void SyncIKServerRpc(Vector3 lookPos, float weight)
         {
             networkLookAtPos.value = lookPos;
