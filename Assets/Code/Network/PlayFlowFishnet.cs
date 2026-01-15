@@ -31,6 +31,8 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.DefaultLobbyConfig = Application.version;
             PlayFlowLobbyManagerV2.Instance.Initialize(playerId, OnInitialized);
             LoadingScreenUI.Instance.Show("loading", "loading.please_wait");
+#else
+            InstanceHandler.NetworkManager.StartServer();
 #endif
         }
 
@@ -167,6 +169,7 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
                 onSuccess: _ =>
                 {
+                    InstanceHandler.NetworkManager.StartClient();
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
                 },
@@ -197,7 +200,11 @@ namespace Code.Network
                 {
                     Debug.Log($"Лобби создано с ID: {lobby.id}");
                     PlayFlowLobbyManagerV2.Instance.StartMatch(
-                        onSuccess: _ => Debug.Log("Match starting! Waiting for server..."),
+                        onSuccess: _ =>
+                        {
+                            InstanceHandler.NetworkManager.StartHost();
+                            Debug.Log("Match starting! Waiting for server...");
+                        },
                         onError: error =>
                         {
                             Debug.LogError(error);
@@ -226,6 +233,7 @@ namespace Code.Network
         private IEnumerator ConnectToServer(string ip, ushort port)
         {
             yield return new WaitForSeconds(2f);
+            
             InstanceHandler.NetworkManager.currentTransport.Connect(ip, port);
         }
 

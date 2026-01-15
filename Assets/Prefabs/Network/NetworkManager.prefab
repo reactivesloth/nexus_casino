@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 2358639528394899744}
   - component: {fileID: -5730291507850343229}
   - component: {fileID: -5213578328157531378}
-  - component: {fileID: 5353664881606109110}
   - component: {fileID: 4148929254775448530}
   - component: {fileID: 4731415244911535516}
+  - component: {fileID: 4239465161067467006}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -141,22 +141,6 @@ MonoBehaviour:
   _enableHeartbeat: 1
   _heartbeatInterval: 15
   _debugLogging: 0
---- !u!114 &5353664881606109110
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 598e8b9bae3f494c9b167dd7af028106, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerSpawner
-  playerPrefab: {fileID: 0}
-  _playerPrefab: {fileID: 1127680710956633387, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
-  _ignoreNetworkRules: 0
-  spawnPoints: []
 --- !u!114 &4148929254775448530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -170,8 +154,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkManager
   _stopPlayingOnDisconnect: 0
-  _startServerFlags: 8
-  _startClientFlags: 7
+  _startServerFlags: 0
+  _startClientFlags: 0
   _cookieScope: 1
   _dontDestroyOnLoad: 0
   _transport: {fileID: 4731415244911535516}
@@ -201,3 +185,32 @@ MonoBehaviour:
   _address: 127.0.0.1
   _timeoutInSeconds: 5
   _pollEventsInUpdate: 1
+--- !u!114 &4239465161067467006
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 598e8b9bae3f494c9b167dd7af028106, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerSpawner
+  _ignoreNetworkRules: 0
+  spawnPoints:
+  - {fileID: 0}
+  playerPrefabs:
+  - key: Female
+    val: {fileID: 3849972420961721490, guid: 51ca181595adb9f4badfe0ef54b91255, type: 3}
+  - key: Male
+    val: {fileID: 8802292562543951320, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
+  - key: PlayerM1
+    val: {fileID: 2573045833460620576, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+  - key: PlayerM2
+    val: {fileID: 6472889869485083012, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
+  - key: PlayerM3
+    val: {fileID: 3856792766210476487, guid: 264bab18018f257499f6a02bb93ee245, type: 3}
+  - key: ChostisF1
+    val: {fileID: 1993866734829066590, guid: fd5bf44672cdc4f40a1b68d943372f19, type: 3}
+  _addToDefaultScene: 1
