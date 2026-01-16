@@ -75,7 +75,7 @@ namespace Code.Network.InteractionSystem
                     IsBusy = true;
 
                     _selected = Active;
-                    //_selected.RequestEndInteract();
+                    _selected.RequestEndInteract();
                 }
             }
 
@@ -89,7 +89,7 @@ namespace Code.Network.InteractionSystem
             
             _selected = interactable;
             _selected.InteractCallback_Client += OnStartInteractCallbackClient;
-            //_selected.RequestInteract(force);
+            _selected.RequestInteract(force);
         }
 
         private void UpdateHover()

@@ -69,8 +69,8 @@ namespace Code.UI
         
         private void OnBoutiqueClick()
         {
-            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
-            flowFishnet.Disconnect();
+            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
+            flowConnect.Disconnect();
             LoadingScreenUI.Instance.LoadScene("Character Customization");
         }
         
@@ -104,8 +104,8 @@ namespace Code.UI
 
         private void OnQuitClick()
         {
-            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
-            flowFishnet.Disconnect();
+            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
+            flowConnect.Disconnect();
             LoadingScreenUI.Instance.LoadScene("Init");
 // #if UNITY_EDITOR
 //             UnityEditor.EditorApplication.isPlaying = false;

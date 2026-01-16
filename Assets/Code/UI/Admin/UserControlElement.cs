@@ -143,7 +143,7 @@ namespace Code.UI.Admin
 
         private void KickAction()
         {
-            //_adminPanelHandler.Kick(_username);
+            _adminPanelHandler.Kick(_username);
         }
 
         private void OnBanClicked()
@@ -174,32 +174,32 @@ namespace Code.UI.Admin
 
         private void BanAction(int time)
         {
-            //_adminPanelHandler.BanUser(_username, time);
+            _adminPanelHandler.BanUser(_username, time);
         }
 
         private void OnMuteChatClicked()
         {
-            //_adminPanelHandler.MuteChat(_username);
+            _adminPanelHandler.MuteChat(_username);
         }
 
         private void OnUnmuteChatClicked()
         {
-            //_adminPanelHandler.UnmuteChat(_username);
+            _adminPanelHandler.UnmuteChat(_username);
         }
 
         private void OnMuteVoiceClicked()
         {
-            //_adminPanelHandler.MuteVoice(_username);
+            _adminPanelHandler.MuteVoice(_username);
         }
 
         private void OnUnmuteVoiceClicked()
         {
-            //_adminPanelHandler.UnmuteVoice(_username);
+            _adminPanelHandler.UnmuteVoice(_username);
         }
 
         private void OnToggleOffVoiceClicked()
         {
-            //_adminPanelHandler.ToggleOffVoice(_username);
+            _adminPanelHandler.ToggleOffVoice(_username);
         }
 
         private void SetMutedButtonsState(bool isMuteChat, bool isUnmuteVoice)

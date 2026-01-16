@@ -14,7 +14,7 @@ namespace Code.Player
         private NetworkAnimator _networkAnimator;
         private Coroutine _updateAvatarCoroutine;
 
-        private readonly SyncVar<string> _characterJson;
+        private readonly SyncVar<string> _characterJson = new SyncVar<string>();
         
         private void Awake()
         {

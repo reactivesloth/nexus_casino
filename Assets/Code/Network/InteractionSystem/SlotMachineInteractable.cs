@@ -89,7 +89,7 @@ namespace Code.Network.InteractionSystem
             }
         }
 
-        public void OnStartNetwork()
+        public void OnConnectedToServer()
         {
             contentCanvas.gameObject.SetActive(false);
         }

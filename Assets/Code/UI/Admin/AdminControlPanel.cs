@@ -345,7 +345,7 @@ namespace Code.UI.Admin
                 ? null
                 : _popupOpener.LastPopup.GetInputValue(2);
 
-            //_adminPanelHandler.NewRoomHandle(roomName, isPrivate, hostName);
+            _adminPanelHandler.NewRoomHandle(roomName, isPrivate, hostName);
 
             _popupOpener.ClosePopup();
         }

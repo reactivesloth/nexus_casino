@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using CC;
@@ -150,8 +151,8 @@ namespace Code.Player
         private float _animSpeed;
         private float _animTurn;
 
-        private readonly SyncVar<Vector3> networkLookAtPos;
-        private readonly SyncVar<float> networkIkWeight;
+        private readonly SyncVar<Vector3> networkLookAtPos = new SyncVar<Vector3>();
+        private readonly SyncVar<float> networkIkWeight = new SyncVar<float>();
 
         private int animIDSpeed;
         private int animIDGrounded;
@@ -206,7 +207,6 @@ namespace Code.Player
 
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
         }
-
         public void OnConnectedToServer()
         {
             Own = this;
@@ -222,7 +222,6 @@ namespace Code.Player
             
             if (spawnOnSawedPosition)
             {
-                LoadingScreenUI.Instance?.Hide();
                 LoadSpawnPosition();
             }
             
@@ -882,7 +881,6 @@ namespace Code.Player
             
             if (spawnOnSawedPosition)
             {
-                LoadingScreenUI.Instance?.Hide();
                 LoadSpawnPosition();
                 var playerInteract = gameObject.GetComponent<PlayerInteraction>();
                 playerInteract.ResetInteract();

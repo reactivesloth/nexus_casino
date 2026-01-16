@@ -77,8 +77,9 @@ namespace Code.Network.Stream
                 streamLoadBalancer = FindAnyObjectByType<StreamLoadBalancer>();
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             if (streamConnection != null)
                 streamConnection.OnFrameReceived -= StreamConnectionOnOnFrameReceived;
         }
@@ -344,14 +345,12 @@ namespace Code.Network.Stream
         // СТАНДАРТНЫЕ МЕТОДЫ FISHNET
         // =================================================================================
 
-        /*public override void OnStartClient()
+        protected override void OnSpawned()
         {
-            base.OnStartClient();
-
             _lastRecvFrameId = 0;
             
             // Настройка видимости
-            if (IsOwner)
+            if (isOwner)
             {
                 if (targetImage) targetImage.gameObject.SetActive(false);
             }
@@ -364,47 +363,49 @@ namespace Code.Network.Stream
                 }
             }
             
-            if (Owner.ClientId != -1)
+            if (hasOwner)
             {
                 targetImage.gameObject.SetActive(true);
             }
+            
+            
+            OnOwnerChanged(PlayerID.Server, PlayerID.Server);
         }
         
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
+        private void OnOwnerChanged(PlayerID prevOwner, PlayerID newOwner)
         {
-            base.OnOwnershipClient(prevOwner);
             _lastRecvFrameId = 0;
             
-            if (IsOwner)
+            if (isOwner)
             {
-                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
+                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({objectId}). Начинаю стрим.");
                 _isCapturing = false;
                 streamLoadBalancer?.RegisterStream();
                 _lastSentFrameId = 0;
             }
 
-            if (Owner.ClientId == -1)
+            if (!hasOwner)
             {
                 targetImage.gameObject.SetActive(false);
                 streamLoadBalancer?.UnregisterStream();
             }
-            else if (!IsOwner)
+            else if (!isOwner)
             {
                 targetImage.gameObject.SetActive(true);
                 streamLoadBalancer?.UnregisterStream();
             }
             
-            if(Owner.ClientId != -1)
+            if(hasOwner)
                 streamConnection.Connect(SlotNumber);
         }
 
-        public override void OnStopClient()
+        protected override void OnDespawned()
         {
-            base.OnStopClient();
+            base.OnDespawned();
             
             streamConnection.Disconnect();
             
-            if (IsOwner)
+            if (isOwner)
                 streamLoadBalancer?.UnregisterStream();
             
             if (_tempRT) RenderTexture.ReleaseTemporary(_tempRT);
@@ -414,7 +415,7 @@ namespace Code.Network.Stream
 
             _lastFrameHash = 0;
             _frameCheckCounter = 0;
-        }*/
+        }
         
         // API
         public void SetQualitySettings(float res, int quality)

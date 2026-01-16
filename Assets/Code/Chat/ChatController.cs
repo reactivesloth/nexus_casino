@@ -435,10 +435,10 @@ namespace Code.Chat
             var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
             string lobbyId = CurrentChatType == ChatType.Global ? "main" : (lobby?.id ?? "main");
 
-            var payload = new ChatModel<SendMassage>
+            var payload = new ChatModel<SendMessage>
             {
                 @event = ChatSocketEvents.SendMessage,
-                data = new SendMassage
+                data = new SendMessage
                 {
                     lobby_id = lobbyId,
                     message = message,

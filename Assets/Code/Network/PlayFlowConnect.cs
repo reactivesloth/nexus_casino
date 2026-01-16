@@ -11,10 +11,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using SceneManager = UnityEngine.SceneManagement.SceneManager;
+using PlayerSpawner = Code.Network.Player.PlayerSpawner;
 
 namespace Code.Network
 {
-    public class PlayFlowFishnet : MonoBehaviour
+    public class PlayFlowConnect : MonoBehaviour
     {
         public int maxPlayersPerLobby = 100;
         private NexusModularPopupOpener _popupOpener;
@@ -235,6 +236,8 @@ namespace Code.Network
             yield return new WaitForSeconds(2f);
             
             InstanceHandler.NetworkManager.currentTransport.Connect(ip, port);
+            LoadingScreenUI.Instance.Hide();
+            FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
         }
 
         private void InitPlayerDataOnLobby()

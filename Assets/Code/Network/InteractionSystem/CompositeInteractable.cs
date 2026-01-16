@@ -89,7 +89,7 @@ namespace Code.Network.InteractionSystem
             {
                 var child = children[i];
                 if (child == null) continue;
-                //child.RequestInteract(force);
+                child.RequestInteract(force);
             }
         }
 
@@ -112,7 +112,7 @@ namespace Code.Network.InteractionSystem
 
                     if (child.ManualRelease)
                     {
-                        //child.RequestEndInteract();
+                        child.RequestEndInteract();
                     }
                 }
             }

@@ -4,7 +4,6 @@ using Code.API.Models;
 using Code.Chat;
 using Code.Network.InteractionSystem;
 using Code.Player;
-using Code.Scene.SceneObjectControl;
 using Code.UI;
 using PlayFlow;
 using Proyecto26;
@@ -22,7 +21,7 @@ namespace Code.Network
 
         [FormerlySerializedAs("sceneObjectController")] [SerializeField] private SceneObjectsController sceneObjectsController;
 
-        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary;
+        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary = new SyncDictionary<string, MuteStateSync>();
 
         [System.Serializable]
         public struct MuteStateSync
@@ -41,10 +40,10 @@ namespace Code.Network
         
         public void OnStartClient()
         {
-//            if(MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync)) SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
+            if(MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync)) SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
         
-        /*
+        
         #region Ban
 
         public void BanUser(string usernameTime)
@@ -120,11 +119,11 @@ namespace Code.Network
             }
 
             PlayFlowLobbyManagerV2.Instance.KickPlayer(username);
-            Kick_ServerRPC(ClientManager.Connection, username);
+            Kick_ServerRPC(localPlayerForced, username);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void Kick_ServerRPC(NetworkConnection sender, string username)
+        [ServerRpc(requireOwnership: false)]
+        private void Kick_ServerRPC(PlayerID sender, string username)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
@@ -139,16 +138,16 @@ namespace Code.Network
                 return;
             }
 
-            CommandCallback_Rpc(null, $"User {username} was kicked", true);
+            CommandCallback_Rpc(PlayerID.Server, $"User {username} was kicked", true);
             Kick_TargetRpc(connection);
         }
 
         [TargetRpc]
-        private void Kick_TargetRpc(NetworkConnection target)
+        private void Kick_TargetRpc(PlayerID target)
         {
             PlayerPrefs.DeleteKey("auth_accessToken");
-            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
-            flowFishnet.Disconnect();
+            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
+            flowConnect.Disconnect();
             LoadingScreenUI.Instance.LoadScene("Init");
         }
 
@@ -210,11 +209,11 @@ namespace Code.Network
                 return;
             }
 
-            Mute_ServerRpc(ClientManager.Connection, username, muteChat, muteVoice);
+            Mute_ServerRpc(localPlayerForced, username, muteChat, muteVoice);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void Mute_ServerRpc(NetworkConnection sender, string username, bool muteChat, bool muteVoice)
+        [ServerRpc(requireOwnership: false)]
+        private void Mute_ServerRpc(PlayerID sender, string username, bool muteChat, bool muteVoice)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
@@ -241,17 +240,17 @@ namespace Code.Network
             // Обновляем словарь
             MutedDictionary[username] = currentMuteState;
 
-            CommandCallback_Rpc(null, $"User {username} was muted", true);
+            CommandCallback_Rpc(PlayerID.Server, $"User {username} was muted", true);
             Mute_TargetRpc(connection, muteChat, muteVoice);
         }
 
         [TargetRpc]
-        private void Mute_TargetRpc(NetworkConnection target, bool muteChat = false, bool muteVoice = false)
+        private void Mute_TargetRpc(PlayerID target, bool muteChat = false, bool muteVoice = false)
         {
             if (muteChat)
                 chatController.IsMuted = true;
-            if (muteVoice)
-                 PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = true;
+            //if (muteVoice)
+                 //PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
@@ -270,11 +269,11 @@ namespace Code.Network
                 return;
             }
 
-            Unmute_ServerRpc(ClientManager.Connection, username, unmuteChat, unmuteVoice);
+            Unmute_ServerRpc(localPlayerForced, username, unmuteChat, unmuteVoice);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void Unmute_ServerRpc(NetworkConnection sender, string username, bool unmuteChat, bool unmuteVoice)
+        [ServerRpc(requireOwnership: false)]
+        private void Unmute_ServerRpc(PlayerID sender, string username, bool unmuteChat, bool unmuteVoice)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
@@ -301,23 +300,23 @@ namespace Code.Network
             // Обновляем словарь
             MutedDictionary[username] = currentMuteState;
 
-            CommandCallback_Rpc(null, $"User {username} was unmuted", true);
+            CommandCallback_Rpc(PlayerID.Server, $"User {username} was unmuted", true);
             UnmuteCallback_Rpc(connection, unmuteChat, unmuteVoice);
         }
 
         [TargetRpc]
-        private void UnmuteCallback_Rpc(NetworkConnection target, bool unmuteChat = false, bool unmuteVoice = false)
+        private void UnmuteCallback_Rpc(PlayerID target, bool unmuteChat = false, bool unmuteVoice = false)
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
-            if (unmuteVoice)
-                 PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = false;
+            //if (unmuteVoice)
+                 //PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
         {
             chatController.IsMuted = muteChatState;
-            PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = muteVoiceState;
+            //PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = muteVoiceState;
         }
 
         public void ToggleOffVoice(string username)
@@ -330,11 +329,11 @@ namespace Code.Network
             }
 
             //Mute_ServerRpc(ClientManager.Connection, username, muteChat, muteVoice);
-            ToggleOffVoce_ServerRpc(ClientManager.Connection, username);
+            ToggleOffVoce_ServerRpc(localPlayerForced, username);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void ToggleOffVoce_ServerRpc(NetworkConnection sender, string username)
+        [ServerRpc(requireOwnership: false)]
+        private void ToggleOffVoce_ServerRpc(PlayerID sender, string username)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
@@ -346,7 +345,7 @@ namespace Code.Network
         }
 
         [TargetRpc]
-        private void ToggleOffVoice_TargetRpc(NetworkConnection target)
+        private void ToggleOffVoice_TargetRpc(PlayerID target)
         {
             FindAnyObjectByType<VoiceChatInputHandler>().VoiceChatHandle(false);
         }
@@ -384,13 +383,13 @@ namespace Code.Network
             ResetSlot_ServerRpc(id);
         }
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(requireOwnership: false)]
         public void ResetSlot_ServerRpc(int id)
         {
             var slot = SlotMachineInteractable.FindById(id);
             var compositeInteractionComponent = slot.GetComponentInParent<CompositeInteractable>();
             if (compositeInteractionComponent != null)
-                compositeInteractionComponent.ReleaseInteractable();
+                compositeInteractionComponent.ReleaseInteractable(localPlayerForced);
         }
 
         #endregion
@@ -429,11 +428,11 @@ namespace Code.Network
             if (string.IsNullOrEmpty(hostName))
                 CreateRoom(roomName, isPrivate);
             else
-                CreateRoom_ServerRpc(roomName, isPrivate, hostName, ClientManager.Connection);
+                CreateRoom_ServerRpc(roomName, isPrivate, hostName, localPlayerForced);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void CreateRoom_ServerRpc(string roomName, bool isPrivate, string hostName, NetworkConnection sender)
+        [ServerRpc(requireOwnership: false)]
+        private void CreateRoom_ServerRpc(string roomName, bool isPrivate, string hostName, PlayerID sender)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(hostName, out var connection))
             {
@@ -445,7 +444,7 @@ namespace Code.Network
         }
 
         [TargetRpc]
-        private void CreateRoom_TargetRpc(NetworkConnection target, string roomName, bool isPrivate) =>
+        private void CreateRoom_TargetRpc(PlayerID target, string roomName, bool isPrivate) =>
             CreateRoom(roomName, isPrivate);
 
         private void CreateRoom(string roomName, bool isPrivate)
@@ -453,8 +452,8 @@ namespace Code.Network
             PlayerPrefs.SetString("Playflow_NewLobbyInstantID", roomName);
             PlayerPrefs.SetString("Playflow_NewLobby_IsPrivate", isPrivate ? "true" : "false");
             PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "true");
-            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
-            flowFishnet.Disconnect();
+            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
+            flowConnect.Disconnect();
             LoadingScreenUI.Instance.LoadScene("Main");
         }
 
@@ -466,11 +465,11 @@ namespace Code.Network
                 return;
             }
 
-            MoveUserByLobbyName_ServerRpc(ClientManager.Connection, username, roomId);
+            MoveUserByLobbyName_ServerRpc(localPlayerForced, username, roomId);
         }
 
-        [ServerRpc(RequireOwnership = false)]
-        private void MoveUserByLobbyName_ServerRpc(NetworkConnection sender, string username, string lobbyName)
+        [ServerRpc(requireOwnership: false)]
+        private void MoveUserByLobbyName_ServerRpc(PlayerID sender, string username, string lobbyName)
         {
             if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
             {
@@ -481,19 +480,19 @@ namespace Code.Network
             MoveUserToRoomCoroutine(sender, connection, username, lobbyName);
         }
 
-        private void MoveUserToRoomCoroutine(NetworkConnection sender, NetworkConnection target, string username, string lobbyName)
+        private void MoveUserToRoomCoroutine(PlayerID sender, PlayerID target, string username, string lobbyName)
         {
             MoveUserTargetRpc(target, lobbyName);
             CommandCallback_Rpc(sender, $"Moved {username} to {lobbyName}", true);
         }
 
         [TargetRpc]
-        private void MoveUserTargetRpc(NetworkConnection target, string lobbyId)
+        private void MoveUserTargetRpc(PlayerID target, string lobbyId)
         {
             PlayerPrefs.SetString("Playflow_NewLobbyInstantID", lobbyId);
             PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "false");
-            PlayFlowFishnet flowFishnet = FindAnyObjectByType<PlayFlowFishnet>(FindObjectsInactive.Include);
-            flowFishnet.Disconnect();
+            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
+            flowConnect.Disconnect();
             LoadingScreenUI.Instance.LoadScene("Main");
         }
 
@@ -542,8 +541,8 @@ namespace Code.Network
 
         #region Commons
 
-        [TargetRpc, ObserversRpc]
-        private void CommandCallback_Rpc(NetworkConnection target, string message, bool success) =>
+        [TargetRpc]
+        private void CommandCallback_Rpc(PlayerID target, string message, bool success) =>
             CommandCallback(message, success);
 
         private void CommandCallback(string message, bool success)
@@ -578,6 +577,6 @@ namespace Code.Network
                     });
         }
 
-        #endregion*/
+        #endregion
     }
 }

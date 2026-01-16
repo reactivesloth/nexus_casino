@@ -18,19 +18,14 @@ namespace Code.Network.Stream
         private SlotMachineInteractable CurrentStreamSlot => GetCurrentStream(StreamSlotId.value);
         private SlotMachineInteractable _prevStreamSlot;
 
-        public readonly SyncVar<int> StreamSlotId;
+        public readonly SyncVar<int> StreamSlotId = new SyncVar<int>(1);
 
-        public readonly SyncVar<string> StreamerUsername;
+        public readonly SyncVar<string> StreamerUsername = new SyncVar<string>();
 
         protected void OnValidate()
         {
             elementsParent ??= screenRawImage.transform.parent.gameObject;
         }
-
-        // private void Awake()
-        // {
-        //     StreamSlotId.SetInitialValues(-1);
-        // }
 
         private void OnEnable()
         {

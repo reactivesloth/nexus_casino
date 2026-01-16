@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using Code.Player;
 using PurrNet;
 using UnityEngine;
 
@@ -45,7 +47,7 @@ namespace Code.Network.InteractionSystem
         [SerializeField, Tooltip("Время анимации на клиенте, сек")]
         private float animationDuration = 0.5f;
 
-        private readonly SyncVar<float> _targetOpen;
+        private readonly SyncVar<float> _targetOpen = new SyncVar<float>();
 
         private float _visualDegree;
         private AnimationCurve _currentCurve;
@@ -75,7 +77,7 @@ namespace Code.Network.InteractionSystem
             if (col != null) col.isTrigger = true;
         }
 
-        /*private void OnEnable()
+        private void OnEnable()
         {
             _targetOpen.onChanged += OnTargetChanged;
         }
@@ -89,25 +91,22 @@ namespace Code.Network.InteractionSystem
                 StopCoroutine(_manualRoutine);
                 _manualRoutine = null;
             }
-        }*/
+        }
 
-        /*
-        public override void OnStartClient()
+        public void OnConnectedToServer()
         {
-            base.OnStartClient();
-
-            _visualDegree = EvaluateByCurve(_targetOpen.Value);
+            _visualDegree = EvaluateByCurve(_targetOpen.value);
             ApplyToElements(_visualDegree);
 
-            _prevTarget = _targetOpen.Value;
+            _prevTarget = _targetOpen.value;
         }
 
         private void Update()
         {
-            if (IsServerInitialized && (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual))
+            if (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual)
                 Server_AutoTick();
 
-            float targetCurve = EvaluateByCurve(_targetOpen.Value);
+            float targetCurve = EvaluateByCurve(_targetOpen.value);
             float step = (animationDuration > 0f) ? Time.deltaTime / animationDuration : 1f;
             _visualDegree = Mathf.MoveTowards(_visualDegree, targetCurve, step);
             ApplyToElements(_visualDegree);
@@ -136,7 +135,7 @@ namespace Code.Network.InteractionSystem
             _isOpen = open;
             float target = open ? 1f : 0f;
 
-            float t = _targetOpen.Value;
+            float t = _targetOpen.value;
             float speed = Mathf.Max(0.0001f, manualSpeed);
 
             while (!Mathf.Approximately(t, target))
@@ -144,8 +143,8 @@ namespace Code.Network.InteractionSystem
                 float dir = Mathf.Sign(target - t);
                 t += dir * speed * Time.deltaTime;
                 t = Mathf.Clamp01(t);
-                if (!Mathf.Approximately(_targetOpen.Value, t))
-                    _targetOpen.Value = t;
+                if (!Mathf.Approximately(_targetOpen.value, t))
+                    _targetOpen.value = t;
                 yield return null;
             }
 
@@ -208,17 +207,20 @@ namespace Code.Network.InteractionSystem
 
             _prevTarget = newTarget;
 
-            if (!Mathf.Approximately(_targetOpen.Value, newTarget))
-                _targetOpen.Value = newTarget;
+            if (!Mathf.Approximately(_targetOpen.value, newTarget))
+                _targetOpen.value = newTarget;
         }
         #endregion
-        */
 
         #region Client visuals helpers
-        private void OnTargetChanged(float prev, float next, bool asServer)
+
+        private float _prevCurve;
+        private void OnTargetChanged(float value)
         {
-            if (next > prev)      _currentCurve = openCurve;
-            else if (next < prev) _currentCurve = closeCurve;
+            if (value > _prevCurve)      _currentCurve = openCurve;
+            else if (value < _prevCurve) _currentCurve = closeCurve;
+            
+            _prevCurve = value;
         }
 
         private float EvaluateByCurve(float degree01)

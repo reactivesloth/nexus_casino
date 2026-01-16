@@ -59,7 +59,7 @@ namespace Code.UI.Admin
         
         private void ResetSlot()
         {
-            //_adminPanelHandler.ResetSlot(_slot.IDNumber);
+            _adminPanelHandler.ResetSlot(_slot.IDNumber);
         }
     }
 }

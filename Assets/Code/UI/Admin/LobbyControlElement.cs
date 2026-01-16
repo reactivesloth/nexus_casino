@@ -262,7 +262,7 @@ namespace Code.UI.Admin
             // Перемещаем каждого уникального игрока
             foreach (var playerName in uniquePlayers)
             {
-            //    _adminPanelHandler.MoveUserToRoom(playerName, _lobbyId);
+                _adminPanelHandler.MoveUserToRoom(playerName, _lobbyId);
             }
 
             _popupOpener.ClosePopup();

@@ -52,7 +52,7 @@ namespace Code.UI.Admin
         private void OnDropDownValueChanged(int index)
         {
             var indexText = statesDropdown.options[index].text;
-        //    _adminPanelHandler.SceneControl(_sceneObject.Key, indexText);
+            _adminPanelHandler.SceneControl(_sceneObject.Key, indexText);
         }
     }
 }

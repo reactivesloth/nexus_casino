@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using Code.Scene.SceneObjectControl;
+using PurrNet;
+using PurrNet.Modules;
 using UnityEngine;
 
-namespace Code.Scene.SceneObjectControl
+namespace Code.Network
 {
     public class SceneObjectsController : MonoBehaviour
     {
@@ -27,30 +30,43 @@ namespace Code.Scene.SceneObjectControl
             }
         }
 
-        /*private void OnEnable()
+        private void OnEnable()
         {
-            if (ClientManager != null)
-                ClientManager.RegisterBroadcast<StateMessage>(ClientReceiveState);
+            var networkManager = InstanceHandler.NetworkManager;
+            if (networkManager != null)
+            {
+                // Сервер слушает сообщения от клиентов
+                networkManager.Subscribe<StateMessage>(ServerReceiveState, true);
+            
+                // Клиент слушает сообщения от сервера
+                networkManager.Subscribe<StateMessage>(ClientReceiveState, false);
 
-            if (ServerManager != null)
-                ServerManager.RegisterBroadcast<StateMessage>(ServerReceiveState);
-
-            if (SceneManager != null)
-                SceneManager.OnClientLoadedStartScenes += OnClientConnectionState;
+                // 2. События сцены (аналог OnClientLoadedStartScenes)
+                // В PurrNet нужно получить модуль ScenePlayersModule
+                if (networkManager.TryGetModule(out ScenePlayersModule scenePlayers, true))
+                {
+                    scenePlayers.onPlayerLoadedScene += OnPlayerLoadedScene_PurrNet;
+                }
+            }
         }
 
         private void OnDisable()
         {
-            if (ClientManager != null)
-                ClientManager.UnregisterBroadcast<StateMessage>(ClientReceiveState);
+            var networkManager = InstanceHandler.NetworkManager;
+            if (networkManager != null)
+            {
+                // Отписка от Broadcast
+                networkManager.Unsubscribe<StateMessage>(ServerReceiveState, true);
+                networkManager.Unsubscribe<StateMessage>(ClientReceiveState, false);
 
-            if (ServerManager != null)
-                ServerManager.UnregisterBroadcast<StateMessage>(ServerReceiveState);
-
-            if (SceneManager != null)
-                SceneManager.OnClientLoadedStartScenes -= OnClientConnectionState;
+                // Отписка от событий сцены
+                if (networkManager.TryGetModule(out ScenePlayersModule scenePlayers, true))
+                {
+                    scenePlayers.onPlayerLoadedScene -= OnPlayerLoadedScene_PurrNet;
+                }
+            }
         }
-
+        
         /// <summary>
         /// Get states by object name.
         /// If function return null object not contains
@@ -70,40 +86,33 @@ namespace Code.Scene.SceneObjectControl
             if (GetStatesByName(objectName) == null)
                 return;
 
-            if (ClientManager == null || !ClientManager.Started)
-            {
-                Debug.LogWarning("[SceneControl] Client not connected");
-                return;
-            }
-
             var actionMessage = new StateMessage { ObjectName = objectName, Action = state };
             Debug.Log($"[SceneControl] {objectName} is making action {state}");
 
             //Broadcast TO Server
-            ClientManager.Broadcast(actionMessage);
+            NetworkManager.main.SendToServer(actionMessage);
         }
 
-        private void OnClientConnectionState(NetworkConnection conn, bool asServer)
+        private void OnPlayerLoadedScene_PurrNet(PlayerID player, SceneID scene, bool asServer)
         {
             if (!asServer)
                 return;
 
             foreach (var action in LastStates.Values)
             {
-                ServerManager.Broadcast(conn, action);
-            }
+                NetworkManager.main.Send(player, action);
+            } 
         }
 
-        private void ServerReceiveState(NetworkConnection conn, StateMessage message,
-            Channel channel = Channel.Reliable)
+        private void ServerReceiveState(PlayerID conn, StateMessage message, bool asServer)
         {
             Debug.Log($"[SceneControl.Server] {message.ObjectName} is making action {message.Action}");
 
             LastStates[message.ObjectName] = message;
-            ServerManager.Broadcast(message);
+            NetworkManager.main.SendToAll(message);
         }
 
-        private void ClientReceiveState(StateMessage message, Channel channel = Channel.Reliable)
+        private void ClientReceiveState(PlayerID player, StateMessage message, bool asServer)
         {
             if (!SceneObjects.TryGetValue(message.ObjectName, out var sceneObject))
             {
@@ -115,6 +124,6 @@ namespace Code.Scene.SceneObjectControl
 
             LastStates[message.ObjectName] = message;
             sceneObject.SetState(message.Action);
-        }*/
+        }
     }
 }

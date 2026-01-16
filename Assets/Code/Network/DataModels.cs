@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Code.API.Models;
+using PurrNet.Packing;
 
 namespace Code.Network
 {
@@ -34,7 +35,7 @@ namespace Code.Network
     }
 
     [Serializable]
-    public struct MeSchema // : Broadcast
+    public struct MeSchema : IPackedAuto
     {
         public int id;
         public string username;

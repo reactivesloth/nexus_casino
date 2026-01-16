@@ -77,12 +77,6 @@ namespace Code.Network.InteractionSystem
 
             _isSittingLocal = false;
         }
-        
-        public void OnStopNetwork()
-        {
-            _isSittingLocal = false;
-            _sitRoutine = null;
-        }
 
         private void Update()
         {

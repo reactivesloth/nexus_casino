@@ -14,9 +14,10 @@ namespace Code.UI
         [SerializeField] private Image voiceImage;
         [SerializeField] private GameObject hostIndicator;
         
-        public readonly SyncVar<bool> IsVoiceHeld;
-        public readonly SyncVar<bool> IsVoiceMuted;
-        
+        public readonly SyncVar<bool> IsVoiceHeld = new SyncVar<bool>(false);
+        public readonly SyncVar<bool> IsVoiceMuted = new SyncVar<bool>(false);
+
+
         public string PlayerName => playerName.text;
         public string PlayerRole => playerRole.text;
         public bool IsHost => hostIndicator.activeSelf;

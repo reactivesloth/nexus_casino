@@ -7,6 +7,7 @@ using Code.Network.InteractionSystem;
 using Code.Utility;
 using CurvedUI;
 using Proyecto26;
+using PurrNet;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -16,7 +17,7 @@ using Object = UnityEngine.Object;
 
 namespace Code.UI
 {
-    public class StoriesUI : MonoBehaviour
+    public class StoriesUI : PurrMonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private Image image;
@@ -42,14 +43,14 @@ namespace Code.UI
 
         private ObjectPool<GameObject> _progressBarPool;
 
-        private void Awake()
+        private void OnConnectedToServer()
         {
-            _isCurved = TryGetComponent(out CurvedUIRaycaster _) || TryGetComponent(out CurvedUIVertexEffect _);
+            _isCurved = TryGetComponent(out CurvedUIRaycaster raycaster) || TryGetComponent(out CurvedUIVertexEffect vertexEffects);
 
             _progressBarPool = new ObjectPool<GameObject>(
-                createFunc: () => Instantiate(progressBarPrefab, progressBarContainer),
-                actionOnGet: go => go.SetActive(true),
-                actionOnRelease: go => go.SetActive(false),
+                createFunc: CreateFunc,
+                actionOnGet: ActionOnGet,
+                actionOnRelease: ActionOnRelease,
                 actionOnDestroy: Destroy,
                 collectionCheck: false,
                 defaultCapacity: 10,
@@ -57,20 +58,36 @@ namespace Code.UI
             );
         }
 
-        private void OnEnable()
+        GameObject CreateFunc() => Instantiate(progressBarPrefab, progressBarContainer);
+
+        void ActionOnGet(GameObject go) => go.SetActive(true);
+
+        void ActionOnRelease(GameObject go) => go.SetActive(false);
+
+        public override void OnEnable()
         {
             if(loadingScreen != null)
                 loadingScreen.SetActive(true);
             StartNewCycle();
         }
 
-        private void OnDisable()
+        public override  void OnDisable()
         {
             if (_storyCoroutine != null) { StopCoroutine(_storyCoroutine); _storyCoroutine = null; }
             if (_waitCoroutine != null) { StopCoroutine(_waitCoroutine); _waitCoroutine = null; }
 
             ClearCache();
             ClearProgressBars();
+        }
+
+        public override void Subscribe(NetworkManager manager, bool asServer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Unsubscribe(NetworkManager manager, bool asServer)
+        {
+            throw new NotImplementedException();
         }
 
         public void StartNewCycle()
@@ -165,8 +182,8 @@ namespace Code.UI
                 var story = batch[i];
                 if (playerName != null)
                 {
-                    var name = story != null && !string.IsNullOrEmpty(story.user.username) ? story.user.username : "";
-                    if (playerName.text != name) playerName.text = name;
+                    var n = story != null && !string.IsNullOrEmpty(story.user.username) ? story.user.username : "";
+                    if (playerName.text != n) playerName.text = n;
                 }
 
                 if (story != null)

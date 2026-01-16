@@ -211,7 +211,7 @@ namespace Code.Network.Stream
         {
             Connect(_slotId);
 
-            if (debugLogs) Debug.Log($"[StreamingLiteNetLibPeer] Peer disconnected. Reason: {disconnectInfo.Reason}");
+            if (debugLogs) Debug.Log($"[StreamingLiteNetLibPeer] Peer disconnected.");// Reason: {disconnectInfo.Reason}");
         }
 
         public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)
