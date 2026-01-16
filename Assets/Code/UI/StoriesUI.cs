@@ -48,21 +48,36 @@ namespace Code.UI
             _isCurved = TryGetComponent(out CurvedUIRaycaster raycaster) || TryGetComponent(out CurvedUIVertexEffect vertexEffects);
 
             _progressBarPool = new ObjectPool<GameObject>(
-                createFunc: CreateFunc,
-                actionOnGet: ActionOnGet,
-                actionOnRelease: ActionOnRelease,
-                actionOnDestroy: Destroy,
+                createFunc: CreateProgressBar,
+                actionOnGet: OnGetProgressBar,
+                actionOnRelease: OnReleaseProgressBar,
+                actionOnDestroy: OnDestroyProgressBar,
                 collectionCheck: false,
                 defaultCapacity: 10,
                 maxSize: 20
             );
         }
 
-        GameObject CreateFunc() => Instantiate(progressBarPrefab, progressBarContainer);
+        private GameObject CreateProgressBar()
+        {
+            return Instantiate(progressBarPrefab, progressBarContainer);
+        }
 
-        void ActionOnGet(GameObject go) => go.SetActive(true);
+        private void OnGetProgressBar(GameObject go)
+        {
+            go.SetActive(true);
+        }
 
-        void ActionOnRelease(GameObject go) => go.SetActive(false);
+        private void OnReleaseProgressBar(GameObject go)
+        {
+            go.SetActive(false);
+        }
+
+        private void OnDestroyProgressBar(GameObject go)
+        {
+            Destroy(go);
+        }
+
 
         public override void OnEnable()
         {

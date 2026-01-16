@@ -170,9 +170,9 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
                 onSuccess: _ =>
                 {
-                    InstanceHandler.NetworkManager.StartClient();
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
+                    InstanceHandler.NetworkManager.StartClient();
                 },
                 onError: error =>
                 {
