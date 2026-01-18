@@ -139,7 +139,7 @@ MonoBehaviour:
   _requestTimeout: 30
   _connectionTimeout: 10
   _enableHeartbeat: 1
-  _heartbeatInterval: 15
+  _heartbeatInterval: 30
   _debugLogging: 0
 --- !u!114 &4148929254775448530
 MonoBehaviour:
@@ -155,8 +155,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkManager
   _stopPlayingOnDisconnect: 0
   _startServerFlags: 0
-  _startClientFlags: 5
-  _cookieScope: 1
+  _startClientFlags: 0
+  _cookieScope: 2
   _dontDestroyOnLoad: 0
   _transport: {fileID: 4731415244911535516}
   _networkPrefabs: {fileID: 11400000, guid: af47c7779c6c6cc4f816d7b1d13e303d, type: 2}
@@ -182,7 +182,7 @@ MonoBehaviour:
     _adaptToEdgegap: 1
   _serverPort: 7770
   _maxConnections: 100
-  _address: 127.0.0.1
+  _address: 
   _timeoutInSeconds: 5
   _pollEventsInUpdate: 1
 --- !u!114 &4239465161067467006

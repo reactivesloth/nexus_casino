@@ -6,6 +6,7 @@ using Code.UI.Popup;
 using Code.Utility;
 using PlayFlow;
 using PurrNet;
+using PurrNet.Transports;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
@@ -19,7 +20,7 @@ namespace Code.Network
     {
         public int maxPlayersPerLobby = 100;
         private NexusModularPopupOpener _popupOpener;
-        
+
         private void Awake()
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
@@ -33,6 +34,13 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.Initialize(playerId, OnInitialized);
             LoadingScreenUI.Instance.Show("loading", "loading.please_wait");
 #else
+            
+            var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
+            if (transport != null)
+            {
+                transport.serverPort = 7770;
+            }
+            
             InstanceHandler.NetworkManager.StartServer();
 #endif
         }
@@ -114,8 +122,7 @@ namespace Code.Network
                     foreach (var lobby in lobbies)
                     {
                         if (lobby.currentPlayers < lobby.maxPlayers
-                            && lobby.currentPlayers > 0
-                            && lobby.status == "in_game")
+                            && lobby.currentPlayers >= 0)
                         {
                             JoinLobby(lobby.id);
                             return;
@@ -147,14 +154,14 @@ namespace Code.Network
             _popupOpener.Title = LocalizationHelper.GetLocalizedString("errors.update_nexus_title");
             _popupOpener.Subtitle = "";
             _popupOpener.Message = LocalizationHelper.GetLocalizedString("errors.update_nexus");
-            
+
             var okButton = new ButtonInfo
             {
                 Label = LocalizationHelper.GetLocalizedString("buttons.update"),
                 ClosePopupWhenClicked = true,
                 OnClickedEvent = new Button.ButtonClickedEvent()
             };
-            okButton.OnClickedEvent.AddListener(()=>
+            okButton.OnClickedEvent.AddListener(() =>
             {
                 Application.OpenURL("https://nexusmetaclub.com/update#download");
                 CursorManager.Instance.SetForceShowCursor(false);
@@ -172,14 +179,13 @@ namespace Code.Network
                 {
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
-                    InstanceHandler.NetworkManager.StartClient();
                 },
                 onError: error =>
                 {
                     Debug.LogError("Ошибка при подключении к лобби: " + error);
-                    
+
                     // Можно попытаться повторить зайти в лобби
-                    if (error.Contains ("not found"))
+                    if (error.Contains("not found"))
                         CreateLobby(lobbyId);
                     else
                         JoinLobby(lobbyId);
@@ -193,7 +199,7 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.CreateLobby(
                 name: lobbyName ?? "Lobby_" + Random.Range(000000, 999999),
                 maxPlayers: maxPlayersPerLobby,
-                isPrivate: false, 
+                isPrivate: false,
                 allowLateJoin: true,
                 region: "eu-west",
                 customSettings: new Dictionary<string, object>(),
@@ -201,15 +207,11 @@ namespace Code.Network
                 {
                     Debug.Log($"Лобби создано с ID: {lobby.id}");
                     PlayFlowLobbyManagerV2.Instance.StartMatch(
-                        onSuccess: _ =>
-                        {
-                            InstanceHandler.NetworkManager.StartHost();
-                            Debug.Log("Match starting! Waiting for server...");
-                        },
+                        onSuccess: _ => { Debug.Log("Match starting! Waiting for server..."); },
                         onError: error =>
                         {
                             Debug.LogError(error);
-                            
+
                             PlayFlowLobbyManagerV2.Instance.LeaveLobby();
                             TryJoinOrCreateLobby();
                         });
@@ -233,11 +235,48 @@ namespace Code.Network
 
         private IEnumerator ConnectToServer(string ip, ushort port)
         {
-            yield return new WaitForSeconds(2f);
-            
-            InstanceHandler.NetworkManager.currentTransport.Connect(ip, port);
-            LoadingScreenUI.Instance.Hide();
-            FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
+            Debug.Log($"[Client] Connecting to {ip}:{port}...");
+
+            yield return new WaitUntil(() =>
+                PlayFlowLobbyManagerV2.Instance.CurrentLobby.GetGameServerStatus() == "running");
+
+            var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
+            if (transport != null)
+            {
+                transport.address = ip;
+                transport.serverPort = port;
+            }
+
+            InstanceHandler.NetworkManager.StartClient();
+
+            // Ждем подключения с таймаутом
+            float timeout = 10f;
+            float timer = 0;
+
+            while (InstanceHandler.NetworkManager.clientState != ConnectionState.Connected && timer < timeout)
+            {
+                yield return null;
+                timer += Time.deltaTime;
+                // Если сбросилось в Disconnected, пробуем снова или выходим
+                if (InstanceHandler.NetworkManager.clientState == ConnectionState.Disconnected && timer > 1f)
+                {
+                    Debug.LogWarning("Connection failed immediately, retrying...");
+                    InstanceHandler.NetworkManager.StartClient();
+                    timer = 0; // Сброс таймера (осторожно с бесконечным циклом)
+                    yield return new WaitForSeconds(2f);
+                }
+            }
+
+            if (InstanceHandler.NetworkManager.clientState == ConnectionState.Connected)
+            {
+                Debug.Log("Success!");
+                FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
+            }
+            else
+            {
+                Debug.LogError($"Failed to connect to {ip}:{port} after timeout.");
+                LoadingScreenUI.Instance.Hide();
+            }
         }
 
         private void InitPlayerDataOnLobby()
