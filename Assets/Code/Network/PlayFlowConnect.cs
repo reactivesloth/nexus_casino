@@ -177,6 +177,7 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
                 onSuccess: _ =>
                 {
+                    InstanceHandler.NetworkManager.StartClient();
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
                 },
@@ -207,7 +208,11 @@ namespace Code.Network
                 {
                     Debug.Log($"Лобби создано с ID: {lobby.id}");
                     PlayFlowLobbyManagerV2.Instance.StartMatch(
-                        onSuccess: _ => { Debug.Log("Match starting! Waiting for server..."); },
+                        onSuccess: _ =>
+                        {
+                            InstanceHandler.NetworkManager.StartHost();
+                            Debug.Log("Match starting! Waiting for server...");
+                        },
                         onError: error =>
                         {
                             Debug.LogError(error);
@@ -237,19 +242,12 @@ namespace Code.Network
         {
             Debug.Log($"[Client] Connecting to {ip}:{port}...");
 
-            yield return new WaitUntil(() =>
-                PlayFlowLobbyManagerV2.Instance.CurrentLobby.GetGameServerStatus() == "running");
+            yield return new WaitUntil(() => PlayFlowLobbyManagerV2.Instance.CurrentLobby.GetGameServerStatus() == "running");
 
             var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
-            if (transport != null)
-            {
-                transport.address = ip;
-                transport.serverPort = port;
-            }
-
-            InstanceHandler.NetworkManager.StartClient();
-
-            // Ждем подключения с таймаутом
+            
+            transport.Connect(ip, port);
+            
             float timeout = 10f;
             float timer = 0;
 
