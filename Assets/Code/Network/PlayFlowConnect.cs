@@ -41,7 +41,9 @@ namespace Code.Network
                 transport.serverPort = 7770;
             }
             
+            Debug.Log($"[ServerInit] Attempting to start server on port {transport.serverPort}");
             InstanceHandler.NetworkManager.StartServer();
+            Debug.Log($"[ServerInit] Server state after start: {InstanceHandler.NetworkManager.serverState}");
 #endif
         }
 
@@ -177,7 +179,6 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.JoinLobby(lobbyId,
                 onSuccess: _ =>
                 {
-                    InstanceHandler.NetworkManager.StartClient();
                     Debug.Log("Успешно подключились к лобби");
                     InitPlayerDataOnLobby();
                 },
