@@ -210,7 +210,6 @@ namespace Code.Network
                     PlayFlowLobbyManagerV2.Instance.StartMatch(
                         onSuccess: _ =>
                         {
-                            InstanceHandler.NetworkManager.StartHost();
                             Debug.Log("Match starting! Waiting for server...");
                         },
                         onError: error =>
@@ -245,25 +244,13 @@ namespace Code.Network
             yield return new WaitUntil(() => PlayFlowLobbyManagerV2.Instance.CurrentLobby.GetGameServerStatus() == "running");
 
             var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
-            
-            transport.Connect(ip, port);
-            
-            float timeout = 10f;
-            float timer = 0;
 
-            while (InstanceHandler.NetworkManager.clientState != ConnectionState.Connected && timer < timeout)
-            {
-                yield return null;
-                timer += Time.deltaTime;
-                // Если сбросилось в Disconnected, пробуем снова или выходим
-                if (InstanceHandler.NetworkManager.clientState == ConnectionState.Disconnected && timer > 1f)
-                {
-                    Debug.LogWarning("Connection failed immediately, retrying...");
-                    InstanceHandler.NetworkManager.StartClient();
-                    timer = 0; // Сброс таймера (осторожно с бесконечным циклом)
-                    yield return new WaitForSeconds(2f);
-                }
-            }
+            transport.address = ip;
+            transport.serverPort = port;
+
+            yield return new WaitForSecondsRealtime(5);
+            
+            InstanceHandler.NetworkManager.StartClient();
 
             if (InstanceHandler.NetworkManager.clientState == ConnectionState.Connected)
             {
