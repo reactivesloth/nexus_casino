@@ -34,19 +34,26 @@ namespace Code.Network
             PlayFlowLobbyManagerV2.Instance.Initialize(playerId, OnInitialized);
             LoadingScreenUI.Instance.Show("loading", "loading.please_wait");
 #else
-            
-            var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
-            if (transport != null)
-            {
-                transport.serverPort = 7770;
-            }
-            
-            Debug.Log($"[ServerInit] Attempting to start server on port {transport.serverPort}");
-            InstanceHandler.NetworkManager.StartServer();
-            Debug.Log($"[ServerInit] Server state after start: {InstanceHandler.NetworkManager.serverState}");
+            StartCoroutine(InitializeServer());
 #endif
         }
 
+        private IEnumerator InitializeServer()
+        {
+            yield return new WaitUntil(() => PlayFlowLobbyManagerV2.Instance.CurrentLobby.GetGameServerStatus() == "running");
+
+            var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
+
+            ConnectionInfo? connectionInfo = PlayFlowLobbyManagerV2.Instance.GetGameServerConnectionInfo();
+            if (connectionInfo != null)
+            {
+                transport.address = connectionInfo.Value.Ip;
+                transport.serverPort = (ushort)connectionInfo.Value.Port;
+            }
+
+            InstanceHandler.NetworkManager.StartServer();
+        }
+        
         void OnInitialized()
         {
             Debug.Log("PlayFlow SDK готов. Получаем список лобби...");
@@ -245,7 +252,7 @@ namespace Code.Network
             yield return new WaitUntil(() => PlayFlowLobbyManagerV2.Instance.CurrentLobby.GetGameServerStatus() == "running");
 
             var transport = InstanceHandler.NetworkManager.GetComponent<PurrNet.Transports.UDPTransport>();
-
+            
             transport.address = ip;
             transport.serverPort = port;
 
@@ -257,11 +264,11 @@ namespace Code.Network
             {
                 Debug.Log("Success!");
                 FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
+                LoadingScreenUI.Instance.Hide();
             }
             else
             {
-                Debug.LogError($"Failed to connect to {ip}:{port} after timeout.");
-                LoadingScreenUI.Instance.Hide();
+                Debug.LogError($"Failed to connect to {ip}:{port}.");
             }
         }
 
