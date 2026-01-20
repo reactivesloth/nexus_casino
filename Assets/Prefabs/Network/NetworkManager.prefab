@@ -9,9 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7947594284464758584}
-  - component: {fileID: 2358639528394899744}
-  - component: {fileID: -5730291507850343229}
-  - component: {fileID: -5213578328157531378}
+  - component: {fileID: 724768061121026126}
   - component: {fileID: 4148929254775448530}
   - component: {fileID: 4731415244911535516}
   - component: {fileID: 4239465161067467006}
@@ -37,7 +35,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2358639528394899744
+--- !u!114 &724768061121026126
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -46,101 +44,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 3067998394517210273}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41dbe0742da22c8459151ce06f562b32, type: 3}
+  m_Script: {fileID: 11500000, guid: ba2ec6105185aee4dbd56831eaf762d3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.PlayFlowClientConnector
-  maxPlayersPerLobby: 100
---- !u!114 &-5730291507850343229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad8b27b10a0354ae1b426ad2599057fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PlayFlow.SDK.Lobby::PlayFlow.PlayFlowEvents
-  OnLobbyCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLobbyJoined:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLobbyUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLobbyLeft:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchRunning:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchServerDetailsReady:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchEnded:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchmakingStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchFound:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchmakingCancelled:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchmakingTimeout:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPlayerJoined:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPlayerLeft:
-    m_PersistentCalls:
-      m_Calls: []
-  OnConnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnDisconnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnError:
-    m_PersistentCalls:
-      m_Calls: []
-  OnStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  _logEvents: 0
---- !u!114 &-5213578328157531378
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b0b727893e54459cbce543032e2c793, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PlayFlow.SDK.Lobby::PlayFlow.PlayFlowLobbyManagerV2
-  _apiKey: pfclientcun3qoeqmdX1bXcnM3XPrjpeU1M038kreQqp5OyMwVI=
-  _baseUrl: https://api.scale.computeflow.cloud
-  _defaultLobbyConfig: Default
-  _refreshInterval: 5
-  _autoRefresh: 1
-  _maxRetryAttempts: 3
-  _retryDelay: 1
-  _requestTimeout: 30
-  _connectionTimeout: 10
-  _enableHeartbeat: 1
-  _heartbeatInterval: 30
-  _debugLogging: 0
+  m_EditorClassIdentifier: Assembly-CSharp::PlayFlowManager
 --- !u!114 &4148929254775448530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -157,7 +63,7 @@ MonoBehaviour:
   _startServerFlags: 0
   _startClientFlags: 0
   _cookieScope: 2
-  _dontDestroyOnLoad: 1
+  _dontDestroyOnLoad: 0
   _transport: {fileID: 4731415244911535516}
   _networkPrefabs: {fileID: 11400000, guid: af47c7779c6c6cc4f816d7b1d13e303d, type: 2}
   _networkAssets: {fileID: 11400000, guid: 31797f31e16dfc8418b19e34267ef130, type: 2}
