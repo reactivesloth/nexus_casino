@@ -1,38 +1,44 @@
-using System.Collections.Generic;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using PlayFlow.SDK.Servers;
+using Random = UnityEngine.Random;
 
 namespace Code.Network.PlayFlow
 {
     public class PlayFlowLobby : MonoBehaviour
     {
-        public string playflowApiKey = "YOUR_API_KEY_HERE"; 
+        public string playflowApiKey = "YOUR_API_KEY_HERE";
         public static PlayflowServerApiClient _apiClient;
-        public bool CanConnect { get; private set; }
-        
+        public bool CanConnect { get; private set; } = false;
+
         void Start()
         {
             _apiClient = new PlayflowServerApiClient(playflowApiKey);
-            
+
             FindServer();
         }
-        
+
         private async void StartNewServer()
         {
             var serverRequest = new ServerCreateRequest
             {
-                name = "MyCustomServer",
+                name = $"Server {Random.Range(0, 10_000)}",
                 region = "eu-west",
-                custom_data = new Dictionary<string, object>
-                {
-                    { "map_name", "castle_siege" }
-                }
+                compute_size = "small",
+                version_tag = Application.version
             };
 
             try
             {
-                ServerStartResponse response = await _apiClient.StartServerAsync(serverRequest);
+                var response = await _apiClient.StartServerAsync(serverRequest);
+                
+                PlayerPrefs.SetString("PlayFlow_IP", response.network_ports[0].host);
+                PlayerPrefs.SetString("PlayFlow_Port", response.network_ports[0].external_port.ToString());
+
+                WaitForServer(response);
+                
                 Debug.Log($"Server is starting! Instance ID: {response.instance_id}");
             }
             catch (PlayFlowApiException e)
@@ -40,30 +46,47 @@ namespace Code.Network.PlayFlow
                 Debug.LogError($"Failed to start server: {e.Message}");
             }
         }
-        
-        private async void StopServer(string instanceId)
+
+        private async void WaitForServer(ServerStartResponse serverStats)
         {
-            try
+            CanConnect = false;
+            
+            while (!CanConnect)
             {
-                ServerStopResponse response = await _apiClient.StopServerAsync(instanceId);
-                Debug.Log($"Server stop initiated. Status: {response.status}");
-            }
-            catch (PlayFlowApiException e)
-            {
-                Debug.LogError($"Failed to stop server: {e.Message}");
+                await Task.Delay(1000);
+                try
+                {
+                    var serverData = await _apiClient.GetServerDetailsAsync(serverStats.instance_id);
+                    CanConnect = serverData.status == "running";
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Failed to get server details: {e.Message}");
+                    throw;
+                }
             }
         }
 
         public async void FindServer()
         {
             CanConnect = false;
-            
+
             try
             {
                 ServerList response = await _apiClient.ListServersAsync(includeLaunching: true);
                 Debug.Log($"Found {response.total_servers} total servers.");
 
-                foreach (var server in response.servers)
+                // Server Filter
+                var availableServers =
+                    response.servers.Where(s => s.status == "running" && s.version_tag == Application.version).ToList();
+
+                if (availableServers.Count == 0)
+                {
+                    StartNewServer();
+                    return;
+                }
+
+                foreach (var server in availableServers)
                 {
                     Debug.Log($"- Server: {server.name}, Status: {server.status}");
                     if (server.status == "running" && server.version_tag == Application.version)
