@@ -693,7 +693,7 @@ namespace Code.Player
         private float _lastSentWeight;
         private bool spawned = false;
 
-        [ServerRpc(runLocally: true)]
+        [ServerRpc(runLocally: true, requireOwnership: true)]
         private void SyncIKServerRpc(Vector3 lookPos, float weight)
         {
             networkLookAtPos.value = lookPos;
