@@ -13,11 +13,23 @@ namespace Code.Network.PlayFlow
         public static PlayflowServerApiClient _apiClient;
         public bool CanConnect { get; private set; } = false;
 
+        [Header("Для ручного ввода")]
+        [SerializeField] private string ip;
+        [SerializeField] private string port;
+
         void Start()
         {
             _apiClient = new PlayflowServerApiClient(playflowApiKey);
 
             FindServer();
+        }
+
+        [ContextMenu("SetAddress")]
+        private void SetAddress()
+        {
+            PlayerPrefs.SetString("PlayFlow_IP", ip);
+            PlayerPrefs.SetString("PlayFlow_Port", port);
+            CanConnect = true;
         }
 
         private async void StartNewServer()
@@ -33,9 +45,6 @@ namespace Code.Network.PlayFlow
             try
             {
                 var response = await _apiClient.StartServerAsync(serverRequest);
-                
-                PlayerPrefs.SetString("PlayFlow_IP", response.network_ports[0].host);
-                PlayerPrefs.SetString("PlayFlow_Port", response.network_ports[0].external_port.ToString());
 
                 WaitForServer(response);
                 
@@ -58,6 +67,12 @@ namespace Code.Network.PlayFlow
                 {
                     var serverData = await _apiClient.GetServerDetailsAsync(serverStats.instance_id);
                     CanConnect = serverData.status == "running";
+                    if (CanConnect)
+                    {
+                        Debug.Log($"Server is running! Address: {serverData.network_ports[0].host}:{serverData.network_ports[0].external_port}");
+                        PlayerPrefs.SetString("PlayFlow_IP", serverData.network_ports[0].host);
+                        PlayerPrefs.SetString("PlayFlow_Port", serverData.network_ports[0].external_port.ToString());
+                    }
                 }
                 catch (Exception e)
                 {
