@@ -9,6 +9,10 @@ namespace Code.Network.PlayFlow
 {
     public class PlayFlowManager : MonoBehaviour
     {
+        [SerializeField] private float emptyServerLifeTime = 600f;
+
+        private float _emptyTime;
+        
         private void Awake()
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
@@ -37,10 +41,31 @@ namespace Code.Network.PlayFlow
 
         private void Update ()
         {
-            //TODO: Check players and disconnect after 10 mins if no players
 #if UNITY_SERVER
-
+            UpdateTimer();
 #endif
+        }
+
+        private void UpdateTimer()
+        {
+            var playerCount = InstanceHandler.NetworkManager.playerCount;
+
+            if (playerCount > 0)
+            {
+                _emptyTime = 0f;
+                return;
+            }
+
+            _emptyTime += Time.deltaTime;
+
+            if (_emptyTime >= emptyServerLifeTime)
+            {
+                InstanceHandler.NetworkManager.StopServer();
+                Application.Quit();
+#if UNITY_EDITOR
+                UnityEditor.EditorApplication.isPlaying = false;
+#endif
+            }
         }
     }
 }
