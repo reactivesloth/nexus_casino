@@ -118,7 +118,6 @@ namespace Code.Network
                 return;
             }
 
-            PlayFlowLobbyManagerV2.Instance.KickPlayer(username);
             Kick_ServerRPC(localPlayerForced, username);
         }
 
@@ -146,8 +145,7 @@ namespace Code.Network
         private void Kick_TargetRpc(PlayerID target)
         {
             PlayerPrefs.DeleteKey("auth_accessToken");
-            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
-            flowConnect.Disconnect();
+            InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Init");
         }
 
@@ -452,8 +450,7 @@ namespace Code.Network
             PlayerPrefs.SetString("Playflow_NewLobbyInstantID", roomName);
             PlayerPrefs.SetString("Playflow_NewLobby_IsPrivate", isPrivate ? "true" : "false");
             PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "true");
-            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
-            flowConnect.Disconnect();
+            InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Main");
         }
 
@@ -491,8 +488,7 @@ namespace Code.Network
         {
             PlayerPrefs.SetString("Playflow_NewLobbyInstantID", lobbyId);
             PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "false");
-            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
-            flowConnect.Disconnect();
+            InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Main");
         }
 

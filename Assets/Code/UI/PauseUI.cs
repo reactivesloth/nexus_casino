@@ -2,6 +2,7 @@ using Code.Network;
 using Code.Tests;
 using Code.UI.Admin;
 using Code.Utility;
+using PurrNet;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -69,8 +70,7 @@ namespace Code.UI
         
         private void OnBoutiqueClick()
         {
-            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
-            flowConnect.Disconnect();
+            InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Character Customization");
         }
         
@@ -104,8 +104,7 @@ namespace Code.UI
 
         private void OnQuitClick()
         {
-            PlayFlowConnect flowConnect = FindAnyObjectByType<PlayFlowConnect>(FindObjectsInactive.Include);
-            flowConnect.Disconnect();
+            InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Init");
 // #if UNITY_EDITOR
 //             UnityEditor.EditorApplication.isPlaying = false;

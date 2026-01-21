@@ -158,7 +158,7 @@ namespace Code.UI
                     {
                         image_url = fileUri,
                         slot_id = slotMachineInteractable != null ? slotMachineInteractable.IDNumber : 0,
-                        lobby_id = PlayFlowLobbyManagerV2.Instance != null && PlayFlowLobbyManagerV2.Instance.CurrentLobby != null ? PlayFlowLobbyManagerV2.Instance.CurrentLobby.id : 0.ToString(),
+                        lobby_id = PlayerPrefs.GetString("PlayFlowLobbyID"),
                     },
                     Timeout = 7
                 };

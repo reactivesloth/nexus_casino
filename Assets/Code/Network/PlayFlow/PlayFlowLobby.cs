@@ -8,8 +8,7 @@ namespace Code.Network.PlayFlow
     public class PlayFlowLobby : MonoBehaviour
     {
         public string playflowApiKey = "YOUR_API_KEY_HERE"; 
-
-        private PlayflowServerApiClient _apiClient;
+        public static PlayflowServerApiClient _apiClient;
         public bool CanConnect { get; private set; }
         
         void Start()

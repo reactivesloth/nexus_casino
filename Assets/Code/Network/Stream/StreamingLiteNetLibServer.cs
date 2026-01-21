@@ -2,11 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using Code.Network.PlayFlow;
 using Code.Network.Stream.Data;
 using Code.Network.Stream.Utility;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using PlayFlow;
+using PlayFlow.SDK.Servers;
 using PurrNet;
 using UnityEngine;
 
@@ -31,30 +33,37 @@ namespace Code.Network.Stream
         private readonly Dictionary<NetPeer, int> _connectedPeersSlots = new();
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
-        public static string ServerAddress
-        {
-            get
-            {
-                // var transport = InstanceHandler.NetworkManager.currentTransport;
-                // if (transport == null)
-                //     return string.Empty;
-                // var addr = transport.GetClientAddress();
-                // return addr;
-                return null;
-            }
-        }
+        public static string ServerAddress { get; set; }
+        public static int ServerStreamPort { get; set; }
 
-        public static int ServerStreamPort
+        private void Start()
         {
-            get
+            FindServer();
+        }
+        
+        private async void FindServer()
+        {
+            try
             {
-                var internalPort = Instance.port;
-                var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
-                if (lobby == null)
-                    return internalPort;
-                return !lobby.TryGetPortMapping(internalPort, out var portMapping)
-                    ? internalPort
-                    : portMapping.ExternalPort;
+                ServerList response = await PlayFlowLobby._apiClient.ListServersAsync(includeLaunching: true);
+                Debug.Log($"Found {response.total_servers} total servers.");
+
+                foreach (var server in response.servers)
+                {
+                    Debug.Log($"- Server: {server.name}, Status: {server.status}");
+                    if (server.status == "running" && server.version_tag == Application.version)
+                    {
+                        if (server.network_ports[0].host == PlayerPrefs.GetString("PlayFlow_IP"))
+                        {
+                            ServerAddress = server.network_ports[1].host;
+                            ServerStreamPort = server.network_ports[1].external_port;
+                        }
+                    }
+                }
+            }
+            catch (PlayFlowApiException e)
+            {
+                Debug.LogError($"Failed to list servers: {e.Message}");
             }
         }
 

@@ -277,7 +277,7 @@ namespace Code.Network.Player
 
             if (newPlayerGO.TryGetComponent(out NetworkIdentity id))
             {
-                id.GiveOwnership(player);
+                id.GiveOwnership(player, false, true);
                 _spawned.Add(player);
                 OnSpawned?.Invoke(id);
             }
