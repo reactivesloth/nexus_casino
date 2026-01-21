@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
 using PlayFlow.SDK.Servers;
 
@@ -9,12 +10,13 @@ namespace Code.Network.PlayFlow
         public string playflowApiKey = "YOUR_API_KEY_HERE"; 
 
         private PlayflowServerApiClient _apiClient;
+        public bool CanConnect { get; private set; }
         
         void Start()
         {
-            PlayerPrefs.SetString("PlayFlow_IP", "137.66.29.230");
-            PlayerPrefs.SetString("PlayFlow_Port", "7426");
             _apiClient = new PlayflowServerApiClient(playflowApiKey);
+            
+            FindServer();
         }
         
         private async void StartNewServer()
@@ -52,9 +54,11 @@ namespace Code.Network.PlayFlow
                 Debug.LogError($"Failed to stop server: {e.Message}");
             }
         }
-        
-        private async void ListAllServers()
+
+        public async void FindServer()
         {
+            CanConnect = false;
+            
             try
             {
                 ServerList response = await _apiClient.ListServersAsync(includeLaunching: true);
@@ -63,6 +67,12 @@ namespace Code.Network.PlayFlow
                 foreach (var server in response.servers)
                 {
                     Debug.Log($"- Server: {server.name}, Status: {server.status}");
+                    if (server.status == "running" && server.version_tag == Application.version)
+                    {
+                        PlayerPrefs.SetString("PlayFlow_IP", server.network_ports[0].host);
+                        PlayerPrefs.SetString("PlayFlow_Port", server.network_ports[0].external_port.ToString());
+                        CanConnect = true;
+                    }
                 }
             }
             catch (PlayFlowApiException e)

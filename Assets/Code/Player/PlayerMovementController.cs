@@ -225,6 +225,8 @@ namespace Code.Player
                 LoadSpawnPosition();
             }
             
+            transform.position += Vector3.up;
+            
             Invoke(nameof(PlayerGetHeadThings), 2);
         }
 
@@ -295,6 +297,7 @@ namespace Code.Player
 
         private void SaveSpawnPosition()
         {
+            if (!controller.enabled) return;
             if (!isOwner || !CanMove) return;
             var spawnPos = transform.position;
             var spawnRot = transform.rotation.eulerAngles;
@@ -551,7 +554,7 @@ namespace Code.Player
 
         private void Move()
         {
-            if (controller == null) return;
+            if (!controller.enabled) return;
 
             var mv = input != null ? input.Move : Vector2.zero;
             var mvUsed = _cursorUsable ? mv : Vector2.zero;

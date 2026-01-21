@@ -335,7 +335,7 @@ namespace Code.Network.Player
                 rot = t.rotation;
                 return;
             }
-
+            
             pos = prefab != null ? prefab.position : transform.position;
             rot = prefab != null ? prefab.rotation : transform.rotation;
         }

@@ -13,7 +13,7 @@ namespace Code.Network.PlayFlow
 
         private float _emptyTime;
         
-        private void Awake()
+        private void Start()
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
 
