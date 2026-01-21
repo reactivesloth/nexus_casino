@@ -12,6 +12,8 @@ namespace Code.Network.PlayFlow
         
         void Start()
         {
+            PlayerPrefs.SetString("PlayFlow_IP", "137.66.29.230");
+            PlayerPrefs.SetString("PlayFlow_Port", "7426");
             _apiClient = new PlayflowServerApiClient(playflowApiKey);
         }
         
@@ -20,7 +22,7 @@ namespace Code.Network.PlayFlow
             var serverRequest = new ServerCreateRequest
             {
                 name = "MyCustomServer",
-                region = "us-east",
+                region = "eu-west",
                 custom_data = new Dictionary<string, object>
                 {
                     { "map_name", "castle_siege" }
