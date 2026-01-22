@@ -69,7 +69,7 @@ namespace Code.Utility
                 PlayerPrefs.SetInt("SavedSpawnPosition", 1);
                 PlayerPrefs.Save();
                 LoadingScreenUI.Instance.Show("loading.apply_settings", string.Empty, 100);
-            }).Finally(() => LoadingScreenUI.Instance.LoadScene("Main"));
+            }).Finally(() => LoadingScreenUI.Instance.LoadScene("Matchmaker"));
         }
     }
 }
