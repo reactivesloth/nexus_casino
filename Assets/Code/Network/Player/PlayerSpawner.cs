@@ -50,10 +50,6 @@ namespace Code.Network.Player
         public Quaternion rotation;
     }
 
-    /// <summary>
-    /// Спавнер: сервер спавнит игрока только после того, как клиент сам вызвал SpawnPlayer()
-    /// (т.е. клиент отправил PlayerTypeBroadcast). Дополнительно можно ждать загрузку сцены.
-    /// </summary>
     public class PlayerSpawner : PurrMonoBehaviour
     {
         public event Action<NetworkIdentity> OnSpawned;
@@ -68,9 +64,6 @@ namespace Code.Network.Player
 
         [Tooltip("True to add player to the active scene when no global scenes are specified.")] [SerializeField]
         private bool _addToDefaultScene = true;
-
-        [Tooltip("Если true — сервер будет ждать onPlayerLoadedScene (как раньше).")] [SerializeField]
-        private bool _requireSceneLoaded = true;
 
         [Tooltip("Сцена, в которой спавнить игрока. Оставь пустым, чтобы спавнить в сцене объекта со спавнером.")]
         [SerializeField]
@@ -135,7 +128,7 @@ namespace Code.Network.Player
         }
 
         // =========================
-        // CLIENT API (то, что ты будешь дергать)
+        // CLIENT API
         // =========================
 
         /// <summary>
@@ -196,7 +189,6 @@ namespace Code.Network.Player
             if (!SpawnedPlayerData_Server.TryAdd(sender, msg.PlayerData))
                 SpawnedPlayerData_Server[sender] = msg.PlayerData;
 
-            // Точка принятия решения: спавним только когда клиент сам прислал запрос (через SpawnPlayer()).
             if (!TryGetSpawnSceneID(out var sceneId))
                 return;
 
@@ -209,11 +201,7 @@ namespace Code.Network.Player
             if (_dontSpawn.Contains(player)) return;
             if (_spawned.Contains(player)) return;
 
-            // ждём клиентский “я готов” (PlayerTypeBroadcast)
             if (!_playerTypes.ContainsKey(player)) return;
-
-            // опционально ждём загрузку сцены
-            if (_requireSceneLoaded && !_sceneLoadedPlayers.Contains(player)) return;
 
             var main = NetworkManager.main;
 
@@ -237,7 +225,6 @@ namespace Code.Network.Player
 
             GetSpawnTransform(out var pos, out var rot, player, scene, prefabToSpawn.transform);
 
-            // Важно: спавним в выбранной сцене
             var unityScene = ResolveSpawnScene();
             var newPlayerGO = UnityProxy.Instantiate(prefabToSpawn.gameObject, msg.IsSpawnOnSavePos ? msg.SavePos : pos,
                 rot, unityScene);
@@ -250,9 +237,6 @@ namespace Code.Network.Player
             }
 
             _prefabInstantiatedProvider?.OnPrefabInstantiated(newPlayerGO, player, scene);
-
-            // Если у тебя тут логика двойных подключений — оставь свою реализацию
-            // ClearDoubleConnections();
         }
 
         private void OnPlayerLeft_Server(PlayerID player, bool asServer)
@@ -273,15 +257,10 @@ namespace Code.Network.Player
             _dontSpawn.Remove(player);
         }
 
-        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data,
-            bool asServer)
+        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data, bool asServer)
         {
-            // по желанию
+            
         }
-
-        // =========================
-        // Spawn point helpers
-        // =========================
 
         private void GetSpawnTransform(out Vector3 pos, out Quaternion rot, PlayerID player, SceneID scene,
             Transform prefab)
@@ -346,14 +325,5 @@ namespace Code.Network.Player
 
             if (hadNull) PurrLogger.LogWarning("Invalid spawn points cleanup.", this);
         }
-
-        // Providers (как было)
-        public void SetRespawnPointProvider(IProvideSpawnPoints provider) => _spawnPointProvider = provider;
-        public void ResetSpawnPointProvider() => _spawnPointProvider = null;
-
-        public void SetPrefabInstantiatedProvider(IProvidePrefabInstantiated provider) =>
-            _prefabInstantiatedProvider = provider;
-
-        public void ResetPrefabInstantiatedProvider() => _prefabInstantiatedProvider = null;
     }
 }
