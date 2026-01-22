@@ -1,8 +1,5 @@
 using Code.UI.Popup;
-using Code.Utility;
-using Ricimi;
 using UnityEngine;
-using UnityEngine.UI;
 using Gradient = Ricimi.Gradient;
 
 #if UNITY_ANDROID
