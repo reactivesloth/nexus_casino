@@ -22,10 +22,7 @@ namespace Code.Network.PlayFlow
             transport.serverPort = 7770;
             transport.StartServer();
 #else
-            LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
-            transport.address = PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1");
-            transport.serverPort = ushort.Parse(PlayerPrefs.GetString("PlayFlow_Port", "7770"));
-            transport.StartClient();
+            
             
             StartCoroutine(SpawnPlayer());
 #endif            
@@ -33,9 +30,22 @@ namespace Code.Network.PlayFlow
 
         private IEnumerator SpawnPlayer()
         {
+            var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
+            transport.address = PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1");
+            transport.serverPort = ushort.Parse(PlayerPrefs.GetString("PlayFlow_Port", "7770"));
+            
+            LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
+            
+            yield return new WaitForSeconds(5f);
+            
+            transport.StartClient();
+            
             yield return new WaitUntil(() => InstanceHandler.NetworkManager.clientState == ConnectionState.Connected);
             Debug.Log("Success!");
             FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
+            
+            yield return new WaitForSeconds(2f);
+            
             LoadingScreenUI.Instance.Hide();
         }
 

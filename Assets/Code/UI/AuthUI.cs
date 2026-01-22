@@ -664,12 +664,9 @@ namespace Code.UI
             {
                 LoadingScreenUI.Instance.Show("loading", "loading.character", 100);
                 var isLoadGame = !forceBoutique && (isAvatarLoaded && isModelTypeLoaded);
-                if (LoadingScreenUI.Instance != null)
-                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization",
+                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Matchmaker" : "Character Customization",
                         "loading.please_wait",
                         "loading");
-                else
-                    SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization");
             });
         }
 

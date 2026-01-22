@@ -43,7 +43,7 @@ namespace Code.Network.Stream
         
         private async void FindServer()
         {
-            try
+            /*try
             {
                 ServerList response = await PlayFlowLobby._apiClient.ListServersAsync(includeLaunching: true);
                 Debug.Log($"Found {response.total_servers} total servers.");
@@ -64,7 +64,7 @@ namespace Code.Network.Stream
             catch (PlayFlowApiException e)
             {
                 Debug.LogError($"Failed to list servers: {e.Message}");
-            }
+            }*/
         }
 
         public static StreamingLiteNetLibServer Instance { get; private set; }

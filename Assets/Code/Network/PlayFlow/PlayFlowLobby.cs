@@ -1,35 +1,124 @@
-using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Code.UI;
 using UnityEngine;
 using PlayFlow.SDK.Servers;
+using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
 namespace Code.Network.PlayFlow
 {
     public class PlayFlowLobby : MonoBehaviour
     {
-        public string playflowApiKey = "YOUR_API_KEY_HERE";
-        public static PlayflowServerApiClient _apiClient;
-        public bool CanConnect { get; private set; } = false;
+        private const string PrefsServerIDName = "PlayFlow_ID";
+        private const string PrefsServerIPName = "PlayFlow_IP";
+        private const string PrefsServerPortName = "PlayFlow_Port";
 
-        [Header("Для ручного ввода")]
-        [SerializeField] private string ip;
-        [SerializeField] private string port;
+        private const string GameSceneName = "Main";
+        private const string MenuSceneName = "Init";
+
+        [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
+        [SerializeField] private float timeout = 60f;
+
+        private static PlayflowServerApiClient _apiClient;
+
+        private float _leftTime = 0f;
+
+        public static InstanceData CurrentServerData { get; private set; }
 
         void Start()
         {
             _apiClient = new PlayflowServerApiClient(playflowApiKey);
 
-            FindServer();
+            SelectMatch();
         }
 
-        [ContextMenu("SetAddress")]
-        private void SetAddress()
+        private void Update()
         {
-            PlayerPrefs.SetString("PlayFlow_IP", ip);
-            PlayerPrefs.SetString("PlayFlow_Port", port);
-            CanConnect = true;
+            _leftTime += Time.deltaTime;
+            
+            if(_leftTime >= timeout)
+                OnMatchMakingError();
+        }
+
+        private async void SelectMatch()
+        {
+            LoadingScreenUI.Instance.Show("loading.find_server", "loading");
+            
+            var savedServerId = PlayerPrefs.GetString(PrefsServerIDName, null);
+
+            // Если id нет ищем сервер
+            if (string.IsNullOrEmpty(savedServerId))
+            {
+                FindServer();
+                return;
+            }
+
+            var instanceData = await GetInstanceData(savedServerId);
+
+            // Если сервера с сохр id нет - ищем сервер
+            if (instanceData == null || instanceData.status == "stopped")
+            {
+                FindServer();
+                return;
+            }
+
+            // если есть ждём запуска при необходимости и подключаемся
+            WaitWhenServerIsReadyAndConnect(savedServerId);
+        }
+
+        private async Task<InstanceData> GetInstanceData(string serverId)
+        {
+            try
+            {
+                var serverInfo = await _apiClient.GetServerDetailsAsync(serverId);
+                return serverInfo;
+            }
+            catch (PlayFlowApiException playFlowException)
+            {
+                if (playFlowException.StatusCode == 404)
+                    return null;
+                OnMatchMakingError();
+            }
+
+            return null;
+        }
+
+        public async void FindServer()
+        {
+            try
+            {
+                ServerList response = await _apiClient.ListServersAsync(includeLaunching: true);
+                Debug.Log($"Found {response.total_servers} total servers.");
+
+                // Server Filter
+                var availableServers =
+                    response.servers.Where(s => s.version_tag == Application.version && s.status != "stopped").ToList();
+
+                if (availableServers.Count == 0)
+                {
+                    StartNewServer();
+                    return;
+                }
+
+                var server = availableServers[0]; // Выбор сервера
+                
+                WaitWhenServerIsReadyAndConnect(server.instance_id);
+                
+                /*foreach (var server in availableServers)
+                {
+                    Debug.Log($"- Server: {server.name}, Status: {server.status}");
+                    if (server.status == "running" && server.version_tag == Application.version)
+                    {
+                        PlayerPrefs.SetString("PlayFlow_IP", server.network_ports[0].host);
+                        PlayerPrefs.SetString("PlayFlow_Port", server.network_ports[0].external_port.ToString());
+                    }
+                }*/
+            }
+            catch (PlayFlowApiException e)
+            {
+                Debug.LogError($"Failed to list servers: {e.Message}");
+            }
         }
 
         private async void StartNewServer()
@@ -38,17 +127,15 @@ namespace Code.Network.PlayFlow
             {
                 name = $"Server {Random.Range(0, 10_000)}",
                 region = "eu-west",
-                compute_size = "small",
+                compute_size = "xlarge", // быстрое подключение на производительном сервере
                 version_tag = Application.version
             };
 
             try
             {
                 var response = await _apiClient.StartServerAsync(serverRequest);
-
-                WaitForServer(response);
-                
                 Debug.Log($"Server is starting! Instance ID: {response.instance_id}");
+                WaitWhenServerIsReadyAndConnect(response.instance_id);
             }
             catch (PlayFlowApiException e)
             {
@@ -56,66 +143,46 @@ namespace Code.Network.PlayFlow
             }
         }
 
-        private async void WaitForServer(ServerStartResponse serverStats)
+        private async void WaitWhenServerIsReadyAndConnect(string serverId)
         {
-            CanConnect = false;
+            LoadingScreenUI.Instance.Show("loading.wait_server", "loading");
             
-            while (!CanConnect)
+            while (SceneManager.GetActiveScene().name == "Matchmaker")
             {
-                await Task.Delay(1000);
-                try
+                var data = await GetInstanceData(serverId);
+                
+                if (data == null)
                 {
-                    var serverData = await _apiClient.GetServerDetailsAsync(serverStats.instance_id);
-                    CanConnect = serverData.status == "running";
-                    if (CanConnect)
-                    {
-                        Debug.Log($"Server is running! Address: {serverData.network_ports[0].host}:{serverData.network_ports[0].external_port}");
-                        PlayerPrefs.SetString("PlayFlow_IP", serverData.network_ports[0].host);
-                        PlayerPrefs.SetString("PlayFlow_Port", serverData.network_ports[0].external_port.ToString());
-                    }
+                    OnMatchMakingError();
+                    break;
                 }
-                catch (Exception e)
+
+                if (data.status == "running")
                 {
-                    Debug.LogError($"Failed to get server details: {e.Message}");
-                    throw;
+                    CurrentServerData = data;
+
+                    PlayerPrefs.SetString(PrefsServerIDName, data.instance_id);
+                    PlayerPrefs.SetString(PrefsServerIPName, data.network_ports[0].host);
+                    PlayerPrefs.SetString(PrefsServerPortName, data.network_ports[0].external_port.ToString());
+
+                    MatchReady();
+                    break;
                 }
+
+                await Task.Delay(1_000);
+                Debug.Log("Waiting For Server Ready...");
             }
         }
 
-        public async void FindServer()
+        private async void MatchReady()
         {
-            CanConnect = false;
+            await Task.Delay(5_000);
+            SceneManager.LoadScene(GameSceneName);
+        }
 
-            try
-            {
-                ServerList response = await _apiClient.ListServersAsync(includeLaunching: true);
-                Debug.Log($"Found {response.total_servers} total servers.");
-
-                // Server Filter
-                var availableServers =
-                    response.servers.Where(s => s.status == "running" && s.version_tag == Application.version).ToList();
-
-                if (availableServers.Count == 0)
-                {
-                    StartNewServer();
-                    return;
-                }
-
-                foreach (var server in availableServers)
-                {
-                    Debug.Log($"- Server: {server.name}, Status: {server.status}");
-                    if (server.status == "running" && server.version_tag == Application.version)
-                    {
-                        PlayerPrefs.SetString("PlayFlow_IP", server.network_ports[0].host);
-                        PlayerPrefs.SetString("PlayFlow_Port", server.network_ports[0].external_port.ToString());
-                        CanConnect = true;
-                    }
-                }
-            }
-            catch (PlayFlowApiException e)
-            {
-                Debug.LogError($"Failed to list servers: {e.Message}");
-            }
+        private void OnMatchMakingError()
+        {
+            SceneManager.LoadScene(MenuSceneName);
         }
     }
 }
