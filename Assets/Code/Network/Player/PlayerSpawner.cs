@@ -16,6 +16,10 @@ namespace Code.Network.Player
     {
         public MeSchema PlayerData;
         public string PlayerType;
+
+        // Spawn pos data
+        public bool IsSpawnOnSavePos;
+        public Vector3 SavePos;
     }
 
     public struct DisconnectBroadcast : IPackedAuto
@@ -54,22 +58,23 @@ namespace Code.Network.Player
     {
         public event Action<NetworkIdentity> OnSpawned;
 
-        [Header("PurrNet Settings")]
-        [SerializeField] private bool _ignoreNetworkRules;
+        [Header("PurrNet Settings")] [SerializeField]
+        private bool _ignoreNetworkRules;
 
         [SerializeField] private List<Transform> spawnPoints = new();
 
-        [Header("Custom Logic Settings")]
-        [SerializeField] private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new();
+        [Header("Custom Logic Settings")] [SerializeField]
+        private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new();
 
-        [Tooltip("True to add player to the active scene when no global scenes are specified.")]
-        [SerializeField] private bool _addToDefaultScene = true;
+        [Tooltip("True to add player to the active scene when no global scenes are specified.")] [SerializeField]
+        private bool _addToDefaultScene = true;
 
-        [Tooltip("Если true — сервер будет ждать onPlayerLoadedScene (как раньше).")]
-        [SerializeField] private bool _requireSceneLoaded = true;
+        [Tooltip("Если true — сервер будет ждать onPlayerLoadedScene (как раньше).")] [SerializeField]
+        private bool _requireSceneLoaded = true;
 
         [Tooltip("Сцена, в которой спавнить игрока. Оставь пустым, чтобы спавнить в сцене объекта со спавнером.")]
-        [SerializeField] private string _spawnSceneName = "Main";
+        [SerializeField]
+        private string _spawnSceneName = "Main";
 
         private int _currentSpawnPoint;
         private IProvideSpawnPoints _spawnPointProvider;
@@ -107,10 +112,6 @@ namespace Code.Network.Player
                 manager.Subscribe<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived_Server, true);
 
                 manager.onPlayerLeft += OnPlayerLeft_Server;
-
-                // Если хочешь дополнительно ждать “сцена загружена” — оставляем.
-                if (manager.TryGetModule(out ScenePlayersModule scenePlayersModule, true))
-                    scenePlayersModule.onPlayerLoadedScene += OnPlayerLoadedScene_Server;
             }
             else
             {
@@ -126,9 +127,6 @@ namespace Code.Network.Player
                 manager.Unsubscribe<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived_Server, true);
 
                 manager.onPlayerLeft -= OnPlayerLeft_Server;
-
-                if (manager.TryGetModule(out ScenePlayersModule scenePlayersModule, true))
-                    scenePlayersModule.onPlayerLoadedScene -= OnPlayerLoadedScene_Server;
             }
             else
             {
@@ -163,36 +161,19 @@ namespace Code.Network.Player
             var msg = new PlayerTypeBroadcast
             {
                 PlayerType = type,
-                PlayerData = ClientDataStorage.UserData
+                PlayerData = ClientDataStorage.UserData,
+                IsSpawnOnSavePos = PlayerPrefs.HasKey("SavedSpawnPosition"),
+                SavePos = transform.position = new Vector3(
+                    PlayerPrefs.GetFloat("SavedSpawnPositionX"),
+                    PlayerPrefs.GetFloat("SavedSpawnPositionY"),
+                    PlayerPrefs.GetFloat("SavedSpawnPositionZ")
+                )
             };
+
+            if (msg.IsSpawnOnSavePos)
+                Debug.Log($"[{nameof(PlayerSpawner)}] SpawnPlayer on Save Position: {msg.SavePos}");
 
             // Клиент -> Сервер (broadcast-сообщение без привязки к объекту)
-            NetworkManager.main.SendToServer(msg);
-        }
-
-        /// <summary>
-        /// Если хочешь вызывать с явными параметрами (без PlayerPrefs / ClientDataStorage).
-        /// </summary>
-        public void SpawnPlayer(string playerType, MeSchema data)
-        {
-            if (!InstanceHandler.NetworkManager.isClient)
-            {
-                Debug.LogWarning($"[{nameof(PlayerSpawner)}] SpawnPlayer(type,data) called not on client.");
-                return;
-            }
-
-            if (!_clientConnected)
-            {
-                Debug.LogWarning($"[{nameof(PlayerSpawner)}] SpawnPlayer(type,data) called before ConnectionState.Connected.");
-                return;
-            }
-
-            var msg = new PlayerTypeBroadcast
-            {
-                PlayerType = string.IsNullOrEmpty(playerType) ? "Male" : playerType,
-                PlayerData = data
-            };
-
             NetworkManager.main.SendToServer(msg);
         }
 
@@ -204,21 +185,6 @@ namespace Code.Network.Player
         // =========================
         // SERVER SIDE
         // =========================
-
-        private void OnPlayerLoadedScene_Server(PlayerID player, SceneID scene, bool asServer)
-        {
-            if (!asServer) return;
-
-            // Если ограничиваешься конкретной сценой — проверим, что это она.
-            if (_requireSceneLoaded)
-            {
-                if (!TryGetSpawnSceneID(out var wantedSceneId)) return;
-                if (scene != wantedSceneId) return;
-
-                _sceneLoadedPlayers.Add(player);
-                TrySpawnPlayer_Server(player, wantedSceneId);
-            }
-        }
 
         private void OnPlayerTypeBroadcastReceived_Server(PlayerID sender, PlayerTypeBroadcast msg, bool asServer)
         {
@@ -234,10 +200,10 @@ namespace Code.Network.Player
             if (!TryGetSpawnSceneID(out var sceneId))
                 return;
 
-            TrySpawnPlayer_Server(sender, sceneId);
+            TrySpawnPlayer_Server(sender, sceneId, msg);
         }
 
-        private void TrySpawnPlayer_Server(PlayerID player, SceneID scene)
+        private void TrySpawnPlayer_Server(PlayerID player, SceneID scene, PlayerTypeBroadcast msg)
         {
             if (!InstanceHandler.NetworkManager.isServer) return;
             if (_dontSpawn.Contains(player)) return;
@@ -273,7 +239,8 @@ namespace Code.Network.Player
 
             // Важно: спавним в выбранной сцене
             var unityScene = ResolveSpawnScene();
-            var newPlayerGO = UnityProxy.Instantiate(prefabToSpawn.gameObject, pos, rot, unityScene);
+            var newPlayerGO = UnityProxy.Instantiate(prefabToSpawn.gameObject, msg.IsSpawnOnSavePos ? msg.SavePos : pos,
+                rot, unityScene);
 
             if (newPlayerGO.TryGetComponent(out NetworkIdentity id))
             {
@@ -306,7 +273,8 @@ namespace Code.Network.Player
             _dontSpawn.Remove(player);
         }
 
-        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data, bool asServer)
+        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data,
+            bool asServer)
         {
             // по желанию
         }
@@ -315,7 +283,8 @@ namespace Code.Network.Player
         // Spawn point helpers
         // =========================
 
-        private void GetSpawnTransform(out Vector3 pos, out Quaternion rot, PlayerID player, SceneID scene, Transform prefab)
+        private void GetSpawnTransform(out Vector3 pos, out Quaternion rot, PlayerID player, SceneID scene,
+            Transform prefab)
         {
             CleanupSpawnPoints();
 
@@ -335,7 +304,7 @@ namespace Code.Network.Player
                 rot = t.rotation;
                 return;
             }
-            
+
             pos = prefab != null ? prefab.position : transform.position;
             rot = prefab != null ? prefab.rotation : transform.rotation;
         }
@@ -359,6 +328,7 @@ namespace Code.Network.Player
                 if (s.IsValid() && s.isLoaded)
                     return s;
             }
+
             return gameObject.scene;
         }
 
@@ -373,13 +343,17 @@ namespace Code.Network.Player
                     spawnPoints.RemoveAt(i--);
                 }
             }
+
             if (hadNull) PurrLogger.LogWarning("Invalid spawn points cleanup.", this);
         }
 
         // Providers (как было)
         public void SetRespawnPointProvider(IProvideSpawnPoints provider) => _spawnPointProvider = provider;
         public void ResetSpawnPointProvider() => _spawnPointProvider = null;
-        public void SetPrefabInstantiatedProvider(IProvidePrefabInstantiated provider) => _prefabInstantiatedProvider = provider;
+
+        public void SetPrefabInstantiatedProvider(IProvidePrefabInstantiated provider) =>
+            _prefabInstantiatedProvider = provider;
+
         public void ResetPrefabInstantiatedProvider() => _prefabInstantiatedProvider = null;
     }
 }

@@ -253,7 +253,7 @@ namespace Code.Player
 
         private void LoadSpawnPosition()
         {
-            if (!isOwner) return;
+            /*if (!isOwner) return;
 
             var spawnPos = Vector3.zero;
             
@@ -272,7 +272,7 @@ namespace Code.Player
                 PlayerPrefs.DeleteKey("SavedSpawnPosition");
             }
             
-            Debug.Log($"Spawn pos is {spawnPos}");
+            Debug.Log($"Spawn pos is {spawnPos}");*/
 
             spawned = true;
         }
