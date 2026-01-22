@@ -657,8 +657,7 @@ PrefabInstance:
     - {fileID: 8342693247915125007, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
     - {fileID: 9141442648569433180, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
     - {fileID: 9141442648569442942, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
-    - {fileID: 8031360426406796682, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
-    - {fileID: 8031360426406798248, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+    - {fileID: 0}
     - {fileID: 2928854265349077119, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
     - {fileID: 454188468000461564, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
     - {fileID: 4512772256248564134, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
@@ -669,18 +668,212 @@ PrefabInstance:
     - {fileID: 5262338169212929698, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 7428642365710054699, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3429340675106137513}
+    - targetCorrespondingSourceObject: {fileID: 3425181746840552809, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5600166383713875002}
+    - targetCorrespondingSourceObject: {fileID: 3104914455951375261, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2658068305381662866}
+    - targetCorrespondingSourceObject: {fileID: 3104914455951375261, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1870865883668539707}
+    - targetCorrespondingSourceObject: {fileID: 1974736798326296970, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6661040952147973464}
+    - targetCorrespondingSourceObject: {fileID: 112326953764129691, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 7490226006327009578}
+    - targetCorrespondingSourceObject: {fileID: 2939719190116952049, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8107212067257186294}
+    - targetCorrespondingSourceObject: {fileID: 2939719190116952049, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2997506239579305699}
   m_SourcePrefab: {fileID: 100100000, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+--- !u!1 &353411779112204537 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 112326953764129691, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+  m_PrefabInstance: {fileID: 389705270390682466}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &7490226006327009578
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 353411779112204537}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.CurvedUIVertexEffect
+  DoNotTesselate: 0
+  savedPos: {x: 0, y: 0, z: 0}
+  savedUp: {x: 0, y: 0, z: 0}
+  savedRectSize: {x: 0, y: 0}
+  savedColor: {r: 0, g: 0, b: 0, a: 0}
+  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
+  savedFill: 0
+--- !u!1 &2166000829299581672 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 1974736798326296970, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+  m_PrefabInstance: {fileID: 389705270390682466}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6661040952147973464
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2166000829299581672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.CurvedUIVertexEffect
+  DoNotTesselate: 0
+  savedPos: {x: 0, y: 0, z: 0}
+  savedUp: {x: 0, y: 0, z: 0}
+  savedRectSize: {x: 0, y: 0}
+  savedColor: {r: 0, g: 0, b: 0, a: 0}
+  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
+  savedFill: 0
 --- !u!4 &2202699216649295627 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2015657308730844265, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
   m_PrefabInstance: {fileID: 389705270390682466}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &3089524621933721099 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3425181746840552809, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+  m_PrefabInstance: {fileID: 389705270390682466}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5600166383713875002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3089524621933721099}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.CurvedUIVertexEffect
+  DoNotTesselate: 0
+  savedPos: {x: 0, y: 0, z: 0}
+  savedUp: {x: 0, y: 0, z: 0}
+  savedRectSize: {x: 0, y: 0}
+  savedColor: {r: 0, g: 0, b: 0, a: 0}
+  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
+  savedFill: 0
+--- !u!1 &3288606189225120915 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2939719190116952049, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+  m_PrefabInstance: {fileID: 389705270390682466}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &8107212067257186294
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3288606189225120915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.CurvedUIVertexEffect
+  DoNotTesselate: 0
+  savedPos: {x: 0, y: 0, z: 0}
+  savedUp: {x: 0, y: 0, z: 0}
+  savedRectSize: {x: 0, y: 0}
+  savedColor: {r: 0, g: 0, b: 0, a: 0}
+  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
+  savedFill: 0
+--- !u!114 &2997506239579305699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3288606189225120915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 004b8ec0c25535c409b1f6115963d476, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.Core.Integrations.CurvedUITMP
+  Dirty: 0
+--- !u!1 &3350218388194396415 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3104914455951375261, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+  m_PrefabInstance: {fileID: 389705270390682466}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2658068305381662866
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350218388194396415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.CurvedUIVertexEffect
+  DoNotTesselate: 0
+  savedPos: {x: 0, y: 0, z: 0}
+  savedUp: {x: 0, y: 0, z: 0}
+  savedRectSize: {x: 0, y: 0}
+  savedColor: {r: 0, g: 0, b: 0, a: 0}
+  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
+  savedFill: 0
+--- !u!114 &1870865883668539707
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3350218388194396415}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 004b8ec0c25535c409b1f6115963d476, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.Core.Integrations.CurvedUITMP
+  Dirty: 0
 --- !u!224 &6786753346707152748 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 6577479591757589518, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
   m_PrefabInstance: {fileID: 389705270390682466}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &7097484169653732937 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 7428642365710054699, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
+  m_PrefabInstance: {fileID: 389705270390682466}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &3429340675106137513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7097484169653732937}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CurvedUI.CurvedUIVertexEffect
+  DoNotTesselate: 0
+  savedPos: {x: 0, y: 0, z: 0}
+  savedUp: {x: 0, y: 0, z: 0}
+  savedRectSize: {x: 0, y: 0}
+  savedColor: {r: 0, g: 0, b: 0, a: 0}
+  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
+  savedFill: 0
 --- !u!1001 &2166040833565533678
 PrefabInstance:
   m_ObjectHideFlags: 0
