@@ -1,12 +1,11 @@
 using System.Linq;
 using Code.API;
-using Code.Network;
 using PurrNet;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Code.UI
+namespace Code.Network.Player
 {
     public class PlayerUI : NetworkBehaviour
     {
@@ -18,17 +17,21 @@ namespace Code.UI
         public readonly SyncVar<bool> IsVoiceHeld = new SyncVar<bool>(false);
         public readonly SyncVar<bool> IsVoiceMuted = new SyncVar<bool>(false);
 
-
         public string PlayerName => playerName.text;
         public string PlayerRole => playerRole.text;
         public bool IsHost => hostIndicator.activeSelf;
+
+        private PlayerVoice _voice;
         
         private void Update()
         {
             if (isOwner)
             {
-                var newHeld = false; //!PlayerVoice.LocalPlayerVoiceInstance.isInputMuted;
-                var newMuted = false; //PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer;
+                if (_voice == null)
+                    _voice = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
+                
+                var newHeld = !_voice.isMuted;
+                var newMuted = _voice.isInputMutedByServer;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
                 if (newHeld != IsVoiceHeld.value || newMuted != IsVoiceMuted.value)

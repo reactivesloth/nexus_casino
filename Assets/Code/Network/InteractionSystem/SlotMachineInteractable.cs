@@ -56,6 +56,8 @@ namespace Code.Network.InteractionSystem
 
             if (networkImageStream == null)
                 networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
+            
+            contentCanvas.gameObject.SetActive(false);
         }
         
         private void Start()
@@ -87,11 +89,6 @@ namespace Code.Network.InteractionSystem
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-        }
-
-        public void OnConnectedToServer()
-        {
-            contentCanvas.gameObject.SetActive(false);
         }
 
 #if UNITY_EDITOR

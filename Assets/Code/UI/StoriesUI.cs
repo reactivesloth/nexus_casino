@@ -43,7 +43,7 @@ namespace Code.UI
 
         private ObjectPool<GameObject> _progressBarPool;
 
-        private void OnConnectedToServer()
+        private void Awake()
         {
             _isCurved = TryGetComponent(out CurvedUIRaycaster raycaster) || TryGetComponent(out CurvedUIVertexEffect vertexEffects);
 

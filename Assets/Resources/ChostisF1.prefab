@@ -1299,6 +1299,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: -3371581580184644227}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1011662787271410697}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 651306884355573710}
     - targetCorrespondingSourceObject: {fileID: 159943881184610819, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4665974107282693136}
@@ -2137,7 +2143,7 @@ MonoBehaviour:
   _syncRotation: 1
   _syncScale: 1
   _syncParent: 1
-  _interpolateSettings: 7
+  _interpolateSettings: 255
   _minBufferSize: 1
   _maxBufferSize: 2
   _characterControllerPatch: 1
@@ -2168,6 +2174,41 @@ MonoBehaviour:
   _ownerAuth: 1
   _autoSyncParameters: 1
   _dontSyncParameters: []
+--- !u!114 &1011662787271410697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5874861292224152706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 184b564a357c4b81a66bd944199741e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerVoice
+  isMuted: 1
+  isInputMutedByServer: 0
+--- !u!114 &651306884355573710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5874861292224152706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 779de4360b944034b1bf74ecea3c3696, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.Player
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
 --- !u!4 &6542713848401944120 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}

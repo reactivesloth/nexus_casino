@@ -93,7 +93,7 @@ namespace Code.Network.InteractionSystem
             }
         }
 
-        public void OnConnectedToServer()
+        public void Start()
         {
             _visualDegree = EvaluateByCurve(_targetOpen.value);
             ApplyToElements(_visualDegree);

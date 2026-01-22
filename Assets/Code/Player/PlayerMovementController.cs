@@ -16,8 +16,8 @@ namespace Code.Player
     [RequireComponent(typeof(CharacterController))]
     public class PlayerMovementController : NetworkBehaviour
     {
-        public static PlayerMovementController Own { get; private set; }
-
+        public static PlayerMovementController LocalInstance;
+        
         [Header("Settings")] [SerializeField] private float moveSpeed = 2.0f;
         [SerializeField] private float sprintSpeed = 5.335f;
         [SerializeField] private float rotationSmoothTime = 0.12f;
@@ -205,9 +205,11 @@ namespace Code.Player
 
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
         }
-        public void OnConnectedToServer()
+        public IEnumerator Start()
         {
-            Own = this;
+            yield return new WaitUntil(() => Network.Player.Player.GetLocalPlayer() != null);
+            LocalInstance = Network.Player.Player.GetLocalPlayer().GetComponent<PlayerMovementController>();
+            
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
 
@@ -217,11 +219,6 @@ namespace Code.Player
                 EnsureInit();
 
             CursorManager.Instance.HideCursor();
-            
-            if (spawnOnSawedPosition)
-            {
-                LoadSpawnPosition();
-            }
             
             transform.position += Vector3.up;
             
@@ -249,32 +246,6 @@ namespace Code.Player
                             playerThingsList.Add(g);
                     }
             }
-        }
-
-        private void LoadSpawnPosition()
-        {
-            /*if (!isOwner) return;
-
-            var spawnPos = Vector3.zero;
-            
-            if (PlayerPrefs.HasKey("SavedSpawnPosition"))
-            {
-                spawnPos = transform.position = new Vector3(
-                    PlayerPrefs.GetFloat("SavedSpawnPositionX"),
-                    PlayerPrefs.GetFloat("SavedSpawnPositionY"),
-                    PlayerPrefs.GetFloat("SavedSpawnPositionZ")
-                );
-                transform.rotation = Quaternion.Euler(
-                    PlayerPrefs.GetFloat("SavedSpawnRotationX"),
-                    PlayerPrefs.GetFloat("SavedSpawnRotationY"),
-                    PlayerPrefs.GetFloat("SavedSpawnRotationZ")
-                );
-                PlayerPrefs.DeleteKey("SavedSpawnPosition");
-            }
-            
-            Debug.Log($"Spawn pos is {spawnPos}");*/
-
-            spawned = true;
         }
 
         private void UpdateSpawnPositionTimer()
@@ -327,7 +298,7 @@ namespace Code.Player
 
         private void Update()
         {
-            if (transform.position.y is < -10 or > 10 && spawned)
+            if (transform.position.y is < -10 or > 10)
             {
                 Debug.Log($"[PlayerMovementController] Spawn position out of range");
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
@@ -375,7 +346,7 @@ namespace Code.Player
             JumpAndGravity();
             Move();
 
-            if (spawnOnSawedPosition && spawned)
+            if (spawnOnSawedPosition)
                 UpdateSpawnPositionTimer();
         }
 
@@ -689,7 +660,6 @@ namespace Code.Player
         [SerializeField] private float ikSendRate = 1f / 30f;
         private Vector3 _lastSentLookPos;
         private float _lastSentWeight;
-        private bool spawned = false;
 
         [ServerRpc(requireOwnership: true)]
         private void SyncIKServerRpc(Vector3 lookPos, float weight)
@@ -882,7 +852,6 @@ namespace Code.Player
             
             if (spawnOnSawedPosition)
             {
-                LoadSpawnPosition();
                 var playerInteract = gameObject.GetComponent<PlayerInteraction>();
                 playerInteract.ResetInteract();
             }

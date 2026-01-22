@@ -1,4 +1,5 @@
 using System.Linq;
+using Code.Network.Player;
 using Code.Player;
 using TMPro;
 using UnityEngine;
@@ -17,16 +18,14 @@ namespace Code.UI
         private bool _inited;
     
         private PlayerUI _playerUI;
-        private PlayerMovementController  _playerMovementController;
 
         private void Update()
         {
             if (!_inited)
             {
-                _playerMovementController = FindLocalOwnerMovement();
-                if (_playerMovementController != null)
+                if (PlayerMovementController.LocalInstance != null)
                 {
-                    _playerUI = _playerMovementController.GetComponent<PlayerUI>();
+                    _playerUI = PlayerMovementController.LocalInstance.GetComponent<PlayerUI>();
                     if (_playerUI != null)
                     {
                         _inited = true;
@@ -37,7 +36,7 @@ namespace Code.UI
             if (!_inited || playerUIFPVPanel == null) return;
             if (_playerUI != null)
             {
-                playerUIFPVPanel.SetActive(_playerMovementController.FirstPersonView);
+                playerUIFPVPanel.SetActive(PlayerMovementController.LocalInstance.FirstPersonView);
 
                 if (playerUIFPVPanel.activeSelf)
                 {
@@ -56,12 +55,6 @@ namespace Code.UI
             {
                 _inited = false;
             }
-        }
-    
-        private static PlayerMovementController FindLocalOwnerMovement()
-        {
-            var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            return all.FirstOrDefault(m => m != null && m.isOwner);
         }
     }
 }

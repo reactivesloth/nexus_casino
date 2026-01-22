@@ -114,7 +114,7 @@ namespace Code.Network.InteractionSystem
         
         private void TargetToggleSit(bool isSitDown, bool isForce = false)
         {
-            var move = FindLocalOwnerMovement();
+            var move = PlayerMovementController.LocalInstance;
             if (move == null) return;
 
             var cc = move.GetComponent<CharacterController>();
@@ -560,19 +560,6 @@ namespace Code.Network.InteractionSystem
             float localFootY = playerTf.InverseTransformPoint(footWorld).y;
             float localRefY = playerTf.InverseTransformPoint(refPoint.position).y;
             return localRefY - localFootY;
-        }
-
-        private PlayerMovementController FindLocalOwnerMovement()
-        {
-            var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = 0; i < all.Length; i++)
-            {
-                var m = all[i];
-                if (m != null && m.isOwner)
-                    return m;
-            }
-
-            return null;
         }
     }
 }
