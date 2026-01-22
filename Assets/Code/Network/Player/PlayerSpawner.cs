@@ -16,7 +16,6 @@ namespace Code.Network.Player
     {
         public MeSchema PlayerData;
         public string PlayerType;
-        public Vector3 Position;
     }
 
     public struct DisconnectBroadcast : IPackedAuto
@@ -164,12 +163,7 @@ namespace Code.Network.Player
             var msg = new PlayerTypeBroadcast
             {
                 PlayerType = type,
-                PlayerData = ClientDataStorage.UserData,
-                Position = new Vector3(
-                    PlayerPrefs.GetFloat("SavedSpawnPositionX"),
-                    PlayerPrefs.GetFloat("SavedSpawnPositionY"),
-                    PlayerPrefs.GetFloat("SavedSpawnPositionZ")
-                )
+                PlayerData = ClientDataStorage.UserData
             };
 
             // Клиент -> Сервер (broadcast-сообщение без привязки к объекту)
