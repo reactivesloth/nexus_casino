@@ -27,8 +27,8 @@ namespace Code.UI
         {
             if (isOwner)
             {
-                var newHeld = !PlayerVoice.LocalPlayerVoiceInstance.isInputMuted;
-                var newMuted = PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer;
+                var newHeld = false; //!PlayerVoice.LocalPlayerVoiceInstance.isInputMuted;
+                var newMuted = false; //PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer;
 
                 // Если изменилось состояние — пересылаем на сервер только голосовые данные
                 if (newHeld != IsVoiceHeld.value || newMuted != IsVoiceMuted.value)

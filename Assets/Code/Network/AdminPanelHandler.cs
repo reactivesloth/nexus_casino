@@ -247,8 +247,8 @@ namespace Code.Network
         {
             if (muteChat)
                 chatController.IsMuted = true;
-            if (muteVoice)
-                 PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = true;
+            //if (muteVoice)
+                //PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
@@ -307,14 +307,14 @@ namespace Code.Network
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
-            if (unmuteVoice)
-                 PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = false;
+            //if (unmuteVoice)
+                 //PlayerVoice.LocalPlayerVoiceInstance.isInputMutedByServer = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
         {
             chatController.IsMuted = muteChatState;
-            PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = muteVoiceState;
+            //PlayerVoice.LocalPlayerVoiceInstance.isInputMuted = muteVoiceState;
         }
 
         public void ToggleOffVoice(string username)
