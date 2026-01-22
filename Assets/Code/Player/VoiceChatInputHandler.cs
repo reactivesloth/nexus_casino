@@ -109,13 +109,6 @@ namespace Code.Player
 
             _permissionRequestInFlight = false;
             
-#if UNITY_ANDROID
-            if (VivoxVoiceManager.Instance != null)
-            {
-                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
-            }
-#endif
-            
             VoiceChatHandle(true);
         }
 
@@ -225,10 +218,9 @@ namespace Code.Player
             saveTime = 0.2f;
 
             voiceHeld = value;
-
-            if (PlayerVoice.LocalPlayerVoiceInstance != null)
-                PlayerVoice.LocalPlayerVoiceInstance.SetMuteState (!voiceHeld);
-
+            
+            // Handle player voice
+            
             if (mobileButtonImage != null)
             {
                 mobileButtonImage.Color1 = voiceHeld ? on1 : off1;
