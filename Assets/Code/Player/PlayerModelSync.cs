@@ -13,17 +13,13 @@ namespace Code.Player
         [SerializeField] private float updateAvatarInterval = 10f;
         
         private CharacterCustomization _characterCustomization;
-        private NetworkAnimator _networkAnimator;
         private Coroutine _updateAvatarCoroutine;
-
-        //private readonly SyncVar<string> _characterJson = new SyncVar<string>(ownerAuth:true);
-        private readonly SyncBigData _characterJson = new SyncBigData(ownerAuth:true);
+        
+        private readonly SyncBigData _characterJson = new(ownerAuth:true);
         
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
-            _networkAnimator = GetComponent<NetworkAnimator>();
-            //_characterJson.onChanged += OnCharacterJsonChanged;
             _characterJson.onSyncStatusChanged += CharacterJsonSyncStatusChanged;
             _characterCustomization.Initialize();
         }
@@ -47,7 +43,6 @@ namespace Code.Player
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            //_characterJson.onChanged -= OnCharacterJsonChanged;
             _characterJson.onSyncStatusChanged -= CharacterJsonSyncStatusChanged;
         }
 
@@ -66,44 +61,19 @@ namespace Code.Player
                 _characterCustomization.LoadFromJSON(obj);
         }
 
-        /*[ServerRpc(requireOwnership: false)]
-        public void SendCharacterJsonServerRpc(string json)
-        {
-            //Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
-            _characterJson.value = json ?? string.Empty;
-        }*/
-
         private IEnumerator WaitAndSendLocalCharacter()
         {
             yield return null;
             yield return null;
             
-            /*
-            if(_updateAvatarCoroutine != null)
-                StopCoroutine(_updateAvatarCoroutine);
-            _updateAvatarCoroutine = StartCoroutine(UpdateLoop());*/
             TransmitLocalCharacter();
         }
-
-        /*
-        private IEnumerator UpdateLoop()
-        {
-            var wait = new WaitForSeconds(updateAvatarInterval);
-            while (true)
-            {
-                TransmitLocalCharacter();
-                yield return wait;
-            }
-        }
-        */
         
         public void TransmitLocalCharacter()
         {
             if (!isOwner) return;
             Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
-            // SendCharacterJsonServerRpc(json);
-            //_characterJson.value = json ?? string.Empty;
             _characterJson.SetData(Encoding.UTF8.GetBytes(json));
         }
     }
