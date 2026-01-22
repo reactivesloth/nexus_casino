@@ -14,7 +14,7 @@ namespace Code.Player
         private NetworkAnimator _networkAnimator;
         private Coroutine _updateAvatarCoroutine;
 
-        private readonly SyncVar<string> _characterJson = new SyncVar<string>();
+        private readonly SyncVar<string> _characterJson = new SyncVar<string>(ownerAuth:true);
         
         private void Awake()
         {
@@ -57,11 +57,14 @@ namespace Code.Player
                 yield return null;
             yield return null;
             
+            /*
             if(_updateAvatarCoroutine != null)
                 StopCoroutine(_updateAvatarCoroutine);
-            _updateAvatarCoroutine = StartCoroutine(UpdateLoop());
+            _updateAvatarCoroutine = StartCoroutine(UpdateLoop());*/
+            TransmitLocalCharacter();
         }
 
+        /*
         private IEnumerator UpdateLoop()
         {
             var wait = new WaitForSeconds(updateAvatarInterval);
@@ -71,13 +74,15 @@ namespace Code.Player
                 yield return wait;
             }
         }
+        */
         
         public void TransmitLocalCharacter()
         {
             if (!isOwner) return;
             //Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
-            SendCharacterJsonServerRpc(json);
+            // SendCharacterJsonServerRpc(json);
+            _characterJson.value = json ?? string.Empty;
         }
     }
 }
