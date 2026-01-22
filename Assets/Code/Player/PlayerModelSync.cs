@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
+using System.Text;
 using CC;
 using PurrNet;
+using UnityEditor.Localization.Plugins.XLIFF.V20;
 using UnityEngine;
 
 namespace Code.Player
@@ -14,20 +17,46 @@ namespace Code.Player
         private NetworkAnimator _networkAnimator;
         private Coroutine _updateAvatarCoroutine;
 
-        private readonly SyncVar<string> _characterJson = new SyncVar<string>(ownerAuth:true);
+        //private readonly SyncVar<string> _characterJson = new SyncVar<string>(ownerAuth:true);
+        private SyncBigData _characterJson;
         
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
             _networkAnimator = GetComponent<NetworkAnimator>();
-            _characterJson.onChanged += OnCharacterJsonChanged;
+            //_characterJson.onChanged += OnCharacterJsonChanged;
+            _characterJson.onSyncStatusChanged += CharacterJsonSyncStatusChanged;
             _characterCustomization.Initialize();
+        }
+
+        private void CharacterJsonSyncStatusChanged(SyncStatus status)
+        {
+            if(!status.isDone)
+                return;
+            
+            if (_characterJson.data.Array is null)
+                throw new InvalidOperationException("Пустой ArraySegment");
+
+            string text = Encoding.UTF8.GetString(
+                _characterJson.data.Array,
+                _characterJson.data.Offset,
+                _characterJson.data.Count);
+            
+            OnCharacterJsonChanged(text);
         }
 
         protected override void OnDestroy()
         {
             base.OnDestroy();
-            _characterJson.onChanged -= OnCharacterJsonChanged;
+            //_characterJson.onChanged -= OnCharacterJsonChanged;
+            _characterJson.onSyncStatusChanged -= CharacterJsonSyncStatusChanged;
+        }
+
+        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
+        {
+            base.OnOwnerChanged(oldOwner, newOwner, asServer);
+            if(isOwner)
+                StartCoroutine(WaitAndSendLocalCharacter());
         }
 
         private void OnCharacterJsonChanged(string obj)
@@ -37,24 +66,17 @@ namespace Code.Player
             if (!string.IsNullOrEmpty(obj))
                 _characterCustomization.LoadFromJSON(obj);
         }
-        
-        // public override void OnOwnershipClient(NetworkConnection prevOwner)
-        // {
-        //      base.OnOwnershipClient(prevOwner);
-        //      if (isOwner) StartCoroutine(WaitAndSendLocalCharacter());
-        // }
 
-        [ServerRpc(requireOwnership: false)]
+        /*[ServerRpc(requireOwnership: false)]
         public void SendCharacterJsonServerRpc(string json)
         {
             //Debug.Log($"[Server] Получен JSON ({(json != null ? json.Length : 0)} симв.)");
             _characterJson.value = json ?? string.Empty;
-        }
+        }*/
 
         private IEnumerator WaitAndSendLocalCharacter()
         {
-            while (!isClientAndObserving || !isFullySpawned)
-                yield return null;
+            yield return null;
             yield return null;
             
             /*
@@ -79,10 +101,11 @@ namespace Code.Player
         public void TransmitLocalCharacter()
         {
             if (!isOwner) return;
-            //Debug.Log("[Client] TransmitLocalCharacter");
+            Debug.Log("[Client] TransmitLocalCharacter");
             string json = _characterCustomization.GetJSON();
             // SendCharacterJsonServerRpc(json);
-            _characterJson.value = json ?? string.Empty;
+            //_characterJson.value = json ?? string.Empty;
+            _characterJson.SetData(Encoding.UTF8.GetBytes(json));
         }
     }
 }
