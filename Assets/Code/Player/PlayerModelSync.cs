@@ -17,7 +17,7 @@ namespace Code.Player
         private Coroutine _updateAvatarCoroutine;
 
         //private readonly SyncVar<string> _characterJson = new SyncVar<string>(ownerAuth:true);
-        private SyncBigData _characterJson;
+        private readonly SyncBigData _characterJson = new SyncBigData(ownerAuth:true);
         
         private void Awake()
         {
