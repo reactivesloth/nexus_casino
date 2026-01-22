@@ -1,3 +1,4 @@
+using Code.Network;
 using Code.UI.Popup;
 using Code.Utility;
 using Ricimi;
@@ -105,7 +106,15 @@ namespace Code.Player
         private void OnPermissionGranted(string permission)
         {
             if (permission != MicPermission) return;
+
             _permissionRequestInFlight = false;
+            
+#if UNITY_ANDROID
+            if (VivoxVoiceManager.Instance != null)
+            {
+                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
+            }
+#endif
             
             VoiceChatHandle(true);
         }
@@ -217,8 +226,8 @@ namespace Code.Player
 
             voiceHeld = value;
 
-            // if (PlayerVoice.LocalPlayerVoiceInstance != null)
-            //     PlayerVoice.LocalPlayerVoiceInstance.SetMuteState (!voiceHeld);
+            if (PlayerVoice.LocalPlayerVoiceInstance != null)
+                PlayerVoice.LocalPlayerVoiceInstance.SetMuteState (!voiceHeld);
 
             if (mobileButtonImage != null)
             {
