@@ -33,39 +33,10 @@ namespace Code.Network.Stream
         private readonly Dictionary<NetPeer, int> _connectedPeersSlots = new();
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
-        public static string ServerAddress { get; set; }
-        public static int ServerStreamPort { get; set; }
-
-        private void Start()
-        {
-            FindServer();
-        }
         
-        private async void FindServer()
-        {
-            /*try
-            {
-                ServerList response = await PlayFlowLobby._apiClient.ListServersAsync(includeLaunching: true);
-                Debug.Log($"Found {response.total_servers} total servers.");
-
-                foreach (var server in response.servers)
-                {
-                    Debug.Log($"- Server: {server.name}, Status: {server.status}");
-                    if (server.status == "running" && server.version_tag == Application.version)
-                    {
-                        if (server.network_ports[0].host == PlayerPrefs.GetString("PlayFlow_IP"))
-                        {
-                            ServerAddress = server.network_ports[1].host;
-                            ServerStreamPort = server.network_ports[1].external_port;
-                        }
-                    }
-                }
-            }
-            catch (PlayFlowApiException e)
-            {
-                Debug.LogError($"Failed to list servers: {e.Message}");
-            }*/
-        }
+        private static PortMapping _serverPortMapping => PlayFlowLobby.CurrentServerData.network_ports[1];
+        public static string ServerAddress => _serverPortMapping.host;
+        public static int ServerStreamPort => _serverPortMapping.external_port;
 
         public static StreamingLiteNetLibServer Instance { get; private set; }
 
