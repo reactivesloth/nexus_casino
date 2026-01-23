@@ -13,15 +13,13 @@ namespace Code.Player
         [SerializeField] private float updateAvatarInterval = 10f;
         
         private CharacterCustomization _characterCustomization;
-        private NetworkAnimator _networkAnimator;
         private Coroutine _updateAvatarCoroutine;
 
-        private SyncBigData _characterJson;
+        private readonly SyncBigData _characterJson = new SyncBigData(ownerAuth:true);
         
         private void Awake()
         {
             _characterCustomization = GetComponent<CharacterCustomization>();
-            _networkAnimator = GetComponent<NetworkAnimator>();
             _characterJson.onSyncStatusChanged += CharacterJsonSyncStatusChanged;
             _characterCustomization.Initialize();
         }
