@@ -47,10 +47,10 @@ namespace Code.Network.Stream
             
             if(_server is not { ConnectionState: ConnectionState.Connected }) return;
             
-            if(_timeFromLastFrameReceived > frameReceiveTimeout)
+            /*if(_timeFromLastFrameReceived > frameReceiveTimeout)
                 Reconnect();
             else
-                _timeFromLastFrameReceived += Time.deltaTime;
+                _timeFromLastFrameReceived += Time.deltaTime;*/
         }
 
         private void OnDisable()
