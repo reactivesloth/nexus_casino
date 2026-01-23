@@ -153,6 +153,7 @@ namespace Code.Network.InteractionSystem
         #endregion
 
         #region Server: auto-logic
+        [ServerOnly]
         private void Server_AutoTick()
         {
             _scanTimer -= Time.deltaTime;
