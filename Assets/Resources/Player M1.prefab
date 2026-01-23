@@ -40,7 +40,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4001682504778783961}
-  - component: {fileID: 8035642654914025112}
   m_Layer: 8
   m_Name: HeadTargetPos
   m_TagString: Untagged
@@ -63,37 +62,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1495082819104649297}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8035642654914025112
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9079256719307716292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 817fe5016bd0a2a49a95b6eb338bb132, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkTransform
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  _syncPosition: 1
-  _syncRotation: 1
-  _syncScale: 1
-  _syncParent: 1
-  _interpolateSettings: 7
-  _minBufferSize: 1
-  _maxBufferSize: 2
-  _characterControllerPatch: 0
-  _ownerAuth: 0
-  _interpolationTiming: 0
 --- !u!1001 &1384048308031903674
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1133,6 +1101,14 @@ MonoBehaviour:
   sitBasePitch: 30
   speedLerp: 5
   angLerp: 7
+  networkLookAtPos:
+    _value: {x: 0, y: 0, z: 0}
+    _ownerAuth: 1
+    _sendIntervalInSeconds: 0
+  networkIkWeight:
+    _value: 0
+    _ownerAuth: 1
+    _sendIntervalInSeconds: 0
   spawnPositionUpdateTime: 2
   ikSendRate: 0.033333335
 --- !u!114 &-2375218669794436234
