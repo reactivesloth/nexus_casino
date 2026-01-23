@@ -149,8 +149,8 @@ namespace Code.Player
         private float _animSpeed;
         private float _animTurn;
 
-        private readonly SyncVar<Vector3> networkLookAtPos = new SyncVar<Vector3>(ownerAuth:true);
-        private readonly SyncVar<float> networkIkWeight = new SyncVar<float>(ownerAuth:true);
+        [SerializeField] private SyncVar<Vector3> networkLookAtPos = new SyncVar<Vector3>(ownerAuth:true);
+        [SerializeField] private SyncVar<float> networkIkWeight = new SyncVar<float>(ownerAuth:true);
 
         private int animIDSpeed;
         private int animIDGrounded;
