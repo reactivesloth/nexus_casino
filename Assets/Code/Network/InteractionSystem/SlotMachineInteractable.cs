@@ -56,8 +56,6 @@ namespace Code.Network.InteractionSystem
 
             if (networkImageStream == null)
                 networkImageStream = GetComponentInChildren<NetworkImageStream>(true);
-            
-            contentCanvas.gameObject.SetActive(false);
         }
         
         private void Start()

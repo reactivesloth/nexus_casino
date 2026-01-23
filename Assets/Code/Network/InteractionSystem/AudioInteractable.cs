@@ -1,4 +1,5 @@
 ﻿using System;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.InteractionSystem
@@ -104,8 +105,15 @@ namespace Code.Network.InteractionSystem
             Configure3DDefaults();
         }
 #endif
-        
+
+        [ServerRpc(requireOwnership: true)]
         private void TryPlay()
+        {
+            PlayAudioFromServer();
+        }
+        
+        [ObserversRpc]
+        private void PlayAudioFromServer()
         {
             if (audioSource == null) return;
             if (clips == null || clips.Length == 0) return;
