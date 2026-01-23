@@ -1,3 +1,4 @@
+using System;
 using PurrNet;
 using UnityEngine;
 
@@ -29,11 +30,13 @@ namespace Code.Network.InteractionSystem
         public event InteractCallback StartInteractCallback_Server;
         public event InteractCallback EndInteractCallback_Server;
 
-        private void OnServerInitialized()
+        private void Start()
         {
-            _isOccupied.value = false;
+#if UNITY_SERVER
+            InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
+#endif
         }
-        
+
         public void RequestInteract(bool force = false) => RequestInteract(force, localPlayerForced);
         
         public void RequestInteract(bool force,  PlayerID requester) => 
@@ -53,10 +56,13 @@ namespace Code.Network.InteractionSystem
         }
         
         [Server]
-        private void ServerManagerOnRemoteConnectionState(PlayerID requester)
+        private void OnPlayerLeft(PlayerID player, bool asServer)
         {
-            //if (stateArgs.ConnectionState == RemoteConnectionState.Stopped && stateArgs.ConnectionId == _occupiedConnectionId)
-                ReleaseInteractable(requester);
+            if(!asServer)
+                return;
+            
+            if (player == OccupierConnection)
+                ReleaseInteractable(player);
         }
         
         #endregion
