@@ -149,8 +149,8 @@ namespace Code.Player
         private float _animSpeed;
         private float _animTurn;
 
-        private readonly SyncVar<Vector3> networkLookAtPos = new SyncVar<Vector3>();
-        private readonly SyncVar<float> networkIkWeight = new SyncVar<float>();
+        private readonly SyncVar<Vector3> networkLookAtPos = new SyncVar<Vector3>(ownerAuth:true);
+        private readonly SyncVar<float> networkIkWeight = new SyncVar<float>(ownerAuth:true);
 
         private int animIDSpeed;
         private int animIDGrounded;
@@ -661,8 +661,7 @@ namespace Code.Player
         private Vector3 _lastSentLookPos;
         private float _lastSentWeight;
 
-        [ServerRpc(requireOwnership: true)]
-        private void SyncIKServerRpc(Vector3 lookPos, float weight)
+        private void SyncIK(Vector3 lookPos, float weight)
         {
             networkLookAtPos.value = lookPos;
             networkIkWeight.value = weight;
@@ -812,7 +811,7 @@ namespace Code.Player
             {
                 if (SuppressLookAtIK || Time.time < _ikSuppressUntil)
                 {
-                    SyncIKServerRpc(headTarget.position, 0);
+                    SyncIK(headTarget.position, 0);
                     return;
                 }
 
@@ -829,7 +828,7 @@ namespace Code.Player
                         _lastSentLookPos = nowPos;
                         _lastSentWeight = currentIkWeight;
                         _lastIkSendTime = Time.unscaledTime;
-                        SyncIKServerRpc(_lastSentLookPos, _lastSentWeight);
+                        SyncIK(_lastSentLookPos, _lastSentWeight);
                     }
                 }
 
