@@ -24,7 +24,7 @@ namespace Code.Network.Stream
 
         protected void OnValidate()
         {
-            elementsParent ??= screenRawImage.transform.parent.gameObject;
+            if (screenRawImage != null) elementsParent ??= screenRawImage.transform.parent.gameObject;
         }
 
         private void OnEnable()
@@ -75,15 +75,15 @@ namespace Code.Network.Stream
         {
             if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
-            
-            elementsParent.gameObject.SetActive(CurrentStreamSlot != null);
-           
+
+            if (elementsParent != null) elementsParent.gameObject.SetActive(CurrentStreamSlot != null);
+
             _prevStreamSlot = CurrentStreamSlot;
             
             if (CurrentStreamSlot == null)
             {
-                screenRawImage.texture = null;
-                slotIdText.text = string.Empty;
+                if (screenRawImage != null) screenRawImage.texture = null;
+                if (slotIdText != null) slotIdText.text = string.Empty;
                 return;
             }
 
@@ -94,12 +94,12 @@ namespace Code.Network.Stream
                     ApplyTexture(CurrentStreamSlot.NetworkImageStream.RecvTexture);
             }
 
-            slotIdText.text = $"Slot №{next}";
+            if (slotIdText != null) slotIdText.text = $"Slot №{next}";
         }
 
         private void StreamerUsernameOnOnChange(string next)
         {
-            streamerNameText.text = $"{next}";
+            if (streamerNameText != null) streamerNameText.text = $"{next}";
         }
         
         private void OnTargetEndInteraction(bool success)
@@ -123,8 +123,11 @@ namespace Code.Network.Stream
         
         private void ApplyTexture(Texture texture)
         {
-            screenRawImage.texture = texture;
-            ImageUtility.AdjustAspect(screenRawImage);
+            if (screenRawImage != null)
+            {
+                screenRawImage.texture = texture;
+                ImageUtility.AdjustAspect(screenRawImage);
+            }
         }
 
         private SlotMachineInteractable GetCurrentStream(int id) => SlotMachineInteractable.FindById(id);

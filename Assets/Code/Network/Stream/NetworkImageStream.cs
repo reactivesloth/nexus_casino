@@ -73,6 +73,7 @@ namespace Code.Network.Stream
             
             streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
             
+            
             if (streamLoadBalancer == null)
                 streamLoadBalancer = FindAnyObjectByType<StreamLoadBalancer>();
         }
@@ -341,12 +342,10 @@ namespace Code.Network.Stream
             }
         }
 
-        // =================================================================================
-        // СТАНДАРТНЫЕ МЕТОДЫ FISHNET
-        // =================================================================================
-
         protected override void OnSpawned()
         {
+            base.OnSpawned();
+            
             _lastRecvFrameId = 0;
             
             // Настройка видимости
@@ -367,13 +366,12 @@ namespace Code.Network.Stream
             {
                 targetImage.gameObject.SetActive(true);
             }
-            
-            
-            OnOwnerChanged(PlayerID.Server, PlayerID.Server);
         }
-        
-        private void OnOwnerChanged(PlayerID prevOwner, PlayerID newOwner)
+
+        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
         {
+            base.OnOwnerChanged(oldOwner, newOwner, asServer);
+            
             _lastRecvFrameId = 0;
             
             if (isOwner)
