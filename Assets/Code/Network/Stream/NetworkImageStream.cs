@@ -372,6 +372,9 @@ namespace Code.Network.Stream
         {
             base.OnOwnerChanged(oldOwner, newOwner, asServer);
             
+            if(asServer)
+                return;
+            
             _lastRecvFrameId = 0;
             
             if (isOwner)
