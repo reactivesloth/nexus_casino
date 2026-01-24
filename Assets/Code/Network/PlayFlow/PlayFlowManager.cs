@@ -1,6 +1,11 @@
+using System;
 using System.Collections;
+using System.IO;
 using Code.UI;
+using Newtonsoft.Json;
+using PlayFlow.SDK.Servers;
 using PurrNet;
+using PurrNet.Packing;
 using PurrNet.Transports;
 using UnityEngine;
 using PlayerSpawner = Code.Network.Player.PlayerSpawner;
@@ -9,24 +14,28 @@ namespace Code.Network.PlayFlow
 {
     public class PlayFlowManager : MonoBehaviour
     {
+        [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float emptyServerLifeTime = 600f;
-
+        
+        public static PlayflowServerApiClient ApiClient;
+        
         private float _emptyTime;
         
         private void Start()
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
 
+            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
+            InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
+            InstanceHandler.NetworkManager.Subscribe<ServerLog>(HandleServerCustomData);
+            
+            ApiClient = new PlayflowServerApiClient(playflowApiKey);
+            
 #if UNITY_SERVER
             transport.address = "";
             transport.serverPort = 7770;
             transport.StartServer();
-            
-            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
-            InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
 #else
-            
-            
             StartCoroutine(SpawnPlayer());
 #endif            
         }
@@ -100,11 +109,40 @@ namespace Code.Network.PlayFlow
         [ServerOnly]
         private async void UpdateServerPlayerCount()
         {
-            PlayFlowLobby.CurrentServerData.custom_data["players_count"] = InstanceHandler.NetworkManager.playerCount;
-            // TODO: Send custom data
-            await PlayFlowLobby.ApiClient.UpdateServerAsync(PlayFlowLobby.CurrentServerData.instance_id,
-                PlayFlowLobby.CurrentServerData.custom_data);
+            var playFlowJsonFile = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? string.Empty, "playflow.json");
+            InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = playFlowJsonFile});
+            if(!File.Exists(playFlowJsonFile))
+            {
+                InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = "File Not Exits"});
+                return;
+            }
+            var playFlowJson = await File.ReadAllTextAsync(playFlowJsonFile);
+            var serverData = JsonConvert.DeserializeObject<InstanceData>(playFlowJson);
+
+            var instanceId = serverData.instance_id;
+            var customData = serverData.custom_data;
+            customData["players_count"] = InstanceHandler.NetworkManager.playerCount;
+
+            try
+            {
+                await ApiClient.UpdateServerAsync(instanceId, customData);
+                InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = "Lobby Updated"});
+            }
+            catch (PlayFlowApiException e)
+            {
+                InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = $"UpdateError: {e.Message}"});
+            }
             
         }
+
+        private void HandleServerCustomData(PlayerID sender, ServerLog msg, bool asServer)
+        {
+            Debug.Log(msg.Message);
+        }
+    }
+
+    public struct ServerLog : IPackedAuto
+    {
+        public string Message;
     }
 }

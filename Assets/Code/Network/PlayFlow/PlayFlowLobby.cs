@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Code.UI;
@@ -37,15 +38,15 @@ namespace Code.Network.PlayFlow
         private void Update()
         {
             _leftTime += Time.deltaTime;
-            
-            if(_leftTime >= timeout)
+
+            if (_leftTime >= timeout)
                 OnMatchMakingError();
         }
 
         private async void SelectMatch()
         {
             LoadingScreenUI.Instance.Show("loading.find_server", "loading");
-            
+
             var savedServerId = PlayerPrefs.GetString(PrefsServerIDName, null);
 
             // Если id нет ищем сервер
@@ -103,18 +104,8 @@ namespace Code.Network.PlayFlow
                 }
 
                 var server = availableServers[0]; // Выбор сервера
-                
+
                 WaitWhenServerIsReadyAndConnect(server.instance_id);
-                
-                /*foreach (var server in availableServers)
-                {
-                    Debug.Log($"- Server: {server.name}, Status: {server.status}");
-                    if (server.status == "running" && server.version_tag == Application.version)
-                    {
-                        PlayerPrefs.SetString("PlayFlow_IP", server.network_ports[0].host);
-                        PlayerPrefs.SetString("PlayFlow_Port", server.network_ports[0].external_port.ToString());
-                    }
-                }*/
             }
             catch (PlayFlowApiException e)
             {
@@ -129,7 +120,8 @@ namespace Code.Network.PlayFlow
                 name = $"Server {Random.Range(0, 10_000)}",
                 region = "eu-west",
                 compute_size = "xlarge", // быстрое подключение на производительном сервере
-                version_tag = Application.version
+                version_tag = Application.version,
+                custom_data = new Dictionary<string, object> { { "max_players", 64 }, { "players_count", 0 } },
             };
 
             try
@@ -147,11 +139,11 @@ namespace Code.Network.PlayFlow
         private async void WaitWhenServerIsReadyAndConnect(string serverId)
         {
             LoadingScreenUI.Instance.Show("loading.wait_server", "loading");
-            
+
             while (SceneManager.GetActiveScene().name == "Matchmaker")
             {
                 var data = await GetInstanceData(serverId);
-                
+
                 if (data == null)
                 {
                     OnMatchMakingError();
