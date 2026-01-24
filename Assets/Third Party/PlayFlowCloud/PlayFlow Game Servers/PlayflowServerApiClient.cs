@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Newtonsoft.Json; // Added for Newtonsoft.Json
 
 namespace PlayFlow.SDK.Servers
@@ -427,6 +428,22 @@ namespace PlayFlow.SDK.Servers
             };
             // OpenAPI spec for this PUT endpoint does not define a requestBody.
             return await SendRequestAsync<InstanceData>(endpoint, UnityWebRequest.kHttpVerbPUT, payload: null, additionalHeaders: headers);
+        }
+
+        /// <summary>
+        /// Updates server status and IP. Typically called by a game server instance itself upon successful launch.
+        /// </summary>
+        /// <param name="instanceId">Unique identifier (UUID) of the server instance reporting its status.</param>
+        /// <param name="newCustomData"></param>
+        /// <returns>An InstanceData object with the updated server details.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if instanceId or serverStatus is null or empty.</exception>
+        public async Task<InstanceData> UpdateServerAsync(string instanceId, Dictionary<string, object> newCustomData)
+        {
+            if (string.IsNullOrEmpty(instanceId)) throw new ArgumentNullException(nameof(instanceId));
+
+            string endpoint = $"/v2/servers/{instanceId}";
+            // OpenAPI spec for this PUT endpoint does not define a requestBody.
+            return await SendRequestAsync<InstanceData>(endpoint, UnityWebRequest.kHttpVerbPOST, newCustomData);
         }
     }
 

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Code.UI;
 using UnityEngine;
 using PlayFlow.SDK.Servers;
+using PurrNet;
 using UnityEngine.SceneManagement;
 using Random = UnityEngine.Random;
 
@@ -31,6 +32,24 @@ namespace Code.Network.PlayFlow
             _apiClient = new PlayflowServerApiClient(playflowApiKey);
 
             SelectMatch();
+            
+            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
+            InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
+        }
+        
+        
+        private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
+        {
+            if(!asServer)
+                return;
+            UpdateServerPlayerCount();
+        }
+        
+        private void OnPlayerLeft(PlayerID player, SceneID scene, bool asServer)
+        {
+            if(!asServer)
+                return;
+            UpdateServerPlayerCount();
         }
 
         private void Update()
@@ -183,6 +202,14 @@ namespace Code.Network.PlayFlow
         private void OnMatchMakingError()
         {
             SceneManager.LoadScene(MenuSceneName);
+        }
+
+        [ServerOnly]
+        private async void UpdateServerPlayerCount()
+        {
+            CurrentServerData.custom_data["players_count"] = InstanceHandler.NetworkManager.playerCount;
+            // TODO: Send custom data
+            await _apiClient.UpdateServerAsync(CurrentServerData.instance_id, CurrentServerData.custom_data);
         }
     }
 }
