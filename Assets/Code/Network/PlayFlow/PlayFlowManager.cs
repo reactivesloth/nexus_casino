@@ -121,6 +121,9 @@ namespace Code.Network.PlayFlow
         [ServerOnly]
         private static async Task UpdateSeverData_Internal(params (string, object)[] data)
         {
+            if(CurrentServerData == null)
+                AssignServerDataToServer();
+            
             var instanceId = CurrentServerData.instance_id;
             var customData = CurrentServerData.custom_data;
 
@@ -147,7 +150,7 @@ namespace Code.Network.PlayFlow
         }
 
         [ServerOnly]
-        private void AssignServerDataToServer()
+        private static void AssignServerDataToServer()
         {
             var playFlowJsonFile =
                 Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? string.Empty, "playflow.json");
