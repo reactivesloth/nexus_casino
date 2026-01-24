@@ -21,7 +21,7 @@ namespace Code.Network.PlayFlow
         [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float timeout = 60f;
 
-        private static PlayflowServerApiClient _apiClient;
+        public static PlayflowServerApiClient ApiClient;
 
         private float _leftTime = 0f;
 
@@ -29,27 +29,9 @@ namespace Code.Network.PlayFlow
 
         void Start()
         {
-            _apiClient = new PlayflowServerApiClient(playflowApiKey);
+            ApiClient = new PlayflowServerApiClient(playflowApiKey);
 
             SelectMatch();
-            
-            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
-            InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
-        }
-        
-        
-        private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
-        {
-            if(!asServer)
-                return;
-            UpdateServerPlayerCount();
-        }
-        
-        private void OnPlayerLeft(PlayerID player, SceneID scene, bool asServer)
-        {
-            if(!asServer)
-                return;
-            UpdateServerPlayerCount();
         }
 
         private void Update()
@@ -90,7 +72,7 @@ namespace Code.Network.PlayFlow
         {
             try
             {
-                var serverInfo = await _apiClient.GetServerDetailsAsync(serverId);
+                var serverInfo = await ApiClient.GetServerDetailsAsync(serverId);
                 return serverInfo;
             }
             catch (PlayFlowApiException playFlowException)
@@ -107,7 +89,7 @@ namespace Code.Network.PlayFlow
         {
             try
             {
-                ServerList response = await _apiClient.ListServersAsync(includeLaunching: true);
+                ServerList response = await ApiClient.ListServersAsync(includeLaunching: true);
                 Debug.Log($"Found {response.total_servers} total servers.");
 
                 // Server Filter
@@ -152,7 +134,7 @@ namespace Code.Network.PlayFlow
 
             try
             {
-                var response = await _apiClient.StartServerAsync(serverRequest);
+                var response = await ApiClient.StartServerAsync(serverRequest);
                 Debug.Log($"Server is starting! Instance ID: {response.instance_id}");
                 WaitWhenServerIsReadyAndConnect(response.instance_id);
             }
@@ -202,14 +184,6 @@ namespace Code.Network.PlayFlow
         private void OnMatchMakingError()
         {
             SceneManager.LoadScene(MenuSceneName);
-        }
-
-        [ServerOnly]
-        private async void UpdateServerPlayerCount()
-        {
-            CurrentServerData.custom_data["players_count"] = InstanceHandler.NetworkManager.playerCount;
-            // TODO: Send custom data
-            await _apiClient.UpdateServerAsync(CurrentServerData.instance_id, CurrentServerData.custom_data);
         }
     }
 }

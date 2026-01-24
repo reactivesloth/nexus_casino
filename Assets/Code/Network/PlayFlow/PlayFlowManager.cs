@@ -21,6 +21,9 @@ namespace Code.Network.PlayFlow
             transport.address = "";
             transport.serverPort = 7770;
             transport.StartServer();
+            
+            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
+            InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
 #else
             
             
@@ -76,6 +79,32 @@ namespace Code.Network.PlayFlow
                 UnityEditor.EditorApplication.isPlaying = false;
 #endif
             }
+        }
+        
+                
+        
+        private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
+        {
+            if(!asServer)
+                return;
+            UpdateServerPlayerCount();
+        }
+        
+        private void OnPlayerLeft(PlayerID player, SceneID scene, bool asServer)
+        {
+            if(!asServer)
+                return;
+            UpdateServerPlayerCount();
+        }
+        
+        [ServerOnly]
+        private async void UpdateServerPlayerCount()
+        {
+            PlayFlowLobby.CurrentServerData.custom_data["players_count"] = InstanceHandler.NetworkManager.playerCount;
+            // TODO: Send custom data
+            await PlayFlowLobby.ApiClient.UpdateServerAsync(PlayFlowLobby.CurrentServerData.instance_id,
+                PlayFlowLobby.CurrentServerData.custom_data);
+            
         }
     }
 }
