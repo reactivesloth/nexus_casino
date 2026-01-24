@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using Code.UI;
 using Newtonsoft.Json;
@@ -16,11 +17,11 @@ namespace Code.Network.PlayFlow
     {
         [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float emptyServerLifeTime = 600f;
-        
+
         public static PlayflowServerApiClient ApiClient;
-        
+
         private float _emptyTime;
-        
+
         private void Start()
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
@@ -28,16 +29,16 @@ namespace Code.Network.PlayFlow
             InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
             InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
             InstanceHandler.NetworkManager.Subscribe<ServerLog>(HandleServerCustomData);
-            
+
             ApiClient = new PlayflowServerApiClient(playflowApiKey);
-            
+
 #if UNITY_SERVER
             transport.address = "";
             transport.serverPort = 7770;
             transport.StartServer();
 #else
             StartCoroutine(SpawnPlayer());
-#endif            
+#endif
         }
 
         private IEnumerator SpawnPlayer()
@@ -45,23 +46,24 @@ namespace Code.Network.PlayFlow
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
             transport.address = PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1");
             transport.serverPort = ushort.Parse(PlayerPrefs.GetString("PlayFlow_Port", "7770"));
-            
+
             LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
-            
+
             yield return new WaitForSeconds(5f);
-            
+
             transport.StartClient();
-            
+
             yield return new WaitUntil(() => InstanceHandler.NetworkManager.clientState == ConnectionState.Connected);
             Debug.Log("Success!");
             FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
-            
+
             yield return new WaitForSeconds(2f);
-            
+
             LoadingScreenUI.Instance.Hide();
+            Debug.Log(JsonConvert.SerializeObject(PlayFlowLobby.CurrentServerData.custom_data));
         }
 
-        private void Update ()
+        private void Update()
         {
 #if UNITY_SERVER
             UpdateTimer();
@@ -89,33 +91,32 @@ namespace Code.Network.PlayFlow
 #endif
             }
         }
-        
-                
-        
+
+
         private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
         {
-            if(!asServer)
+            if (!asServer)
                 return;
             UpdateServerPlayerCount();
         }
-        
+
         private void OnPlayerLeft(PlayerID player, SceneID scene, bool asServer)
         {
-            if(!asServer)
+            if (!asServer)
                 return;
             UpdateServerPlayerCount();
         }
-        
+
         [ServerOnly]
         private async void UpdateServerPlayerCount()
         {
-            var playFlowJsonFile = Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? string.Empty, "playflow.json");
-            InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = playFlowJsonFile});
-            if(!File.Exists(playFlowJsonFile))
+            var playFlowJsonFile =
+                Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? string.Empty, "playflow.json");
+            if (!File.Exists(playFlowJsonFile))
             {
-                InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = "File Not Exits"});
                 return;
             }
+
             var playFlowJson = await File.ReadAllTextAsync(playFlowJsonFile);
             var serverData = JsonConvert.DeserializeObject<InstanceData>(playFlowJson);
 
@@ -125,14 +126,12 @@ namespace Code.Network.PlayFlow
 
             try
             {
-                await ApiClient.UpdateServerAsync(instanceId, customData);
-                InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = "Lobby Updated"});
+                var newData = await ApiClient.UpdateServerAsync(instanceId,
+                    new CustomDataPostWrapper { custom_data = customData });
             }
             catch (PlayFlowApiException e)
             {
-                InstanceHandler.NetworkManager.SendToAll(new ServerLog{Message = $"UpdateError: {e.Message}"});
             }
-            
         }
 
         private void HandleServerCustomData(PlayerID sender, ServerLog msg, bool asServer)

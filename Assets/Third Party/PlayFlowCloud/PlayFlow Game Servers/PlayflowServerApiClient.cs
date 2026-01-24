@@ -437,7 +437,7 @@ namespace PlayFlow.SDK.Servers
         /// <param name="newCustomData"></param>
         /// <returns>An InstanceData object with the updated server details.</returns>
         /// <exception cref="ArgumentNullException">Thrown if instanceId or serverStatus is null or empty.</exception>
-        public async Task<InstanceData> UpdateServerAsync(string instanceId, Dictionary<string, object> newCustomData)
+        public async Task<InstanceData> UpdateServerAsync(string instanceId, CustomDataPostWrapper newCustomData)
         {
             if (string.IsNullOrEmpty(instanceId)) throw new ArgumentNullException(nameof(instanceId));
 
@@ -487,5 +487,11 @@ namespace PlayFlow.SDK.Servers
             };
             return tcs.Task;
         }
+    }
+    
+    
+    public class CustomDataPostWrapper
+    {
+        public Dictionary<string, object> custom_data { get; set; }
     }
 } 
