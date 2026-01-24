@@ -2,8 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using Code.UI;
 using Newtonsoft.Json;
+using NUnit.Framework;
 using PlayFlow.SDK.Servers;
 using PurrNet;
 using PurrNet.Packing;
@@ -19,17 +22,14 @@ namespace Code.Network.PlayFlow
         [SerializeField] private float emptyServerLifeTime = 600f;
 
         public static PlayflowServerApiClient ApiClient;
+        public static InstanceData CurrentServerData;
 
         private float _emptyTime;
 
         private void Start()
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
-
-            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
-            InstanceHandler.NetworkManager.onPlayerLeftScene += OnPlayerLeft;
-            InstanceHandler.NetworkManager.Subscribe<ServerLog>(HandleServerCustomData);
-
+            InstanceHandler.NetworkManager.Subscribe<ChangeServerInfo>(HandleServerCustomData);
             ApiClient = new PlayflowServerApiClient(playflowApiKey);
 
 #if UNITY_SERVER
@@ -92,23 +92,62 @@ namespace Code.Network.PlayFlow
             }
         }
 
-
-        private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
+        private void HandleServerCustomData(PlayerID sender, ChangeServerInfo info, bool asServer)
         {
-            if (!asServer)
+            if (asServer)
                 return;
-            UpdateServerPlayerCount();
+            CurrentServerData = info.NewServerData;
         }
 
-        private void OnPlayerLeft(PlayerID player, SceneID scene, bool asServer)
+        private static readonly object _lock = new();
+        private static Task _lastTask = Task.CompletedTask;
+        
+        [ServerOnly]
+        public static void UpdateSeverData(params (string, object)[] data)
         {
-            if (!asServer)
-                return;
-            UpdateServerPlayerCount();
+            // навешиваем новый апдейт в конец предыдущего
+            lock (_lock)
+            {
+                _lastTask = _lastTask.ContinueWith(
+                    _ => UpdateSeverData_Internal(data),
+                    CancellationToken.None,
+                    TaskContinuationOptions.None,
+                    TaskScheduler.Default
+                ).Unwrap();
+            }
+        }
+
+        // делаем async Task, а не async void
+        [ServerOnly]
+        private static async Task UpdateSeverData_Internal(params (string, object)[] data)
+        {
+            var instanceId = CurrentServerData.instance_id;
+            var customData = CurrentServerData.custom_data;
+
+            for (var i = 0; i < data.Length; i++)
+            {
+                customData[data[i].Item1] = data[i].Item2;
+            }
+
+            try
+            {
+                var newData = await ApiClient.UpdateServerAsync(
+                    instanceId,
+                    new CustomDataPostWrapper { custom_data = customData }
+                ).ConfigureAwait(false);
+
+                InstanceHandler.NetworkManager.SendToAll(
+                    new ChangeServerInfo { NewServerData = newData }
+                );
+            }
+            catch (PlayFlowApiException e)
+            {
+                // логирование
+            }
         }
 
         [ServerOnly]
-        private async void UpdateServerPlayerCount()
+        private void AssignServerDataToServer()
         {
             var playFlowJsonFile =
                 Path.Combine(Path.GetDirectoryName(Application.dataPath) ?? string.Empty, "playflow.json");
@@ -117,31 +156,13 @@ namespace Code.Network.PlayFlow
                 return;
             }
 
-            var playFlowJson = await File.ReadAllTextAsync(playFlowJsonFile);
-            var serverData = JsonConvert.DeserializeObject<InstanceData>(playFlowJson);
-
-            var instanceId = serverData.instance_id;
-            var customData = serverData.custom_data;
-            customData["players_count"] = InstanceHandler.NetworkManager.playerCount;
-
-            try
-            {
-                var newData = await ApiClient.UpdateServerAsync(instanceId,
-                    new CustomDataPostWrapper { custom_data = customData });
-            }
-            catch (PlayFlowApiException e)
-            {
-            }
-        }
-
-        private void HandleServerCustomData(PlayerID sender, ServerLog msg, bool asServer)
-        {
-            Debug.Log(msg.Message);
+            var playFlowJson = File.ReadAllText(playFlowJsonFile);
+            CurrentServerData = JsonConvert.DeserializeObject<InstanceData>(playFlowJson);
         }
     }
 
-    public struct ServerLog : IPackedAuto
+    public struct ChangeServerInfo : IPackedAuto
     {
-        public string Message;
+        public InstanceData NewServerData;
     }
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
+using Code.Network.PlayFlow;
 using PurrNet;
 using PurrNet.Logging;
 using PurrNet.Modules;
@@ -188,6 +189,9 @@ namespace Code.Network.Player
 
             if (!SpawnedPlayerData_Server.TryAdd(sender, msg.PlayerData))
                 SpawnedPlayerData_Server[sender] = msg.PlayerData;
+            
+            // TODO: Update PlayFlow custom Data
+            //PlayFlowManager.UpdateSeverData();
 
             if (!TryGetSpawnSceneID(out var sceneId))
                 return;
@@ -241,6 +245,9 @@ namespace Code.Network.Player
 
         private void OnPlayerLeft_Server(PlayerID player, bool asServer)
         {
+            // TODO: Update PlayFlow custom Data
+            //PlayFlowManager.UpdateSeverData();
+            
             _playerTypes.Remove(player);
             _sceneLoadedPlayers.Remove(player);
             _spawned.Remove(player);

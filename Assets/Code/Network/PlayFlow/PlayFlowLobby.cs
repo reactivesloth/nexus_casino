@@ -119,7 +119,7 @@ namespace Code.Network.PlayFlow
             {
                 name = $"Server {Random.Range(0, 10_000)}",
                 region = "eu-west",
-                compute_size = "xlarge", // быстрое подключение на производительном сервере
+                compute_size = "large",
                 version_tag = Application.version,
                 custom_data = new Dictionary<string, object> { { "max_players", 64 }, { "players_count", 0 } },
             };
