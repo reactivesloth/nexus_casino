@@ -1,13 +1,12 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Code.Chat;
 using Code.Network;
 using Code.Network.InteractionSystem;
-using Code.Scene.SceneObjectControl;
+using Code.Network.Player;
+using Code.Network.PlayFlow;
 using Code.UI.Popup;
 using Code.Utility;
-using PlayFlow;
+using PlayFlow.SDK.Servers;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -199,24 +198,12 @@ namespace Code.UI.Admin
         {
             ClearContent();
 
-            var lobbyIds = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players;
+            var playerDatas = PlayerSpawner.SpawnedPlayerData.Values.ToList();
 
-            foreach (var playerId in lobbyIds)
+            foreach (var playerData in playerDatas)
             {
-                if (playerId == null) continue;
-                
-                if (!PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(playerId,
-                        out var playerData))
-                    continue;
-
-                if (playerData == null) continue;
-                var pn = playerData.GetValueOrDefault("name", "_Name").ToString();
-                var pr = playerData.GetValueOrDefault("role", "_Role").ToString();
-                
-                if (pn.Equals("_Name") || pr.Equals("_Role")) continue;
-                
                 var controlElement = Instantiate(userControlElementPrefab, contentContainer);
-                controlElement.Init(playerId, pn, pr);
+                controlElement.Init(playerData);
                 _controlElements.Add(controlElement);
             }
         }
@@ -246,19 +233,24 @@ namespace Code.UI.Admin
             }
         }
 
-        private void UpdateLobbies()
+        private async void UpdateLobbies()
         {
             ClearContent();
-            PlayFlowLobbyManagerV2.Instance.GetAvailableLobbies(OnLobbiesReceived, Debug.LogError);
+            try
+            {
+                OnLobbiesReceived(await PlayFlowManager.ApiClient.ListServersAsync());
+            }
+            catch (PlayFlowApiException e)
+            {
+                Debug.LogException(e);
+            }
+            
         }
 
-        private void OnLobbiesReceived(List<Lobby> lobbies)
+        private void OnLobbiesReceived(ServerList lobbies)
         {
-            foreach (var lobby in lobbies)
+            foreach (var lobby in lobbies.servers)
             {
-                if(lobby.currentPlayers <= 0)
-                    continue;
-                
                 var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
                 controlElement.Init(lobby);
                 _controlElements.Add(controlElement);
@@ -306,17 +298,7 @@ namespace Code.UI.Admin
             
             
             var hostVariants = new List<string> { "me" };
-            var allAvailablePlayers = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.ToList()
-                .Select(id =>
-                {
-                    if (PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(id, out var playerData)
-                        && playerData.TryGetValue("name", out var playerName))
-                        return playerName.ToString();
-                    return string.Empty;
-                })
-                .Where(playerName => !string.IsNullOrEmpty(playerName))
-                .Distinct()
-                .ToList();
+            var allAvailablePlayers = PlayerSpawner.NameConnectionsData.Keys.Distinct().ToList();;
             
             hostVariants.AddRange(allAvailablePlayers);
 

@@ -33,7 +33,7 @@ namespace Code.UI.Admin
         private PlayerUI _playerUI;
 
         private string _username;
-        private string _playerId;
+        private MeSchema _playerData;
 
         private void Awake()
         {
@@ -86,12 +86,12 @@ namespace Code.UI.Admin
         }
 
 
-        public void Init(string id, string playerName, string playerRole)
+        public void Init(MeSchema playerData)
         {
-            _playerId = id;
+            _playerData = playerData;
             
-            titleDisplayText.text = _username = playerName;
-            roleText.text = playerRole;
+            titleDisplayText.text = _username = playerData.username;
+            roleText.text = playerData.role;
 
             if (_adminPanelHandler.MutedDictionary.TryGetValue(_username, out var muteState))
                 SetMutedButtonsState(muteState.muteChat, muteState.muteVoice);
@@ -102,7 +102,7 @@ namespace Code.UI.Admin
 
             kickButton.interactable = banButton.interactable = muteChatButton.interactable =
                 unmuteChatButton.interactable = muteVoiceButton.interactable =
-                    unmuteVoiceButton.interactable = roleText.text is "user" or "vip";
+                    unmuteVoiceButton.interactable = !playerData.IsAdminRole;
 
             _playerUI = PlayerUI.GetByPlayerName(_username);
             if(_playerUI != null)

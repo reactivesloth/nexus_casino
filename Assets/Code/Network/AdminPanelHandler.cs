@@ -125,13 +125,13 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void Kick_ServerRPC(PlayerID sender, string username)
         {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            if (!PlayerSpawner.NameConnectionsData.TryGetValue(username, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
                 return;
             }
 
-            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
+            if (PlayerSpawner.SpawnedPlayerData.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
                 CommandCallback_Rpc(sender, $"User {username} cannot be kicked", false);
@@ -214,13 +214,13 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void Mute_ServerRpc(PlayerID sender, string username, bool muteChat, bool muteVoice)
         {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            if (!PlayerSpawner.NameConnectionsData.TryGetValue(username, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
                 return;
             }
 
-            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
+            if (PlayerSpawner.SpawnedPlayerData.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
                 CommandCallback_Rpc(sender, $"User {username} cannot be muted", false);
@@ -274,13 +274,13 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void Unmute_ServerRpc(PlayerID sender, string username, bool unmuteChat, bool unmuteVoice)
         {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            if (!PlayerSpawner.NameConnectionsData.TryGetValue(username, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
                 return;
             }
 
-            if (PlayerSpawner.SpawnedPlayerData_Server.TryGetValue(connection, out var playerData)
+            if (PlayerSpawner.SpawnedPlayerData.TryGetValue(connection, out var playerData)
                 && playerData.IsAdminRole)
             {
                 CommandCallback_Rpc(sender, $"User {username} cannot be unmuted", false);
@@ -334,7 +334,7 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void ToggleOffVoce_ServerRpc(PlayerID sender, string username)
         {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            if (!PlayerSpawner.NameConnectionsData.TryGetValue(username, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
                 return;
@@ -433,7 +433,7 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void CreateRoom_ServerRpc(string roomName, bool isPrivate, string hostName, PlayerID sender)
         {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(hostName, out var connection))
+            if (!PlayerSpawner.NameConnectionsData.TryGetValue(hostName, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {hostName} not found", false);
                 return;
@@ -469,7 +469,7 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void MoveUserByLobbyName_ServerRpc(PlayerID sender, string username, string lobbyName)
         {
-            if (!PlayerSpawner.NameConnectionsData_Server.TryGetValue(username, out var connection))
+            if (!PlayerSpawner.NameConnectionsData.TryGetValue(username, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
                 return;

@@ -28,6 +28,13 @@ namespace Code.Network.Player
         public string Reason;
     }
 
+    public struct UpdatePlayerListBroadcast : IPackedAuto
+    {
+        public int PlayerCount;
+        public PlayerID[] Ids;
+        public MeSchema[] Datas;
+    }
+
     [Serializable]
     public class PlayerSpawnableModelKeyValuePair
     {
@@ -80,8 +87,8 @@ namespace Code.Network.Player
         private readonly HashSet<PlayerID> _sceneLoadedPlayers = new();
         private readonly HashSet<PlayerID> _spawned = new(); // защита от дубля
 
-        public static readonly Dictionary<PlayerID, MeSchema> SpawnedPlayerData_Server = new();
-        public static readonly Dictionary<string, PlayerID> NameConnectionsData_Server = new();
+        public static readonly Dictionary<PlayerID, MeSchema> SpawnedPlayerData = new();
+        public static readonly Dictionary<string, PlayerID> NameConnectionsData = new();
 
         // ===== Client state =====
         private bool _clientConnected;
@@ -110,6 +117,7 @@ namespace Code.Network.Player
             else
             {
                 manager.onClientConnectionState += OnClientConnectionState_Client;
+                manager.Subscribe<UpdatePlayerListBroadcast>(OnPlayerUpdated);
             }
         }
 
@@ -125,6 +133,7 @@ namespace Code.Network.Player
             else
             {
                 manager.onClientConnectionState -= OnClientConnectionState_Client;
+                manager.Unsubscribe<UpdatePlayerListBroadcast>(OnPlayerUpdated);
             }
         }
 
@@ -167,6 +176,12 @@ namespace Code.Network.Player
             if (msg.IsSpawnOnSavePos)
                 Debug.Log($"[{nameof(PlayerSpawner)}] SpawnPlayer on Save Position: {msg.SavePos}");
 
+            NetworkManager.main.SendToServer(new UpdatePlayerListBroadcast
+            {
+                PlayerCount = SpawnedPlayerData.Count,
+                Ids = SpawnedPlayerData.Keys.ToArray(),
+                Datas = SpawnedPlayerData.Values.ToArray()
+            });
             // Клиент -> Сервер (broadcast-сообщение без привязки к объекту)
             NetworkManager.main.SendToServer(msg);
         }
@@ -184,14 +199,22 @@ namespace Code.Network.Player
         {
             _playerTypes[sender] = msg.PlayerType;
 
-            if (!NameConnectionsData_Server.TryAdd(msg.PlayerData.username, sender))
-                NameConnectionsData_Server[msg.PlayerData.username] = sender;
+            if (!NameConnectionsData.TryAdd(msg.PlayerData.username, sender))
+                NameConnectionsData[msg.PlayerData.username] = sender;
 
-            if (!SpawnedPlayerData_Server.TryAdd(sender, msg.PlayerData))
-                SpawnedPlayerData_Server[sender] = msg.PlayerData;
+            if (!SpawnedPlayerData.TryAdd(sender, msg.PlayerData))
+                SpawnedPlayerData[sender] = msg.PlayerData;
 
-            UpdatePlayFlowDataOnPlayersChanges();
+            OnPlayersDataUpdated();
             
+            if(msg.PlayerData.IsAdminRole)
+                InstanceHandler.NetworkManager.Send(sender, new UpdatePlayerListBroadcast
+                {
+                    PlayerCount = SpawnedPlayerData.Count,
+                    Ids = SpawnedPlayerData.Keys.ToArray(),
+                    Datas = SpawnedPlayerData.Values.ToArray()
+                });
+
             if (!TryGetSpawnSceneID(out var sceneId))
                 return;
 
@@ -247,19 +270,19 @@ namespace Code.Network.Player
             _playerTypes.Remove(player);
             _sceneLoadedPlayers.Remove(player);
             _spawned.Remove(player);
-            SpawnedPlayerData_Server.Remove(player);
+            SpawnedPlayerData.Remove(player);
 
-            var keysToRemove = NameConnectionsData_Server
+            var keysToRemove = NameConnectionsData
                 .Where(kvp => kvp.Value == player)
                 .Select(kvp => kvp.Key)
                 .ToList();
 
             foreach (var key in keysToRemove)
-                NameConnectionsData_Server.Remove(key);
+                NameConnectionsData.Remove(key);
 
             _dontSpawn.Remove(player);
-            
-            UpdatePlayFlowDataOnPlayersChanges();
+
+            OnPlayersDataUpdated();
         }
 
         private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data,
@@ -331,16 +354,44 @@ namespace Code.Network.Player
             if (hadNull) PurrLogger.LogWarning("Invalid spawn points cleanup.", this);
         }
 
-        private void UpdatePlayFlowDataOnPlayersChanges()
+        [ServerOnly]
+        private void OnPlayersDataUpdated()
         {
             // Update PlayFlow custom Data
-            var playersList = SpawnedPlayerData_Server.Values.Select(p => p.username).ToArray();
-            var hosts = SpawnedPlayerData_Server.Values.Where(p => p.IsHost).Select(p => p.username).ToArray();
-            var admins = SpawnedPlayerData_Server.Values.Where(p => p.IsAdmin).Select(p => p.username).ToArray();
-            var moderators = SpawnedPlayerData_Server.Values.Where(p => p.IsModerator).Select(p => p.username).ToArray();
+            var playersList = SpawnedPlayerData.Values.Select(p => p.username).ToArray();
+            var hosts = SpawnedPlayerData.Values.Where(p => p.IsHost).Select(p => p.username).ToArray();
+            var admins = SpawnedPlayerData.Values.Where(p => p.IsAdmin).Select(p => p.username).ToArray();
+            var moderators = SpawnedPlayerData.Values.Where(p => p.IsModerator).Select(p => p.username).ToArray();
 
             PlayFlowManager.UpdateSeverData(("players", playersList), ("hosts", hosts),
                 ("admins", admins), ("moderators", moderators));
+
+            var adminsKeys = SpawnedPlayerData
+                .Where(data => data.Value.IsAdminRole)
+                .Select(data => data.Key).ToList();
+            
+            InstanceHandler.NetworkManager.Send(adminsKeys, new UpdatePlayerListBroadcast
+            {
+                PlayerCount = SpawnedPlayerData.Count,
+                Ids = SpawnedPlayerData.Keys.ToArray(),
+                Datas = SpawnedPlayerData.Values.ToArray()
+            });
+        }
+
+        private void OnPlayerUpdated(PlayerID sender, UpdatePlayerListBroadcast msg, bool asServer)
+        {
+            SpawnedPlayerData.Clear();
+            NameConnectionsData.Clear();
+
+            for (int i = 0; i < msg.PlayerCount; i++)
+            {
+                SpawnedPlayerData.Add(msg.Ids[i], msg.Datas[i]);
+                NameConnectionsData.Add(msg.Datas[i].username, msg.Ids[i]);
+            }
+            var adminsKeys = SpawnedPlayerData
+                .Where(data => data.Value.IsAdminRole)
+                .Select(data => data.Key).ToList();
+            Debug.Log(adminsKeys.Count.ToString());
         }
     }
 }

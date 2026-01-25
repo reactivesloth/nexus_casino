@@ -59,7 +59,6 @@ namespace Code.Network.PlayFlow
             yield return new WaitForSeconds(2f);
 
             LoadingScreenUI.Instance.Hide();
-            Debug.Log(JsonConvert.SerializeObject(PlayFlowLobby.CurrentServerData.custom_data));
         }
 
         private void Update()
