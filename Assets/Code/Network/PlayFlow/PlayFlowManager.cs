@@ -96,7 +96,16 @@ namespace Code.Network.PlayFlow
         {
             if (asServer)
                 return;
+            Debug.Log(JsonConvert.SerializeObject(info.NewServerData, Formatting.Indented));
             CurrentServerData = info.NewServerData;
+            if(CurrentServerData.custom_data.TryGetValue("players", out var players))
+            {
+                var playerList = players as List<string>;
+                if(playerList != null)
+                    Debug.Log(playerList.Count);
+                else
+                    Debug.LogError("Convert fails");
+            }
         }
 
         private static readonly object _lock = new();
@@ -105,7 +114,6 @@ namespace Code.Network.PlayFlow
         [ServerOnly]
         public static void UpdateSeverData(params (string, object)[] data)
         {
-            // навешиваем новый апдейт в конец предыдущего
             lock (_lock)
             {
                 _lastTask = _lastTask.ContinueWith(
@@ -117,12 +125,16 @@ namespace Code.Network.PlayFlow
             }
         }
 
-        // делаем async Task, а не async void
         [ServerOnly]
         private static async Task UpdateSeverData_Internal(params (string, object)[] data)
         {
             if(CurrentServerData == null)
                 AssignServerDataToServer();
+            if(CurrentServerData == null)
+            {
+                Debug.LogError("Server data is null");
+                return;
+            }
             
             var instanceId = CurrentServerData.instance_id;
             var customData = CurrentServerData.custom_data;
@@ -140,12 +152,12 @@ namespace Code.Network.PlayFlow
                 ).ConfigureAwait(false);
 
                 InstanceHandler.NetworkManager.SendToAll(
-                    new ChangeServerInfo { NewServerData = newData }
+                    new ChangeServerInfo { NewServerData = CurrentServerData }
                 );
             }
             catch (PlayFlowApiException e)
             {
-                // логирование
+                Debug.LogError(e.Message);
             }
         }
 

@@ -121,7 +121,7 @@ namespace Code.Network.PlayFlow
                 region = "eu-west",
                 compute_size = "large",
                 version_tag = Application.version,
-                custom_data = new Dictionary<string, object> { { "max_players", 64 }, { "players_count", 0 } },
+                custom_data = new Dictionary<string, object> { { "max_players", 64 }},
             };
 
             try

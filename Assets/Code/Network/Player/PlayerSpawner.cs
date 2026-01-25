@@ -189,10 +189,9 @@ namespace Code.Network.Player
 
             if (!SpawnedPlayerData_Server.TryAdd(sender, msg.PlayerData))
                 SpawnedPlayerData_Server[sender] = msg.PlayerData;
-            
-            // TODO: Update PlayFlow custom Data
-            //PlayFlowManager.UpdateSeverData();
 
+            UpdatePlayFlowDataOnPlayersChanges();
+            
             if (!TryGetSpawnSceneID(out var sceneId))
                 return;
 
@@ -245,9 +244,8 @@ namespace Code.Network.Player
 
         private void OnPlayerLeft_Server(PlayerID player, bool asServer)
         {
-            // TODO: Update PlayFlow custom Data
-            //PlayFlowManager.UpdateSeverData();
-            
+            UpdatePlayFlowDataOnPlayersChanges();
+
             _playerTypes.Remove(player);
             _sceneLoadedPlayers.Remove(player);
             _spawned.Remove(player);
@@ -264,9 +262,9 @@ namespace Code.Network.Player
             _dontSpawn.Remove(player);
         }
 
-        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data, bool asServer)
+        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data,
+            bool asServer)
         {
-            
         }
 
         private void GetSpawnTransform(out Vector3 pos, out Quaternion rot, PlayerID player, SceneID scene,
@@ -331,6 +329,18 @@ namespace Code.Network.Player
             }
 
             if (hadNull) PurrLogger.LogWarning("Invalid spawn points cleanup.", this);
+        }
+
+        private void UpdatePlayFlowDataOnPlayersChanges()
+        {
+            // Update PlayFlow custom Data
+            var playersList = SpawnedPlayerData_Server.Values.Select(p => p.username).ToArray();
+            var hosts = SpawnedPlayerData_Server.Values.Where(p => p.IsHost).Select(p => p.username).ToArray();
+            var admins = SpawnedPlayerData_Server.Values.Where(p => p.IsAdmin).Select(p => p.username).ToArray();
+            var moderators = SpawnedPlayerData_Server.Values.Where(p => p.IsModerator).Select(p => p.username).ToArray();
+
+            PlayFlowManager.UpdateSeverData(("players", playersList), ("hosts", hosts),
+                ("admins", admins), ("moderators", moderators));
         }
     }
 }
