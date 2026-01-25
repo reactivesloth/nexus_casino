@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Code.API;
-using CurvedUI;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -175,13 +173,9 @@ namespace Code.Utility
             canvasGroup.interactable = true;
             canvasGroup.alpha = 1;
 
-            var curved = WebViewPrefabInstance.GetComponentInChildren<CurvedUISettings>(true);
-            if (curved != null) curved.enabled = false;
-
             RebindToCanvas(WebViewPrefabInstance, parkingCanvas, bringToFront: true, worldSpace: false);
-
+            
             WebViewPrefabInstance.gameObject.SetActive(true);
-            StartCoroutine(ForceCanvasRebuildNextFrame((RectTransform)WebViewPrefabInstance.transform));
         }
 
         public void Hide()
@@ -220,11 +214,6 @@ namespace Code.Utility
             bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace || worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
             if (worldSpace && worldCanvas.worldCamera == null) worldCanvas.worldCamera = Camera.main;
             if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _)) worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
-
-            var curved = _view.GetComponentInChildren<CurvedUISettings>(true);
-            if (curved != null) curved.enabled = true;
-        
-            _view.gameObject.SetActive(false);
         
             RebindToCanvas(_view, worldCanvas, bringToFront: false, worldSpace: worldSpace);
 
@@ -249,7 +238,6 @@ namespace Code.Utility
             }
 
             view.gameObject.SetActive(true);
-            StartCoroutine(ForceCanvasRebuildNextFrame((RectTransform)view.transform));
 
             _image =  view.GetComponentInChildren<RawImage>(true);
             return _image;
@@ -289,28 +277,6 @@ namespace Code.Utility
             rt.anchoredPosition = Vector2.zero;
             var localPos = rt.localPosition;
             rt.localPosition = new Vector3(localPos.x, localPos.y, 0f);
-
-            if (worldSpace)
-            {
-                if (canvas.worldCamera == null) canvas.worldCamera = Camera.main;
-                _view.transform.hasChanged = true; 
-            }
-            else
-            {
-                canvas.worldCamera = null;
-            }
-
-            if (!canvas.TryGetComponent(out GraphicRaycaster _))
-                canvas.gameObject.AddComponent<GraphicRaycaster>();
-        }
-
-
-        private IEnumerator ForceCanvasRebuildNextFrame(RectTransform rt)
-        {
-            yield return new WaitForEndOfFrame();
-            Canvas.ForceUpdateCanvases();
-            if (rt != null) LayoutRebuilder.ForceRebuildLayoutImmediate(rt);
-            Canvas.ForceUpdateCanvases();
         }
 
         public async Task ClearAllDataAsync(bool deepStandalone)

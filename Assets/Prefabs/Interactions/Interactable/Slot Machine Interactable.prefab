@@ -666,9 +666,8 @@ GameObject:
   - component: {fileID: 6577479591757589518}
   - component: {fileID: 4508126933881994218}
   - component: {fileID: 6088033711210609466}
-  - component: {fileID: 7068722929800042271}
   m_Layer: 5
-  m_Name: StreamSlotMachineUI (Curved)
+  m_Name: StreamSlotMachineUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -740,29 +739,6 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 1
---- !u!114 &7068722929800042271
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3818568580355395448}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a783f671592674b589cfc4953e28656b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  shape: 3
-  quality: 2
-  interactable: 1
-  blocksRaycasts: 0
-  useMeshCollider: 0
-  angle: 25
-  preserveAspect: 1
-  vertAngle: 90
-  ringFill: 0.5
-  ringExternalDiamater: 1000
-  ringFlipVertical: 0
 --- !u!1 &3836657926655847833
 GameObject:
   m_ObjectHideFlags: 0
@@ -792,7 +768,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0.5336603, y: 0.5336603, z: 0.46390373, w: 0.46390373}
   m_LocalPosition: {x: 0.00057, y: 0, z: 0.02072}
-  m_LocalScale: {x: 0.000102649996, y: 0.000102649996, z: 0.000102649996}
+  m_LocalScale: {x: 0.0001, y: 0.0001, z: 0.0001}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 6577479591757589518}
@@ -910,7 +886,6 @@ GameObject:
   - component: {fileID: 4866904692684555069}
   - component: {fileID: 8527433312368776774}
   - component: {fileID: 4849952405852889531}
-  - component: {fileID: 8200879489191177144}
   m_Layer: 5
   m_Name: RawImage
   m_TagString: Untagged
@@ -972,25 +947,6 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
---- !u!114 &8200879489191177144
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4440273282103300431}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0.000000053314203, y: 1, z: 0.00000008079381}
-  savedRectSize: {x: 1280, y: 720}
-  savedColor: {r: 1, g: 1, b: 1, a: 1}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 0
 --- !u!1 &4666618633821540953
 GameObject:
   m_ObjectHideFlags: 0
@@ -1541,7 +1497,6 @@ GameObject:
   - component: {fileID: 5316184197522198741}
   - component: {fileID: 2384090569383149430}
   - component: {fileID: 3622304924101099840}
-  - component: {fileID: 8342693247915125007}
   m_Layer: 5
   m_Name: BG
   m_TagString: Untagged
@@ -1606,25 +1561,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8342693247915125007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8453526588274256824}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0, y: 0, z: 0}
-  savedRectSize: {x: 1280, y: 720}
-  savedColor: {r: 0, g: 0, b: 0, a: 1}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 0
 --- !u!1 &9141442648563448162
 GameObject:
   m_ObjectHideFlags: 0
@@ -1636,10 +1572,8 @@ GameObject:
   - component: {fileID: 9141442648583643534}
   - component: {fileID: 9141442648583482066}
   - component: {fileID: 9141442648569476374}
-  - component: {fileID: 9141442648569442942}
-  - component: {fileID: 9141442648569433180}
   m_Layer: 5
-  m_Name: SlotMachineUI - WorldSpace (Curved)
+  m_Name: SlotMachineUI - WorldSpace
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1711,44 +1645,3 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 1
---- !u!114 &9141442648569442942
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9141442648563448162}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ba045fa4943b5428da9ef8508c8ada33, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 32
-  showDebug: 0
---- !u!114 &9141442648569433180
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 9141442648563448162}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a783f671592674b589cfc4953e28656b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  shape: 3
-  quality: 2
-  interactable: 1
-  blocksRaycasts: 1
-  useMeshCollider: 0
-  angle: 25
-  preserveAspect: 1
-  vertAngle: 90
-  ringFill: 0.5
-  ringExternalDiamater: 1000
-  ringFlipVertical: 0

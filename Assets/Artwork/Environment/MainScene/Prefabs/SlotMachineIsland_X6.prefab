@@ -121,6 +121,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &4116596764303104398
 MonoBehaviour:
@@ -180,6 +181,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -300,6 +302,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!114 &1077840091294688453
 MonoBehaviour:
@@ -359,6 +362,7 @@ MonoBehaviour:
   m_VerticalAlignment: 512
   m_textAlignment: 65535
   m_characterSpacing: 0
+  m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0
   m_lineSpacingMax: 0
@@ -403,37 +407,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2759572100934600428}
     m_Modifications:
-    - target: {fileID: 1122238392872016104, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: <SceneId>k__BackingField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (4)
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
@@ -475,14 +451,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: 5811844798856425221, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 9113964075066348919, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -501,37 +469,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2759572100934600428}
     m_Modifications:
-    - target: {fileID: 1122238392872016104, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: <SceneId>k__BackingField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (3)
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
@@ -573,14 +513,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: 5811844798856425221, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 9113964075066348919, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -599,37 +531,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2759572100934600428}
     m_Modifications:
-    - target: {fileID: 1122238392872016104, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: <SceneId>k__BackingField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (5)
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
@@ -671,14 +575,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: 5811844798856425221, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 9113964075066348919, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -697,37 +593,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2759572100934600428}
     m_Modifications:
-    - target: {fileID: 1122238392872016104, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: <SceneId>k__BackingField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (6)
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
@@ -769,14 +637,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
       objectReference: {fileID: 0}
-    - target: {fileID: 5811844798856425221, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 9113964075066348919, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -795,37 +655,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2759572100934600428}
     m_Modifications:
-    - target: {fileID: 1122238392872016104, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: <SceneId>k__BackingField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (7)
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
@@ -866,14 +698,6 @@ PrefabInstance:
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 5811844798856425221, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 9113964075066348919, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1069,37 +893,9 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2759572100934600428}
     m_Modifications:
-    - target: {fileID: 1122238392872016104, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: WasActiveDuringEdit
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1674911866223267697, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: <SceneId>k__BackingField
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1977339585327243757, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
     - target: {fileID: 4813418176142902161, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_Name
       value: SlotMachine_01 (2)
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalPosition.x
@@ -1140,14 +936,6 @@ PrefabInstance:
     - target: {fileID: 5298312307050830123, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 90
-      objectReference: {fileID: 0}
-    - target: {fileID: 5811844798856425221, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
-      objectReference: {fileID: 0}
-    - target: {fileID: 9113964075066348919, guid: dd431f3e0e0dcb44d968636ae2b03229, type: 3}
-      propertyPath: objectId
-      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

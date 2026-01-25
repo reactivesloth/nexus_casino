@@ -39,6 +39,8 @@ namespace Code.Network.InteractionSystem
         
         [SerializeField] private Providers provider = Providers.all;
         
+        [SerializeField] private Vector3 localScale = new Vector3(0.0001f, 0.0001f, 0.0001f);
+        
         public int IDNumber;
 
         private bool _initSlot;
@@ -249,6 +251,14 @@ namespace Code.Network.InteractionSystem
         {
             var all = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             return all.FirstOrDefault(s => s.IDNumber == id);
+        }
+
+        private void Update()
+        {
+            if (transform.localScale != localScale) {
+                Debug.Log($"SlotMachine {IDNumber} localScale changed");    
+                transform.localScale = localScale; // ( 0.0001f, 0.0001f, 0.0001f)
+            }
         }
     }
 }
