@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Code.UI;
+using Newtonsoft.Json.Linq;
 using UnityEngine;
 using PlayFlow.SDK.Servers;
 using PurrNet;
@@ -12,12 +13,12 @@ namespace Code.Network.PlayFlow
 {
     public class PlayFlowLobby : MonoBehaviour
     {
-        private const string PrefsServerIDName = "PlayFlow_ID";
-        private const string PrefsServerIPName = "PlayFlow_IP";
-        private const string PrefsServerPortName = "PlayFlow_Port";
+        public const string PrefsServerIDName = "PlayFlow_ID";
+        public const string PrefsServerIPName = "PlayFlow_IP";
+        public const string PrefsServerPortName = "PlayFlow_Port";
 
-        private const string GameSceneName = "Main";
-        private const string MenuSceneName = "Init";
+        public const string GameSceneName = "Main";
+        public const string MenuSceneName = "Init";
 
         [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float timeout = 60f;
@@ -94,8 +95,15 @@ namespace Code.Network.PlayFlow
                 Debug.Log($"Found {response.total_servers} total servers.");
 
                 // Server Filter
-                var availableServers =
-                    response.servers.Where(s => s.version_tag == Application.version && s.status != "stopped").ToList();
+                var availableServers = response.servers
+                    .Where(s =>
+                        s.version_tag == Application.version
+                        && s.status != "stopped"
+                        && (!s.custom_data.TryGetValue("private", out var isPrivate) || !(bool)isPrivate)
+                        && GetFreeSlotsInServerCount(s) > 0)
+                    .OrderBy(GetFreeSlotsInServerCount)
+                    .ToList();
+
 
                 if (availableServers.Count == 0)
                 {
@@ -121,7 +129,7 @@ namespace Code.Network.PlayFlow
                 region = "eu-west",
                 compute_size = "large",
                 version_tag = Application.version,
-                custom_data = new Dictionary<string, object> { { "max_players", 64 }},
+                custom_data = new Dictionary<string, object> { { "max_players", 64 } },
             };
 
             try
@@ -176,6 +184,53 @@ namespace Code.Network.PlayFlow
         private void OnMatchMakingError()
         {
             SceneManager.LoadScene(MenuSceneName);
+        }
+
+        private static int GetFreeSlotsInServerCount(InstanceData instanceData)
+        {
+            var customData = instanceData.custom_data;
+            var allSlots = (int)customData["max_players"];
+
+            if (!customData.TryGetValue("players", out var players)
+                || players is not JArray playersArray)
+                return allSlots;
+
+            var isAdmin = TryGetArray(customData, "admins", out var adminsArray)
+                          && adminsArray.Count > 0;
+            var isHost = TryGetArray(customData, "hosts", out var hostsArray)
+                         && hostsArray.Count > 0;
+            var isModerator = TryGetArray(customData, "moderators", out var moderatorsArray)
+                              && moderatorsArray.Count > 0;
+
+            return allSlots - playersArray.Count
+                            - (!isAdmin ? 1 : 0)
+                            - (!isHost ? 1 : 0)
+                            - (!isModerator ? 1 : 0);
+        }
+
+        private static bool TryGetArray(
+            Dictionary<string, object> data,
+            string key,
+            out JArray array)
+        {
+            array = null;
+
+            if (!data.TryGetValue(key, out var value) || value is null)
+                return false;
+
+            if (value is JArray jArr)
+            {
+                array = jArr;
+                return true;
+            }
+
+            if (value is JToken token && token is JArray tokenArr)
+            {
+                array = tokenArr;
+                return true;
+            }
+
+            return false;
         }
     }
 }

@@ -1,12 +1,15 @@
+using System.Collections.Generic;
 using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.Chat;
 using Code.Network.InteractionSystem;
 using Code.Network.Player;
+using Code.Network.PlayFlow;
 using Code.Player;
 using Code.UI;
 using PlayFlow;
+using PlayFlow.SDK.Servers;
 using Proyecto26;
 using PurrNet;
 using UnityEngine;
@@ -20,9 +23,11 @@ namespace Code.Network
         [SerializeField] private ChatController chatController;
         [SerializeField, TextArea] private string helpText;
 
-        [FormerlySerializedAs("sceneObjectController")] [SerializeField] private SceneObjectsController sceneObjectsController;
+        [FormerlySerializedAs("sceneObjectController")] [SerializeField]
+        private SceneObjectsController sceneObjectsController;
 
-        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary = new SyncDictionary<string, MuteStateSync>();
+        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary =
+            new SyncDictionary<string, MuteStateSync>();
 
         [System.Serializable]
         public struct MuteStateSync
@@ -30,7 +35,7 @@ namespace Code.Network
             public bool muteChat;
             public bool muteVoice;
         }
-        
+
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -38,13 +43,14 @@ namespace Code.Network
             sceneObjectsController ??= FindAnyObjectByType<SceneObjectsController>();
         }
 #endif
-        
+
         public void OnStartClient()
         {
-            if(MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync)) SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
+            if (MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
+                SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
-        
-        
+
+
         #region Ban
 
         public void BanUser(string usernameTime)
@@ -62,17 +68,17 @@ namespace Code.Network
                 CommandCallback($"You can't ban users", false);
                 return;
             }
-            
+
             var banedUser = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.FirstOrDefault(m => m == username);
-            
+
             if (banedUser == null)
             {
-                 CommandCallback($"User not found in lobby", false);
-                 return;
+                CommandCallback($"User not found in lobby", false);
+                return;
             }
-            
+
             Debug.Log($"Banning {username} for {time}");
-            
+
             var banRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetBanUrl(),
@@ -107,7 +113,7 @@ namespace Code.Network
                 Kick(username);
             });
         }
-        
+
         #region Kick
 
         public void Kick(string username)
@@ -151,7 +157,7 @@ namespace Code.Network
         }
 
         #endregion
-        
+
         public void UnbanUser(string username)
         {
             if (!ClientDataStorage.UserData.IsAdminRole)
@@ -226,10 +232,10 @@ namespace Code.Network
                 CommandCallback_Rpc(sender, $"User {username} cannot be muted", false);
                 return;
             }
-            
+
             // Получаем текущее состояние мута или создаем новое
-            var currentMuteState = MutedDictionary.ContainsKey(username) 
-                ? MutedDictionary[username] 
+            var currentMuteState = MutedDictionary.ContainsKey(username)
+                ? MutedDictionary[username]
                 : new MuteStateSync { muteChat = false, muteVoice = false };
 
             // Применяем действия мута
@@ -286,10 +292,10 @@ namespace Code.Network
                 CommandCallback_Rpc(sender, $"User {username} cannot be unmuted", false);
                 return;
             }
-            
+
             // Получаем текущее состояние мута или создаем новое
-            var currentMuteState = MutedDictionary.ContainsKey(username) 
-                ? MutedDictionary[username] 
+            var currentMuteState = MutedDictionary.ContainsKey(username)
+                ? MutedDictionary[username]
                 : new MuteStateSync { muteChat = false, muteVoice = false };
 
             // Применяем действия размута
@@ -309,7 +315,7 @@ namespace Code.Network
             if (unmuteChat)
                 chatController.IsMuted = false;
             if (unmuteVoice)
-                 PlayerVoice.LocalInstance.isInputMutedByServer = false;
+                PlayerVoice.LocalInstance.isInputMutedByServer = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
@@ -339,7 +345,7 @@ namespace Code.Network
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
                 return;
             }
-            
+
             ToggleOffVoice_TargetRpc(connection);
         }
 
@@ -446,13 +452,37 @@ namespace Code.Network
         private void CreateRoom_TargetRpc(PlayerID target, string roomName, bool isPrivate) =>
             CreateRoom(roomName, isPrivate);
 
-        private void CreateRoom(string roomName, bool isPrivate)
+        private async void CreateRoom(string roomName, bool isPrivate)
         {
-            PlayerPrefs.SetString("Playflow_NewLobbyInstantID", roomName);
-            PlayerPrefs.SetString("Playflow_NewLobby_IsPrivate", isPrivate ? "true" : "false");
-            PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "true");
-            InstanceHandler.NetworkManager.StopClient();
-            LoadingScreenUI.Instance.LoadScene("Main");
+            LoadingScreenUI.Instance.Show("loading", "loading");
+
+            var serverRequest = new ServerCreateRequest
+            {
+                name = roomName,
+                region = "eu-west",
+                compute_size = "large",
+                version_tag = Application.version,
+                custom_data = new Dictionary<string, object> { { "max_players", 64 }, { "private", isPrivate } }
+            };
+
+            try
+            {
+                var response = await PlayFlowLobby.ApiClient.StartServerAsync(serverRequest);
+                Debug.Log($"Server is starting! Instance ID: {response.instance_id}");
+                
+                PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIDName, response.instance_id);
+                PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIPName, response.network_ports[0].host);
+                PlayerPrefs.SetString(PlayFlowLobby.PrefsServerPortName,
+                    response.network_ports[0].external_port.ToString());
+                
+                InstanceHandler.NetworkManager.StopClient();
+                LoadingScreenUI.Instance.LoadScene("Matchmaker");
+            }
+            catch (PlayFlowApiException e)
+            {
+                Debug.LogError($"Failed to start server: {e.Message}");
+                LoadingScreenUI.Instance.Hide();
+            }
         }
 
         public void MoveUserToRoom(string username, string roomId)
@@ -487,10 +517,10 @@ namespace Code.Network
         [TargetRpc]
         private void MoveUserTargetRpc(PlayerID target, string lobbyId)
         {
-            PlayerPrefs.SetString("Playflow_NewLobbyInstantID", lobbyId);
-            PlayerPrefs.SetString("Playflow_NewLobby_IsNewRoom",  "false");
+            PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIDName, lobbyId);
+            
             InstanceHandler.NetworkManager.StopClient();
-            LoadingScreenUI.Instance.LoadScene("Main");
+            LoadingScreenUI.Instance.LoadScene("Matchmaker");
         }
 
         #endregion

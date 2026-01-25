@@ -128,11 +128,11 @@ namespace Code.UI.Admin
                 default:
                     return;
             }
-            
+
             refreshButton.interactable = false;
             Invoke(nameof(RefreshButtonReenable), 1.5f);
         }
-        
+
         private void RefreshButtonReenable() => refreshButton.interactable = true;
 
         private void OnUsersButtonClick()
@@ -244,12 +244,15 @@ namespace Code.UI.Admin
             {
                 Debug.LogException(e);
             }
-            
         }
 
         private void OnLobbiesReceived(ServerList lobbies)
         {
-            foreach (var lobby in lobbies.servers)
+            var availableLobbies = lobbies.servers.Where(s =>
+                s.version_tag == Application.version
+                && s.status != "stopped").ToList();
+            
+            foreach (var lobby in availableLobbies)
             {
                 var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
                 controlElement.Init(lobby);
@@ -295,11 +298,10 @@ namespace Code.UI.Admin
                 }
             });
 
-            
-            
             var hostVariants = new List<string> { "me" };
-            var allAvailablePlayers = PlayerSpawner.NameConnectionsData.Keys.Distinct().ToList();;
-            
+            var allAvailablePlayers = PlayerSpawner.NameConnectionsData.Keys.Distinct().ToList();
+            ;
+
             hostVariants.AddRange(allAvailablePlayers);
 
             _popupOpener.Inputs.Add(new InputInfo
