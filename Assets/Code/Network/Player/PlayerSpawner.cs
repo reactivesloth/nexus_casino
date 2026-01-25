@@ -244,8 +244,6 @@ namespace Code.Network.Player
 
         private void OnPlayerLeft_Server(PlayerID player, bool asServer)
         {
-            UpdatePlayFlowDataOnPlayersChanges();
-
             _playerTypes.Remove(player);
             _sceneLoadedPlayers.Remove(player);
             _spawned.Remove(player);
@@ -260,6 +258,8 @@ namespace Code.Network.Player
                 NameConnectionsData_Server.Remove(key);
 
             _dontSpawn.Remove(player);
+            
+            UpdatePlayFlowDataOnPlayersChanges();
         }
 
         private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data,

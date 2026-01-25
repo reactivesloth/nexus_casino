@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Code.UI;
 using Newtonsoft.Json;
-using NUnit.Framework;
+using Newtonsoft.Json.Linq;
 using PlayFlow.SDK.Servers;
 using PurrNet;
 using PurrNet.Packing;
@@ -20,7 +19,7 @@ namespace Code.Network.PlayFlow
     {
         [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float emptyServerLifeTime = 600f;
-
+        
         public static PlayflowServerApiClient ApiClient;
         public static InstanceData CurrentServerData;
 
@@ -96,15 +95,21 @@ namespace Code.Network.PlayFlow
         {
             if (asServer)
                 return;
-            Debug.Log(JsonConvert.SerializeObject(info.NewServerData, Formatting.Indented));
-            CurrentServerData = info.NewServerData;
+            
+            CurrentServerData = JsonConvert.DeserializeObject<InstanceData>(info.NewServerDataString);
+            
             if(CurrentServerData.custom_data.TryGetValue("players", out var players))
             {
-                var playerList = players as List<string>;
-                if(playerList != null)
+                // players, скорее всего, JArray
+                if (players is JArray jarr)
+                {
+                    var playerList = jarr.ToObject<List<string>>();
                     Debug.Log(playerList.Count);
+                }
                 else
-                    Debug.LogError("Convert fails");
+                {
+                    Debug.LogError($"Unexpected type: {players?.GetType()}");
+                }
             }
         }
 
@@ -152,7 +157,7 @@ namespace Code.Network.PlayFlow
                 ).ConfigureAwait(false);
 
                 InstanceHandler.NetworkManager.SendToAll(
-                    new ChangeServerInfo { NewServerData = CurrentServerData }
+                    new ChangeServerInfo { NewServerDataString = JsonConvert.SerializeObject(newData) }
                 );
             }
             catch (PlayFlowApiException e)
@@ -178,6 +183,6 @@ namespace Code.Network.PlayFlow
 
     public struct ChangeServerInfo : IPackedAuto
     {
-        public InstanceData NewServerData;
+        public string NewServerDataString;
     }
 }
