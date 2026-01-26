@@ -209,7 +209,6 @@ namespace Code.Utility
             _view = CanvasWebViewPrefab.Instantiate(WebView);
         
             _view.Resolution = Application.isMobilePlatform ? 0.5f : 1.0f;
-            _view.transform.SetParent(worldCanvas.transform, false);
 
             bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace || worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
             if (worldSpace && worldCanvas.worldCamera == null) worldCanvas.worldCamera = Camera.main;
@@ -223,7 +222,6 @@ namespace Code.Utility
         public RawImage ShowWorldView(int slotId, Canvas worldCanvas)
         {
             var view = EnsureWorldView(slotId, worldCanvas);
-            if (view == null) return null;
 
             if (parkingCanvas != null)
             {
@@ -237,9 +235,13 @@ namespace Code.Utility
                 }
             }
 
-            view.gameObject.SetActive(true);
+            if (view != null)
+            {
+                view.gameObject.SetActive(true);
 
-            _image =  view.GetComponentInChildren<RawImage>(true);
+                _image = view.GetComponentInChildren<RawImage>(true);
+            }
+
             return _image;
         }
 
@@ -249,8 +251,8 @@ namespace Code.Utility
             {
                 LoadURL(string.IsNullOrEmpty(ClientDataStorage.AccessToken) ? "" : ClientDataStorage.AccessToken, agregator);
             }
-        
-            _view.gameObject.SetActive(false);
+
+            if (_view != null) _view.gameObject.SetActive(false);
         }
 
         private void RebindToCanvas(CanvasWebViewPrefab prefab, Canvas canvas, bool bringToFront, bool worldSpace)

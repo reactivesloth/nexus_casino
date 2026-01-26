@@ -38,8 +38,9 @@ namespace Code.Network.InteractionSystem
         public NetworkImageStream NetworkImageStream => networkImageStream;
         
         [SerializeField] private Providers provider = Providers.all;
-        
-        [SerializeField] private Vector3 localScale = new Vector3(0.0001f, 0.0001f, 0.0001f);
+
+        [SerializeField] private Vector3 localPosition;
+        [SerializeField] private Vector3 localScale;
         
         public int IDNumber;
 
@@ -257,7 +258,13 @@ namespace Code.Network.InteractionSystem
         {
             if (transform.localScale != localScale) {
                 Debug.Log($"SlotMachine {IDNumber} localScale changed");    
-                transform.localScale = localScale; // ( 0.0001f, 0.0001f, 0.0001f)
+                transform.localScale = localScale;
+            }
+
+            if (transform.localPosition != localPosition)
+            {
+                Debug.Log($"SlotMachine {IDNumber} localPosition changed");    
+                transform.localPosition = localPosition;
             }
         }
     }
