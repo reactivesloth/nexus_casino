@@ -2,11 +2,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Code.UI;
+using Code.UI.Popup;
+using Code.Utility;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using PlayFlow.SDK.Servers;
 using PurrNet;
+using Ricimi;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
 namespace Code.Network.PlayFlow
@@ -28,7 +32,14 @@ namespace Code.Network.PlayFlow
         private float _leftTime = 0f;
 
         public static InstanceData CurrentServerData { get; private set; }
+        
+        private NexusModularPopupOpener _popupOpener;
 
+        private void Awake()
+        {
+            _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
+        }
+        
         void Start()
         {
             ApiClient = new PlayflowServerApiClient(playflowApiKey);
@@ -41,7 +52,7 @@ namespace Code.Network.PlayFlow
             _leftTime += Time.deltaTime;
 
             if (_leftTime >= timeout)
-                OnMatchMakingError();
+                OnMatchMakingError("timeout");
         }
 
         private async void SelectMatch()
@@ -81,7 +92,7 @@ namespace Code.Network.PlayFlow
             {
                 if (playFlowException.StatusCode == 404)
                     return null;
-                OnMatchMakingError();
+                OnMatchMakingError("not found");
             }
 
             return null;
@@ -154,7 +165,7 @@ namespace Code.Network.PlayFlow
 
                 if (data == null)
                 {
-                    OnMatchMakingError();
+                    OnMatchMakingError("data null");
                     break;
                 }
 
@@ -181,9 +192,28 @@ namespace Code.Network.PlayFlow
             SceneManager.LoadScene(GameSceneName);
         }
 
-        private void OnMatchMakingError()
+        //TODO: Обработать экран обновлений по удалению старой версии с сервера. Пока закинул на ошибку 404
+        private void OnMatchMakingError(string error = "unknown")
         {
-            SceneManager.LoadScene(MenuSceneName);
+            switch (error)
+            {
+                case "version deleted":
+                    UpdateReadyPopup();
+                    break;
+                case "timeout":
+                    ShowPopup("Timeout error", "The server is not responding. Please try again later.");
+                    break;
+                case "not found":
+                    //ShowPopup("Server not found", "The server is not found. Please try again later.");
+                    UpdateReadyPopup();
+                    break;
+                case "data null":
+                    ShowPopup("Server data null", "The server data is null. Please try again later.");
+                    break;
+                case "unknown":
+                    ShowPopup("Unknown error", "An unknown error occurred. Please try again later.");
+                    break;
+            }
         }
 
         private static int GetFreeSlotsInServerCount(InstanceData instanceData)
@@ -231,6 +261,52 @@ namespace Code.Network.PlayFlow
             }
 
             return false;
+        }
+        
+        private void UpdateReadyPopup()
+        {
+            CursorManager.Instance.SetForceShowCursor(true);
+            _popupOpener.Title = LocalizationHelper.GetLocalizedString("errors.update_nexus_title");
+            _popupOpener.Subtitle = "";
+            _popupOpener.Message = LocalizationHelper.GetLocalizedString("errors.update_nexus");
+
+            var okButton = new ButtonInfo
+            {
+                Label = LocalizationHelper.GetLocalizedString("buttons.update"),
+                ClosePopupWhenClicked = true,
+                OnClickedEvent = new Button.ButtonClickedEvent()
+            };
+            okButton.OnClickedEvent.AddListener(() =>
+            {
+                Application.OpenURL("https://nexusmetaclub.com/update#download");
+                CursorManager.Instance.SetForceShowCursor(false);
+                SceneManager.LoadScene(MenuSceneName);
+            });
+            _popupOpener.Buttons.Add(okButton);
+            _popupOpener.OpenPopup();
+        }
+
+
+        private void ShowPopup (string title, string message)
+        {
+            CursorManager.Instance.SetForceShowCursor(true);
+            _popupOpener.Title = title;
+            _popupOpener.Subtitle = "";
+            _popupOpener.Message = message;
+
+            var okButton = new ButtonInfo
+            {
+                Label = "OK",
+                ClosePopupWhenClicked = true,
+                OnClickedEvent = new Button.ButtonClickedEvent()
+            };
+            okButton.OnClickedEvent.AddListener(() =>
+            {
+                CursorManager.Instance.SetForceShowCursor(false);
+                SceneManager.LoadScene(MenuSceneName);
+            });
+            _popupOpener.Buttons.Add(okButton);
+            _popupOpener.OpenPopup();
         }
     }
 }
