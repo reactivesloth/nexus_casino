@@ -35,10 +35,12 @@ namespace Code.UI.Popup
 
         public GameObject InputGroup;
         public List<Selectable> Inputs;
+        public Action CloseAction;
 
         public void Initialize(NexusModularPopupOpener opener)
         {
-            buttonClose.onClick.AddListener(Close);
+            CloseAction = opener.ManualyCloseAction;
+            buttonClose.onClick.AddListener(OnCloseClicked);
 
             SetLabel(Title, opener.Title);
             SetLabel(Subtitle, opener.Subtitle);
@@ -285,6 +287,12 @@ namespace Code.UI.Popup
             {
                 button.onClick.AddListener(Close);
             }
+        }
+
+        private void OnCloseClicked()
+        {
+            CloseAction?.Invoke();
+            Close();
         }
     }
 }

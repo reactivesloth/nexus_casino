@@ -59,6 +59,13 @@ namespace Code.Network.PlayFlow
         {
             LoadingScreenUI.Instance.Show("loading.find_server", "loading");
 
+            var builds = await ApiClient.GetBuildsAsync(Application.version);
+            if (builds.total_builds == 0)
+            {
+                OnMatchMakingError("version");
+                return;
+            }
+
             var savedServerId = PlayerPrefs.GetString(PrefsServerIDName, null);
 
             // Если id нет ищем сервер
@@ -91,8 +98,9 @@ namespace Code.Network.PlayFlow
             catch (PlayFlowApiException playFlowException)
             {
                 if (playFlowException.StatusCode == 404)
-                    return null;
-                OnMatchMakingError("not found");
+                    OnMatchMakingError("data null");
+                else
+                    OnMatchMakingError();
             }
 
             return null;
@@ -151,7 +159,10 @@ namespace Code.Network.PlayFlow
             }
             catch (PlayFlowApiException e)
             {
-                Debug.LogError($"Failed to start server: {e.Message}");
+                if(e.StatusCode == 404)
+                    OnMatchMakingError("not found");
+                else
+                    OnMatchMakingError();
             }
         }
 
@@ -197,20 +208,13 @@ namespace Code.Network.PlayFlow
         {
             switch (error)
             {
-                case "version deleted":
+                case "version":
                     UpdateReadyPopup();
                     break;
                 case "timeout":
                     ShowPopup("Timeout error", "The server is not responding. Please try again later.");
                     break;
-                case "not found":
-                    //ShowPopup("Server not found", "The server is not found. Please try again later.");
-                    UpdateReadyPopup();
-                    break;
-                case "data null":
-                    ShowPopup("Server data null", "The server data is null. Please try again later.");
-                    break;
-                case "unknown":
+                default:
                     ShowPopup("Unknown error", "An unknown error occurred. Please try again later.");
                     break;
             }
@@ -269,6 +273,7 @@ namespace Code.Network.PlayFlow
             _popupOpener.Title = LocalizationHelper.GetLocalizedString("errors.update_nexus_title");
             _popupOpener.Subtitle = "";
             _popupOpener.Message = LocalizationHelper.GetLocalizedString("errors.update_nexus");
+            _popupOpener.ManualyCloseAction = LoadMainMenu;
 
             var okButton = new ButtonInfo
             {
@@ -280,7 +285,7 @@ namespace Code.Network.PlayFlow
             {
                 Application.OpenURL("https://nexusmetaclub.com/update#download");
                 CursorManager.Instance.SetForceShowCursor(false);
-                SceneManager.LoadScene(MenuSceneName);
+                LoadMainMenu();
             });
             _popupOpener.Buttons.Add(okButton);
             _popupOpener.OpenPopup();
@@ -293,6 +298,7 @@ namespace Code.Network.PlayFlow
             _popupOpener.Title = title;
             _popupOpener.Subtitle = "";
             _popupOpener.Message = message;
+            _popupOpener.ManualyCloseAction = LoadMainMenu;
 
             var okButton = new ButtonInfo
             {
@@ -303,10 +309,16 @@ namespace Code.Network.PlayFlow
             okButton.OnClickedEvent.AddListener(() =>
             {
                 CursorManager.Instance.SetForceShowCursor(false);
-                SceneManager.LoadScene(MenuSceneName);
+                LoadMainMenu();
             });
             _popupOpener.Buttons.Add(okButton);
             _popupOpener.OpenPopup();
+        }
+
+        private void LoadMainMenu()
+        {
+            CursorManager.Instance.SetForceShowCursor(true);
+            LoadingScreenUI.Instance.LoadScene(MenuSceneName);
         }
     }
 }

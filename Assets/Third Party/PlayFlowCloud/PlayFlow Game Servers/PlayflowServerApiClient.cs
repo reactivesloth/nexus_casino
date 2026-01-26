@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using Newtonsoft.Json; // Added for Newtonsoft.Json
+using Newtonsoft.Json;
+using NUnit.Framework;
+using Task = UnityEditor.VersionControl.Task; // Added for Newtonsoft.Json
 
 namespace PlayFlow.SDK.Servers
 {
@@ -213,6 +215,19 @@ namespace PlayFlow.SDK.Servers
         public string detail; // Some APIs use 'detail' directly for the message
     }
 
+    public class BuildsList
+    {
+        public List<BuildData> builds;
+        public int total_builds;
+    }
+
+    public class BuildData
+    {
+        public string build_id;
+        public string name;
+        public int version;
+        public string status;
+    }
 
     // ------------- API Client -------------
 
@@ -444,6 +459,13 @@ namespace PlayFlow.SDK.Servers
             string endpoint = $"/v2/servers/{instanceId}";
             // OpenAPI spec for this PUT endpoint does not define a requestBody.
             return await SendRequestAsync<InstanceData>(endpoint, UnityWebRequest.kHttpVerbPOST, newCustomData);
+        }
+
+        public async Task<BuildsList> GetBuildsAsync(string findName = null)
+        {
+            string endpoint = $"/v2/builds/builds";
+            endpoint = string.IsNullOrEmpty(findName) ? endpoint : $"{endpoint}?name={findName}";
+            return await SendRequestAsync<BuildsList>(endpoint, UnityWebRequest.kHttpVerbGET);
         }
     }
 
