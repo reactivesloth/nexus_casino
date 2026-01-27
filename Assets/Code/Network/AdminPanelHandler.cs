@@ -125,6 +125,7 @@ namespace Code.Network
                 return;
             }
 
+            Debug.Log(localPlayerForced.id);
             Kick_ServerRPC(localPlayerForced, username);
         }
 
@@ -220,6 +221,8 @@ namespace Code.Network
         [ServerRpc(requireOwnership: false)]
         private void Mute_ServerRpc(PlayerID sender, string username, bool muteChat, bool muteVoice)
         {
+            CommandCallback_Rpc(sender, $"Mute Command Reciver by Server User:{username}", true);
+            
             if (!PlayerSpawner.NameConnectionsData.TryGetValue(username, out var connection))
             {
                 CommandCallback_Rpc(sender, $"User {username} not found", false);
@@ -574,6 +577,11 @@ namespace Code.Network
 
         private void CommandCallback(string message, bool success)
         {
+            if(success)
+                Debug.Log(message);
+            else
+                Debug.LogWarning(message);
+            
             chatController.SendSystemMessage(message,
                 !success
                     ? new ChatMessageStyle
