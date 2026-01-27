@@ -1,12 +1,10 @@
-using System;
+using Code.Network;
 using Code.Network.Player;
 using Code.UI.Popup;
 using Code.Utility;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
-using Code.Network;
-
 using Gradient = Ricimi.Gradient;
 
 #if UNITY_ANDROID
@@ -34,10 +32,6 @@ namespace Code.Player
         private void Awake()
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
-        }
-
-        private void Start()
-        {
             VoiceChatHandle(false);
         }
 
@@ -231,11 +225,9 @@ namespace Code.Player
 
             _voiceHeld = value;
 
-            if (PlayerVoice.LocalInstance != null) PlayerVoice.LocalInstance.isMuted = !_voiceHeld;
-            if (VivoxVoiceManager.Instance != null)
-            {
-                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
-            }
+            if (PlayerVoice.LocalInstance != null)
+                PlayerVoice.LocalInstance.SetMuteState (!_voiceHeld);
+
             if (mobileButtonImage != null)
             {
                 mobileButtonImage.Color1 = _voiceHeld ? on1 : off1;

@@ -14,71 +14,48 @@ namespace Code.Network
     {
         public const string LobbyChannelName = "lobbyChannel";
 
-        private static object m_Lock = new object();
-        private static VivoxVoiceManager m_Instance;
-
         [SerializeField] private string key;
         [SerializeField] private string issuer;
         [SerializeField] private string domain;
         [SerializeField] private string server;
 
         public List <VivoxParticipant> Participants;
-        
-        public static VivoxVoiceManager Instance
+
+        public static VivoxVoiceManager Instance;
+
+        private async void Awake()
         {
-            get
+            if (Instance != this)
             {
-                lock (m_Lock)
-                {
-                    if (m_Instance == null)
-                    {
-                        m_Instance = (VivoxVoiceManager)FindObjectOfType(typeof(VivoxVoiceManager));
-
-                        if (m_Instance == null)
-                        {
-                            var singletonObject = new GameObject();
-                            m_Instance = singletonObject.AddComponent<VivoxVoiceManager>();
-                            singletonObject.name = typeof(VivoxVoiceManager).ToString() + " (Singleton)";
-                        }
-                    }
-
-                    DontDestroyOnLoad(m_Instance.gameObject);
-                    return m_Instance;
-                }
-            }
-        }
-
-        private async void Start()
-        {
-            try
-            {
-                if (m_Instance != this && m_Instance != null)
+                if (Instance != null)
                 {
                     Debug.LogWarning("Multiple VivoxVoiceManager detected in the scene. Only one VivoxVoiceManager can exist at a time. The duplicate VivoxVoiceManager will be destroyed.");
-                    Destroy(gameObject);
+                    Destroy(this);
                 }
 
-                var options = new InitializationOptions();
-                if (CheckManualCredentials())
+                if (Instance == null)
                 {
-                    options.SetVivoxCredentials(server, domain, issuer, key);
+                    Instance = this;
+                    DontDestroyOnLoad(this);
                 }
-            
-                await UnityServices.InitializeAsync(options);
-                await VivoxService.Instance.InitializeAsync();
+            }
 
-                VivoxService.Instance.AvailableInputDevicesChanged += OnAvailableInputDevicesChanged;
-                VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
-                VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
-            
-                Participants = new List<VivoxParticipant>();
-            
-                TrySelectBestInputDevice();
-            }
-            catch (Exception e)
+            var options = new InitializationOptions();
+            if (CheckManualCredentials())
             {
-                Debug.LogError($"[VivoxVoiceManager] Failed to initialize Vivox: {e.Message}");
+                options.SetVivoxCredentials(server, domain, issuer, key);
             }
+            
+            await UnityServices.InitializeAsync(options);
+            await VivoxService.Instance.InitializeAsync();
+
+            VivoxService.Instance.AvailableInputDevicesChanged += OnAvailableInputDevicesChanged;
+            VivoxService.Instance.ParticipantAddedToChannel += OnParticipantAdded;
+            VivoxService.Instance.ParticipantRemovedFromChannel += OnParticipantRemoved;
+            
+            Participants = new List<VivoxParticipant>();
+            
+            TrySelectBestInputDevice(); 
         }
         
         private void OnAvailableInputDevicesChanged()

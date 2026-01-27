@@ -68,7 +68,6 @@ namespace Code.Network.PlayFlow
 
             var savedServerId = PlayerPrefs.GetString(PrefsServerIDName, null);
 
-            // Если id нет ищем сервер
             if (string.IsNullOrEmpty(savedServerId))
             {
                 FindServer();
@@ -77,14 +76,12 @@ namespace Code.Network.PlayFlow
 
             var instanceData = await GetInstanceData(savedServerId);
 
-            // Если сервера с сохр id нет - ищем сервер
             if (instanceData == null || instanceData.status == "stopped")
             {
                 FindServer();
                 return;
             }
 
-            // если есть ждём запуска при необходимости и подключаемся
             WaitWhenServerIsReadyAndConnect(savedServerId);
         }
 
@@ -113,7 +110,6 @@ namespace Code.Network.PlayFlow
                 ServerList response = await ApiClient.ListServersAsync(includeLaunching: true);
                 Debug.Log($"Found {response.total_servers} total servers.");
 
-                // Server Filter
                 var availableServers = response.servers
                     .Where(s =>
                         s.version_tag == Application.version
@@ -130,7 +126,7 @@ namespace Code.Network.PlayFlow
                     return;
                 }
 
-                var server = availableServers[0]; // Выбор сервера
+                var server = availableServers[0];
 
                 WaitWhenServerIsReadyAndConnect(server.instance_id);
             }
@@ -203,7 +199,6 @@ namespace Code.Network.PlayFlow
             SceneManager.LoadScene(GameSceneName);
         }
 
-        //TODO: Обработать экран обновлений по удалению старой версии с сервера. Пока закинул на ошибку 404
         private void OnMatchMakingError(string error = "unknown")
         {
             switch (error)
@@ -223,24 +218,25 @@ namespace Code.Network.PlayFlow
         private static int GetFreeSlotsInServerCount(InstanceData instanceData)
         {
             var customData = instanceData.custom_data;
-            var allSlots = (int)customData["max_players"];
 
-            if (!customData.TryGetValue("players", out var players)
-                || players is not JArray playersArray)
+            if (!customData.TryGetValue("max_players", out var maxPlayersObj))
+                return 0; 
+            
+            var allSlots = System.Convert.ToInt32(maxPlayersObj);
+
+            if (!customData.TryGetValue("players", out var players) || players is not JArray playersArray)
                 return allSlots;
 
-            var isAdmin = TryGetArray(customData, "admins", out var adminsArray)
-                          && adminsArray.Count > 0;
-            var isHost = TryGetArray(customData, "hosts", out var hostsArray)
-                         && hostsArray.Count > 0;
-            var isModerator = TryGetArray(customData, "moderators", out var moderatorsArray)
-                              && moderatorsArray.Count > 0;
-
-            return allSlots - playersArray.Count
-                            - (!isAdmin ? 1 : 0)
-                            - (!isHost ? 1 : 0)
+            var isAdmin = TryGetArray(customData, "admins", out var adminsArray) && adminsArray.Count > 0;
+            var isHost = TryGetArray(customData, "hosts", out var hostsArray) && hostsArray.Count > 0;
+            var isModerator = TryGetArray(customData, "moderators", out var moderatorsArray) && moderatorsArray.Count > 0;
+            
+            return allSlots - playersArray.Count 
+                            - (!isAdmin ? 1 : 0) 
+                            - (!isHost ? 1 : 0) 
                             - (!isModerator ? 1 : 0);
         }
+
 
         private static bool TryGetArray(
             Dictionary<string, object> data,
