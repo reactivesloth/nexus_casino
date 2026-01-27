@@ -68,7 +68,6 @@ namespace Code.Network
                 CommandCallback($"You can't ban users", false);
                 return;
             }
-
             var banedUser = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.FirstOrDefault(m => m == username);
 
             if (banedUser == null)
