@@ -3,7 +3,6 @@ using Code.Utility;
 using PurrNet;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Code.Network.Stream
 {
@@ -11,7 +10,9 @@ namespace Code.Network.Stream
     {
         [SerializeField] private int currentSlotId = -1;
         [Space] [SerializeField] private GameObject elementsParent;
-        [SerializeField] private RawImage screenRawImage;
+        [SerializeField] private MeshRenderer screenRawImage;
+        [SerializeField] private int screenRawIndex;
+        [SerializeField] private Texture screenRawTextureEmpty;
         [SerializeField] private TMP_Text slotIdText;
         [SerializeField] private TMP_Text streamerNameText;
 
@@ -82,7 +83,11 @@ namespace Code.Network.Stream
             
             if (CurrentStreamSlot == null)
             {
-                if (screenRawImage != null) screenRawImage.texture = null;
+                if (screenRawImage != null)
+                {
+                    screenRawImage.materials[screenRawIndex].mainTexture = screenRawTextureEmpty;
+                    screenRawImage.materials[screenRawIndex].mainTextureScale = new Vector2(1, 1);
+                }
                 if (slotIdText != null) slotIdText.text = string.Empty;
                 return;
             }
@@ -125,8 +130,8 @@ namespace Code.Network.Stream
         {
             if (screenRawImage != null)
             {
-                screenRawImage.texture = texture;
-                ImageUtility.AdjustAspect(screenRawImage);
+                screenRawImage.materials[screenRawIndex].mainTexture = texture;
+                screenRawImage.materials[screenRawIndex].mainTextureScale = new Vector2(1, -1);
             }
         }
 

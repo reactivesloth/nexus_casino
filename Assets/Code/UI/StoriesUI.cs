@@ -24,6 +24,10 @@ namespace Code.UI
         [SerializeField] private Transform progressBarContainer;
         [SerializeField] private GameObject progressBarPrefab;
 
+        [Header("Mesh Renderer")]
+        [SerializeField] private MeshRenderer screenRawImage;
+        [SerializeField] private int screenRawIndex;
+        
         [Header("Story Settings")]
         [SerializeField] private int storiesPerCycle = 5;
         [SerializeField] private float storyDisplayTime = 3f;
@@ -79,6 +83,11 @@ namespace Code.UI
             if(loadingScreen != null)
                 loadingScreen.SetActive(true);
             StartNewCycle();
+
+            if (screenRawImage != null)
+            {
+                screenRawImage.gameObject.SetActive(image == null);
+            }
         }
 
         public override  void OnDisable()
@@ -88,6 +97,11 @@ namespace Code.UI
 
             ClearCache();
             ClearProgressBars();
+
+            if (screenRawImage != null)
+            {
+                screenRawImage.gameObject.SetActive(false);
+            }
         }
 
         public override void Subscribe(NetworkManager manager, bool asServer)
@@ -209,7 +223,12 @@ namespace Code.UI
             // из кэша
             if (_idSpriteCache.TryGetValue(story.id, out var cached))
             {
-                image.sprite = cached;
+                if (image != null) image.sprite = cached;
+                else if (screenRawImage != null)
+                {
+                    screenRawImage.gameObject.SetActive(true);
+                    screenRawImage.materials[screenRawIndex].SetTexture("_BaseTex", cached.texture);
+                }
                 yield break;
             }
 
@@ -234,7 +253,12 @@ namespace Code.UI
                 var sprite = ImageUtility.CreateSpriteFromBytes(data);
                 if (sprite != null)
                 {
-                    image.sprite = sprite;
+                    if (image != null) image.sprite = sprite;
+                    else if (screenRawImage != null)
+                    {
+                        screenRawImage.gameObject.SetActive(true);
+                        screenRawImage.materials[screenRawIndex].SetTexture("_BaseTex", sprite.texture);
+                    }
                     if (!_idSpriteCache.ContainsKey(story.id))
                         _idSpriteCache.Add(story.id, sprite);
                 }
