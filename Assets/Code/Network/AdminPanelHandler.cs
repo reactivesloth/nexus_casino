@@ -44,8 +44,9 @@ namespace Code.Network
         }
 #endif
 
-        public void OnStartClient()
+        protected override void OnSpawned ()
         {
+            base.OnSpawned();
             if (MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
                 SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
@@ -254,7 +255,7 @@ namespace Code.Network
             if (muteChat)
                 chatController.IsMuted = true;
             if (muteVoice)
-                PlayerVoice.LocalInstance.isInputMutedByServer = true;
+                PlayerVoice.GetByPlayerID(target).isInputMutedByServer = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
@@ -314,7 +315,7 @@ namespace Code.Network
             if (unmuteChat)
                 chatController.IsMuted = false;
             if (unmuteVoice)
-                PlayerVoice.LocalInstance.isInputMutedByServer = false;
+                PlayerVoice.GetByPlayerID(target).isInputMutedByServer = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)

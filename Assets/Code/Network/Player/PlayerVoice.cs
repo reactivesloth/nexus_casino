@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Code.API;
 using Code.Utility;
@@ -36,12 +37,18 @@ namespace Code.Network.Player
                 _salsa.useExternalAnalysis = true;
         }
 
-        protected override async void OnSpawned ()
+        protected override void OnSpawned ()
         {
             base.OnSpawned();
-            if (isOwner)
+            LoginVivox();
+        }
+
+        private async void LoginVivox()
+        {
+            try
             {
-                string userName = ClientDataStorage.UserData.username;
+                if (!isOwner) return;
+                var userName = ClientDataStorage.UserData.username;
 
                 if (VivoxVoiceManager.Instance != null)
                 {
@@ -56,6 +63,10 @@ namespace Code.Network.Player
                 InvokeRepeating(nameof(UpdatePos), 1.0f, 0.1f);
                 
                 ApplyAudioSettings();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
             }
         }
 
@@ -155,5 +166,10 @@ namespace Code.Network.Player
                 VivoxVoiceManager.Instance.SetLocalPosition(gameObject);
         }
 
+
+        public static PlayerVoice GetByPlayerID(PlayerID playerName)
+        {
+            return Player.TryGetPlayer(playerName, out var player) ? player.GetComponent<PlayerVoice>() : null;
+        }
     }
 }
