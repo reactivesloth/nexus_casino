@@ -257,13 +257,13 @@ namespace Code.Network.InteractionSystem
         private void Update()
         {
             if (transform.localScale != localScale) {
-                Debug.Log($"SlotMachine {IDNumber} localScale changed");    
+                //Debug.Log($"SlotMachine {IDNumber} localScale changed");    
                 transform.localScale = localScale;
             }
 
             if (transform.localPosition != localPosition)
             {
-                Debug.Log($"SlotMachine {IDNumber} localPosition changed");    
+                //Debug.Log($"SlotMachine {IDNumber} localPosition changed");    
                 transform.localPosition = localPosition;
             }
         }

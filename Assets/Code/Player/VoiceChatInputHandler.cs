@@ -5,6 +5,8 @@ using Code.Utility;
 using Ricimi;
 using UnityEngine;
 using UnityEngine.UI;
+using Code.Network;
+
 using Gradient = Ricimi.Gradient;
 
 #if UNITY_ANDROID
@@ -113,7 +115,12 @@ namespace Code.Player
             if (permission != MicPermission) return;
 
             _permissionRequestInFlight = false;
-            
+
+            if (VivoxVoiceManager.Instance != null)
+            {
+                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
+            }
+
             VoiceChatHandle(true);
         }
 
@@ -225,7 +232,10 @@ namespace Code.Player
             _voiceHeld = value;
 
             if (PlayerVoice.LocalInstance != null) PlayerVoice.LocalInstance.isMuted = !_voiceHeld;
-
+            if (VivoxVoiceManager.Instance != null)
+            {
+                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
+            }
             if (mobileButtonImage != null)
             {
                 mobileButtonImage.Color1 = _voiceHeld ? on1 : off1;
