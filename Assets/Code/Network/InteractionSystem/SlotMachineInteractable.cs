@@ -228,6 +228,9 @@ namespace Code.Network.InteractionSystem
                         networkImageStream.SetTexture(raw);
 
                     if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
+                    
+                    transform.localScale = localScale;
+                    transform.localPosition = localPosition;
                 }
             }
         }
@@ -252,20 +255,6 @@ namespace Code.Network.InteractionSystem
         {
             var all = FindObjectsByType<SlotMachineInteractable>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             return all.FirstOrDefault(s => s.IDNumber == id);
-        }
-
-        private void Update()
-        {
-            if (transform.localScale != localScale) {
-                //Debug.Log($"SlotMachine {IDNumber} localScale changed");    
-                transform.localScale = localScale;
-            }
-
-            if (transform.localPosition != localPosition)
-            {
-                //Debug.Log($"SlotMachine {IDNumber} localPosition changed");    
-                transform.localPosition = localPosition;
-            }
         }
     }
 }

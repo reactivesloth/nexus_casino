@@ -5,7 +5,6 @@ using Code.API;
 using Code.Network;
 using Code.Network.InteractionSystem;
 using Code.Utility;
-using CurvedUI;
 using Proyecto26;
 using PurrNet;
 using TMPro;
@@ -35,8 +34,6 @@ namespace Code.UI
 
         private Coroutine _storyCoroutine;
         private Coroutine _waitCoroutine;
-        private bool _isCurved;
-
         private readonly List<Image> _progressBars = new List<Image>(16);
         private readonly List<GetStoryData> _stories = new List<GetStoryData>(16);
         private readonly Dictionary<int, Sprite> _idSpriteCache = new Dictionary<int, Sprite>(32);
@@ -45,8 +42,6 @@ namespace Code.UI
 
         private void Awake()
         {
-            _isCurved = TryGetComponent(out CurvedUIRaycaster raycaster) || TryGetComponent(out CurvedUIVertexEffect vertexEffects);
-
             _progressBarPool = new ObjectPool<GameObject>(
                 createFunc: CreateProgressBar,
                 actionOnGet: OnGetProgressBar,
@@ -180,12 +175,6 @@ namespace Code.UI
 
                 var fill = go.transform.GetChild(0).GetComponent<Image>();
                 if (fill == null) continue;
-
-                if (_isCurved)
-                {
-                    go.AddComponentIfMissing<CurvedUIVertexEffect>();
-                    fill.AddComponentIfMissing<CurvedUIVertexEffect>();
-                }
 
                 fill.fillAmount = 0f;
                 _progressBars.Add(fill);

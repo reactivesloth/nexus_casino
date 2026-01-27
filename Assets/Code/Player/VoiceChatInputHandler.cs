@@ -1,4 +1,3 @@
-using Code.Network;
 using Code.Network.Player;
 using Code.UI.Popup;
 using Code.Utility;
@@ -109,12 +108,7 @@ namespace Code.Player
             if (permission != MicPermission) return;
 
             _permissionRequestInFlight = false;
-
-            if (VivoxVoiceManager.Instance != null)
-            {
-                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
-            }
-
+            
             VoiceChatHandle(true);
         }
 

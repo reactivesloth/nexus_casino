@@ -1,10 +1,7 @@
-using System;
 using System.Collections;
-using Code.API;
 using Code.Utility;
 using CrazyMinnow.SALSA;
 using PurrNet;
-using Unity.Services.Vivox;
 using UnityEngine;
 
 namespace Code.Network.Player
@@ -28,7 +25,6 @@ namespace Code.Network.Player
         
         private float _savedVol;
         private float _savedVolSettings;
-        private VivoxParticipant _participant;
         
         private void Awake()
         {
@@ -40,45 +36,17 @@ namespace Code.Network.Player
         protected override void OnSpawned ()
         {
             base.OnSpawned();
-            LoginVivox();
+            ApplyAudioSettings();
         }
-
-        private async void LoginVivox()
-        {
-            try
-            {
-                if (!isOwner) return;
-                var userName = ClientDataStorage.UserData.username;
-
-                if (VivoxVoiceManager.Instance != null)
-                {
-                    if (!VivoxService.Instance.IsLoggedIn)
-                    {
-                        await VivoxVoiceManager.Instance.LoginToVivoxAsync(userName);
-                    }
-
-                    VivoxVoiceManager.Instance.ConnectToLobbyChannel();
-                }
-
-                InvokeRepeating(nameof(UpdatePos), 1.0f, 0.1f);
-                
-                ApplyAudioSettings();
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
-            }
-        }
-
+        
         protected override void OnDespawned ()
         {
             base.OnDespawned();
             if (isOwner)
             {
+                ConnectVoiceChannel();
                 LeaveVoiceChannel();
             }
-
-            _participant = null;
         }
 
         protected override void OnDestroy()
@@ -89,17 +57,20 @@ namespace Code.Network.Player
             }
         }
 
+        private void ConnectVoiceChannel()
+        {
+            
+        }
+
         private void LeaveVoiceChannel()
         {
-            CancelInvoke(nameof(UpdatePos));
-            if (VivoxVoiceManager.Instance != null) VivoxVoiceManager.Instance.DisconnectFromLobbyChannel();
+            
         }
 
         private void ApplyAudioSettings()
         {
             _savedVolSettings = 0;
             isMuted = true;
-            if (VivoxVoiceManager.Instance != null) VivoxVoiceManager.Instance.MuteLocalPlayer();
         }
 
         public void SetMuteState(bool muted)
@@ -110,62 +81,24 @@ namespace Code.Network.Player
                 isMuted = true;
 
             isMuted = muted;
-
-            if (VivoxVoiceManager.Instance != null)
-            {
-                if (muted)
-                {
-                    VivoxVoiceManager.Instance.MuteLocalPlayer();
-                }
-                else
-                {
-                    VivoxVoiceManager.Instance.UnmuteLocalPlayer();
-                }
-            }
         }
 
         private void Update()
         {
             if (isInputMutedByServer)
                 isMuted = true;
-
-            if (_participant == null)
-            {
-                if (VivoxVoiceManager.Instance != null)
-                    _participant =
-                        VivoxVoiceManager.Instance.GetParticipant(gameObject.GetComponentInChildren<PlayerUI>()
-                            .PlayerName);
+            
+            if (_salsa != null)
+            { 
+                _salsa.analysisValue = 0;
             }
-            else
-            {
-                if (_salsa != null)
-                {
-                    if (_participant != null)
-                    {
-                        var audioEnergy = _participant.AudioEnergy;
-                        if (_participant.IsMuted) audioEnergy = 0f;
-                        if (audioEnergy < 0.01f) audioEnergy = 0f;
-                        _salsa.analysisValue = (float)audioEnergy;
-                    }
-                }
 
-                if (!isOwner) return;
-                if (!Mathf.Approximately(_savedVolSettings, SettingsManager.Instance.VoiceChatVolume))
-                {
-                    if (VivoxService.Instance != null)
-                        VivoxService.Instance.SetOutputDeviceVolume((int)Mathf.Lerp(-40, 10,
-                            SettingsManager.Instance.VoiceChatVolume / 100));
-                    _savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
-                }
+            if (!isOwner) return;
+            if (!Mathf.Approximately(_savedVolSettings, SettingsManager.Instance.VoiceChatVolume))
+            {
+                _savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
             }
         }
-
-        private void UpdatePos()
-        {
-            if (VivoxService.Instance?.ActiveChannels?.Count > 0)
-                VivoxVoiceManager.Instance.SetLocalPosition(gameObject);
-        }
-
 
         public static PlayerVoice GetByPlayerID(PlayerID playerName)
         {

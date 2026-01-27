@@ -11,7 +11,6 @@ GameObject:
   - component: {fileID: 748230244934953723}
   - component: {fileID: 9114445610584396665}
   - component: {fileID: 1477880308533970646}
-  - component: {fileID: 9181908555989196189}
   m_Layer: 5
   m_Name: LoadingImage
   m_TagString: Untagged
@@ -77,25 +76,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &9181908555989196189
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 112326953764129691}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp-firstpass::CurvedUI.CurvedUIVertexEffect
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0.000000053314203, y: 1, z: 0.00000008079381}
-  savedRectSize: {x: 1280, y: 720}
-  savedColor: {r: 0, g: 0, b: 0, a: 0.5019608}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 1
 --- !u!1 &1974736798326296970
 GameObject:
   m_ObjectHideFlags: 0
@@ -108,7 +88,6 @@ GameObject:
   - component: {fileID: 4068609615081318023}
   - component: {fileID: 7018896050928460683}
   - component: {fileID: 6634757432104096679}
-  - component: {fileID: 7629919852681318574}
   m_Layer: 5
   m_Name: ProgressBar
   m_TagString: Untagged
@@ -199,25 +178,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &7629919852681318574
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1974736798326296970}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: -0.00006251096, y: 359.99954, z: 0.00015725021}
-  savedUp: {x: 0.000000053314203, y: 1, z: 0.00000005386254}
-  savedRectSize: {x: 1280, y: 53.2}
-  savedColor: {r: 1, g: 1, b: 1, a: 0}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 1
 --- !u!1 &2939719190116952049
 GameObject:
   m_ObjectHideFlags: 0
@@ -229,8 +189,6 @@ GameObject:
   - component: {fileID: 6639015917440393185}
   - component: {fileID: 4491784290509848663}
   - component: {fileID: 5422880441186378329}
-  - component: {fileID: 5262338169212929698}
-  - component: {fileID: 8122762063052833986}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -357,38 +315,6 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &5262338169212929698
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939719190116952049}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp-firstpass::CurvedUI.CurvedUIVertexEffect
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0, y: 0, z: 0}
-  savedRectSize: {x: 0, y: 0}
-  savedColor: {r: 0, g: 0, b: 0, a: 0}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 0
---- !u!114 &8122762063052833986
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2939719190116952049}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 004b8ec0c25535c409b1f6115963d476, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp-firstpass::CurvedUI.Core.Integrations.CurvedUITMP
-  Dirty: 0
 --- !u!1 &3104914455951375261
 GameObject:
   m_ObjectHideFlags: 0
@@ -400,8 +326,6 @@ GameObject:
   - component: {fileID: 7664683482973709585}
   - component: {fileID: 2522432264655750441}
   - component: {fileID: 6477625944379837305}
-  - component: {fileID: 4512772256248564134}
-  - component: {fileID: 1735809697017363527}
   m_Layer: 5
   m_Name: Text (TMP)
   m_TagString: Untagged
@@ -456,9 +380,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: NICHNAME
+  m_text: Username
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: d9b454495b7d24a7a933eb61bdfa0607, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
@@ -525,41 +449,9 @@ MonoBehaviour:
   m_margin: {x: 0, y: 0, z: 0, w: 0}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
+  m_hasFontAssetChanged: 1
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!114 &4512772256248564134
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3104914455951375261}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0, y: 0, z: 0}
-  savedRectSize: {x: 0, y: 0}
-  savedColor: {r: 0, g: 0, b: 0, a: 0}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 0
---- !u!114 &1735809697017363527
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3104914455951375261}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 004b8ec0c25535c409b1f6115963d476, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  Dirty: 0
 --- !u!1 &3425181746840552809
 GameObject:
   m_ObjectHideFlags: 0
@@ -571,7 +463,6 @@ GameObject:
   - component: {fileID: 8228744730253065807}
   - component: {fileID: 7565611052505095505}
   - component: {fileID: 2124206955975990430}
-  - component: {fileID: 454188468000461564}
   m_Layer: 5
   m_Name: Image
   m_TagString: Untagged
@@ -636,25 +527,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &454188468000461564
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3425181746840552809}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0.000000053314203, y: 1, z: 0.00000005386254}
-  savedRectSize: {x: 1280, y: 720}
-  savedColor: {r: 1, g: 1, b: 1, a: 1}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 1
 --- !u!1 &3818568580355395448
 GameObject:
   m_ObjectHideFlags: 0
@@ -815,6 +687,8 @@ MonoBehaviour:
   idNumberText: {fileID: 4658051661201525424}
   networkImageStream: {fileID: 2377678613824972991}
   provider: 0
+  localPosition: {x: 0, y: 0, z: 0}
+  localScale: {x: 0, y: 0, z: 0}
   IDNumber: 0
   customUrl: https://demo.superomatic.biz/
 --- !u!114 &2377678613824972991
@@ -1238,7 +1112,6 @@ MonoBehaviour:
   children:
   - {fileID: 8690079509221083420}
   - {fileID: 0}
-  generateColliderFromChildren: 0
 --- !u!1 &7428642365710054699
 GameObject:
   m_ObjectHideFlags: 0
@@ -1250,7 +1123,6 @@ GameObject:
   - component: {fileID: 3542749645596242901}
   - component: {fileID: 1161705610087556061}
   - component: {fileID: 869463208503383906}
-  - component: {fileID: 2928854265349077119}
   m_Layer: 5
   m_Name: back
   m_TagString: Untagged
@@ -1315,25 +1187,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &2928854265349077119
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7428642365710054699}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e62188adca544cf1b96ccf1630f15f9, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  DoNotTesselate: 0
-  savedPos: {x: 0, y: 0, z: 0}
-  savedUp: {x: 0.000000053314203, y: 1, z: 0.00000005386254}
-  savedRectSize: {x: 1280, y: 720}
-  savedColor: {r: 0, g: 0, b: 0, a: 1}
-  savedTextUV0: {x: 0, y: 0, z: 0, w: 0}
-  savedFill: 1
 --- !u!1 &8031360426417051286
 GameObject:
   m_ObjectHideFlags: 0
@@ -1345,7 +1198,6 @@ GameObject:
   - component: {fileID: 8031360426403040890}
   - component: {fileID: 8031360426403005734}
   - component: {fileID: 8031360426406828770}
-  - component: {fileID: 8031360426406798248}
   - component: {fileID: 872624224596379124}
   - component: {fileID: 2376197351818714202}
   m_Layer: 5
@@ -1425,29 +1277,6 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 1
---- !u!114 &8031360426406798248
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8031360426417051286}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a783f671592674b589cfc4953e28656b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  shape: 3
-  quality: 2
-  interactable: 1
-  blocksRaycasts: 1
-  useMeshCollider: 0
-  angle: 25
-  preserveAspect: 1
-  vertAngle: 90
-  ringFill: 0.5
-  ringExternalDiamater: 1000
-  ringFlipVertical: 0
 --- !u!114 &872624224596379124
 MonoBehaviour:
   m_ObjectHideFlags: 0
