@@ -26,8 +26,7 @@ namespace Code.Network
         [FormerlySerializedAs("sceneObjectController")] [SerializeField]
         private SceneObjectsController sceneObjectsController;
 
-        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary =
-            new SyncDictionary<string, MuteStateSync>();
+        public readonly SyncDictionary<string, MuteStateSync> MutedDictionary = new();
 
         [System.Serializable]
         public struct MuteStateSync
@@ -69,9 +68,9 @@ namespace Code.Network
                 return;
             }
 
-            var banedUser = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.FirstOrDefault(m => m == username);
+            var isUserInGame = PlayerSpawner.NameConnectionsData.ContainsKey(username);
 
-            if (banedUser == null)
+            if (!isUserInGame)
             {
                 CommandCallback($"User not found in lobby", false);
                 return;
