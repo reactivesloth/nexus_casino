@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Code.API;
-using PlayFlow;
+using Code.Network.PlayFlow;
 using Unity.Services.Core;
 using Unity.Services.Vivox;
 using UnityEngine;
@@ -105,10 +104,9 @@ namespace Code.Network
 
         public void SetLocalPosition(GameObject localObject)
         {
-            if (PlayFlowLobbyManagerV2.Instance?.CurrentLobby == null) return;
             if (VivoxService.Instance == null || !VivoxService.Instance.IsLoggedIn) return;
 
-            VivoxService.Instance.Set3DPosition(localObject, PlayFlowLobbyManagerV2.Instance.CurrentLobby.id);
+            VivoxService.Instance.Set3DPosition(localObject, PlayFlowLobby.CurrentServerData.name);
         }
 
         public void MuteLocalPlayer()
@@ -234,8 +232,7 @@ namespace Code.Network
         {
             Participants.Clear();
             Debug.Log("[VivoxVoiceManager] Connecting to lobby channel]");
-            VivoxService.Instance.JoinPositionalChannelAsync(PlayFlowLobbyManagerV2.Instance.CurrentLobby.id,
-                ChatCapability.AudioOnly, new Channel3DProperties(40, 30, 1, AudioFadeModel.ExponentialByDistance), new ChannelOptions());
+            VivoxService.Instance.JoinPositionalChannelAsync(PlayFlowLobby.CurrentServerData.name, ChatCapability.AudioOnly, new Channel3DProperties(40, 30, 1, AudioFadeModel.ExponentialByDistance), new ChannelOptions());
         }
 
         public void DisconnectFromLobbyChannel()
