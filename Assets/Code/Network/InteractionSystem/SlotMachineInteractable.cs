@@ -134,6 +134,7 @@ namespace Code.Network.InteractionSystem
 
         protected override void OnInteractCallback_Observers(bool success, bool force = false)
         {
+            Debug.Log($"Start Interact slot {IDNumber}");
             base.OnInteractCallback_Observers(success, force);
             if(!success)
                 return;

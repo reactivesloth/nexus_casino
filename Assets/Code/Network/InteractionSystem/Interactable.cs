@@ -1,4 +1,3 @@
-using System.Linq;
 using PurrNet;
 using UnityEngine;
 
@@ -51,7 +50,7 @@ namespace Code.Network.InteractionSystem
             var realRequester = requester == PlayerID.Server ? OccupierConnection : requester;
 
             _isOccupied.value = false;
-            OccupierConnection = default; // явно очищаем
+            OccupierConnection = default;
 
             SendRequestEndInteractCallbacks(realRequester, true);
         }
@@ -71,7 +70,6 @@ namespace Code.Network.InteractionSystem
         {
             if(!asServer)
                 return;
-            
         }
         
         #endregion
@@ -97,8 +95,7 @@ namespace Code.Network.InteractionSystem
         private void SendRequestInteractCallbacks(PlayerID requester, bool success, bool force = false)
         {
             OnInteractCallback_Server(requester, success, force);
-            
-                RequestInteractCallback_TargetRpc(requester, success, force);
+            RequestInteractCallback_TargetRpc(requester, success, force);
             RequestInteractCallback_ObserversRpc(true, success, force);
         }
 
@@ -117,8 +114,8 @@ namespace Code.Network.InteractionSystem
         [Server]
         private void SendRequestEndInteractCallbacks(PlayerID requester, bool success)
         {
-            OnInteractEndCallback_Server(requester, success);
             RequestInteractCallback_ObserversRpc(false, success);
+            OnInteractEndCallback_Server(requester, success);
             RequestEndInteractCallback_TargetRpc(requester, success);
         }
 
@@ -133,7 +130,6 @@ namespace Code.Network.InteractionSystem
         [ObserversRpc(bufferLast: true)]
         private void RequestInteractCallback_ObserversRpc(bool isStartInteract, bool success, bool force = false)
         {
-            Debug.Log(isStartInteract ? "Starting Interact" : "Ending Interact");
             if(isStartInteract)
                 OnInteractCallback_Observers(success, force);
             else
