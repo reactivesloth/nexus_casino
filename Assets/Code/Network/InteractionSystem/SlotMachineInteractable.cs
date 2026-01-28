@@ -142,6 +142,7 @@ namespace Code.Network.InteractionSystem
 
         protected override void OnInteractEndCallback_Observers(bool success)
         {
+            Debug.Log($"End Interact slot {IDNumber}");
             base.OnInteractEndCallback_Observers(success);
             if(!success)
                 return;

@@ -1,3 +1,4 @@
+using System.Linq;
 using PurrNet;
 using UnityEngine;
 
@@ -31,10 +32,8 @@ namespace Code.Network.InteractionSystem
 
         private void Start()
         {
-#if UNITY_SERVER
             InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
             InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
-#endif
         }
 
         public void RequestInteract(bool force = false) => RequestInteract(force, localPlayerForced);
@@ -49,13 +48,12 @@ namespace Code.Network.InteractionSystem
         [Server]
         public void ReleaseInteractable(PlayerID requester)
         {
-            if(requester == PlayerID.Server)
-                requester = OccupierConnection;
-            
-            OccupierConnection = requester;
+            var realRequester = requester == PlayerID.Server ? OccupierConnection : requester;
+
             _isOccupied.value = false;
-            
-            SendRequestEndInteractCallbacks(requester, true);
+            OccupierConnection = default; // явно очищаем
+
+            SendRequestEndInteractCallbacks(realRequester, true);
         }
         
         [Server]
@@ -120,8 +118,8 @@ namespace Code.Network.InteractionSystem
         private void SendRequestEndInteractCallbacks(PlayerID requester, bool success)
         {
             OnInteractEndCallback_Server(requester, success);
-            RequestEndInteractCallback_TargetRpc(requester, success);
             RequestInteractCallback_ObserversRpc(false, success);
+            RequestEndInteractCallback_TargetRpc(requester, success);
         }
 
         [TargetRpc]
@@ -135,6 +133,7 @@ namespace Code.Network.InteractionSystem
         [ObserversRpc(bufferLast: true)]
         private void RequestInteractCallback_ObserversRpc(bool isStartInteract, bool success, bool force = false)
         {
+            Debug.Log(isStartInteract ? "Starting Interact" : "Ending Interact");
             if(isStartInteract)
                 OnInteractCallback_Observers(success, force);
             else
