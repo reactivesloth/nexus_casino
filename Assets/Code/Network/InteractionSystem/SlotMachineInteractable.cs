@@ -228,11 +228,11 @@ namespace Code.Network.InteractionSystem
                         networkImageStream.SetTexture(raw);
 
                     if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
-                    
-                    transform.localScale = localScale;
-                    transform.localPosition = localPosition;
                 }
             }
+            
+            transform.localScale = localScale;
+            transform.localPosition = localPosition;
         }
 
         public void SwitchFullScreen()
