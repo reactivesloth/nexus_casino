@@ -1,3 +1,4 @@
+using System;
 using PurrNet;
 using UnityEngine;
 
@@ -18,7 +19,7 @@ namespace Code.Network.InteractionSystem
         [SerializeField] protected SyncVar<bool> _isOccupied = new SyncVar<bool>(false);
 
         public bool IsBusy;
-
+        
         public bool IsEnabled => _interactableEnabled;
         public bool ManualRelease => _manualRelease;
         public bool IsOccupied => _isOccupied.value;
@@ -33,12 +34,18 @@ namespace Code.Network.InteractionSystem
         {
             InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
             InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
+            OccupierConnection.onChanged += playerID => Debug.Log($"[{gameObject.name}]{playerID.ToString()}");
         }
+
 
         public void RequestInteract(bool force = false) => RequestInteract(force, localPlayerForced);
         
-        public void RequestInteract(bool force,  PlayerID requester) => 
+        public void RequestInteract(bool force,  PlayerID requester)
+        {
+            Debug.Log($"[{gameObject.name}] Requesting interaction");
             RequestInteract_ServerRpc(requester, force);
+        }
+            
 
         public void RequestEndInteract() => RequestEndInteract_ServerRpc(localPlayerForced);
 
@@ -131,7 +138,7 @@ namespace Code.Network.InteractionSystem
         [ObserversRpc(bufferLast: true)]
         private void RequestInteractCallback_ObserversRpc(bool isStartInteract, bool success, bool force = false)
         {
-            Debug.Log($"[{gameObject.name}] isStartInteract: {isStartInteract}, success: {success}");
+            // Debug.Log($"[{gameObject.name}] isStartInteract: {isStartInteract}, success: {success}");
             if(isStartInteract)
                 OnInteractCallback_Observers(success, force);
             else
@@ -167,6 +174,8 @@ namespace Code.Network.InteractionSystem
         protected virtual void OnInteractCallback_Client(bool success, bool force = false)
         {
             InteractCallback_Client?.Invoke(success);
+            if(!success)
+                Debug.LogError($"[{gameObject}] Interactable not sucsess");
         }
 
         protected virtual void OnInteractEndCallback_Client(bool success)
