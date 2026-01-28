@@ -362,16 +362,16 @@ namespace Code.Network
 
         public void ResetSlot(string idString)
         {
-            if (!int.TryParse(idString, out var id))
+            if (!int.TryParse(idString, out var slotId))
             {
                 CommandCallback("Invalid param", false);
                 return;
             }
 
-            ResetSlot(id);
+            ResetSlot(slotId);
         }
 
-        public void ResetSlot(int id)
+        public void ResetSlot(int slotId)
         {
             if (!ClientDataStorage.UserData.IsAdminRole)
             {
@@ -379,23 +379,23 @@ namespace Code.Network
                 return;
             }
 
-            if (SlotMachineInteractable.FindById(id) == null)
+            if (SlotMachineInteractable.FindById(slotId) == null)
             {
                 CommandCallback("Slot not found", false);
                 return;
             }
 
-            CommandCallback($"Request reset slot {id}", true);
-            ResetSlot_ServerRpc(id);
+            CommandCallback($"Request reset slot {slotId}", true);
+            ResetSlot_ServerRpc(slotId);
         }
 
         [ServerRpc(requireOwnership: false)]
-        public void ResetSlot_ServerRpc(int id)
+        public void ResetSlot_ServerRpc(int slotId)
         {
-            var slot = SlotMachineInteractable.FindById(id);
+            var slot = SlotMachineInteractable.FindById(slotId);
             var compositeInteractionComponent = slot.GetComponentInParent<CompositeInteractable>();
             if (compositeInteractionComponent != null)
-                compositeInteractionComponent.ReleaseInteractable(localPlayerForced);
+                compositeInteractionComponent.ReleaseInteractable(PlayerID.Server);
         }
 
         #endregion

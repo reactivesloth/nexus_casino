@@ -49,6 +49,9 @@ namespace Code.Network.InteractionSystem
         [Server]
         public void ReleaseInteractable(PlayerID requester)
         {
+            if(requester == PlayerID.Server)
+                requester = OccupierConnection;
+            
             OccupierConnection = requester;
             _isOccupied.value = false;
             
