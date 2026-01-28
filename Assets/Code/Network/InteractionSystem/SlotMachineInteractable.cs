@@ -129,7 +129,7 @@ namespace Code.Network.InteractionSystem
                 return;
             }
             
-            ToggleComputerUI(false, false);
+            ToggleComputerUI(false);
         }
 
         protected override void OnInteractCallback_Observers(bool success, bool force = false)
@@ -230,9 +230,16 @@ namespace Code.Network.InteractionSystem
                     if (PlayerInput.Instance != null) PlayerInput.Instance.IsBusy = false;
                 }
             }
-            
-            transform.localScale = localScale;
-            transform.localPosition = localPosition;
+        }
+
+        private void Update()
+        {
+            if (transform.localPosition != localPosition && transform.localScale != localScale)
+            {
+                transform.localScale = localScale;
+                transform.localPosition = localPosition;
+                Canvas.ForceUpdateCanvases();
+            }
         }
 
         public void SwitchFullScreen()

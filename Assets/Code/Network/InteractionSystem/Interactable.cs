@@ -1,4 +1,3 @@
-using System;
 using PurrNet;
 using UnityEngine;
 
@@ -34,6 +33,7 @@ namespace Code.Network.InteractionSystem
         {
 #if UNITY_SERVER
             InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
+            InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
 #endif
         }
 
@@ -63,6 +63,14 @@ namespace Code.Network.InteractionSystem
             
             if (player == OccupierConnection)
                 ReleaseInteractable(player);
+        }
+        
+        [Server]
+        private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
+        {
+            if(!asServer)
+                return;
+            
         }
         
         #endregion
