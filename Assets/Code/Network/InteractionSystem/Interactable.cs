@@ -146,19 +146,23 @@ namespace Code.Network.InteractionSystem
         [Server]
         protected virtual void OnInteractCallback_Server(PlayerID requester, bool success, bool force = false)
         {
+            if(!isServer) return;
+            
             StartInteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
-            GiveOwnership(requester);
+            GiveOwnership(requester, false, true);
         }
 
         [Server]
         protected virtual void OnInteractEndCallback_Server(PlayerID requester, bool success)
         {
+            if(!isServer) return;
+            
             EndInteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
-            RemoveOwnership();
+            RemoveOwnership(true);
         }
 
         #endregion
