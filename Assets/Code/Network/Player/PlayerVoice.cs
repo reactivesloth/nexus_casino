@@ -1,6 +1,6 @@
+using System;
 using System.Collections;
-using Code.Utility;
-using CrazyMinnow.SALSA;
+using MetaVoiceChat.NetProviders.PurrNet;
 using PurrNet;
 using UnityEngine;
 
@@ -11,26 +11,13 @@ namespace Code.Network.Player
         public static PlayerVoice LocalInstance;
         public bool isMuted;
         public bool isInputMutedByServer;
-
-        private Salsa _salsa;
-
+        
         private IEnumerator Start()
         {
             yield return new WaitUntil(() => Player.GetLocalPlayer() != null);
             LocalInstance = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
-            _salsa = Player.GetLocalPlayer().GetComponent<Salsa>();
 
-            isMuted = true;
-        }
-        
-        private float _savedVol;
-        private float _savedVolSettings;
-        
-        private void Awake()
-        {
-            _salsa = gameObject.GetComponentInChildren<Salsa>();
-            if (_salsa != null)
-                _salsa.useExternalAnalysis = true;
+            SetMuteState(true);
         }
 
         protected override void OnSpawned ()
@@ -38,38 +25,9 @@ namespace Code.Network.Player
             base.OnSpawned();
             ApplyAudioSettings();
         }
-        
-        protected override void OnDespawned ()
-        {
-            base.OnDespawned();
-            if (isOwner)
-            {
-                ConnectVoiceChannel();
-                LeaveVoiceChannel();
-            }
-        }
-
-        protected override void OnDestroy()
-        {
-            if (isOwner)
-            {
-                LeaveVoiceChannel();
-            }
-        }
-
-        private void ConnectVoiceChannel()
-        {
-            
-        }
-
-        private void LeaveVoiceChannel()
-        {
-            
-        }
 
         private void ApplyAudioSettings()
         {
-            _savedVolSettings = 0;
             isMuted = true;
         }
 
@@ -77,27 +35,15 @@ namespace Code.Network.Player
         {
             if (!isOwner) return;
 
-            if (isInputMutedByServer)
-                isMuted = true;
+            isMuted = muted || isInputMutedByServer;
 
-            isMuted = muted;
+            PurrNetNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value = isMuted;
         }
 
         private void Update()
         {
-            if (isInputMutedByServer)
-                isMuted = true;
-            
-            if (_salsa != null)
-            { 
-                _salsa.analysisValue = 0;
-            }
-
-            if (!isOwner) return;
-            if (!Mathf.Approximately(_savedVolSettings, SettingsManager.Instance.VoiceChatVolume))
-            {
-                _savedVolSettings = SettingsManager.Instance.VoiceChatVolume;
-            }
+            if (!isInputMutedByServer) return;
+            if (!isMuted) SetMuteState(true);
         }
 
         public static PlayerVoice GetByPlayerID(PlayerID playerName)

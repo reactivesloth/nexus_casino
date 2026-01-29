@@ -28,7 +28,7 @@ namespace Code.Player
         private PermissionCallbacks _permissionCallbacks;
 #endif
 
-        private void Awake()
+        private void Start()
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
             VoiceChatHandle(false);

@@ -94,6 +94,73 @@ Transform:
   m_Children: []
   m_Father: {fileID: 713667818490075550}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1629514902389970137
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 6542713848401944120}
+    m_Modifications:
+    - target: {fileID: 535821762851530637, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_Name
+      value: VoiceChat
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.649
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ed524522e89bb12419da49673cda9895, type: 3}
+--- !u!82 &935669713571651923 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 1900828616370910602, guid: ed524522e89bb12419da49673cda9895, type: 3}
+  m_PrefabInstance: {fileID: 1629514902389970137}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3865464817202633087 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+  m_PrefabInstance: {fileID: 1629514902389970137}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5003041856196150683
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1233,6 +1300,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3480051585346763968}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3865464817202633087}
     - targetCorrespondingSourceObject: {fileID: 7208261743932278219, guid: f1b3be8260b730b49bd808cd4ca33778, type: 3}
       insertIndex: -1
       addedObject: {fileID: 713667818490075550}
@@ -2162,6 +2232,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 184b564a357c4b81a66bd944199741e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerVoice
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
   isMuted: 1
   isInputMutedByServer: 0
 --- !u!114 &651306884355573710
@@ -2207,7 +2286,7 @@ MonoBehaviour:
   m_Script: {fileID: -1091098677, guid: 21fe281538940584e84b6d5eedb3525e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: SALSA-LipSync.dll::CrazyMinnow.SALSA.Salsa
-  audioSrc: {fileID: 0}
+  audioSrc: {fileID: 935669713571651923}
   waitForAudioSource: 0
   useExternalAnalysis: 0
   audioSourceWaitTarget: {fileID: 0}
@@ -2527,7 +2606,7 @@ MonoBehaviour:
   randomHoldDurationMax: 0.5
   configReady: 0
   warnOnNullRefs: 1
-  inspSalsaLinked: 0
+  inspSalsaLinked: 1
   inspStateFoldoutProcessing: 1
   inspStateFoldoutSettings: 0
   inspStateFoldoutEmotes: 0
