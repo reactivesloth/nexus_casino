@@ -1,6 +1,5 @@
-using System;
 using System.Collections;
-using MetaVoiceChat.NetProviders.PurrNet;
+using MetaVoiceChat;
 using PurrNet;
 using UnityEngine;
 
@@ -11,24 +10,15 @@ namespace Code.Network.Player
         public static PlayerVoice LocalInstance;
         public bool isMuted;
         public bool isInputMutedByServer;
+        private MetaVc _metaVc;
         
         private IEnumerator Start()
         {
             yield return new WaitUntil(() => Player.GetLocalPlayer() != null);
             LocalInstance = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
-
+            _metaVc = Player.GetLocalPlayer().GetComponentInChildren<MetaVc>();
+            
             SetMuteState(true);
-        }
-
-        protected override void OnSpawned ()
-        {
-            base.OnSpawned();
-            ApplyAudioSettings();
-        }
-
-        private void ApplyAudioSettings()
-        {
-            isMuted = true;
         }
 
         public void SetMuteState(bool muted)
@@ -37,7 +27,7 @@ namespace Code.Network.Player
 
             isMuted = muted || isInputMutedByServer;
 
-            PurrNetNetProvider.LocalPlayerInstance.MetaVc.isInputMuted.Value = isMuted;
+            _metaVc.isInputMuted.Value = isMuted;
         }
 
         private void Update()

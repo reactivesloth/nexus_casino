@@ -1,113 +1,81 @@
-﻿using System;
-using System.Collections.Generic;
-using MetaVoiceChat.Utils;
-using PurrNet;
-using PurrNet.Transports;
+﻿using System.Collections.Generic;
 using UnityEngine;
-
+using PurrNet;
 
 namespace MetaVoiceChat.NetProviders.PurrNet
 {
     [RequireComponent(typeof(MetaVc))]
     public class PurrNetNetProvider : NetworkBehaviour, INetProvider
     {
-        #region Singleton
         public static PurrNetNetProvider LocalPlayerInstance { get; private set; }
-        private readonly static List<PurrNetNetProvider> instances = new();
-        public static IReadOnlyList<PurrNetNetProvider> Instances => instances;
-        #endregion
-
-        bool INetProvider.IsLocalPlayerDeafened => LocalPlayerInstance.MetaVc.isDeafened;
+        private static readonly List<PurrNetNetProvider> s_Instances = new();
+        public static IReadOnlyList<PurrNetNetProvider> Instances => s_Instances;
 
         public MetaVc MetaVc { get; private set; }
 
-        protected override void OnSpawned() {
-            base.OnSpawned();
-            
-            #region Singleton
-            if (isOwner)
-            {
-                LocalPlayerInstance = this;
-            }
+        private const int DefaultMaxDataBytesPerPacket = 1200;
 
-            instances.Add(this);
-            #endregion
-
-            static int GetMaxDataBytesPerPacket(NetworkManager networkManager)
-            {
-                if (networkManager.clientToServerConn != null) return 1011;
-
-                int bytes = networkManager.transport.transport.GetMTU(networkManager.clientToServerConn.Value, Channel.Unreliable, false) - 13;
-                bytes -= sizeof(int); // Index
-                bytes -= sizeof(double); // Timestamp
-                bytes -= sizeof(byte); // Additional latency
-                bytes -= sizeof(ushort); // Array length
-                return bytes;
-            }
+        protected override void OnSpawned()
+        {
+            if (isOwner) LocalPlayerInstance = this;
+            s_Instances.Add(this);
 
             MetaVc = GetComponent<MetaVc>();
-            MetaVc.StartClient(this, isOwner, GetMaxDataBytesPerPacket(NetworkManager.main));
+            MetaVc.StartClient(this, isOwner, DefaultMaxDataBytesPerPacket);
         }
 
         protected override void OnDespawned()
         {
-            base.OnDespawned();
-            
-            #region Singleton
-            if (isOwner)
-            {
-                LocalPlayerInstance = null;
-            }
-
-            instances.Remove(this);
-            #endregion
-
+            if (isOwner) LocalPlayerInstance = null;
+            s_Instances.Remove(this);
             MetaVc.StopClient();
         }
 
-        void INetProvider.RelayFrame(int index, double timestamp, ReadOnlySpan<byte> data)
+        public bool IsLocalPlayerDeafened
         {
-            var array = FixedLengthArrayPool<byte>.Rent(data.Length);
-            data.CopyTo(array);
+            get
+            {
+                if (LocalPlayerInstance == null) return false;
+                return LocalPlayerInstance.MetaVc.isDeafened;
+            }
+        }
+
+        public void RelayFrame(int index, double timestamp, System.ReadOnlySpan<byte> data)
+        {
+            byte[] dataToSend = data.ToArray(); 
 
             float additionalLatency = Time.deltaTime;
-            PurrNetFrame frame = new(index, timestamp, additionalLatency, array);
 
-            if (networkManager.isServer)
+            var frame = new PurrNetFrame(index, timestamp, additionalLatency, dataToSend);
+
+            if (isServer)
             {
-                ObsReceiveFrame(frame);
+                ReceiveFrameObserversRpc(frame);
             }
             else
             {
-                ServerRelayFrame(frame);
+                RelayFrameServerRpc(frame);
             }
-
-            FixedLengthArrayPool<byte>.Return(array);
         }
 
-        [ServerRpc (channel: Channel.Unreliable)]
-        private void ServerRelayFrame(PurrNetFrame frame)
+        [ServerRpc]
+        private void RelayFrameServerRpc(PurrNetFrame frame, RPCInfo info = default)
         {
-            float additionalLatency = frame.additionalLatency + Time.deltaTime;
-            frame = new(frame.index, frame.timestamp, additionalLatency, frame.data);
-            ObsReceiveFrame(frame);
+            frame.additionalLatency += Time.deltaTime;
+            ReceiveFrameObserversRpc(frame);
         }
 
-        // A possible optimization is to use target RPCs and only send filled arrays to clients that are within audible range, and empty arrays to others.
-        // Audible range would be determined by the distance between the reciever's position and the sender's audio source position.
-        [ObserversRpc(excludeOwner: true, channel: Channel.Unreliable)]
-        private void ObsReceiveFrame(PurrNetFrame frame)
+        [ObserversRpc (excludeOwner:true)]
+        private void ReceiveFrameObserversRpc(PurrNetFrame frame, RPCInfo info = default)
         {
-            if (networkManager.isServer)
+            float latency = frame.additionalLatency;
+
+            if (isServer)
             {
-                // Don't apply server Time.deltaTime to additionalLatency -- this frame did not go over the network again.
-                float additionalLatency = frame.additionalLatency - Time.deltaTime;
-                MetaVc.ReceiveFrame(frame.index, frame.timestamp, additionalLatency, frame.data);
+                latency -= Time.deltaTime;
             }
-            else
-            {
-                MetaVc.ReceiveFrame(frame.index, frame.timestamp, frame.additionalLatency, frame.data);
-            }
+
+            MetaVc.ReceiveFrame(frame.index, frame.timestamp, latency, frame.data);
         }
     }
 }
