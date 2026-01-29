@@ -140,6 +140,7 @@ namespace Code.Player
         private Camera _mainCamera;
         private PlayerInput input;
         private Animator animator;
+        private NetworkAnimator networkAnimator;
         private CharacterController controller;
         private CinemachineVirtualCamera virtualCamera;
 
@@ -193,8 +194,9 @@ namespace Code.Player
 
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
+            networkAnimator = GetComponent<NetworkAnimator>();
             AssignAnimationIDs();
-
+            
             _mainCamera = Camera.main;
             input = PlayerInput.Instance;
 
@@ -204,6 +206,8 @@ namespace Code.Player
             UpdateHeadTargetPos();
 
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            
+            NetworkManager.main.onPlayerJoined += OnPlayerJoin;
         }
         public IEnumerator Start()
         {
@@ -223,6 +227,11 @@ namespace Code.Player
             transform.position += Vector3.up;
             
             Invoke(nameof(PlayerGetHeadThings), 2);
+        }
+
+        private void OnPlayerJoin(PlayerID player, bool isReconnect, bool asServer)
+        { 
+            networkAnimator.Reconcile(player);
         }
 
         private void PlayerGetHeadThings()
