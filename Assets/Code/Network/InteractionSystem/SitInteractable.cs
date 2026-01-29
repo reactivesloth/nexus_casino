@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using Code.Player;
 using Code.Utility;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.InteractionSystem
@@ -118,7 +119,7 @@ namespace Code.Network.InteractionSystem
             if (move == null) return;
 
             var cc = move.GetComponent<CharacterController>();
-            var anim = move.GetComponent<Animator>();
+            var anim = move.GetComponent<NetworkAnimator>();
             var tf = move.transform;
 
             if (_sitRoutine != null) StopCoroutine(_sitRoutine);
@@ -145,7 +146,7 @@ namespace Code.Network.InteractionSystem
             }
         }
 
-        private void ForceSit(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf, EntryData entry)
+        private void ForceSit(PlayerMovementController move, NetworkAnimator anim, CharacterController cc, Transform tf, EntryData entry)
         {
             if (entry == null) return;
 
@@ -163,7 +164,7 @@ namespace Code.Network.InteractionSystem
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, true);
                 anim.Play(SIT_STATE, 0, 0f);
-                anim.Update(0f);
+                anim.UpdateWithDelta(0f);
                 anim.applyRootMotion = false;
             }
 
@@ -188,7 +189,7 @@ namespace Code.Network.InteractionSystem
             IsBusy = false;
         }
 
-        private void ForceStand(PlayerMovementController move, Animator anim, CharacterController cc, Transform tf, EntryData entry)
+        private void ForceStand(PlayerMovementController move, NetworkAnimator anim, CharacterController cc, Transform tf, EntryData entry)
         {
             if (allowRotateCamera)
             {
@@ -214,7 +215,7 @@ namespace Code.Network.InteractionSystem
                 anim.SetFloat(SIT_STYLE, style);
                 anim.SetBool(SIT_TRIGGER, false);
                 anim.Play(STAND_STATE, 0, 0f);
-                anim.Update(0f);
+                anim.UpdateWithDelta(0f);
                 anim.applyRootMotion = false;
             }
 
@@ -241,7 +242,7 @@ namespace Code.Network.InteractionSystem
 
         private bool wasFPV = false;
         
-        private IEnumerator SitDownFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+        private IEnumerator SitDownFlow(PlayerMovementController move, NetworkAnimator anim, CharacterController cc,
             Transform tf, EntryData entry)
         {
             IsBusy = true;
@@ -343,7 +344,7 @@ namespace Code.Network.InteractionSystem
             IsBusy = false;
         }
 
-        private IEnumerator StandUpFlow(PlayerMovementController move, Animator anim, CharacterController cc,
+        private IEnumerator StandUpFlow(PlayerMovementController move, NetworkAnimator anim, CharacterController cc,
             Transform tf, EntryData entry)
         {
             move.SuppressLookAtIK = true;
@@ -468,7 +469,7 @@ namespace Code.Network.InteractionSystem
             return closest;
         }
 
-        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, Animator anim, float stopDistance = 0.25f,
+        private IEnumerator MoveToPoint(Transform tf, Vector3 targetPos, NetworkAnimator anim, float stopDistance = 0.25f,
             float maxDuration = 2f)
         {
             float walkSpeed = 1.5f;
@@ -549,7 +550,7 @@ namespace Code.Network.InteractionSystem
             tf.rotation = targetRotation;
         }
 
-        private float ComputeFootOffset(Animator animator, Transform playerTf, Transform refPoint)
+        private float ComputeFootOffset(NetworkAnimator animator, Transform playerTf, Transform refPoint)
         {
             if (animator == null || playerTf == null || refPoint == null) return 0f;
 
