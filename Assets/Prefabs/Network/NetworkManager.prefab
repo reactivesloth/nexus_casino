@@ -47,6 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba2ec6105185aee4dbd56831eaf762d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayFlowManager
+  playflowApiKey: YOUR_API_KEY_HERE
+  emptyServerLifeTime: 600
 --- !u!114 &4148929254775448530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -67,8 +69,8 @@ MonoBehaviour:
   _transport: {fileID: 4731415244911535516}
   _networkPrefabs: {fileID: 11400000, guid: af47c7779c6c6cc4f816d7b1d13e303d, type: 2}
   _networkAssets: {fileID: 11400000, guid: 31797f31e16dfc8418b19e34267ef130, type: 2}
-  _networkRules: {fileID: 11400000, guid: d8799083b96579a42b8b2d03e4ceae98, type: 2}
-  _visibilityRules: {fileID: 11400000, guid: 8f014a5bd8dc68646a2a3c0b18c5bbd8, type: 2}
+  _networkRules: {fileID: 11400000, guid: 49b645d77fb5c440d9ef38ce72d2e37e, type: 2}
+  _visibilityRules: {fileID: 11400000, guid: 665279a58f09344828da3e562e35a930, type: 2}
   _authenticator: {fileID: 0}
   _tickRate: 20
   _patchLingeringProcessBug: 0
@@ -120,5 +122,4 @@ MonoBehaviour:
   - key: ChostisF1
     val: {fileID: 1993866734829066590, guid: fd5bf44672cdc4f40a1b68d943372f19, type: 3}
   _addToDefaultScene: 1
-  _requireSceneLoaded: 1
   _spawnSceneName: Main
