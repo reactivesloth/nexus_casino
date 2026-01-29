@@ -64,9 +64,6 @@ namespace Code.Network.InteractionSystem
         [Server]
         private void OnPlayerLeft(PlayerID player, bool asServer)
         {
-            if(!asServer)
-                return;
-            
             if (player == OccupierConnection.value)
                 ReleaseInteractable(player);
         }
@@ -74,8 +71,7 @@ namespace Code.Network.InteractionSystem
         [Server]
         private void OnPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
         {
-            if(!asServer)
-                return;
+            
         }
         
         #endregion
