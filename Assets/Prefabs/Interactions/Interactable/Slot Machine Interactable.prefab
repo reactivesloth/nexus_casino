@@ -674,6 +674,13 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   outlineGameObjects: []
+  OccupierConnection:
+    _ownerAuth: 0
+    _sendIntervalInSeconds: 0
+  _isOccupied:
+    _value: 0
+    _ownerAuth: 0
+    _sendIntervalInSeconds: 0
   IsBusy: 0
   _slotScreenPromoMeshRenderer: {fileID: 0}
   slotsScreenPromoMaterialIndex: 5
@@ -711,7 +718,7 @@ MonoBehaviour:
   _invertedPathToNearestParent: 
   _directChildren: []
   _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
+  _visitiblityRules: {fileID: 11400000, guid: 995253f3b9fb92247a2604ff399425ad, type: 2}
   slotMachineInteractable: {fileID: 8690079509221083420}
   streamLoadBalancer: {fileID: 0}
   rawImage: {fileID: 0}
@@ -1086,6 +1093,13 @@ MonoBehaviour:
   _manualRelease: 1
   outlineGameObjects:
   - {fileID: 0}
+  OccupierConnection:
+    _ownerAuth: 0
+    _sendIntervalInSeconds: 0
+  _isOccupied:
+    _value: 0
+    _ownerAuth: 0
+    _sendIntervalInSeconds: 0
   IsBusy: 0
   children:
   - {fileID: 8690079509221083420}
