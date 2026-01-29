@@ -1,4 +1,3 @@
-using System;
 using PurrNet;
 using UnityEngine;
 
@@ -65,7 +64,6 @@ namespace Code.Network.InteractionSystem
         [Server]
         private void OnPlayerLeft(PlayerID player, bool asServer)
         {
-            
             if(!asServer)
                 return;
             

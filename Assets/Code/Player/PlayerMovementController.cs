@@ -190,8 +190,7 @@ namespace Code.Player
         private void EnsureInit()
         {
             if (_initedPlayer) return;
-            _initedPlayer = true;
-
+            
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
             networkAnimator = GetComponent<NetworkAnimator>();
@@ -208,7 +207,10 @@ namespace Code.Player
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
             
             NetworkManager.main.onPlayerJoined += OnPlayerJoin;
+            
+            _initedPlayer = true;
         }
+        
         public IEnumerator Start()
         {
             yield return new WaitUntil(() => Network.Player.Player.GetLocalPlayer() != null);
@@ -217,10 +219,10 @@ namespace Code.Player
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
 
-            if (_initedPlayer)
-                ResetOnReconnect();
-            else
-                EnsureInit();
+            EnsureInit();
+
+            yield return new WaitUntil(()=> _initedPlayer);
+            ResetOnReconnect();
 
             CursorManager.Instance.HideCursor();
             
