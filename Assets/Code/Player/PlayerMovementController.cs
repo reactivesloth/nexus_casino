@@ -139,7 +139,7 @@ namespace Code.Player
 
         private Camera _mainCamera;
         private PlayerInput input;
-        private NetworkAnimator animator;
+        private Animator animator;
         private CharacterController controller;
         private CinemachineVirtualCamera virtualCamera;
 
@@ -192,8 +192,7 @@ namespace Code.Player
             _initedPlayer = true;
 
             controller = GetComponent<CharacterController>();
-            animator = GetComponent<NetworkAnimator>();
-            
+            animator = GetComponent<Animator>();
             AssignAnimationIDs();
 
             _mainCamera = Camera.main;
@@ -224,11 +223,6 @@ namespace Code.Player
             transform.position += Vector3.up;
             
             Invoke(nameof(PlayerGetHeadThings), 2);
-        }
-
-        protected override void OnSpawned()
-        {
-            base.OnSpawned();
         }
 
         private void PlayerGetHeadThings()
