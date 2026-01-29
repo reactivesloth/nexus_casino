@@ -384,19 +384,18 @@ namespace Code.Network.Stream
                 streamLoadBalancer?.RegisterStream();
                 _lastSentFrameId = 0;
             }
+            else
+            {
+                targetImage.gameObject.SetActive(true);
+                streamLoadBalancer?.UnregisterStream();
+            }
 
             if (!hasOwner)
             {
                 targetImage.gameObject.SetActive(false);
                 streamLoadBalancer?.UnregisterStream();
             }
-            else if (!isOwner)
-            {
-                targetImage.gameObject.SetActive(true);
-                streamLoadBalancer?.UnregisterStream();
-            }
-            
-            if(hasOwner)
+            else
                 streamConnection.Connect(SlotNumber);
         }
 
