@@ -107,12 +107,6 @@ namespace Code.Network.InteractionSystem
         }
 #endif
 
-        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
-        {
-            base.OnOwnerChanged(oldOwner, newOwner, asServer);
-            contentCanvas.gameObject.SetActive(newOwner is { isServer: false });
-        }
-
         protected override void OnInteractCallback_Client(bool success, bool force = false)
         {
             base.OnInteractCallback_Client(success, force);
@@ -141,7 +135,6 @@ namespace Code.Network.InteractionSystem
 
         protected override void OnInteractCallback_Observers(bool success, bool force = false)
         {
-            Debug.Log($"Start Interact slot {IDNumber} {success}");
             base.OnInteractCallback_Observers(success, force);
             if(!success)
                 return;
@@ -150,7 +143,6 @@ namespace Code.Network.InteractionSystem
 
         protected override void OnInteractEndCallback_Observers(bool success)
         {
-            Debug.Log($"End Interact slot {IDNumber} {success}");
             base.OnInteractEndCallback_Observers(success);
             if(!success)
                 return;
@@ -173,8 +165,6 @@ namespace Code.Network.InteractionSystem
         private void ApplyComputerStateImmediate(bool open, bool silentURL = false)
         {
             bool useFs = PlayerPrefs.GetInt("PlayerSlotMachineIsFullscreen", 0) == 1;
-
-            Debug.Log($"Open {open}");
 
             if (!open)
             {

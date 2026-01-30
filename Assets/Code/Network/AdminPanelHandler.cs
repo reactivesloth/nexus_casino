@@ -395,7 +395,7 @@ namespace Code.Network
             var slot = SlotMachineInteractable.FindById(slotId);
             var compositeInteractionComponent = slot.GetComponentInParent<CompositeInteractable>();
             if (compositeInteractionComponent != null)
-                compositeInteractionComponent.ReleaseInteractable(PlayerID.Server);
+                compositeInteractionComponent.ReleaseInteractable();
         }
 
         #endregion

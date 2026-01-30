@@ -1,3 +1,4 @@
+using System.Linq;
 using PurrNet;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ namespace Code.Network.InteractionSystem
 
         public GameObject[] outlineGameObjects;
 
-        [SerializeField] private SyncVar<PlayerID> OccupierConnection;// => NetworkManager.Clients.TryGetValue(_occupiedConnectionId, out var conn) ? conn : null;
+        [SerializeField] private SyncVar<PlayerID> OccupierConnection = new SyncVar<PlayerID>();// => NetworkManager.Clients.TryGetValue(_occupiedConnectionId, out var conn) ? conn : null;
         public string Key => interactableKey;
 
         [SerializeField] protected SyncVar<bool> _isOccupied = new SyncVar<bool>(false);
@@ -29,19 +30,24 @@ namespace Code.Network.InteractionSystem
         public event InteractCallback StartInteractCallback_Server;
         public event InteractCallback EndInteractCallback_Server;
 
-        private void Start()
+        protected override void OnSpawned(bool asServer)
         {
+            base.OnSpawned(asServer);
             InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
             InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
-            OccupierConnection.onChanged += playerID => Debug.Log($"[{gameObject.name}]{playerID.ToString()}");
         }
 
-
+        protected override void OnDespawned(bool asServer)
+        {
+            base.OnDespawned(asServer);
+            InstanceHandler.NetworkManager.onPlayerLeft -= OnPlayerLeft;
+            InstanceHandler.NetworkManager.onPlayerJoined -= OnPlayerJoined;
+        }
+        
         public void RequestInteract(bool force = false) => RequestInteract(force, localPlayerForced);
         
-        public void RequestInteract(bool force,  PlayerID requester)
+        public void RequestInteract(bool force, PlayerID requester)
         {
-            Debug.Log($"[{gameObject.name}] Requesting interaction");
             RequestInteract_ServerRpc(requester, force);
         }
             
@@ -51,14 +57,13 @@ namespace Code.Network.InteractionSystem
         #region Server Methods
         
         [Server]
-        public void ReleaseInteractable(PlayerID requester)
+        public void ReleaseInteractable()
         {
-            var realRequester = requester == PlayerID.Server ? OccupierConnection.value : requester;
-
+            SendRequestEndInteractCallbacks(OccupierConnection.value, true);
+            
             _isOccupied.value = false;
-            OccupierConnection.value = default;
+            OccupierConnection.value = PlayerID.Server;
 
-            SendRequestEndInteractCallbacks(realRequester, true);
         }
         
         [ServerOnly]
@@ -66,7 +71,7 @@ namespace Code.Network.InteractionSystem
         {
             if(!asServer) return;
             if (player == OccupierConnection.value)
-                ReleaseInteractable(player);
+                ReleaseInteractable();
         }
         
         [Server]
@@ -80,51 +85,56 @@ namespace Code.Network.InteractionSystem
         #region RPC
 
         [ServerRpc(requireOwnership: false)]
-        private void RequestInteract_ServerRpc(PlayerID requester, bool force = false)
+        private void RequestInteract_ServerRpc(PlayerID target, bool force = false)
         {
             if (!_interactableEnabled || _isOccupied.value)
             {
-                SendRequestInteractCallbacks(requester, false, force);
+                SendRequestInteractCallbacks(target, false, force);
                 return;
             }
 
-            OccupierConnection.value = requester;
+            OccupierConnection.value = target;
             _isOccupied.value = true;
 
-            SendRequestInteractCallbacks(requester, true, force);
+            SendRequestInteractCallbacks(target, true, force);
         }
 
         [Server]
-        private void SendRequestInteractCallbacks(PlayerID requester, bool success, bool force = false)
+        private void SendRequestInteractCallbacks(PlayerID target, bool success, bool force = false)
         {
-            OnInteractCallback_Server(requester, success, force);
-            RequestInteractCallback_TargetRpc(requester, success, force);
+            OnInteractCallback_Server(target, success, force);
+            RequestInteractCallback_TargetRpc(target, success, force);
             RequestInteractCallback_ObserversRpc(true, success, force);
         }
 
         [ServerRpc(requireOwnership: false)]
-        private void RequestEndInteract_ServerRpc(PlayerID requester)
+        private void RequestEndInteract_ServerRpc(PlayerID target)
         {
-            if (requester != OccupierConnection.value)
+            if (target != OccupierConnection.value)
             {
-                SendRequestEndInteractCallbacks(requester, false);
+                SendRequestEndInteractCallbacks(target, false);
                 return;
             }
             
-            ReleaseInteractable(requester);
+            ReleaseInteractable();
         }
 
         [Server]
-        private void SendRequestEndInteractCallbacks(PlayerID requester, bool success)
+        private void SendRequestEndInteractCallbacks(PlayerID target, bool success)
         {
             RequestInteractCallback_ObserversRpc(false, success);
-            OnInteractEndCallback_Server(requester, success);
-            RequestEndInteractCallback_TargetRpc(requester, success);
+            OnInteractEndCallback_Server(target, success);
+            
+            if(NetworkManager.main.players.Contains(target))
+                RequestEndInteractCallback_TargetRpc(target, success);
         }
 
         [TargetRpc]
-        private void RequestInteractCallback_TargetRpc(PlayerID target, bool success, bool force = false) =>
+        private void RequestInteractCallback_TargetRpc(PlayerID target, bool success, bool force = false)
+        {
             OnInteractCallback_Client(success, force);
+        }
+            
 
         [TargetRpc]
         private void RequestEndInteractCallback_TargetRpc(PlayerID target, bool success) =>
@@ -133,7 +143,6 @@ namespace Code.Network.InteractionSystem
         [ObserversRpc(bufferLast: true)]
         private void RequestInteractCallback_ObserversRpc(bool isStartInteract, bool success, bool force = false)
         {
-            // Debug.Log($"[{gameObject.name}] isStartInteract: {isStartInteract}, success: {success}");
             if(isStartInteract)
                 OnInteractCallback_Observers(success, force);
             else
@@ -175,6 +184,8 @@ namespace Code.Network.InteractionSystem
             InteractCallback_Client?.Invoke(success);
             if(!success)
                 Debug.LogError($"[{gameObject}] Interactable not sucsess");
+            else
+                Debug.Log($"[{gameObject}] Interactable sucsess");
         }
 
         protected virtual void OnInteractEndCallback_Client(bool success)
