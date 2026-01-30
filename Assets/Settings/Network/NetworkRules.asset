@@ -18,16 +18,16 @@ MonoBehaviour:
     identitiesAlwaysVisible: 1
     scenesAlwaysPublic: 1
   _defaultSpawnRules:
-    spawnAuth: 0
-    despawnAuth: 3
+    spawnAuth: 1
+    despawnAuth: -1
     defaultOwner: 1
     propagateOwnershipByDefault: 1
     despawnIfOwnerDisconnects: 1
     cleanupSpawnedObjects: 1
   _defaultRpcRules:
-    ignoreRequireServerAttribute: 0
-    ignoreRequireOwnerAttribute: 0
-    targetRpcsCanTargetServer: 0
+    ignoreRequireServerAttribute: 1
+    ignoreRequireOwnerAttribute: 1
+    targetRpcsCanTargetServer: 1
   _defaultVisibilityRules:
     visibilityMode: 0
   _defaultOwnershipRules:
