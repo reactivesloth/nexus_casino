@@ -31,9 +31,9 @@ MonoBehaviour:
   _defaultVisibilityRules:
     visibilityMode: 0
   _defaultOwnershipRules:
-    assignAuth: 0
-    transferAuth: 3
-    removeAuth: 0
+    assignAuth: 1
+    transferAuth: -1
+    removeAuth: -1
     overrideWhenPropagating: 1
   _defaultSceneRules:
     _cleanupScenesOnDisconnect: 0
@@ -43,6 +43,6 @@ MonoBehaviour:
   _defaultIdentityRules:
     receiveRpcsWhenDisabled: 1
   _defaultTransformRules:
-    changeParentAuth: 3
+    changeParentAuth: -1
   _defaultMiscRules:
     syncedTickUpdateInterval: 1
