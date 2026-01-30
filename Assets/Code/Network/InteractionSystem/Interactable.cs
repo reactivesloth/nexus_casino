@@ -61,9 +61,10 @@ namespace Code.Network.InteractionSystem
             SendRequestEndInteractCallbacks(realRequester, true);
         }
         
-        [Server]
+        [ServerOnly]
         private void OnPlayerLeft(PlayerID player, bool asServer)
         {
+            if(!asServer) return;
             if (player == OccupierConnection.value)
                 ReleaseInteractable(player);
         }
@@ -162,7 +163,7 @@ namespace Code.Network.InteractionSystem
             EndInteractCallback_Server?.Invoke(success);
             if(!success)
                 return;
-            RemoveOwnership(true);
+            RemoveOwnership();
         }
 
         #endregion
