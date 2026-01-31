@@ -47,7 +47,7 @@ namespace Code.Utility
             Instance = this;
             if (dontDestroyOnLoad) DontDestroyOnLoad(gameObject);
             _webviews = new List<CanvasWebViewPrefab>();
-        
+            
             Web.SetAutoplayEnabled(true);
         }
 
