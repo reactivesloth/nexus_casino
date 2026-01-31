@@ -5,6 +5,7 @@ using Code.API.Models;
 using NativeWebSocket;
 using Proyecto26;
 using System.Threading.Tasks;
+using Code.Network;
 using Code.UI;
 using PlayFlow;
 using UnityEngine;
@@ -359,9 +360,9 @@ namespace Code.Chat
             if (msg?.data?.message == null) return;
 
             var message = msg.data.message;
-            var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
+            var lobby = PlayerPrefs.GetString("PlayFlowLobbyID", "default");
 
-            bool isLobbyMessage = lobby != null && message.lobby_id == lobby.id;
+            bool isLobbyMessage = message.lobby_id == lobby;
 
             var messageStyle = message.type == "important" ? ChatStyles.Important : ChatStyles.Default;
 
@@ -431,13 +432,13 @@ namespace Code.Chat
                 return;
             }
 
-            var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
-            string lobbyId = CurrentChatType == ChatType.Global ? "main" : (lobby?.id ?? "main");
+            var lobby = PlayerPrefs.GetString("PlayFlowLobbyID", "default");
+            string lobbyId = CurrentChatType == ChatType.Global ? "main" : lobby;
 
-            var payload = new ChatModel<SendMassage>
+            var payload = new ChatModel<SendMessage>
             {
                 @event = ChatSocketEvents.SendMessage,
-                data = new SendMassage
+                data = new SendMessage
                 {
                     lobby_id = lobbyId,
                     message = message,
@@ -597,9 +598,9 @@ namespace Code.Chat
 
             if (!isGlobal)
             {
-                var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
+                var lobby = PlayerPrefs.GetString("PlayFlowLobbyID");
                 if (lobby != null)
-                    reqParams.Add("lobby_id", lobby.id);
+                    reqParams.Add("lobby_id", lobby);
             }
 
             if (beforeId.HasValue)

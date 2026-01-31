@@ -1,299 +1,397 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Code.API;
-using Code.API.Models;
-using Code.Player;
-using FishNet;
-using FishNet.Broadcast;
-using FishNet.Connection;
-using FishNet.Managing;
-using FishNet.Object;
-using FishNet.Transporting;
-using PlayFlow;
+using Code.Network.PlayFlow;
+using PurrNet;
+using PurrNet.Logging;
+using PurrNet.Modules;
+using PurrNet.Packing;
+using PurrNet.Transports;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace Code.Network.Player
 {
-    public struct PlayerTypeBroadcast : IBroadcast
+    public struct PlayerTypeBroadcast : IPackedAuto
     {
         public MeSchema PlayerData;
         public string PlayerType;
+
+        // Spawn pos data
+        public bool IsSpawnOnSavePos;
+        public Vector3 SavePos;
     }
 
-    public struct DisconnectBroadcast : IBroadcast
+    public struct DisconnectBroadcast : IPackedAuto
     {
         public string Reason;
+    }
+
+    public struct UpdatePlayerListBroadcast : IPackedAuto
+    {
+        public int PlayerCount;
+        public PlayerID[] Ids;
+        public MeSchema[] Datas;
     }
 
     [Serializable]
     public class PlayerSpawnableModelKeyValuePair
     {
         public string key;
-        public NetworkObject val;
+        public NetworkIdentity val;
     }
 
-    /// <summary>
-    /// Спавнит игрока при подключении клиента. Поддерживает выбор модели через Broadcast.
-    /// </summary>
-    public sealed class PlayerSpawner : MonoBehaviour
+    public interface IProvideSpawnPoints
     {
-        /// <summary>Вызывается на сервере сразу после спавна игрока.</summary>
-        public event Action<NetworkObject> OnSpawned;
+        SpawnPoint NextSpawnPoint(PlayerID player, SceneID scene);
+    }
 
-        [Tooltip(
-            "True to add player to the active scene when no global scenes are specified through the SceneManager.")]
-        [SerializeField]
+    public interface IProvidePrefabInstantiated
+    {
+        void OnPrefabInstantiated(GameObject prefabInstance, PlayerID player, SceneID scene);
+    }
+
+    public struct SpawnPoint
+    {
+        public Vector3 position;
+        public Quaternion rotation;
+    }
+
+    public class PlayerSpawner : PurrMonoBehaviour
+    {
+        public event Action<NetworkIdentity> OnSpawned;
+
+        [Header("PurrNet Settings")] [SerializeField]
+        private bool _ignoreNetworkRules;
+
+        [SerializeField] private List<Transform> spawnPoints = new();
+
+        [Header("Custom Logic Settings")] [SerializeField]
+        private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new();
+
+        [Tooltip("True to add player to the active scene when no global scenes are specified.")] [SerializeField]
         private bool _addToDefaultScene = true;
 
-        [Tooltip("Areas in which players may spawn.")]
-        public Transform[] Spawns = Array.Empty<Transform>();
+        [Tooltip("Сцена, в которой спавнить игрока. Оставь пустым, чтобы спавнить в сцене объекта со спавнером.")]
+        [SerializeField]
+        private string _spawnSceneName = "Main";
 
-        [SerializeField] private List<PlayerSpawnableModelKeyValuePair> playerPrefabs = new();
-        private readonly Dictionary<string, NetworkObject> _playerSpawnables = new(StringComparer.Ordinal);
+        private int _currentSpawnPoint;
+        private IProvideSpawnPoints _spawnPointProvider;
+        private IProvidePrefabInstantiated _prefabInstantiatedProvider;
 
-        private NetworkManager _networkManager;
-        private int _nextSpawn;
+        private readonly Dictionary<string, NetworkIdentity> _playerSpawnables = new(StringComparer.Ordinal);
+        private readonly HashSet<PlayerID> _dontSpawn = new();
+        private readonly Dictionary<PlayerID, string> _playerTypes = new();
+        private readonly HashSet<PlayerID> _sceneLoadedPlayers = new();
+        private readonly HashSet<PlayerID> _spawned = new(); // защита от дубля
 
-        private readonly List<NetworkConnection> _dontSpawn = new(8);
-        private readonly Dictionary<NetworkConnection, string> _playerTypes = new();
+        public static readonly Dictionary<PlayerID, MeSchema> SpawnedPlayerData = new();
+        public static readonly Dictionary<string, PlayerID> NameConnectionsData = new();
 
-        public static readonly Dictionary<NetworkConnection, MeSchema> SpawnedPlayerData_Server = new();
-        public static readonly Dictionary<string, NetworkConnection> NameConnectionsData_Server = new();
+        // ===== Client state =====
+        private bool _clientConnected;
 
         private void Awake()
         {
-            // подготовим словарь модели → префаб (последний дубликат перезаписывает)
-            for (int i = 0; i < playerPrefabs.Count; i++)
+            CleanupSpawnPoints();
+
+            foreach (var kvp in playerPrefabs)
             {
-                var kvp = playerPrefabs[i];
                 if (kvp != null && !string.IsNullOrEmpty(kvp.key) && kvp.val != null)
                     _playerSpawnables[kvp.key] = kvp.val;
             }
         }
 
-        private void OnEnable()
+        public override void Subscribe(NetworkManager manager, bool asServer)
         {
-            _networkManager = GetComponentInParent<NetworkManager>() ?? InstanceFinder.NetworkManager;
-            if (_networkManager == null)
+            if (asServer)
             {
-                NetworkManagerExtensions.LogWarning(
-                    $"PlayerSpawner on {gameObject.name} cannot work as NetworkManager wasn't found on this object or within parent objects.");
-                return;
+                // Сервер получает выбор модели (и именно это будет триггером на спавн).
+                manager.Subscribe<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived_Server, true);
+                manager.Subscribe<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived_Server, true);
+
+                manager.onPlayerLeft += OnPlayerLeft_Server;
             }
-            // серверная подписка: принимаем тип игрока + спавн по загрузке стартовых сцен
-            if (InstanceFinder.ServerManager != null)
-            {
-                InstanceFinder.ServerManager.RegisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived,
-                    true);
-                InstanceFinder.ClientManager.RegisterBroadcast<DisconnectBroadcast>(
-                    OnClientDisconnectBroadcastReceived);
-
-                _networkManager.SceneManager.OnClientLoadedStartScenes += OnClientLoadedStartScenes_Server;
-                _networkManager.ServerManager.OnServerConnectionState += OnServerConnectionState;
-                _networkManager.ServerManager.OnRemoteConnectionState += OnRemoteConnectionState;
-            }
-
-            // клиентская подписка: отправим свой тип после установления соединения
-            if (InstanceFinder.ClientManager != null)
-                InstanceFinder.ClientManager.OnClientConnectionState += OnClientConnectionState;
-        }
-
-        private void OnDisable()
-        {
-            if (_networkManager == null)
-                return;
-
-            if (InstanceFinder.ServerManager != null)
-            {
-                InstanceFinder.ServerManager.UnregisterBroadcast<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived);
-                InstanceFinder.ClientManager.UnregisterBroadcast<DisconnectBroadcast>(
-                    OnClientDisconnectBroadcastReceived);
-
-                _networkManager.SceneManager.OnClientLoadedStartScenes -= OnClientLoadedStartScenes_Server;
-                _networkManager.ServerManager.OnServerConnectionState -= OnServerConnectionState;
-                _networkManager.ServerManager.OnRemoteConnectionState -= OnRemoteConnectionState;
-            }
-
-            if (InstanceFinder.ClientManager != null)
-                InstanceFinder.ClientManager.OnClientConnectionState -= OnClientConnectionState;
-        }
-
-        // === сервер: получили от клиента тип модели ===
-        private void OnPlayerTypeBroadcastReceived(NetworkConnection conn, PlayerTypeBroadcast msg, Channel _)
-        {
-            if (conn == null)
-                return;
-
-            _playerTypes[conn] = msg.PlayerType;
-            if (!NameConnectionsData_Server.TryAdd(msg.PlayerData.username, conn))
-                NameConnectionsData_Server[msg.PlayerData.username] = conn;
-            if (!SpawnedPlayerData_Server.TryAdd(conn, msg.PlayerData))
-                SpawnedPlayerData_Server[conn] = msg.PlayerData;
-
-            Debug.Log($"[Server] Получен тип модели '{msg.PlayerType}' от клиента {conn.ClientId}");
-        }
-
-        private void OnClientDisconnectBroadcastReceived(DisconnectBroadcast data, Channel _)
-        {
-            DisconnectLocalPlayer(data);
-        }
-
-        private async void DisconnectLocalPlayer(DisconnectBroadcast data)
-        {
-            await Task.Delay(3_500);
-            PlayFlowLobbyManagerV2.Instance.Disconnect();        }
-        
-        // === сервер: общий стейт сервера (очистим список запретов при стопе) ===
-        private void OnServerConnectionState(ServerConnectionStateArgs args)
-        {
-            if (args.ConnectionState == LocalConnectionState.Stopped)
-            {
-                _dontSpawn.Clear();
-                _playerTypes.Clear();
-                SpawnedPlayerData_Server.Clear();
-                NameConnectionsData_Server.Clear();
-            }
-        }
-
-        // === сервер: конкретное соединение сменило стейт (почистим кэши) ===
-        private void OnRemoteConnectionState(NetworkConnection conn, RemoteConnectionStateArgs args)
-        {
-            if (args.ConnectionState == RemoteConnectionState.Stopped && conn != null)
-            {
-                _playerTypes.Remove(conn);
-
-                var disconnectedUsername = SpawnedPlayerData_Server.TryGetValue(conn, out var usedData)
-                    ? usedData.username
-                    : null;
-                if (disconnectedUsername != null)
-                    NameConnectionsData_Server.Remove(disconnectedUsername);
-
-                SpawnedPlayerData_Server.Remove(conn);
-                for (int i = _dontSpawn.Count - 1; i >= 0; i--)
-                    if (_dontSpawn[i] == conn)
-                        _dontSpawn.RemoveAt(i);
-            }
-        }
-
-        // === сервер: клиент загрузил стартовые сцены — пора спавнить ===
-        private void OnClientLoadedStartScenes_Server(NetworkConnection conn, bool asServer)
-        {
-            if (!asServer || conn == null)
-                return;
-
-            // чёрный список на этот тик
-            for (int i = 0; i < _dontSpawn.Count; i++)
-                if (_dontSpawn[i] == conn)
-                    return;
-
-            // тип модели (по умолчанию "Male")
-            _playerTypes.TryGetValue(conn, out string playerModelType);
-            if (string.IsNullOrEmpty(playerModelType))
-                playerModelType = "Male";
-
-            _playerSpawnables.TryGetValue(playerModelType, out NetworkObject prefab);
-            if (prefab == null)
-            {
-                Debug.LogWarning($"[{nameof(PlayerSpawner)}] Нет префаба для типа модели '{playerModelType}'");
-                return;
-            }
-
-            // позиция/поворот
-            SetSpawn(prefab.transform, out Vector3 position, out Quaternion rotation);
-
-            // спавним из пула
-            NetworkObject nob = _networkManager.GetPooledInstantiated(prefab, position, rotation, true);
-            _networkManager.ServerManager.Spawn(nob, conn);
-
-            // если нет глобальных сцен — добавить во «вмолчальную» сцену
-            if (_addToDefaultScene)
-                _networkManager.SceneManager.AddOwnerToDefaultScene(nob);
-
-            //Invoke(nameof(ClearDoubleConnections), 2f);
-            ClearDoubleConnections();
-
-            OnSpawned?.Invoke(nob);
-        }
-
-        private void ClearDoubleConnections()
-        {
-            foreach (var networkConnection in InstanceFinder.ServerManager.Clients.Values.Where(networkConnection =>
-                         !NameConnectionsData_Server.ContainsValue(networkConnection)))
-            {
-                // networkConnection.Disconnect(true);
-                var player = networkConnection.Objects.FirstOrDefault(o => o.GetComponent<PlayerMovementController>());
-                if(player != null)
-                    _networkManager.ServerManager.Despawn(player);
-                InstanceFinder.ServerManager.Broadcast(networkConnection,
-                    new DisconnectBroadcast { Reason = "You connect twice" });
-            }
-        }
-
-        /// <summary>Определяет позицию/поворот спавна.</summary>
-        private void SetSpawn(Transform prefab, out Vector3 pos, out Quaternion rot)
-        {
-            if (Spawns == null || Spawns.Length == 0)
-            {
-                SetSpawnUsingPrefab(prefab, out pos, out rot);
-                return;
-            }
-
-            // берём точку по кругу
-            Transform point = Spawns[_nextSpawn];
-            if (point == null)
-                SetSpawnUsingPrefab(prefab, out pos, out rot);
             else
             {
-                pos = point.position;
-                rot = point.rotation;
+                manager.onClientConnectionState += OnClientConnectionState_Client;
+                manager.Subscribe<UpdatePlayerListBroadcast>(OnPlayerUpdated);
+            }
+        }
+
+        public override void Unsubscribe(NetworkManager manager, bool asServer)
+        {
+            if (asServer)
+            {
+                manager.Unsubscribe<PlayerTypeBroadcast>(OnPlayerTypeBroadcastReceived_Server, true);
+                manager.Unsubscribe<DisconnectBroadcast>(OnClientDisconnectBroadcastReceived_Server, true);
+
+                manager.onPlayerLeft -= OnPlayerLeft_Server;
+            }
+            else
+            {
+                manager.onClientConnectionState -= OnClientConnectionState_Client;
+                manager.Unsubscribe<UpdatePlayerListBroadcast>(OnPlayerUpdated);
+            }
+        }
+
+        // =========================
+        // CLIENT API
+        // =========================
+
+        /// <summary>
+        /// Вызывай этот метод, когда у тебя завершилась загрузка/инициализация/авторизация.
+        /// Именно здесь клиент отправляет на сервер данные для спавна.
+        /// </summary>
+        public void SpawnPlayer()
+        {
+            if (!InstanceHandler.NetworkManager.isClient)
+            {
+                Debug.LogWarning($"[{nameof(PlayerSpawner)}] SpawnPlayer() called not on client.");
+                return;
             }
 
-            _nextSpawn++;
-            if (_nextSpawn >= Spawns.Length)
-                _nextSpawn = 0;
-        }
-
-        private static void SetSpawnUsingPrefab(Transform prefab, out Vector3 pos, out Quaternion rot)
-        {
-            // pos = prefab != null ? prefab.position : Vector3.zero;
-            // rot = prefab != null ? prefab.rotation : Quaternion.identity;
-
-            var point = GameObject.FindGameObjectWithTag("Respawn").transform;
-            pos = point.position;
-            rot = point.rotation;
-        }
-
-        /// <summary>Запретить спавн для соединения на ближайшее событие OnClientLoadedStartScenes.</summary>
-        public void DontSpawnOnConnect(NetworkConnection conn)
-        {
-            if (conn == null) return;
-            for (int i = 0; i < _dontSpawn.Count; i++)
-                if (_dontSpawn[i] == conn)
-                    return;
-            _dontSpawn.Add(conn);
-        }
-
-        // === клиент: после старта соединения отправим выбранную модель ===
-        private void OnClientConnectionState(ClientConnectionStateArgs args)
-        {
-            if (args.ConnectionState != LocalConnectionState.Started)
+            if (!_clientConnected)
+            {
+                Debug.LogWarning($"[{nameof(PlayerSpawner)}] SpawnPlayer() called before ConnectionState.Connected.");
                 return;
+            }
 
-            string playerModelType = PlayerPrefs.GetString("PlayerModelType", "Male");
+            string type = PlayerPrefs.GetString("PlayerModelType", "Male");
+
             var msg = new PlayerTypeBroadcast
             {
-                PlayerType = playerModelType, 
-                PlayerData = ClientDataStorage.UserData
+                PlayerType = type,
+                PlayerData = ClientDataStorage.UserData,
+                IsSpawnOnSavePos = PlayerPrefs.HasKey("SavedSpawnPosition"),
+                SavePos = transform.position = new Vector3(
+                    PlayerPrefs.GetFloat("SavedSpawnPositionX"),
+                    PlayerPrefs.GetFloat("SavedSpawnPositionY"),
+                    PlayerPrefs.GetFloat("SavedSpawnPositionZ")
+                )
             };
 
-            if (InstanceFinder.ClientManager != null)
+            if (msg.IsSpawnOnSavePos)
+                Debug.Log($"[{nameof(PlayerSpawner)}] SpawnPlayer on Save Position: {msg.SavePos}");
+
+            NetworkManager.main.SendToServer(new UpdatePlayerListBroadcast
             {
-                InstanceFinder.ClientManager.Broadcast(msg);
+                PlayerCount = SpawnedPlayerData.Count,
+                Ids = SpawnedPlayerData.Keys.ToArray(),
+                Datas = SpawnedPlayerData.Values.ToArray()
+            });
+            // Клиент -> Сервер (broadcast-сообщение без привязки к объекту)
+            NetworkManager.main.SendToServer(msg);
+        }
+
+        private void OnClientConnectionState_Client(ConnectionState state)
+        {
+            _clientConnected = (state == ConnectionState.Connected);
+        }
+
+        // =========================
+        // SERVER SIDE
+        // =========================
+
+        private void OnPlayerTypeBroadcastReceived_Server(PlayerID sender, PlayerTypeBroadcast msg, bool asServer)
+        {
+            _playerTypes[sender] = msg.PlayerType;
+
+            if (!NameConnectionsData.TryAdd(msg.PlayerData.username, sender))
+                NameConnectionsData[msg.PlayerData.username] = sender;
+
+            if (!SpawnedPlayerData.TryAdd(sender, msg.PlayerData))
+                SpawnedPlayerData[sender] = msg.PlayerData;
+
+            OnPlayersDataUpdated();
+            
+            if(msg.PlayerData.IsAdminRole)
+                InstanceHandler.NetworkManager.Send(sender, new UpdatePlayerListBroadcast
+                {
+                    PlayerCount = SpawnedPlayerData.Count,
+                    Ids = SpawnedPlayerData.Keys.ToArray(),
+                    Datas = SpawnedPlayerData.Values.ToArray()
+                });
+
+            if (!TryGetSpawnSceneID(out var sceneId))
+                return;
+
+            TrySpawnPlayer_Server(sender, sceneId, msg);
+        }
+
+        private void TrySpawnPlayer_Server(PlayerID player, SceneID scene, PlayerTypeBroadcast msg)
+        {
+            if (!InstanceHandler.NetworkManager.isServer) return;
+            if (_dontSpawn.Contains(player)) return;
+            if (_spawned.Contains(player)) return;
+
+            if (!_playerTypes.ContainsKey(player)) return;
+
+            var main = NetworkManager.main;
+
+            bool destroyOnDisconnect = main.networkRules.ShouldDespawnOnOwnerDisconnect();
+            if (!_ignoreNetworkRules && !destroyOnDisconnect &&
+                main.TryGetModule(out GlobalOwnershipModule ownership, true) &&
+                ownership.PlayerOwnsSomething(player))
+            {
+                return;
             }
 
-            Debug.Log($"[Client] Отправил Broadcast с моделью игрока '{playerModelType}'");
+            string type = _playerTypes[player];
+            if (!_playerSpawnables.TryGetValue(type, out var prefabToSpawn))
+            {
+                if (!_playerSpawnables.TryGetValue("Male", out prefabToSpawn))
+                {
+                    Debug.LogWarning($"[{nameof(PlayerSpawner)}] No prefab for type '{type}', and no 'Male' fallback.");
+                    return;
+                }
+            }
+
+            GetSpawnTransform(out var pos, out var rot, player, scene, prefabToSpawn.transform);
+
+            var unityScene = ResolveSpawnScene();
+            var newPlayerGO = UnityProxy.Instantiate(prefabToSpawn.gameObject, msg.IsSpawnOnSavePos ? msg.SavePos : pos,
+                rot, unityScene);
+
+            if (newPlayerGO.TryGetComponent(out NetworkIdentity id))
+            {
+                id.GiveOwnership(player, false, true);
+                _spawned.Add(player);
+                OnSpawned?.Invoke(id);
+            }
+
+            _prefabInstantiatedProvider?.OnPrefabInstantiated(newPlayerGO, player, scene);
+        }
+
+        private void OnPlayerLeft_Server(PlayerID player, bool asServer)
+        {
+            _playerTypes.Remove(player);
+            _sceneLoadedPlayers.Remove(player);
+            _spawned.Remove(player);
+            SpawnedPlayerData.Remove(player);
+
+            var keysToRemove = NameConnectionsData
+                .Where(kvp => kvp.Value == player)
+                .Select(kvp => kvp.Key)
+                .ToList();
+
+            foreach (var key in keysToRemove)
+                NameConnectionsData.Remove(key);
+
+            _dontSpawn.Remove(player);
+
+            OnPlayersDataUpdated();
+        }
+
+        private void OnClientDisconnectBroadcastReceived_Server(PlayerID player, DisconnectBroadcast data,
+            bool asServer)
+        {
+        }
+
+        private void GetSpawnTransform(out Vector3 pos, out Quaternion rot, PlayerID player, SceneID scene,
+            Transform prefab)
+        {
+            CleanupSpawnPoints();
+
+            if (_spawnPointProvider != null)
+            {
+                var p = _spawnPointProvider.NextSpawnPoint(player, scene);
+                pos = p.position;
+                rot = p.rotation;
+                return;
+            }
+
+            if (spawnPoints.Count > 0)
+            {
+                var t = spawnPoints[_currentSpawnPoint];
+                _currentSpawnPoint = (_currentSpawnPoint + 1) % spawnPoints.Count;
+                pos = t.position;
+                rot = t.rotation;
+                return;
+            }
+
+            pos = prefab != null ? prefab.position : transform.position;
+            rot = prefab != null ? prefab.rotation : transform.rotation;
+        }
+
+        private bool TryGetSpawnSceneID(out SceneID sceneId)
+        {
+            sceneId = default;
+
+            if (!NetworkManager.main || !NetworkManager.main.TryGetModule(out ScenesModule scenes, true))
+                return false;
+
+            var unityScene = ResolveSpawnScene();
+            return scenes.TryGetSceneID(unityScene, out sceneId);
+        }
+
+        private UnityEngine.SceneManagement.Scene ResolveSpawnScene()
+        {
+            if (!string.IsNullOrEmpty(_spawnSceneName))
+            {
+                var s = SceneManager.GetSceneByName(_spawnSceneName);
+                if (s.IsValid() && s.isLoaded)
+                    return s;
+            }
+
+            return gameObject.scene;
+        }
+
+        private void CleanupSpawnPoints()
+        {
+            bool hadNull = false;
+            for (int i = 0; i < spawnPoints.Count; i++)
+            {
+                if (!spawnPoints[i])
+                {
+                    hadNull = true;
+                    spawnPoints.RemoveAt(i--);
+                }
+            }
+
+            if (hadNull) PurrLogger.LogWarning("Invalid spawn points cleanup.", this);
+        }
+
+        [ServerOnly]
+        private void OnPlayersDataUpdated()
+        {
+            // Update PlayFlow custom Data
+            var playersList = SpawnedPlayerData.Values.Select(p => p.username).ToArray();
+            var hosts = SpawnedPlayerData.Values.Where(p => p.IsHost).Select(p => p.username).ToArray();
+            var admins = SpawnedPlayerData.Values.Where(p => p.IsAdmin).Select(p => p.username).ToArray();
+            var moderators = SpawnedPlayerData.Values.Where(p => p.IsModerator).Select(p => p.username).ToArray();
+
+            PlayFlowManager.UpdateSeverData(("players", playersList), ("hosts", hosts),
+                ("admins", admins), ("moderators", moderators));
+
+            var adminsKeys = SpawnedPlayerData
+                .Where(data => data.Value.IsAdminRole)
+                .Select(data => data.Key).ToList();
+            
+            InstanceHandler.NetworkManager.Send(adminsKeys, new UpdatePlayerListBroadcast
+            {
+                PlayerCount = SpawnedPlayerData.Count,
+                Ids = SpawnedPlayerData.Keys.ToArray(),
+                Datas = SpawnedPlayerData.Values.ToArray()
+            });
+        }
+
+        private void OnPlayerUpdated(PlayerID sender, UpdatePlayerListBroadcast msg, bool asServer)
+        {
+            SpawnedPlayerData.Clear();
+            NameConnectionsData.Clear();
+
+            for (int i = 0; i < msg.PlayerCount; i++)
+            {
+                SpawnedPlayerData.Add(msg.Ids[i], msg.Datas[i]);
+                NameConnectionsData.Add(msg.Datas[i].username, msg.Ids[i]);
+            }
+            var adminsKeys = SpawnedPlayerData
+                .Where(data => data.Value.IsAdminRole)
+                .Select(data => data.Key).ToList();
+            Debug.Log(adminsKeys.Count.ToString());
         }
     }
 }

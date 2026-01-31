@@ -1,12 +1,8 @@
-using Code.InteractionSystem;
+using Code.Network.InteractionSystem;
 using Code.Utility;
-using FishNet.Component.Observing;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
-using FishNet.Transporting;
+using PurrNet;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Code.Network.Stream
 {
@@ -14,46 +10,34 @@ namespace Code.Network.Stream
     {
         [SerializeField] private int currentSlotId = -1;
         [Space] [SerializeField] private GameObject elementsParent;
-        [SerializeField] private RawImage screenRawImage;
+        [SerializeField] private MeshRenderer screenRawImage;
+        [SerializeField] private int screenRawIndex;
+        [SerializeField] private Texture screenRawTextureEmpty;
         [SerializeField] private TMP_Text slotIdText;
         [SerializeField] private TMP_Text streamerNameText;
 
-        private SlotMachineInteractable CurrentStreamSlot => GetCurrentStream(StreamSlotId.Value);
+        private SlotMachineInteractable CurrentStreamSlot => GetCurrentStream(StreamSlotId.value);
         private SlotMachineInteractable _prevStreamSlot;
 
-        public readonly SyncVar<int> StreamSlotId = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
+        public readonly SyncVar<int> StreamSlotId = new SyncVar<int>(1);
 
-        public readonly SyncVar<string> StreamerUsername = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ServerOnly,
-            ReadPermission = ReadPermission.Observers
-        });
+        public readonly SyncVar<string> StreamerUsername = new SyncVar<string>();
 
-        protected override void OnValidate()
+        protected void OnValidate()
         {
-            base.OnValidate();
-            elementsParent ??= screenRawImage.transform.parent.gameObject;
-        }
-
-        private void Awake()
-        {
-            StreamSlotId.SetInitialValues(-1);
+            if (screenRawImage != null) elementsParent ??= screenRawImage.transform.parent.gameObject;
         }
 
         private void OnEnable()
         {
-            StreamSlotId.OnChange += OnStreamSlotIdChange;
-            StreamerUsername.OnChange += StreamerUsernameOnOnChange;
+            StreamSlotId.onChanged += OnStreamSlotIdChange;
+            StreamerUsername.onChanged += StreamerUsernameOnOnChange;
         }
 
         private void OnDisable()
         {
-            StreamSlotId.OnChange -= OnStreamSlotIdChange;
-            StreamerUsername.OnChange -= StreamerUsernameOnOnChange;
+            StreamSlotId.onChanged -= OnStreamSlotIdChange;
+            StreamerUsername.onChanged -= StreamerUsernameOnOnChange;
             
             if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
@@ -66,7 +50,7 @@ namespace Code.Network.Stream
 
         public void RequestCancel() => SetStream_ServerRpc(-1, string.Empty);
 
-        [ServerRpc(RequireOwnership = false)]
+        [ServerRpc(requireOwnership: false)]
         private void SetStream_ServerRpc(int slotId, string username) =>
             SetStream(slotId, username); //TODO: request mechanic, if its need
 
@@ -78,8 +62,8 @@ namespace Code.Network.Stream
                 SetConditionsEnable(true);
             }
             
-            StreamSlotId.Value = slotId;
-            StreamerUsername.Value = username;
+            StreamSlotId.value = slotId;
+            StreamerUsername.value = username;
             
             if (CurrentStreamSlot != null)
             {
@@ -88,22 +72,23 @@ namespace Code.Network.Stream
             }
         }
 
-        private void OnStreamSlotIdChange(int prev, int next, bool asServer)
+        private void OnStreamSlotIdChange(int next)
         {
-            if(asServer)
-                return;
-            
             if (_prevStreamSlot != null && _prevStreamSlot.NetworkImageStream != null)
                 _prevStreamSlot.NetworkImageStream.OnApplyTexture -= ApplyTexture;
-            
-            elementsParent.gameObject.SetActive(CurrentStreamSlot != null);
-           
+
+            if (elementsParent != null) elementsParent.gameObject.SetActive(CurrentStreamSlot != null);
+
             _prevStreamSlot = CurrentStreamSlot;
             
             if (CurrentStreamSlot == null)
             {
-                screenRawImage.texture = null;
-                slotIdText.text = string.Empty;
+                if (screenRawImage != null)
+                {
+                    screenRawImage.materials[screenRawIndex].mainTexture = screenRawTextureEmpty;
+                    screenRawImage.materials[screenRawIndex].mainTextureScale = new Vector2(1, 1);
+                }
+                if (slotIdText != null) slotIdText.text = string.Empty;
                 return;
             }
 
@@ -114,15 +99,12 @@ namespace Code.Network.Stream
                     ApplyTexture(CurrentStreamSlot.NetworkImageStream.RecvTexture);
             }
 
-            slotIdText.text = $"Slot №{next}";
+            if (slotIdText != null) slotIdText.text = $"Slot №{next}";
         }
 
-        private void StreamerUsernameOnOnChange(string prev, string next, bool asServer)
+        private void StreamerUsernameOnOnChange(string next)
         {
-            if(asServer)
-                return;
-            
-            streamerNameText.text = $"{next}";
+            if (streamerNameText != null) streamerNameText.text = $"{next}";
         }
         
         private void OnTargetEndInteraction(bool success)
@@ -140,15 +122,17 @@ namespace Code.Network.Stream
             if (CurrentStreamSlot == null)
                 return;
 
-            var observerCondition =
-                CurrentStreamSlot.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
-            observerCondition.SetIsEnabled(enable);
+            //var observerCondition = CurrentStreamSlot.NetworkObject.NetworkObserver.GetObserverCondition<DistanceCondition>();
+            //observerCondition.SetIsEnabled(enable);
         }
         
         private void ApplyTexture(Texture texture)
         {
-            screenRawImage.texture = texture;
-            ImageUtility.AdjustAspect(screenRawImage);
+            if (screenRawImage != null)
+            {
+                screenRawImage.materials[screenRawIndex].mainTexture = texture;
+                screenRawImage.materials[screenRawIndex].mainTextureScale = new Vector2(1, -1);
+            }
         }
 
         private SlotMachineInteractable GetCurrentStream(int id) => SlotMachineInteractable.FindById(id);

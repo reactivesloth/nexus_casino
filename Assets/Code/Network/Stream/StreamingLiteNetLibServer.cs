@@ -2,14 +2,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using Code.InteractionSystem;
+using Code.Network.PlayFlow;
 using Code.Network.Stream.Data;
 using Code.Network.Stream.Utility;
 using LiteNetLib;
-using FishNet;
-using FishNet.Transporting.Tugboat;
 using LiteNetLib.Utils;
 using PlayFlow;
+using PlayFlow.SDK.Servers;
+using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.Stream
@@ -33,31 +33,10 @@ namespace Code.Network.Stream
         private readonly Dictionary<NetPeer, int> _connectedPeersSlots = new();
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
-        public static string ServerAddress
-        {
-            get
-            {
-                var tugboat = InstanceFinder.TransportManager.Transport as Tugboat;
-                if (tugboat == null)
-                    return string.Empty;
-                var addr = tugboat.GetClientAddress();
-                return addr;
-            }
-        }
-
-        public static int ServerStreamPort
-        {
-            get
-            {
-                var internalPort = Instance.port;
-                var lobby = PlayFlowLobbyManagerV2.Instance.CurrentLobby;
-                if (lobby == null)
-                    return internalPort;
-                return !lobby.TryGetPortMapping(internalPort, out var portMapping)
-                    ? internalPort
-                    : portMapping.ExternalPort;
-            }
-        }
+        
+        private static PortMapping _serverPortMapping => PlayFlowLobby.CurrentServerData.network_ports[1];
+        public static string ServerAddress => _serverPortMapping.host;
+        public static int ServerStreamPort => _serverPortMapping.external_port;
 
         public static StreamingLiteNetLibServer Instance { get; private set; }
 

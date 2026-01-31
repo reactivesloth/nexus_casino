@@ -2,6 +2,7 @@
 // This code can only be used under the standard Unity Asset Store EULA,
 // a copy of which is available at https://unity.com/legal/as-terms.
 
+using System;
 using System.Collections.Generic;
 using Ricimi;
 using TMPro;
@@ -22,7 +23,8 @@ namespace Code.UI.Popup
 
         [Space] [Header("Buttons")] public List<ButtonInfo> Buttons;
         public List<InputInfo> Inputs;
-
+        public Action ManualyCloseAction;
+        
         public NexusModularPopup LastPopup => m_popup.GetComponent<NexusModularPopup>();
 
         public override void OpenPopup()
@@ -40,6 +42,7 @@ namespace Code.UI.Popup
 
         private void ResetValues()
         {
+            ManualyCloseAction = null;
             Title = string.Empty;
             Subtitle = string.Empty;
             Message = string.Empty;

@@ -1,5 +1,5 @@
 using Code.UI;
-using PlayFlow;
+using PurrNet;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -33,7 +33,7 @@ namespace Code.Tests
         {
             LoadingScreenUI.Instance.LoadScene(SceneManager.GetSceneByBuildIndex(buildIndex).name);
             if (isDisconnect)
-                PlayFlowLobbyManagerV2.Instance.Disconnect();
+                InstanceHandler.NetworkManager?.StopClient();
         }
     }
 }

@@ -1,8 +1,9 @@
-using FishNet.Broadcast;
+
+using PurrNet.Packing;
 
 namespace Code.Scene.SceneObjectControl
 {
-    public struct StateMessage: IBroadcast
+    public struct StateMessage : IPackedAuto
     {
         public string ObjectName;
         public string Action;

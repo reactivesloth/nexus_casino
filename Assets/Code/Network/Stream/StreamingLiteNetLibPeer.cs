@@ -5,8 +5,6 @@ using Code.Network.Stream.Data;
 using Code.Network.Stream.Utility;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using FishNet;
-using FishNet.Transporting;
 using UnityEngine;
 
 namespace Code.Network.Stream
@@ -49,10 +47,10 @@ namespace Code.Network.Stream
             
             if(_server is not { ConnectionState: ConnectionState.Connected }) return;
             
-            if(_timeFromLastFrameReceived > frameReceiveTimeout)
+            /*if(_timeFromLastFrameReceived > frameReceiveTimeout)
                 Reconnect();
             else
-                _timeFromLastFrameReceived += Time.deltaTime;
+                _timeFromLastFrameReceived += Time.deltaTime;*/
         }
 
         private void OnDisable()
@@ -213,7 +211,7 @@ namespace Code.Network.Stream
         {
             Connect(_slotId);
 
-            if (debugLogs) Debug.Log($"[StreamingLiteNetLibPeer] Peer disconnected. Reason: {disconnectInfo.Reason}");
+            if (debugLogs) Debug.Log($"[StreamingLiteNetLibPeer] Peer disconnected.");// Reason: {disconnectInfo.Reason}");
         }
 
         public void OnNetworkError(IPEndPoint endPoint, SocketError socketError)

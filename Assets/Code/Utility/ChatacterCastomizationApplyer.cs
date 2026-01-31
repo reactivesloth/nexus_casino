@@ -1,12 +1,9 @@
-using System;
 using System.Text;
 using CC;
 using Code.API;
 using Code.UI;
-using FishNet.Managing.Scened;
 using Proyecto26;
 using UnityEngine;
-using SceneManager = UnityEngine.SceneManagement.SceneManager;
 
 namespace Code.Utility
 {
@@ -72,7 +69,7 @@ namespace Code.Utility
                 PlayerPrefs.SetInt("SavedSpawnPosition", 1);
                 PlayerPrefs.Save();
                 LoadingScreenUI.Instance.Show("loading.apply_settings", string.Empty, 100);
-            }).Finally(() => LoadingScreenUI.Instance.LoadScene("Main"));
+            }).Finally(() => LoadingScreenUI.Instance.LoadScene("Matchmaker"));
         }
     }
 }

@@ -7,7 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json; // Added for Newtonsoft.Json
+using Newtonsoft.Json;
+
+// Added for Newtonsoft.Json
 
 namespace PlayFlow.SDK.Servers
 {
@@ -212,6 +214,19 @@ namespace PlayFlow.SDK.Servers
         public string detail; // Some APIs use 'detail' directly for the message
     }
 
+    public class BuildsList
+    {
+        public List<BuildData> builds;
+        public int total_builds;
+    }
+
+    public class BuildData
+    {
+        public string build_id;
+        public string name;
+        public int version;
+        public string status;
+    }
 
     // ------------- API Client -------------
 
@@ -428,6 +443,29 @@ namespace PlayFlow.SDK.Servers
             // OpenAPI spec for this PUT endpoint does not define a requestBody.
             return await SendRequestAsync<InstanceData>(endpoint, UnityWebRequest.kHttpVerbPUT, payload: null, additionalHeaders: headers);
         }
+
+        /// <summary>
+        /// Updates server status and IP. Typically called by a game server instance itself upon successful launch.
+        /// </summary>
+        /// <param name="instanceId">Unique identifier (UUID) of the server instance reporting its status.</param>
+        /// <param name="newCustomData"></param>
+        /// <returns>An InstanceData object with the updated server details.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if instanceId or serverStatus is null or empty.</exception>
+        public async Task<InstanceData> UpdateServerAsync(string instanceId, CustomDataPostWrapper newCustomData)
+        {
+            if (string.IsNullOrEmpty(instanceId)) throw new ArgumentNullException(nameof(instanceId));
+
+            string endpoint = $"/v2/servers/{instanceId}";
+            // OpenAPI spec for this PUT endpoint does not define a requestBody.
+            return await SendRequestAsync<InstanceData>(endpoint, UnityWebRequest.kHttpVerbPOST, newCustomData);
+        }
+
+        public async Task<BuildsList> GetBuildsAsync(string findName = null)
+        {
+            string endpoint = $"/v2/builds/builds";
+            endpoint = string.IsNullOrEmpty(findName) ? endpoint : $"{endpoint}?name={findName}";
+            return await SendRequestAsync<BuildsList>(endpoint, UnityWebRequest.kHttpVerbGET);
+        }
     }
 
     /// <summary>
@@ -470,5 +508,11 @@ namespace PlayFlow.SDK.Servers
             };
             return tcs.Task;
         }
+    }
+    
+    
+    public class CustomDataPostWrapper
+    {
+        public Dictionary<string, object> custom_data { get; set; }
     }
 } 

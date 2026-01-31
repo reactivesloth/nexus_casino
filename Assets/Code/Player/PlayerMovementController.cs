@@ -1,16 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using CC;
 using Unity.Cinemachine;
 using Code.API;
-using Code.UI;
+using Code.Network.InteractionSystem;
 using Code.Utility;
-using FishNet.Connection;
-using FishNet.Object;
-using FishNet.Object.Synchronizing;
 using Proyecto26;
+using PurrNet;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -19,8 +16,8 @@ namespace Code.Player
     [RequireComponent(typeof(CharacterController))]
     public class PlayerMovementController : NetworkBehaviour
     {
-        public static PlayerMovementController Own { get; private set; }
-
+        public static PlayerMovementController LocalInstance;
+        
         [Header("Settings")] [SerializeField] private float moveSpeed = 2.0f;
         [SerializeField] private float sprintSpeed = 5.335f;
         [SerializeField] private float rotationSmoothTime = 0.12f;
@@ -143,6 +140,7 @@ namespace Code.Player
         private Camera _mainCamera;
         private PlayerInput input;
         private Animator animator;
+        private NetworkAnimator networkAnimator;
         private CharacterController controller;
         private CinemachineVirtualCamera virtualCamera;
 
@@ -152,17 +150,8 @@ namespace Code.Player
         private float _animSpeed;
         private float _animTurn;
 
-        private readonly SyncVar<Vector3> networkLookAtPos = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ClientUnsynchronized,
-            ReadPermission = ReadPermission.Observers
-        });
-
-        private readonly SyncVar<float> networkIkWeight = new(new SyncTypeSettings
-        {
-            WritePermission = WritePermission.ClientUnsynchronized,
-            ReadPermission = ReadPermission.Observers
-        });
+        [SerializeField] private SyncVar<Vector3> networkLookAtPos = new SyncVar<Vector3>(ownerAuth:true);
+        [SerializeField] private SyncVar<float> networkIkWeight = new SyncVar<float>(ownerAuth:true);
 
         private int animIDSpeed;
         private int animIDGrounded;
@@ -201,12 +190,12 @@ namespace Code.Player
         private void EnsureInit()
         {
             if (_initedPlayer) return;
-            _initedPlayer = true;
-
+            
             controller = GetComponent<CharacterController>();
             animator = GetComponent<Animator>();
+            networkAnimator = GetComponent<NetworkAnimator>();
             AssignAnimationIDs();
-
+            
             _mainCamera = Camera.main;
             input = PlayerInput.Instance;
 
@@ -216,42 +205,35 @@ namespace Code.Player
             UpdateHeadTargetPos();
 
             virtualCamera = FindObjectOfType<CinemachineVirtualCamera>();
+            
+            NetworkManager.main.onPlayerJoined += OnPlayerJoin;
+            
+            _initedPlayer = true;
         }
-
-        public override void OnStartClient()
+        
+        public IEnumerator Start()
         {
-            base.OnStartClient();
-            if (IsOwner)
-            {
-                Own = this;
-                jumpTimeoutDelta = jumpTimeout;
-                fallTimeoutDelta = fallTimeout;
-             
-                if (_initedPlayer)
-                    ResetOnReconnect();
-                else
-                    EnsureInit();
-    
-                CursorManager.Instance.HideCursor();
-            }
-        }
-
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
-        {
-            base.OnOwnershipClient(prevOwner);
-            if (!IsOwner) return;
-            if (spawnOnSawedPosition)
-            {
-                LoadingScreenUI.Instance?.Hide();
-                LoadSpawnPosition();
-            }
-
-            EnsureInit();
-            Own = this;
+            yield return new WaitUntil(() => Network.Player.Player.GetLocalPlayer() != null);
+            LocalInstance = Network.Player.Player.GetLocalPlayer().GetComponent<PlayerMovementController>();
+            
             jumpTimeoutDelta = jumpTimeout;
             fallTimeoutDelta = fallTimeout;
 
+            EnsureInit();
+
+            yield return new WaitUntil(()=> _initedPlayer);
+            ResetOnReconnect();
+
+            CursorManager.Instance.HideCursor();
+            
+            transform.position += Vector3.up;
+            
             Invoke(nameof(PlayerGetHeadThings), 2);
+        }
+
+        private void OnPlayerJoin(PlayerID player, bool isReconnect, bool asServer)
+        { 
+            networkAnimator.Reconcile(player);
         }
 
         private void PlayerGetHeadThings()
@@ -277,35 +259,9 @@ namespace Code.Player
             }
         }
 
-        private void LoadSpawnPosition()
-        {
-            if (!IsOwner) return;
-
-            var spawnPos = Vector3.zero;
-            
-            if (PlayerPrefs.HasKey("SavedSpawnPosition"))
-            {
-                spawnPos = transform.position = new Vector3(
-                    PlayerPrefs.GetFloat("SavedSpawnPositionX"),
-                    PlayerPrefs.GetFloat("SavedSpawnPositionY"),
-                    PlayerPrefs.GetFloat("SavedSpawnPositionZ")
-                );
-                transform.rotation = Quaternion.Euler(
-                    PlayerPrefs.GetFloat("SavedSpawnRotationX"),
-                    PlayerPrefs.GetFloat("SavedSpawnRotationY"),
-                    PlayerPrefs.GetFloat("SavedSpawnRotationZ")
-                );
-                PlayerPrefs.DeleteKey("SavedSpawnPosition");
-            }
-            
-            Debug.Log($"Spawn pos is {spawnPos}");
-
-            spawned = true;
-        }
-
         private void UpdateSpawnPositionTimer()
         {
-            if (!IsOwner)
+            if (!isOwner)
                 return;
             
             if (_spawnPositionTimer > 0f)
@@ -321,7 +277,8 @@ namespace Code.Player
 
         private void SaveSpawnPosition()
         {
-            if (!IsOwner || !CanMove) return;
+            if (!controller.enabled) return;
+            if (!isOwner || !CanMove) return;
             var spawnPos = transform.position;
             var spawnRot = transform.rotation.eulerAngles;
 
@@ -352,7 +309,7 @@ namespace Code.Player
 
         private void Update()
         {
-            if (transform.position.y is < -10 or > 10 && spawned)
+            if (transform.position.y is < -10 or > 10)
             {
                 Debug.Log($"[PlayerMovementController] Spawn position out of range");
                 var point = GameObject.FindGameObjectWithTag("Respawn").transform;
@@ -363,7 +320,7 @@ namespace Code.Player
                 return;
             }
             
-            if (!IsOwner) return;
+            if (!isOwner) return;
             if (!_initedPlayer) EnsureInit();
             
             if (_mainCamera == null) _mainCamera = Camera.main;
@@ -400,13 +357,13 @@ namespace Code.Player
             JumpAndGravity();
             Move();
 
-            if (spawnOnSawedPosition && spawned)
+            if (spawnOnSawedPosition)
                 UpdateSpawnPositionTimer();
         }
 
         private void LateUpdate()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             if (!_initedPlayer) EnsureInit();
 
             if (LookCameraLimitRotation)
@@ -577,7 +534,7 @@ namespace Code.Player
 
         private void Move()
         {
-            if (controller == null) return;
+            if (!controller.enabled) return;
 
             var mv = input != null ? input.Move : Vector2.zero;
             var mvUsed = _cursorUsable ? mv : Vector2.zero;
@@ -714,13 +671,11 @@ namespace Code.Player
         [SerializeField] private float ikSendRate = 1f / 30f;
         private Vector3 _lastSentLookPos;
         private float _lastSentWeight;
-        private bool spawned = false;
 
-        [ServerRpc(RunLocally = true)]
-        private void SyncIKServerRpc(Vector3 lookPos, float weight)
+        private void SyncIK(Vector3 lookPos, float weight)
         {
-            networkLookAtPos.Value = lookPos;
-            networkIkWeight.Value = weight;
+            networkLookAtPos.value = lookPos;
+            networkIkWeight.value = weight;
         }
 
         public void SnapAimToCurrentCamera()
@@ -768,7 +723,7 @@ namespace Code.Player
 
         public void PlayEmotionAnimation(int index)
         {
-            if (!IsOwner) return; // только локальный владелец
+            if (!isOwner) return; // только локальный владелец
             if (animator == null) return; // защитная проверка
 
             // Перезапуск, если уже играется
@@ -835,7 +790,7 @@ namespace Code.Player
             while (timer < clipLength)
             {
                 // Если объект потерял владение/Animator исчез — выходим
-                if (!IsOwner || animator == null) break;
+                if (!isOwner || animator == null) break;
 
                 timer += Time.deltaTime;
                 yield return null;
@@ -863,11 +818,11 @@ namespace Code.Player
         {
             if (animator == null) return;
 
-            if (IsOwner)
+            if (isOwner)
             {
                 if (SuppressLookAtIK || Time.time < _ikSuppressUntil)
                 {
-                    SyncIKServerRpc(headTarget.position, 0);
+                    SyncIK(headTarget.position, 0);
                     return;
                 }
 
@@ -884,7 +839,7 @@ namespace Code.Player
                         _lastSentLookPos = nowPos;
                         _lastSentWeight = currentIkWeight;
                         _lastIkSendTime = Time.unscaledTime;
-                        SyncIKServerRpc(_lastSentLookPos, _lastSentWeight);
+                        SyncIK(_lastSentLookPos, _lastSentWeight);
                     }
                 }
 
@@ -894,8 +849,8 @@ namespace Code.Player
             }
             else
             {
-                _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.Value, Time.deltaTime * 5f);
-                _lookPos = Vector3.Lerp(_lookPos, networkLookAtPos.Value, Time.deltaTime * 5f);
+                _syncWeight = Mathf.Lerp(_syncWeight, networkIkWeight.value, Time.deltaTime * 5f);
+                _lookPos = Vector3.Lerp(_lookPos, networkLookAtPos.value, Time.deltaTime * 5f);
                 animator.SetLookAtWeight(_syncWeight, 0f, _syncWeight, _syncWeight, lookAtClampWeight);
                 animator.SetLookAtPosition(_lookPos);
             }
@@ -903,12 +858,10 @@ namespace Code.Player
 
         public void ResetOnReconnect()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             
             if (spawnOnSawedPosition)
             {
-                LoadingScreenUI.Instance?.Hide();
-                LoadSpawnPosition();
                 var playerInteract = gameObject.GetComponent<PlayerInteraction>();
                 playerInteract.ResetInteract();
             }

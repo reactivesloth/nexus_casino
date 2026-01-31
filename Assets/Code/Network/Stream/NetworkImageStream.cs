@@ -1,10 +1,8 @@
 using System;
-using Code.InteractionSystem;
+using Code.Network.InteractionSystem;
 using Code.Network.Stream.Data;
 using Code.Utility;
-using FishNet;
-using FishNet.Connection;
-using FishNet.Object;
+using PurrNet;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
@@ -75,12 +73,14 @@ namespace Code.Network.Stream
             
             streamConnection.OnFrameReceived += StreamConnectionOnOnFrameReceived;
             
+            
             if (streamLoadBalancer == null)
                 streamLoadBalancer = FindAnyObjectByType<StreamLoadBalancer>();
         }
 
-        private void OnDestroy()
+        protected override void OnDestroy()
         {
+            base.OnDestroy();
             if (streamConnection != null)
                 streamConnection.OnFrameReceived -= StreamConnectionOnOnFrameReceived;
         }
@@ -103,7 +103,7 @@ namespace Code.Network.Stream
 
         private void Update()
         {
-            if (!IsOwner) return;
+            if (!isOwner) return;
             if (Time.time < _nextTime) return;
             if (_isCapturing) return;
             
@@ -342,18 +342,14 @@ namespace Code.Network.Stream
             }
         }
 
-        // =================================================================================
-        // СТАНДАРТНЫЕ МЕТОДЫ FISHNET
-        // =================================================================================
-
-        public override void OnStartClient()
+        protected override void OnSpawned()
         {
-            base.OnStartClient();
-
+            base.OnSpawned();
+            
             _lastRecvFrameId = 0;
             
             // Настройка видимости
-            if (IsOwner)
+            if (isOwner)
             {
                 if (targetImage) targetImage.gameObject.SetActive(false);
             }
@@ -366,47 +362,50 @@ namespace Code.Network.Stream
                 }
             }
             
-            if (Owner.ClientId != -1)
+            if (hasOwner)
             {
                 targetImage.gameObject.SetActive(true);
             }
         }
-        
-        public override void OnOwnershipClient(NetworkConnection prevOwner)
+
+        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
         {
-            base.OnOwnershipClient(prevOwner);
+            base.OnOwnerChanged(oldOwner, newOwner, asServer);
+            
+            if(asServer)
+                return;
+            
             _lastRecvFrameId = 0;
             
-            if (IsOwner)
+            if (isOwner)
             {
-                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({ObjectId}). Начинаю стрим.");
+                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({objectId}). Начинаю стрим.");
                 _isCapturing = false;
                 streamLoadBalancer?.RegisterStream();
                 _lastSentFrameId = 0;
             }
-
-            if (Owner.ClientId == -1)
-            {
-                targetImage.gameObject.SetActive(false);
-                streamLoadBalancer?.UnregisterStream();
-            }
-            else if (!IsOwner)
+            else
             {
                 targetImage.gameObject.SetActive(true);
                 streamLoadBalancer?.UnregisterStream();
             }
-            
-            if(Owner.ClientId != -1)
+
+            if (!hasOwner)
+            {
+                targetImage.gameObject.SetActive(false);
+                streamLoadBalancer?.UnregisterStream();
+            }
+            else
                 streamConnection.Connect(SlotNumber);
         }
 
-        public override void OnStopClient()
+        protected override void OnDespawned()
         {
-            base.OnStopClient();
+            base.OnDespawned();
             
             streamConnection.Disconnect();
             
-            if (IsOwner)
+            if (isOwner)
                 streamLoadBalancer?.UnregisterStream();
             
             if (_tempRT) RenderTexture.ReleaseTemporary(_tempRT);

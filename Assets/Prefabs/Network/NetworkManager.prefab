@@ -9,16 +9,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7947594284464758584}
-  - component: {fileID: -7787611042363234579}
-  - component: {fileID: -1856791261854789086}
-  - component: {fileID: -2075149150159575520}
-  - component: {fileID: 2358639528394899744}
-  - component: {fileID: -5730291507850343229}
-  - component: {fileID: -5213578328157531378}
-  - component: {fileID: 5353664881606109110}
-  - component: {fileID: -4495655378147797735}
-  - component: {fileID: -5474675281091056609}
-  - component: {fileID: 770303110248068356}
+  - component: {fileID: 724768061121026126}
+  - component: {fileID: 4148929254775448530}
+  - component: {fileID: 4731415244911535516}
+  - component: {fileID: 4239465161067467006}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -38,12 +32,10 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 3219472338645812186}
-  - {fileID: 3387913618576187554}
+  m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &-7787611042363234579
+--- !u!114 &724768061121026126
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -52,17 +44,37 @@ MonoBehaviour:
   m_GameObject: {fileID: 3067998394517210273}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d2c95dfde7d73b54dbbdc23155d35d36, type: 3}
+  m_Script: {fileID: 11500000, guid: ba2ec6105185aee4dbd56831eaf762d3, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Managing.NetworkManager
-  _refreshDefaultPrefabs: 0
-  _runInBackground: 1
+  m_EditorClassIdentifier: Assembly-CSharp::PlayFlowManager
+  playflowApiKey: YOUR_API_KEY_HERE
+  emptyServerLifeTime: 600
+--- !u!114 &4148929254775448530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3067998394517210273}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: baacc2bfe126d544691d4f39fa3785f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkManager
+  _stopPlayingOnDisconnect: 0
+  _startServerFlags: 0
+  _startClientFlags: 0
+  _cookieScope: 2
   _dontDestroyOnLoad: 0
-  _objectPool: {fileID: 0}
-  _persistence: 0
-  _logging: {fileID: 0}
-  _spawnablePrefabs: {fileID: 11400000, guid: 2cf7ef0a30897a4488dc92bab8cfe808, type: 2}
---- !u!114 &-1856791261854789086
+  _transport: {fileID: 4731415244911535516}
+  _networkPrefabs: {fileID: 11400000, guid: af47c7779c6c6cc4f816d7b1d13e303d, type: 2}
+  _networkAssets: {fileID: 11400000, guid: 31797f31e16dfc8418b19e34267ef130, type: 2}
+  _networkRules: {fileID: 11400000, guid: 49b645d77fb5c440d9ef38ce72d2e37e, type: 2}
+  _visibilityRules: {fileID: 11400000, guid: 665279a58f09344828da3e562e35a930, type: 2}
+  _authenticator: {fileID: 0}
+  _tickRate: 20
+  _patchLingeringProcessBug: 0
+--- !u!114 &4731415244911535516
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -71,139 +83,17 @@ MonoBehaviour:
   m_GameObject: {fileID: 3067998394517210273}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d331f979d46e8e4a9fc90070c596d44, type: 3}
+  m_Script: {fileID: 11500000, guid: fc64ff707d914a64e95f2ac0bf554c09, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Managing.Observing.ObserverManager
-  _updateHostVisibility: 1
-  _maximumTimedObserversDuration: 10
-  _defaultConditions: []
---- !u!114 &-2075149150159575520
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f48f002b825cbd45a19bd96d90f9edb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Transporting.Tugboat.Tugboat
-  _stopSocketsOnThread: 0
-  _dontRoute: 0
-  _reuseAddress: 1
-  _unreliableMtu: 1023
-  _ipv4BindAddress: 
-  _enableIpv6: 1
-  _ipv6BindAddress: 
-  _port: 7770
-  _maximumClients: 4095
-  _clientAddress: localhost
---- !u!114 &2358639528394899744
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 41dbe0742da22c8459151ce06f562b32, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.PlayFlowClientConnector
-  maxPlayersPerLobby: 100
---- !u!114 &-5730291507850343229
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad8b27b10a0354ae1b426ad2599057fb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PlayFlow.SDK.Lobby::PlayFlow.PlayFlowEvents
-  OnLobbyCreated:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLobbyJoined:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLobbyUpdated:
-    m_PersistentCalls:
-      m_Calls: []
-  OnLobbyLeft:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchRunning:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchServerDetailsReady:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchEnded:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchmakingStarted:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchFound:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchmakingCancelled:
-    m_PersistentCalls:
-      m_Calls: []
-  OnMatchmakingTimeout:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPlayerJoined:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPlayerLeft:
-    m_PersistentCalls:
-      m_Calls: []
-  OnConnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnDisconnected:
-    m_PersistentCalls:
-      m_Calls: []
-  OnError:
-    m_PersistentCalls:
-      m_Calls: []
-  OnStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  _logEvents: 0
---- !u!114 &-5213578328157531378
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4b0b727893e54459cbce543032e2c793, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PlayFlow.SDK.Lobby::PlayFlow.PlayFlowLobbyManagerV2
-  _apiKey: pfclientcun3qoeqmdX1bXcnM3XPrjpeU1M038kreQqp5OyMwVI=
-  _baseUrl: https://api.scale.computeflow.cloud
-  _defaultLobbyConfig: Default
-  _refreshInterval: 5
-  _autoRefresh: 1
-  _maxRetryAttempts: 3
-  _retryDelay: 1
-  _requestTimeout: 30
-  _connectionTimeout: 10
-  _enableHeartbeat: 1
-  _heartbeatInterval: 15
-  _debugLogging: 0
---- !u!114 &5353664881606109110
+  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.Transports.UDPTransport
+  _automaticCloudSetups:
+    _adaptToEdgegap: 1
+  _serverPort: 7770
+  _maxConnections: 100
+  _address: 
+  _timeoutInSeconds: 5
+  _pollEventsInUpdate: 1
+--- !u!114 &4239465161067467006
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -215,225 +105,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 598e8b9bae3f494c9b167dd7af028106, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Player.PlayerSpawner
-  _addToDefaultScene: 1
-  Spawns:
+  _ignoreNetworkRules: 0
+  spawnPoints:
   - {fileID: 0}
   playerPrefabs:
-  - key: Male
-    val: {fileID: 92631491164151932, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
   - key: Female
-    val: {fileID: 4352281537206514680, guid: 51ca181595adb9f4badfe0ef54b91255, type: 3}
+    val: {fileID: 3849972420961721490, guid: 51ca181595adb9f4badfe0ef54b91255, type: 3}
+  - key: Male
+    val: {fileID: 8802292562543951320, guid: 14b5eb99542dbb14e98809f8ffcc610f, type: 3}
   - key: PlayerM1
-    val: {fileID: 3901444026938387538, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
+    val: {fileID: 2573045833460620576, guid: 6c7b21f93bf1eaf4e9d1f4b83fb97037, type: 3}
   - key: PlayerM2
-    val: {fileID: 5084366635518163755, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
+    val: {fileID: 6472889869485083012, guid: aa44193a69e98154aa63e8f5ce418b60, type: 3}
   - key: PlayerM3
-    val: {fileID: 2272209766738373433, guid: 264bab18018f257499f6a02bb93ee245, type: 3}
+    val: {fileID: 3856792766210476487, guid: 264bab18018f257499f6a02bb93ee245, type: 3}
   - key: ChostisF1
-    val: {fileID: 8762398165049904545, guid: fd5bf44672cdc4f40a1b68d943372f19, type: 3}
---- !u!114 &-4495655378147797735
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aca43cf6f20e77c4f8fcc078fd85081f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Managing.Client.ClientManager
-  _remoteServerTimeout: 1
-  _remoteServerTimeoutDuration: 10
-  _changeFrameRate: 1
-  _frameRate: 500
---- !u!114 &-5474675281091056609
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 68828c85278210948b9d50a8db3aab74, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: FishNet.Runtime::FishNet.Managing.Server.ServerManager
-  _authenticator: {fileID: 0}
-  _remoteClientTimeout: 1
-  _remoteClientTimeoutDuration: 10
-  _allowPredictedSpawning: 0
-  _reservedObjectIds: 15
-  _syncTypeRate: 0.1
-  SpawnPacking:
-    Position: 0
-    Rotation: 2
-    Scale: 2
-  _changeFrameRate: 1
-  _frameRate: 500
-  _shareIds: 1
-  _startOnHeadless: 1
---- !u!114 &770303110248068356
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3067998394517210273}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f944dbd0dd55d48478bd43d44466deb2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.FishNetAutoReconnect
---- !u!1 &3799973681424323288
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 3387913618576187554}
-  - component: {fileID: 5804645131766813114}
-  m_Layer: 0
-  m_Name: Streaming
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &3387913618576187554
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3799973681424323288}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 7947594284464758584}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5804645131766813114
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3799973681424323288}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 66536f9399374116950a12571394605e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingUdpServer
-  port: 9000
-  debugLogs: 1
---- !u!1001 &1178301237822981492
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 7947594284464758584}
-    m_Modifications:
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_Pivot.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_Pivot.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_AnchorMax.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_AnchorMax.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_AnchorMin.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_AnchorMin.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_SizeDelta.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_SizeDelta.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_AnchoredPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_AnchoredPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058995, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_Name
-      value: NetworkHudCanvas
-      objectReference: {fileID: 0}
-    - target: {fileID: 4393252310969058995, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
---- !u!224 &3219472338645812186 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 4393252310969058990, guid: 0570b6f7f713dc44a90463654bbcd8d0, type: 3}
-  m_PrefabInstance: {fileID: 1178301237822981492}
-  m_PrefabAsset: {fileID: 0}
+    val: {fileID: 1993866734829066590, guid: fd5bf44672cdc4f40a1b68d943372f19, type: 3}
+  _addToDefaultScene: 1
+  _spawnSceneName: Main

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Code.API;
 using Code.API.Models;
+using Code.Network;
 using Code.Player;
 using Proyecto26;
 using TMPro;
@@ -9,8 +10,8 @@ using UnityEngine;
 namespace Code.Scene
 {
     public class RecordsBook : MonoBehaviour
-    {
-                private static readonly int Open = Animator.StringToHash("Open");
+    { 
+        private static readonly int Open = Animator.StringToHash("Open");
         private static readonly int Close = Animator.StringToHash("Close");
 
         [SerializeField] private Animator bookAnimator;
@@ -27,7 +28,7 @@ namespace Code.Scene
 
         private void Update()
         {
-            _localPlayer ??= PlayerMovementController.Own;
+            _localPlayer ??= PlayerMovementController.LocalInstance;
             if (_localPlayer == null) return;
 
             var distance = Vector3.Distance(_localPlayer.transform.position, transform.position);

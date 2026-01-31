@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
-using Code.Chat;
+using Code.Network;
+using Code.Network.Player;
 using Code.UI.Popup;
 using Code.Utility;
-using PlayFlow;
+using Newtonsoft.Json.Linq;
+using PlayFlow.SDK.Servers;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -21,13 +23,15 @@ namespace Code.UI.Admin
         [SerializeField] private Button moveToButton;
 
         private string _lobbyId;
+        private InstanceData _instanceData;
+        
         private NexusModularPopupOpener _popupOpener;
         private AdminPanelHandler _adminPanelHandler;
-        
+
         // Кеш для логики исключения дубликатов
         private List<string> _allAvailablePlayers = new List<string>();
         private const string EMPTY_SELECTION = "-";
-        
+
         // Флаг для предотвращения рекурсии
         private bool _isUpdatingDropdowns = false;
 
@@ -47,14 +51,21 @@ namespace Code.UI.Admin
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
         }
 
-        public void Init(Lobby lobby)//LobbyDetails lobby)
+        public void Init(InstanceData serverData) //LobbyDetails lobby)
         {
+            _instanceData = serverData;
+            
             adminsStatusText.text = "";
-            _lobbyId = lobby.id;
-            titleDisplayText.text = lobby.name;
-            idText.text = lobby.id;
-            playersCountText.text = $"{lobby.currentPlayers}/{lobby.maxPlayers}";
-            var privateKey= lobby.isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";
+            _lobbyId = serverData.instance_id;
+            titleDisplayText.text = serverData.name;
+            idText.text = serverData.instance_id;
+            
+            var playersList = (serverData.custom_data["players"] as JArray)?.ToObject<List<string>>();
+            playersCountText.text = $"{playersList?.Count}/{serverData.custom_data["max_players"]}";
+
+            var privateKey = serverData.custom_data.TryGetValue("private", out var isPrivate) && (bool)isPrivate
+                ? "admin.lobby.private.close"
+                : "admin.lobby.private.open";
             LocalizationHelper.SetLocalizedTextAsync(privateText, privateKey);
         }
 
@@ -95,20 +106,8 @@ namespace Code.UI.Admin
 
         private void InitializePlayerSelectionSystem()
         {
+            _allAvailablePlayers = PlayerSpawner.NameConnectionsData.Keys.Distinct().ToList();
             
-            _allAvailablePlayers = PlayFlowLobbyManagerV2.Instance.CurrentLobby.players.ToList()
-                .Select(id =>
-                {
-                    if (PlayFlowLobbyManagerV2.Instance.CurrentLobby.lobbyStateRealTime.TryGetValue(id, out var playerData)
-                        && playerData.TryGetValue("name", out var playerName))
-                        return playerName.ToString();
-                    return string.Empty;
-                })
-                .Where(playerName => !string.IsNullOrEmpty(playerName))
-                .Distinct()
-                .ToList();
-
-            // Добавляем первый дропдаун
             AddPlayerToPopup();
         }
 
@@ -123,10 +122,10 @@ namespace Code.UI.Admin
 
             // Добавляем новый дропдаун
             popup.AddDropdown("Player", initialOptions.ToArray());
-            
+
             // Получаем индекс последнего добавленного дропдауна
             var lastIndex = popup.Inputs.Count - 1;
-            
+
             // Подписываемся на изменения в новом дропдауне
             if (popup.Inputs[lastIndex] is TMP_Dropdown dropdown)
             {
@@ -143,7 +142,7 @@ namespace Code.UI.Admin
             if (popup == null || popup.Inputs.Count == 0) return;
 
             var lastIndex = popup.Inputs.Count - 1;
-            
+
             // Отписываемся от событий перед удалением
             if (popup.Inputs[lastIndex] is TMP_Dropdown dropdown)
             {
@@ -151,7 +150,7 @@ namespace Code.UI.Admin
             }
 
             popup.RemoveInputAt(lastIndex);
-            
+
             // Обновляем оставшиеся дропдауны
             UpdateAllDropdownsWithConstraints();
         }
@@ -171,7 +170,7 @@ namespace Code.UI.Admin
             if (popup == null || _isUpdatingDropdowns) return;
 
             _isUpdatingDropdowns = true;
-            
+
             try
             {
                 // Собираем текущие выбранные значения (исключая пустые)
@@ -196,7 +195,7 @@ namespace Code.UI.Admin
         {
             var popup = _popupOpener.LastPopup;
             var selectedPlayers = new HashSet<string>();
-            
+
             if (popup == null) return selectedPlayers;
 
             for (int i = 0; i < popup.Inputs.Count; i++)
@@ -214,7 +213,8 @@ namespace Code.UI.Admin
             return selectedPlayers;
         }
 
-        private void UpdateDropdownOptions(int dropdownIndex, TMP_Dropdown targetDropdown, HashSet<string> allSelectedPlayers)
+        private void UpdateDropdownOptions(int dropdownIndex, TMP_Dropdown targetDropdown,
+            HashSet<string> allSelectedPlayers)
         {
             var popup = _popupOpener.LastPopup;
             if (popup == null) return;
@@ -246,7 +246,7 @@ namespace Code.UI.Admin
 
             // Собираем всех выбранных игроков (исключая пустые значения)
             var selectedPlayers = new List<string>();
-            
+
             for (var i = 0; i < popup.Inputs.Count; i++)
             {
                 var playerName = popup.GetInputValue(i);

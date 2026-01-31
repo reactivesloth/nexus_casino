@@ -1,5 +1,6 @@
 using Code.Chat;
-using Code.InteractionSystem;
+using Code.Network;
+using Code.Network.InteractionSystem;
 using Code.UI.Popup;
 using Code.Utility;
 using Ricimi;
@@ -56,6 +57,9 @@ namespace Code.UI.Admin
             _popupOpener.OpenPopup();
         }
         
-        private void ResetSlot() => _adminPanelHandler.ResetSlot(_slot.IDNumber);
+        private void ResetSlot()
+        {
+            _adminPanelHandler.ResetSlot(_slot.IDNumber);
+        }
     }
 }

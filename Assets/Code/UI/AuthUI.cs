@@ -3,6 +3,8 @@ using System.IO;
 using CC;
 using Code.API;
 using Code.API.Models;
+using Code.Network;
+using Code.Network.PlayFlow;
 using Code.UI.Popup;
 using Code.Utility;
 using Proyecto26;
@@ -662,12 +664,9 @@ namespace Code.UI
             {
                 LoadingScreenUI.Instance.Show("loading", "loading.character", 100);
                 var isLoadGame = !forceBoutique && (isAvatarLoaded && isModelTypeLoaded);
-                if (LoadingScreenUI.Instance != null)
-                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Main" : "Character Customization",
+                    LoadingScreenUI.Instance.LoadScene(isLoadGame ? "Matchmaker" : "Character Customization",
                         "loading.please_wait",
                         "loading");
-                else
-                    SceneManager.LoadSceneAsync(isLoadGame ? "Main" : "Character Customization");
             });
         }
 

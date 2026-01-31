@@ -1,4 +1,5 @@
 using System.Linq;
+using Code.Network.Player;
 using Code.Player;
 using TMPro;
 using UnityEngine;
@@ -17,16 +18,14 @@ namespace Code.UI
         private bool _inited;
     
         private PlayerUI _playerUI;
-        private PlayerMovementController  _playerMovementController;
 
         private void Update()
         {
             if (!_inited)
             {
-                _playerMovementController = FindLocalOwnerMovement();
-                if (_playerMovementController != null)
+                if (PlayerMovementController.LocalInstance != null)
                 {
-                    _playerUI = _playerMovementController.GetComponent<PlayerUI>();
+                    _playerUI = PlayerMovementController.LocalInstance.GetComponent<PlayerUI>();
                     if (_playerUI != null)
                     {
                         _inited = true;
@@ -37,7 +36,7 @@ namespace Code.UI
             if (!_inited || playerUIFPVPanel == null) return;
             if (_playerUI != null)
             {
-                playerUIFPVPanel.SetActive(_playerMovementController.FirstPersonView);
+                playerUIFPVPanel.SetActive(PlayerMovementController.LocalInstance.FirstPersonView);
 
                 if (playerUIFPVPanel.activeSelf)
                 {
@@ -46,9 +45,9 @@ namespace Code.UI
                     if (hostIndicator != null) hostIndicator.SetActive(_playerUI.IsHost);
                     if (voiceImage != null)
                     {
-                        voiceImage.color = _playerUI.IsVoiceMuted.Value ? Color.red :
-                            _playerUI.IsVoiceHeld.Value ? Color.white : Color.clear;
-                        voiceImage.gameObject.SetActive(_playerUI.IsVoiceHeld.Value || _playerUI.IsVoiceMuted.Value);
+                        voiceImage.color = _playerUI.IsVoiceMuted.value ? Color.red :
+                            _playerUI.IsVoiceHeld.value ? Color.white : Color.clear;
+                        voiceImage.gameObject.SetActive(_playerUI.IsVoiceHeld.value || _playerUI.IsVoiceMuted.value);
                     }
                 }
             }
@@ -56,12 +55,6 @@ namespace Code.UI
             {
                 _inited = false;
             }
-        }
-    
-        private static PlayerMovementController FindLocalOwnerMovement()
-        {
-            var all = FindObjectsByType<PlayerMovementController>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            return all.FirstOrDefault(m => m != null && m.Owner.IsLocalClient);
         }
     }
 }

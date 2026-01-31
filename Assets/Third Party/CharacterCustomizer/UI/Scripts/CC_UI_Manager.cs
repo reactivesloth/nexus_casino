@@ -203,7 +203,7 @@ namespace CC
             // map known types
             switch (type)
             {
-                case "Female": return 0;
+                    case "Female": return 0;
                 case "Male": return 1;
                 case "PlayerM1": return 2;
                 case "PlayerM2": return 3;

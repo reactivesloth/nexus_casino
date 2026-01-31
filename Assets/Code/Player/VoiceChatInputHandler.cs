@@ -1,4 +1,4 @@
-using Code.Network;
+using Code.Network.Player;
 using Code.UI.Popup;
 using Code.Utility;
 using Ricimi;
@@ -17,8 +17,8 @@ namespace Code.Player
         [SerializeField] private Gradient mobileButtonImage;
         [SerializeField] private Color on1, on2, off1, off2;
 
-        private bool voiceHeld = false;
-        private float saveTime;
+        private bool _voiceHeld = false;
+        private float _saveTime;
         private NexusModularPopupOpener _popupOpener;
 
 #if UNITY_ANDROID
@@ -28,7 +28,7 @@ namespace Code.Player
         private PermissionCallbacks _permissionCallbacks;
 #endif
 
-        private void Awake()
+        private void Start()
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
             VoiceChatHandle(false);
@@ -36,15 +36,15 @@ namespace Code.Player
 
         private void Update()
         {
-            if (saveTime > 0)
+            if (_saveTime > 0)
             {
-                saveTime -= Time.deltaTime;
+                _saveTime -= Time.deltaTime;
                 return;
             }
 
             if (PlayerInput.Instance.VoiceHeld)
             {
-                if (voiceHeld)
+                if (_voiceHeld)
                 {
                     VoiceChatHandle(false);
                 }
@@ -108,13 +108,6 @@ namespace Code.Player
             if (permission != MicPermission) return;
 
             _permissionRequestInFlight = false;
-            
-#if UNITY_ANDROID
-            if (VivoxVoiceManager.Instance != null)
-            {
-                VivoxVoiceManager.Instance.OnMicrophonePermissionGranted();
-            }
-#endif
             
             VoiceChatHandle(true);
         }
@@ -222,17 +215,17 @@ namespace Code.Player
 
         public void VoiceChatHandle(bool value)
         {
-            saveTime = 0.2f;
+            _saveTime = 0.2f;
 
-            voiceHeld = value;
+            _voiceHeld = value;
 
-            if (PlayerVoice.LocalPlayerVoiceInstance != null)
-                PlayerVoice.LocalPlayerVoiceInstance.SetMuteState (!voiceHeld);
+            if (PlayerVoice.LocalInstance != null)
+                PlayerVoice.LocalInstance.SetMuteState (!_voiceHeld);
 
             if (mobileButtonImage != null)
             {
-                mobileButtonImage.Color1 = voiceHeld ? on1 : off1;
-                mobileButtonImage.Color2 = voiceHeld ? on2 : off2;
+                mobileButtonImage.Color1 = _voiceHeld ? on1 : off1;
+                mobileButtonImage.Color2 = _voiceHeld ? on2 : off2;
                 mobileButtonImage.gameObject.SetActive(false);
                 mobileButtonImage.gameObject.SetActive(true);
             }

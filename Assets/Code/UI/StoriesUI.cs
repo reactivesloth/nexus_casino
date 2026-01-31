@@ -2,11 +2,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Code.API;
-using Code.API.Models;
-using Code.InteractionSystem;
+using Code.Network;
+using Code.Network.InteractionSystem;
 using Code.Utility;
-using CurvedUI;
 using Proyecto26;
+using PurrNet;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -16,7 +16,7 @@ using Object = UnityEngine.Object;
 
 namespace Code.UI
 {
-    public class StoriesUI : MonoBehaviour
+    public class StoriesUI : PurrMonoBehaviour
     {
         [Header("UI References")]
         [SerializeField] private Image image;
@@ -24,6 +24,10 @@ namespace Code.UI
         [SerializeField] private Transform progressBarContainer;
         [SerializeField] private GameObject progressBarPrefab;
 
+        [Header("Mesh Renderer")]
+        [SerializeField] private MeshRenderer screenRawImage;
+        [SerializeField] private int screenRawIndex;
+        
         [Header("Story Settings")]
         [SerializeField] private int storiesPerCycle = 5;
         [SerializeField] private float storyDisplayTime = 3f;
@@ -34,43 +38,76 @@ namespace Code.UI
 
         private Coroutine _storyCoroutine;
         private Coroutine _waitCoroutine;
-        private bool _isCurved;
-
         private readonly List<Image> _progressBars = new List<Image>(16);
         private readonly List<GetStoryData> _stories = new List<GetStoryData>(16);
         private readonly Dictionary<int, Sprite> _idSpriteCache = new Dictionary<int, Sprite>(32);
+        private readonly Dictionary<int, Texture2D> _idTextureCache = new Dictionary<int, Texture2D>(32);
 
         private ObjectPool<GameObject> _progressBarPool;
 
         private void Awake()
         {
-            _isCurved = TryGetComponent(out CurvedUIRaycaster _) || TryGetComponent(out CurvedUIVertexEffect _);
-
             _progressBarPool = new ObjectPool<GameObject>(
-                createFunc: () => Instantiate(progressBarPrefab, progressBarContainer),
-                actionOnGet: go => go.SetActive(true),
-                actionOnRelease: go => go.SetActive(false),
-                actionOnDestroy: Destroy,
+                createFunc: CreateProgressBar,
+                actionOnGet: OnGetProgressBar,
+                actionOnRelease: OnReleaseProgressBar,
+                actionOnDestroy: OnDestroyProgressBar,
                 collectionCheck: false,
                 defaultCapacity: 10,
                 maxSize: 20
             );
         }
 
-        private void OnEnable()
+        private GameObject CreateProgressBar()
+        {
+            return Instantiate(progressBarPrefab, progressBarContainer);
+        }
+
+        private void OnGetProgressBar(GameObject go)
+        {
+            go.SetActive(true);
+        }
+
+        private void OnReleaseProgressBar(GameObject go)
+        {
+            go.SetActive(false);
+        }
+
+        private void OnDestroyProgressBar(GameObject go)
+        {
+            Destroy(go);
+        }
+
+
+        public override void OnEnable()
         {
             if(loadingScreen != null)
                 loadingScreen.SetActive(true);
             StartNewCycle();
         }
 
-        private void OnDisable()
+        public override  void OnDisable()
         {
             if (_storyCoroutine != null) { StopCoroutine(_storyCoroutine); _storyCoroutine = null; }
             if (_waitCoroutine != null) { StopCoroutine(_waitCoroutine); _waitCoroutine = null; }
 
             ClearCache();
             ClearProgressBars();
+
+            if (screenRawImage != null)
+            {
+                screenRawImage.gameObject.SetActive(false);
+            }
+        }
+
+        public override void Subscribe(NetworkManager manager, bool asServer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Unsubscribe(NetworkManager manager, bool asServer)
+        {
+            throw new NotImplementedException();
         }
 
         public void StartNewCycle()
@@ -117,7 +154,8 @@ namespace Code.UI
                 if (result.data != null && result.data.screenshots != null)
                     _stories.AddRange(result.data.screenshots);
 
-                ClearOldSprites(); // держим кэш свежим
+                ClearOldSprites();
+                ClearOldTextures();
                 onStoriesFetched?.Invoke();
             }).Catch(_ => { StartNewWaitStories(); });
         }
@@ -149,12 +187,6 @@ namespace Code.UI
                 var fill = go.transform.GetChild(0).GetComponent<Image>();
                 if (fill == null) continue;
 
-                if (_isCurved)
-                {
-                    go.AddComponentIfMissing<CurvedUIVertexEffect>();
-                    fill.AddComponentIfMissing<CurvedUIVertexEffect>();
-                }
-
                 fill.fillAmount = 0f;
                 _progressBars.Add(fill);
             }
@@ -165,8 +197,8 @@ namespace Code.UI
                 var story = batch[i];
                 if (playerName != null)
                 {
-                    var name = story != null && !string.IsNullOrEmpty(story.user.username) ? story.user.username : "";
-                    if (playerName.text != name) playerName.text = name;
+                    var n = story != null && !string.IsNullOrEmpty(story.user.username) ? story.user.username : "";
+                    if (playerName.text != n) playerName.text = n;
                 }
 
                 if (story != null)
@@ -183,12 +215,19 @@ namespace Code.UI
 
         private IEnumerator LoadAndShowStoryImage(GetStoryData story)
         {
-            if (story == null || image == null) yield break;
+            if (story == null) yield break;
 
             // из кэша
-            if (_idSpriteCache.TryGetValue(story.id, out var cached))
+            if (image != null && _idSpriteCache.TryGetValue(story.id, out var cached))
             {
                 image.sprite = cached;
+                yield break;
+            }
+
+            if (screenRawImage != null && _idTextureCache.TryGetValue(story.id, out var cachedTexture))
+            {
+                screenRawImage.gameObject.SetActive(true);
+                screenRawImage.material.mainTexture = cachedTexture;
                 yield break;
             }
 
@@ -210,12 +249,24 @@ namespace Code.UI
                 }
 
                 var data = req.downloadHandler.data;
-                var sprite = ImageUtility.CreateSpriteFromBytes(data);
-                if (sprite != null)
+                if (data != null)
                 {
-                    image.sprite = sprite;
-                    if (!_idSpriteCache.ContainsKey(story.id))
-                        _idSpriteCache.Add(story.id, sprite);
+                    if (image != null)
+                    {
+                        var sprite = ImageUtility.CreateSpriteFromBytes(data);
+                        image.sprite = sprite;
+                        if (!_idSpriteCache.ContainsKey(story.id))
+                            _idSpriteCache.Add(story.id, sprite);
+                    }
+                    
+                    else if (screenRawImage != null)
+                    {
+                        screenRawImage.gameObject.SetActive(true);
+                        screenRawImage.material.mainTexture = ImageUtility.Decode(data);
+                        
+                        if (!_idTextureCache.ContainsKey(story.id))
+                            _idTextureCache.Add(story.id, ImageUtility.Decode(data));
+                    }
                 }
             }
         }
@@ -266,6 +317,32 @@ namespace Code.UI
             }
         }
 
+        private void ClearOldTextures()
+        {
+            if (_idTextureCache.Count == 0) return;
+            var keepIds = new HashSet<int>();
+            for (int i = 0; i < _stories.Count; i++)
+                keepIds.Add(_stories[i].id);
+
+            // соберём удаляемые
+            var toRemove = new List<int>(_idTextureCache.Count);
+            foreach (var kv in _idTextureCache)
+                if (!keepIds.Contains(kv.Key)) toRemove.Add(kv.Key);
+
+            // уничтожаем
+            for (int i = 0; i < toRemove.Count; i++)
+            {
+                int id = toRemove[i];
+                var tex = _idTextureCache[id];
+#if UNITY_EDITOR
+                if (tex != null) Object.DestroyImmediate(tex);
+#else
+                if (tex != null) Object.Destroy(tex);
+#endif
+                _idTextureCache.Remove(id);
+            }
+        }
+
         private void ClearCache()
         {
             foreach (var kv in _idSpriteCache)
@@ -280,6 +357,17 @@ namespace Code.UI
 #endif
             }
             _idSpriteCache.Clear();
+
+            foreach (var texture2D in _idTextureCache)
+            {
+                var tex = texture2D.Value;
+#if UNITY_EDITOR
+                if (tex != null) Object.DestroyImmediate(tex);
+#else
+                if (tex != null) Object.Destroy(tex);
+#endif
+            }
+            _idTextureCache.Clear();
         }
 
         private void ClearProgressBars()

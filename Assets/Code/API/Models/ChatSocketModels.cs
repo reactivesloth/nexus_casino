@@ -1,4 +1,5 @@
 using System;
+using Code.Network;
 
 namespace Code.API.Models
 {
@@ -14,9 +15,8 @@ namespace Code.API.Models
     {
     }
 
-    // NB: 'SendMassage' — сохранено как в исходном коде для совместимости
     [Serializable]
-    public class SendMassage
+    public class SendMessage
     {
         public string lobby_id = "main";
         public string message;

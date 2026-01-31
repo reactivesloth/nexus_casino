@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Code.Chat;
+using Code.Network;
 using Code.Scene.SceneObjectControl;
 using TMPro;
 using UnityEngine;
