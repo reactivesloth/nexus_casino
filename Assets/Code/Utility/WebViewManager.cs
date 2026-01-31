@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Code.API;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -24,7 +23,6 @@ namespace Code.Utility
         public CanvasWebViewPrefab WebViewPrefabInstance { get; private set; }
         public IWebView WebView => WebViewPrefabInstance != null ? WebViewPrefabInstance.WebView : null;
         public RawImage WebViewRawImage { get; private set; }
-        public Canvas ParkingCanvas => parkingCanvas;
 
         private bool _initialized;
     
@@ -33,9 +31,7 @@ namespace Code.Utility
         private CanvasWebViewPrefab _view;
         private RawImage _image;
         private string agregator;
-
-        private List<CanvasWebViewPrefab> _webviews;
-    
+        
         private void Awake()
         {
             if (Instance != null && Instance != this)
@@ -46,7 +42,6 @@ namespace Code.Utility
 
             Instance = this;
             if (dontDestroyOnLoad) DontDestroyOnLoad(gameObject);
-            _webviews = new List<CanvasWebViewPrefab>();
             
             Web.SetAutoplayEnabled(true);
         }
@@ -209,24 +204,19 @@ namespace Code.Utility
                 _view = CanvasWebViewPrefab.Instantiate(WebView);
                 _view.transform.SetParent(worldCanvas.transform, false);;
             }
+        
+            _view.gameObject.SetActive(true);
+            //_view.Resolution = Application.isMobilePlatform ? 0.75f : 1.0f;
 
-            if (_view != null)
-            {
-                _view.gameObject.SetActive(true);
-                _view.Resolution = Application.isMobilePlatform ? 0.75f : 1.0f;
+            bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
+                              worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
+            if (worldSpace && worldCanvas.worldCamera == null) worldCanvas.worldCamera = Camera.main;
+            if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _))
+                worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
 
-                bool worldSpace = worldCanvas.renderMode == RenderMode.WorldSpace ||
-                                  worldCanvas.renderMode == RenderMode.ScreenSpaceCamera;
-                if (worldSpace && worldCanvas.worldCamera == null) worldCanvas.worldCamera = Camera.main;
-                if (!worldCanvas.TryGetComponent<GraphicRaycaster>(out _))
-                    worldCanvas.gameObject.AddComponent<GraphicRaycaster>();
+            RebindToCanvas(_view, worldCanvas, bringToFront: false, worldSpace: worldSpace);
 
-                RebindToCanvas(_view, worldCanvas, bringToFront: false, worldSpace: worldSpace);
-
-                return _view;
-            }
-
-            return null;
+            return _view;
         }
 
         public RawImage ShowWorldView(int slotId, Canvas worldCanvas)
