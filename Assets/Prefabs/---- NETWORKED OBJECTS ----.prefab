@@ -2012,7 +2012,6 @@ GameObject:
   - component: {fileID: 3617463729946615923}
   - component: {fileID: 4945418952652766246}
   - component: {fileID: 5676087379256521398}
-  - component: {fileID: 4252330118561394684}
   m_Layer: 0
   m_Name: ServerSideControllersAndHandlers
   m_TagString: Untagged
@@ -2095,31 +2094,10 @@ MonoBehaviour:
   currentSlotId: -1
   elementsParent: {fileID: 0}
   screenRawImage: {fileID: 0}
-  screenRawIndex: 0
-  screenRawTextureEmpty: {fileID: 0}
+  screenRawIndex: 2
+  screenRawTextureEmpty: {fileID: 2800000, guid: 731c38bccac04ae46aaa8a1f8a915978, type: 3}
   slotIdText: {fileID: 0}
   streamerNameText: {fileID: 0}
---- !u!114 &4252330118561394684
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5530417530369902458}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5681fe548eb84304ea28a286062791f5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkIdentity
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
 --- !u!1 &5703814158101711821
 GameObject:
   m_ObjectHideFlags: 0
@@ -2787,7 +2765,6 @@ GameObject:
   - component: {fileID: 8424866211149960768}
   - component: {fileID: 8498503092070970182}
   - component: {fileID: 2931089735834336022}
-  - component: {fileID: 4453525457017779698}
   m_Layer: 0
   m_Name: StreamingManager
   m_TagString: Untagged
@@ -2838,27 +2815,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Code.Network.Stream.StreamingUdpServer
   port: 9000
   debugLogs: 0
---- !u!114 &4453525457017779698
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7689767874775529665}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5681fe548eb84304ea28a286062791f5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkIdentity
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
 --- !u!1 &8188656446726158787
 GameObject:
   m_ObjectHideFlags: 0

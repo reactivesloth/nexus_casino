@@ -1405,9 +1405,6 @@ PrefabInstance:
       addedObject: {fileID: 1327933454218635796}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 6346838192125710460}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 8807482833776830214}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
@@ -1433,9 +1430,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 624282661056886494}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2906106893410406099}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1159551603828018460}
@@ -2013,23 +2007,6 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &6346838192125710460
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1127680710956633387}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 45ac6d9553a0d774c88a59058782b2d7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  animator: {fileID: 0}
-  capsule: {fileID: 0}
-  useGravity: 1
-  ragdolling: 0
-  customizing: 0
 --- !u!114 &8807482833776830214
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2804,7 +2781,7 @@ MonoBehaviour:
       previewDisplayMode: 0
       collectionExpand: 0
     trigger: 0.80999994
-  configReady: 1
+  configReady: 0
   configNotReadyNotified: 0
   warnOnNullRefs: 1
   isDebug: 0
@@ -3614,27 +3591,6 @@ MonoBehaviour:
       name: 
       description: 
       icon: {fileID: 0}
---- !u!114 &2906106893410406099
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1127680710956633387}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5681fe548eb84304ea28a286062791f5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkIdentity
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
 --- !u!114 &1159551603828018460
 MonoBehaviour:
   m_ObjectHideFlags: 0
