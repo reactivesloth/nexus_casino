@@ -714,23 +714,23 @@ MonoBehaviour:
   streamLoadBalancer: {fileID: 0}
   rawImage: {fileID: 0}
   targetImage: {fileID: 4849952405852889531}
-  maxResolution: 384
-  jpgQuality: 35
+  maxResolution: 512
+  jpgQuality: 50
   sendRate: 0.1
-  enableFrameChangeDetection: 1
+  enableFrameChangeDetection: 0
   frameHashCheckInterval: 1
   streamConnection: {fileID: 5256628607745242369}
   streamServer: {fileID: 0}
   enableAutoQuality: 1
   targetFrameSizeBytes: 10000
-  minJpgQuality: 10
-  maxJpgQuality: 40
+  minJpgQuality: 20
+  maxJpgQuality: 80
   minSendRate: 0.1
   maxSendRate: 0.5
   qualityAdjustInterval: 0.015
   visibleDistance: 5
   requireMainCameraVisible: 1
-  showDebugLogs: 1
+  showDebugLogs: 0
 --- !u!114 &5256628607745242369
 MonoBehaviour:
   m_ObjectHideFlags: 0
