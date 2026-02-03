@@ -1,6 +1,7 @@
 using System;
 using Code.Network.InteractionSystem;
 using Code.Network.Stream.Data;
+using Code.Player;
 using Code.Utility;
 using PurrNet;
 using UnityEngine;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 
 namespace Code.Network.Stream
 {
-    public sealed class NetworkImageStream : NetworkBehaviour
+    public sealed class NetworkImageStream : MonoBehaviour
     {
         [SerializeField] private SlotMachineInteractable slotMachineInteractable;
         [SerializeField] private StreamLoadBalancer streamLoadBalancer;
@@ -38,6 +39,10 @@ namespace Code.Network.Stream
         [SerializeField] private float maxSendRate = 0.3f;            // минимум ~3 FPS
         [SerializeField] private float qualityAdjustInterval = 5f;    // раз в N секунд
 
+        [Header("Visible Settings")] 
+        [SerializeField] private float visibleDistance = 5f;
+        [SerializeField] private bool requireMainCameraVisible = true;
+        
         private int _frameCountForStats;
         private long _bytesForStats;
         private float _nextQualityAdjustTime;
@@ -58,12 +63,16 @@ namespace Code.Network.Stream
         private int _frameCheckCounter;
 
         private int _savedJPGQuality = 35;
+
+        private bool _isVisible;
         
         private int SlotNumber => slotMachineInteractable.IDNumber;
 
         public event Action<Texture> OnApplyTexture;
         
         public Texture2D RecvTexture => _recvTex;
+        public bool IsOwner => slotMachineInteractable.isOwner;
+        public bool HasOwner => slotMachineInteractable.hasOwner;
 
         private void Start()
         {
@@ -76,13 +85,16 @@ namespace Code.Network.Stream
             
             if (streamLoadBalancer == null)
                 streamLoadBalancer = FindAnyObjectByType<StreamLoadBalancer>();
+            
+            slotMachineInteractable.isOccupied.onChanged += OnOccupierChanged;
         }
-
-        protected override void OnDestroy()
+        
+        private void OnDestroy()
         {
-            base.OnDestroy();
             if (streamConnection != null)
                 streamConnection.OnFrameReceived -= StreamConnectionOnOnFrameReceived;
+            
+            slotMachineInteractable.isOccupied.onChanged -= OnOccupierChanged;
         }
         
         private void StreamConnectionOnOnFrameReceived(StreamFrameData data)
@@ -103,7 +115,30 @@ namespace Code.Network.Stream
 
         private void Update()
         {
-            if (!isOwner) return;
+            UpdateVisible();
+            UpdateStream();
+        }
+
+        private void UpdateVisible()
+        {
+            var prevIsVisible = _isVisible;
+            
+            var playerTransform = PlayerMovementController.LocalInstance?.transform;
+            if(playerTransform == null)
+            {
+                _isVisible = false;
+                return;
+            }
+            var playerDistance = Vector3.Distance(transform.position, playerTransform.position);
+            _isVisible = playerDistance <= visibleDistance;
+            
+            if(prevIsVisible != _isVisible)
+                OnVisibleChanged();
+        }
+
+        private void UpdateStream()
+        {
+            if (!IsOwner) return;
             if (Time.time < _nextTime) return;
             if (_isCapturing) return;
             
@@ -342,32 +377,72 @@ namespace Code.Network.Stream
             }
         }
 
-        protected override void OnSpawned()
+        // =================================================================================
+        // Network
+        // =================================================================================
+        
+        private void OnOccupierChanged(bool isOccupied)
         {
-            base.OnSpawned();
-            
+            OnVisibleChanged();
+        }
+
+        private void OnVisibleChanged()
+        {
+            if(_isVisible)
+                OnBecameVisible();
+            else
+                OnBecameInvisible();
+        }
+        
+        private void OnBecameVisible()
+        {
             _lastRecvFrameId = 0;
             
             // Настройка видимости
-            if (isOwner)
+            if (IsOwner)
             {
-                if (targetImage) targetImage.gameObject.SetActive(false);
+                if (showDebugLogs) Debug.Log($"[Client] Я владелец. Начинаю стрим.");
+                _isCapturing = false;
+                streamLoadBalancer?.RegisterStream();
+                _lastSentFrameId = 0;
+                
+                targetImage.gameObject.SetActive(false);
             }
             else
             {
-                if (targetImage)
-                {
-                    targetImage.gameObject.SetActive(true);
-                    targetImage.color = Color.clear; // Прячем до первого кадра
-                }
-            }
-            
-            if (hasOwner)
-            {
+                streamLoadBalancer?.UnregisterStream();
+                
                 targetImage.gameObject.SetActive(true);
             }
+            
+            if (!HasOwner)
+            {
+                streamLoadBalancer?.UnregisterStream();
+                
+                targetImage.gameObject.SetActive(false);
+            }
+            else
+                streamConnection.Connect(SlotNumber);
+        }
+        
+        private void OnBecameInvisible()
+        {
+            streamConnection.Disconnect();
+            
+            if (IsOwner)
+                streamLoadBalancer?.UnregisterStream();
+            
+            if (_tempRT) RenderTexture.ReleaseTemporary(_tempRT);
+            if (_readTex) Destroy(_readTex);
+            if (_recvTex) Destroy(_recvTex);
+            
+            targetImage.gameObject.SetActive(false);
+
+            _lastFrameHash = 0;
+            _frameCheckCounter = 0;
         }
 
+        /*
         protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
         {
             base.OnOwnerChanged(oldOwner, newOwner, asServer);
@@ -399,23 +474,7 @@ namespace Code.Network.Stream
                 streamConnection.Connect(SlotNumber);
         }
 
-        protected override void OnDespawned()
-        {
-            base.OnDespawned();
-            
-            streamConnection.Disconnect();
-            
-            if (isOwner)
-                streamLoadBalancer?.UnregisterStream();
-            
-            if (_tempRT) RenderTexture.ReleaseTemporary(_tempRT);
-            if (_readTex) Destroy(_readTex);
-            if (_recvTex) Destroy(_recvTex);
-            targetImage.gameObject.SetActive(false);
-
-            _lastFrameHash = 0;
-            _frameCheckCounter = 0;
-        }
+        */
         
         // API
         public void SetQualitySettings(float res, int quality)

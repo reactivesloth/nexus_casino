@@ -13,16 +13,16 @@ namespace Code.Network.InteractionSystem
 
         public GameObject[] outlineGameObjects;
 
-        [SerializeField] private SyncVar<PlayerID> OccupierConnection = new SyncVar<PlayerID>();// => NetworkManager.Clients.TryGetValue(_occupiedConnectionId, out var conn) ? conn : null;
+        [SerializeField] public SyncVar<PlayerID> occupierConnection = new SyncVar<PlayerID>();// => NetworkManager.Clients.TryGetValue(_occupiedConnectionId, out var conn) ? conn : null;
         public string Key => interactableKey;
 
-        [SerializeField] protected SyncVar<bool> _isOccupied = new SyncVar<bool>(false);
+        [SerializeField] public SyncVar<bool> isOccupied = new SyncVar<bool>(false);
 
         public bool IsBusy;
         
         public bool IsEnabled => _interactableEnabled;
         public bool ManualRelease => _manualRelease;
-        public bool IsOccupied => _isOccupied.value;
+        public bool IsOccupied => isOccupied.value;
 
         public delegate void InteractCallback(bool success);
         
@@ -59,10 +59,10 @@ namespace Code.Network.InteractionSystem
         [Server]
         public void ReleaseInteractable()
         {
-            SendRequestEndInteractCallbacks(OccupierConnection.value, true);
+            SendRequestEndInteractCallbacks(occupierConnection.value, true);
             
-            _isOccupied.value = false;
-            OccupierConnection.value = PlayerID.Server;
+            isOccupied.value = false;
+            occupierConnection.value = PlayerID.Server;
 
         }
         
@@ -70,7 +70,7 @@ namespace Code.Network.InteractionSystem
         private void OnPlayerLeft(PlayerID player, bool asServer)
         {
             if(!asServer) return;
-            if (player == OccupierConnection.value)
+            if (player == occupierConnection.value)
                 ReleaseInteractable();
         }
         
@@ -87,14 +87,14 @@ namespace Code.Network.InteractionSystem
         [ServerRpc(requireOwnership: false)]
         private void RequestInteract_ServerRpc(PlayerID target, bool force = false)
         {
-            if (!_interactableEnabled || _isOccupied.value)
+            if (!_interactableEnabled || isOccupied.value)
             {
                 SendRequestInteractCallbacks(target, false, force);
                 return;
             }
 
-            OccupierConnection.value = target;
-            _isOccupied.value = true;
+            occupierConnection.value = target;
+            isOccupied.value = true;
 
             SendRequestInteractCallbacks(target, true, force);
         }
@@ -110,7 +110,7 @@ namespace Code.Network.InteractionSystem
         [ServerRpc(requireOwnership: false)]
         private void RequestEndInteract_ServerRpc(PlayerID target)
         {
-            if (target != OccupierConnection.value)
+            if (target != occupierConnection.value)
             {
                 SendRequestEndInteractCallbacks(target, false);
                 return;
