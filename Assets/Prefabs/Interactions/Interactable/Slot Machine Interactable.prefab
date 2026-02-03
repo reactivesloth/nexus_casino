@@ -674,10 +674,10 @@ MonoBehaviour:
   _interactableEnabled: 1
   _manualRelease: 1
   outlineGameObjects: []
-  OccupierConnection:
+  occupierConnection:
     _ownerAuth: 0
     _sendIntervalInSeconds: 0
-  _isOccupied:
+  isOccupied:
     _value: 0
     _ownerAuth: 0
     _sendIntervalInSeconds: 0
@@ -710,15 +710,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 61313445752b0b948a4474e68d095f5c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 11400000, guid: 995253f3b9fb92247a2604ff399425ad, type: 2}
   slotMachineInteractable: {fileID: 8690079509221083420}
   streamLoadBalancer: {fileID: 0}
   rawImage: {fileID: 0}
@@ -737,7 +728,9 @@ MonoBehaviour:
   minSendRate: 0.1
   maxSendRate: 0.5
   qualityAdjustInterval: 0.015
-  showDebugLogs: 0
+  visibleDistance: 5
+  requireMainCameraVisible: 1
+  showDebugLogs: 1
 --- !u!114 &5256628607745242369
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1093,10 +1086,10 @@ MonoBehaviour:
   _manualRelease: 1
   outlineGameObjects:
   - {fileID: 0}
-  OccupierConnection:
+  occupierConnection:
     _ownerAuth: 0
     _sendIntervalInSeconds: 0
-  _isOccupied:
+  isOccupied:
     _value: 0
     _ownerAuth: 0
     _sendIntervalInSeconds: 0

@@ -1,15 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Code.Network.PlayFlow;
 using Code.Network.Stream.Data;
-using Code.Network.Stream.Utility;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using PlayFlow;
 using PlayFlow.SDK.Servers;
-using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.Stream
@@ -97,7 +93,7 @@ namespace Code.Network.Stream
             peer.Send(writer, DeliveryMethod.ReliableOrdered);
             
             if(_slotsLastFrame.TryGetValue(data.SlotId, out var lastFrame))
-                RetranslateFrame(lastFrame, peer);
+                RetranslateFrameForConnection(lastFrame, peer);
         }
         
         private void RetranslateFrame(StreamFrameData frameData, NetPeer senderPeer)
@@ -110,17 +106,17 @@ namespace Code.Network.Stream
                 if (Equals(peer, senderPeer))
                     continue;
                 
-                writer.Reset();
-                packetProcessor.Write(writer, frameData);
-                peer.Send(writer, DeliveryMethod.ReliableUnordered);
+                RetranslateFrameForConnection(frameData, peer);
             }
-        }   
-
-        private void RetranslateFrame(List<StreamFrameChunkData> frameData, int streamerId, int slotId)
-        {
-            // TODO: If need
         }
 
+        private void RetranslateFrameForConnection(StreamFrameData frameData, NetPeer targetPeer)
+        {
+            writer.Reset();
+            packetProcessor.Write(writer, frameData);
+            targetPeer.Send(writer, DeliveryMethod.ReliableUnordered);
+        }
+        
         private void RetranslateChunk(StreamFrameChunkData chunkData, NetPeer senderPeer)
         {
             if(!_slotsPeers.TryGetValue(chunkData.SlotId, out var peers))
