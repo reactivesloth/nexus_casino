@@ -167,7 +167,7 @@ namespace Code.Network.InteractionSystem
             
             if (Active != null)
             {
-                InteractionUIHint.Instance.ShowPrompt(endInteractText);
+                //InteractionUIHint.Instance.ShowPrompt(endInteractText);
                 InteractionUIHint.Instance.HideSocial();
             }
             else if (_hovered != null)
