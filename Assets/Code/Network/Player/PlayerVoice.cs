@@ -18,6 +18,7 @@ namespace Code.Network.Player
             LocalInstance = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
             voicePlayer = Player.GetLocalPlayer().GetComponentInChildren<PurrVoicePlayer>();
             
+            
             SetMuteState(true);
         }
 
