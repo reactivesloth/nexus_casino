@@ -68,18 +68,24 @@ namespace PurrNet.Voice
             SetupVisualization(freq);
         }
 
-        protected override void OnSpawned()
+        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
         {
-            base.OnSpawned();
-
+            base.OnOwnerChanged(oldOwner, newOwner, asServer);
+            
+            Cleanup();
+            
             if (isOwner)
             {
+                Debug.Log("[PurrVoicePlayer] OwnerActions");
+                
                 _inputProvider.Init(this);
                 SetupMicrophone();
                 AudioDevices.onDevicesChanged += OnDevicesChanged;
             }
             else
             {
+                Debug.Log("[PurrVoicePlayer] NONE OwnerActions");
+                
                 SetupRemotePlayback();
             }
         }
