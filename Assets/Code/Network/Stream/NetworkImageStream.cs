@@ -39,9 +39,6 @@ namespace Code.Network.Stream
         [SerializeField] private float maxSendRate = 0.3f;            // минимум ~3 FPS
         [SerializeField] private float qualityAdjustInterval = 5f;    // раз в N секунд
 
-        [Header("Visible Settings")] 
-        [SerializeField] private float visibleDistance = 5f;
-        [SerializeField] private bool requireMainCameraVisible = true;
         
         private int _frameCountForStats;
         private long _bytesForStats;
@@ -63,8 +60,6 @@ namespace Code.Network.Stream
         private int _frameCheckCounter;
 
         private int _savedJPGQuality = 35;
-
-        private bool _isVisible;
         
         private int SlotNumber => slotMachineInteractable.IDNumber;
 
@@ -115,27 +110,9 @@ namespace Code.Network.Stream
 
         private void Update()
         {
-            UpdateVisible();
             UpdateStream();
         }
-
-        private void UpdateVisible()
-        {
-            var prevIsVisible = _isVisible;
-            
-            var playerTransform = PlayerMovementController.LocalInstance?.transform;
-            if(playerTransform == null)
-            {
-                _isVisible = false;
-                return;
-            }
-            var playerDistance = Vector3.Distance(transform.position, playerTransform.position);
-            _isVisible = playerDistance <= visibleDistance;
-            
-            if(prevIsVisible != _isVisible)
-                OnVisibleChanged();
-        }
-
+        
         private void UpdateStream()
         {
             if (!IsOwner) return;
@@ -380,22 +357,26 @@ namespace Code.Network.Stream
         // =================================================================================
         // Network
         // =================================================================================
+
+        private bool _isVisible;
         
         private void OnOccupierChanged(bool isOccupied)
         {
             OnVisibleChanged();
+            
         }
 
         private void OnVisibleChanged()
         {
             if(_isVisible)
-                OnBecameVisible();
+                OnBecameLocalVisible();
             else
-                OnBecameInvisible();
+                OnBecameLocalInvisible();
         }
         
-        private void OnBecameVisible()
+        public void OnBecameLocalVisible()
         {
+            _isVisible = true;
             _lastRecvFrameId = 0;
             
             // Настройка видимости
@@ -425,8 +406,9 @@ namespace Code.Network.Stream
                 streamConnection.Connect(SlotNumber);
         }
         
-        private void OnBecameInvisible()
+        public void OnBecameLocalInvisible()
         {
+            _isVisible = false;
             streamConnection.Disconnect();
             
             if (IsOwner)

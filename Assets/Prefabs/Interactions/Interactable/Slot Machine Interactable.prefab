@@ -383,7 +383,7 @@ MonoBehaviour:
   m_text: Username
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d9b454495b7d24a7a933eb61bdfa0607, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_sharedMaterial: {fileID: 7409485994217783921, guid: d9b454495b7d24a7a933eb61bdfa0607, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -728,8 +728,6 @@ MonoBehaviour:
   minSendRate: 0.1
   maxSendRate: 0.5
   qualityAdjustInterval: 0.015
-  visibleDistance: 5
-  requireMainCameraVisible: 1
   showDebugLogs: 0
 --- !u!114 &5256628607745242369
 MonoBehaviour:
@@ -1013,6 +1011,7 @@ GameObject:
   - component: {fileID: 2015657308730844265}
   - component: {fileID: 2452543488078972824}
   - component: {fileID: 8199382324019828225}
+  - component: {fileID: 2126802171592425673}
   m_Layer: 9
   m_Name: Slot Machine Interactable
   m_TagString: Untagged
@@ -1097,6 +1096,50 @@ MonoBehaviour:
   children:
   - {fileID: 8690079509221083420}
   - {fileID: 0}
+--- !u!114 &2126802171592425673
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6154966392846168794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ffa68aa132b64633b9b0a346ca5ffb5d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Code.Utility.LocalDistanceObserverCondition
+  visibleDistance: 5
+  requireMainCameraVisible: 0
+  onVisible:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2377678613824972991}
+        m_TargetAssemblyTypeName: Code.Network.Stream.NetworkImageStream, Assembly-CSharp
+        m_MethodName: OnBecameLocalVisible
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  onNotVisible:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 2377678613824972991}
+        m_TargetAssemblyTypeName: Code.Network.Stream.NetworkImageStream, Assembly-CSharp
+        m_MethodName: OnBecameLocalInvisible
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &7428642365710054699
 GameObject:
   m_ObjectHideFlags: 0
