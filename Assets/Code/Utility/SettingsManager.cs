@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Localization;
 using UnityEngine.Localization.Settings;
-using UnityEngine.SocialPlatforms;
+using UnityEngine.SceneManagement;
 
 namespace Code.Utility
 {
@@ -45,8 +45,14 @@ namespace Code.Utility
         private void Awake()
         {
             Instance = this;
+            SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
+        private void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
+        {
+            LoadAllSettings();
+        }
+        
         private void Start()
         {
             LoadAllSettings();
