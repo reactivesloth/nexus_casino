@@ -322,11 +322,16 @@ namespace Code.Network.InteractionSystem
             _sitRoutine = null;
             _isSittingLocal = true;
             
+            move.SuppressLookAtIK = false;
+            
+            if (headIKTarget != null)
+                move.HeadIKLookAtCustomTarget = headIKTarget;
+
+            yield return new WaitForSecondsRealtime(1);
+            
             if (headIKTarget != null)
                 move.HeadIKLookAtCustomTarget = null;
-            else 
-                move.SuppressLookAtIK = false;
-
+            
             if (allowRotateCamera)
             {
                 move.LookCameraLimitRotation = true;

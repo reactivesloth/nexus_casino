@@ -389,7 +389,7 @@ namespace Code.Player
             if (animator != null && headTarget != null && cinemachineCameraTarget != null)
             {
                 if (HeadIKLookAtCustomTarget != null)
-                    headTarget.position = Vector3.Lerp(headTarget.position, HeadIKLookAtCustomTarget.position, Time.deltaTime * 0.8f);
+                    headTarget.position = Vector3.Lerp(headTarget.position, HeadIKLookAtCustomTarget.position, Time.deltaTime * 10f);
                 else
                     headTarget.position = cinemachineCameraTarget.transform.position +
                                       cinemachineCameraTarget.transform.forward * 10f;
