@@ -3,6 +3,7 @@ using Code.UI.Popup;
 using Code.Utility;
 using Ricimi;
 using UnityEngine;
+using UnityEngine.Audio;
 using UnityEngine.UI;
 using Gradient = Ricimi.Gradient;
 
@@ -14,6 +15,14 @@ namespace Code.Player
 {
     public class VoiceChatInputHandler : MonoBehaviour
     {
+        [Header("Mixer")]
+        public AudioMixer mixer;
+        public string masterVolumeParam = "MasterVolume";
+        public float normalVolumeDb = 0f;
+        public float duckedVolumeDb = -40f;
+        public float lerpSpeed = 40f;
+        float _currentTargetDb;
+        
         [SerializeField] private Gradient mobileButtonImage;
         [SerializeField] private Color on1, on2, off1, off2;
 
@@ -31,6 +40,9 @@ namespace Code.Player
         private void Start()
         {
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
+            _currentTargetDb = normalVolumeDb;
+            mixer.SetFloat(masterVolumeParam, _currentTargetDb);
+            
             VoiceChatHandle(false);
         }
 
@@ -64,6 +76,17 @@ namespace Code.Player
 #endif
                 }
             }
+            
+            _currentTargetDb = _voiceHeld ? duckedVolumeDb : normalVolumeDb;
+
+            float currentDb;
+            if (!mixer.GetFloat(masterVolumeParam, out currentDb))
+            {
+                return;
+            }
+
+            float newDb = Mathf.Lerp(currentDb, _currentTargetDb, lerpSpeed * Time.deltaTime);
+            mixer.SetFloat(masterVolumeParam, newDb);
         }
 
 #if UNITY_ANDROID
