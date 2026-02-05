@@ -67,6 +67,18 @@ namespace Code.Network.InteractionSystem
             SetupScreensForPromo();
         }
 
+        protected override void OnSpawned()
+        {
+            base.OnSpawned();
+            isOccupied.onChanged += OnOccupierChanged;
+        }
+
+        protected override void OnDespawned()
+        {
+            base.OnDespawned();
+            isOccupied.onChanged += OnOccupierChanged;
+        }
+
         private void SetupScreensForPromo()
         {
             _slotsScreenPromoMaterial = _slotScreenPromoMeshRenderer.materials[slotsScreenPromoMaterialIndex];
@@ -139,7 +151,6 @@ namespace Code.Network.InteractionSystem
             base.OnInteractCallback_Observers(success, force);
             if (!success)
                 return;
-            OnChangeVisible();
         }
 
         protected override void OnInteractEndCallback_Observers(bool success)
@@ -147,7 +158,6 @@ namespace Code.Network.InteractionSystem
             base.OnInteractEndCallback_Observers(success);
             if (!success)
                 return;
-            OnChangeVisible();
         }
 
         private string GetProvider()
@@ -258,6 +268,11 @@ namespace Code.Network.InteractionSystem
 
         private bool _isVisible;
 
+        private void OnOccupierChanged(bool obj)
+        {
+            OnChangeVisible();
+        }
+        
         private void OnChangeVisible()
         {
             if (_isVisible)
