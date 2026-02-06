@@ -18,7 +18,6 @@ namespace Code.Network.Player
             yield return new WaitUntil(() => Player.GetLocalPlayer() != null);
             LocalInstance = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
             SetMuteState(true);
-            _voiceBroadcastTrigger = DissonanceComms.GetSingleton()!.gameObject.GetComponent<VoiceBroadcastTrigger>();
         }
 
         public void SetMuteState(bool muted)
@@ -26,7 +25,12 @@ namespace Code.Network.Player
             if (!isOwner) return;
 
             isMuted = muted || isInputMutedByServer;
-            _voiceBroadcastTrigger.IsMuted = isMuted;
+
+            if (_voiceBroadcastTrigger == null)
+                _voiceBroadcastTrigger = DissonanceComms.GetSingleton()!.gameObject.GetComponent<VoiceBroadcastTrigger>();
+
+            if (_voiceBroadcastTrigger != null)
+                _voiceBroadcastTrigger.IsMuted = isMuted;
         }
 
         private void Update()
