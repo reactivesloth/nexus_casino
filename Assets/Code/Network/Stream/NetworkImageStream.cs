@@ -370,6 +370,8 @@ namespace Code.Network.Stream
         private void OnMainStreamerChanged(int newStreamerId)
         {
             _isMainStreamer = newStreamerId == SlotNumber;
+            if(_isMainStreamer)
+                Debug.Log($"[Viewer {SlotNumber}] OnMainStreamerChanged: {newStreamerId}");
             ChangeVisibility();
         }
         
@@ -418,7 +420,10 @@ namespace Code.Network.Stream
                 targetImage.gameObject.SetActive(true);
             }
             
-            if (!HasOwner)
+            if(_isMainStreamer)
+                Debug.Log(HasOwner);
+            
+            if (!slotMachineInteractable.IsOccupied)
             {
                 streamLoadBalancer?.UnregisterStream();
                 
