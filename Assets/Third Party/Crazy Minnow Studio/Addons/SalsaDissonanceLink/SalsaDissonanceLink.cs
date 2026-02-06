@@ -103,6 +103,12 @@ namespace CrazyMinnow.SALSA.DissonanceLink
             if ( dissonancePlayer.Type == NetworkPlayerType.Local && !useLocalLipSync )
                 return 0f;     // Bail out: local player and lip-sync not desired
 
+            if (playerState.IsLocallyMuted)
+                return 0f;     // Bail out: player is muted
+
+            if (playerState.Amplitude < 0.1f)
+                return 0f;     // Bail out: noise gate
+            
             return playerState.Amplitude * amplifyMultipleExperimental;
         }
 
