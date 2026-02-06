@@ -38,10 +38,6 @@ namespace Code.Network.Stream
         [SerializeField] private float minSendRate = 0.05f;           // максимум 20 FPS
         [SerializeField] private float maxSendRate = 0.3f;            // минимум ~3 FPS
         [SerializeField] private float qualityAdjustInterval = 5f;    // раз в N секунд
-
-        [Header("Visible Settings")] 
-        [SerializeField] private float visibleDistance = 5f;
-        [SerializeField] private bool requireMainCameraVisible = true;
         
         private int _frameCountForStats;
         private long _bytesForStats;
@@ -49,6 +45,7 @@ namespace Code.Network.Stream
         
         [Header("Debug")] [SerializeField] private bool showDebugLogs = true;
 
+        private MainScreenController _mainScreenController;
         private float _nextTime;
         private bool _isCapturing;
         private RenderTexture _tempRT;
@@ -63,8 +60,6 @@ namespace Code.Network.Stream
         private int _frameCheckCounter;
 
         private int _savedJPGQuality = 35;
-
-        private bool _isVisible;
         
         private int SlotNumber => slotMachineInteractable.IDNumber;
 
@@ -74,6 +69,12 @@ namespace Code.Network.Stream
         public bool IsOwner => slotMachineInteractable.isOwner;
         public bool HasOwner => slotMachineInteractable.hasOwner;
 
+        private void Awake()
+        {
+            _mainScreenController = FindAnyObjectByType<MainScreenController>(FindObjectsInactive.Include);
+            _mainScreenController.StreamSlotId.onChanged += OnMainStreamerChanged;
+        }
+        
         private void Start()
         {
             _savedJPGQuality = jpgQuality;
@@ -115,27 +116,9 @@ namespace Code.Network.Stream
 
         private void Update()
         {
-            UpdateVisible();
             UpdateStream();
         }
-
-        private void UpdateVisible()
-        {
-            var prevIsVisible = _isVisible;
-            
-            var playerTransform = PlayerMovementController.LocalInstance?.transform;
-            if(playerTransform == null)
-            {
-                _isVisible = false;
-                return;
-            }
-            var playerDistance = Vector3.Distance(transform.position, playerTransform.position);
-            _isVisible = playerDistance <= visibleDistance;
-            
-            if(prevIsVisible != _isVisible)
-                OnVisibleChanged();
-        }
-
+        
         private void UpdateStream()
         {
             if (!IsOwner) return;
@@ -380,25 +363,47 @@ namespace Code.Network.Stream
         // =================================================================================
         // Network
         // =================================================================================
+
+        private bool _isVisible;
+        private bool _isMainStreamer;
+        
+        private void OnMainStreamerChanged(int newStreamerId)
+        {
+            _isMainStreamer = newStreamerId == SlotNumber;
+            if(_isMainStreamer)
+                Debug.Log($"[Viewer {SlotNumber}] OnMainStreamerChanged: {newStreamerId}");
+            ChangeVisibility();
+        }
         
         private void OnOccupierChanged(bool isOccupied)
         {
-            OnVisibleChanged();
-        }
-
-        private void OnVisibleChanged()
-        {
-            if(_isVisible)
-                OnBecameVisible();
-            else
-                OnBecameInvisible();
+            ChangeVisibility();
         }
         
-        private void OnBecameVisible()
+        public void OnBecameLocalVisible()
+        {
+            _isVisible = true;
+            ChangeVisibility();
+        }
+        
+        public void OnBecameLocalInvisible()
+        {
+            _isVisible = false;
+            ChangeVisibility();
+        }
+
+        private void ChangeVisibility()
+        {
+            if(_isVisible || _isMainStreamer)
+                EnableStream();
+            else
+                DisableStream();
+        }
+        
+        private void EnableStream()
         {
             _lastRecvFrameId = 0;
             
-            // Настройка видимости
             if (IsOwner)
             {
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец. Начинаю стрим.");
@@ -415,7 +420,10 @@ namespace Code.Network.Stream
                 targetImage.gameObject.SetActive(true);
             }
             
-            if (!HasOwner)
+            if(_isMainStreamer)
+                Debug.Log(HasOwner);
+            
+            if (!slotMachineInteractable.IsOccupied)
             {
                 streamLoadBalancer?.UnregisterStream();
                 
@@ -424,8 +432,8 @@ namespace Code.Network.Stream
             else
                 streamConnection.Connect(SlotNumber);
         }
-        
-        private void OnBecameInvisible()
+
+        private void DisableStream()
         {
             streamConnection.Disconnect();
             
@@ -441,40 +449,6 @@ namespace Code.Network.Stream
             _lastFrameHash = 0;
             _frameCheckCounter = 0;
         }
-
-        /*
-        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
-        {
-            base.OnOwnerChanged(oldOwner, newOwner, asServer);
-            
-            if(asServer)
-                return;
-            
-            _lastRecvFrameId = 0;
-            
-            if (isOwner)
-            {
-                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({objectId}). Начинаю стрим.");
-                _isCapturing = false;
-                streamLoadBalancer?.RegisterStream();
-                _lastSentFrameId = 0;
-            }
-            else
-            {
-                targetImage.gameObject.SetActive(true);
-                streamLoadBalancer?.UnregisterStream();
-            }
-
-            if (!hasOwner)
-            {
-                targetImage.gameObject.SetActive(false);
-                streamLoadBalancer?.UnregisterStream();
-            }
-            else
-                streamConnection.Connect(SlotNumber);
-        }
-
-        */
         
         // API
         public void SetQualitySettings(float res, int quality)
