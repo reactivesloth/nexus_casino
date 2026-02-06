@@ -370,25 +370,36 @@ namespace Code.Network.Stream
         private void OnMainStreamerChanged(int newStreamerId)
         {
             _isMainStreamer = newStreamerId == SlotNumber;
-            OnVisibleChanged();
+            ChangeVisibility();
         }
         
         private void OnOccupierChanged(bool isOccupied)
         {
-            OnVisibleChanged();
-        }
-
-        private void OnVisibleChanged()
-        {
-            if(_isVisible || _isMainStreamer)
-                OnBecameLocalVisible();
-            else
-                OnBecameLocalInvisible();
+            ChangeVisibility();
         }
         
         public void OnBecameLocalVisible()
         {
             _isVisible = true;
+            ChangeVisibility();
+        }
+        
+        public void OnBecameLocalInvisible()
+        {
+            _isVisible = false;
+            ChangeVisibility();
+        }
+
+        private void ChangeVisibility()
+        {
+            if(_isVisible || _isMainStreamer)
+                EnableStream();
+            else
+                DisableStream();
+        }
+        
+        private void EnableStream()
+        {
             _lastRecvFrameId = 0;
             
             if (IsOwner)
@@ -416,10 +427,9 @@ namespace Code.Network.Stream
             else
                 streamConnection.Connect(SlotNumber);
         }
-        
-        public void OnBecameLocalInvisible()
+
+        private void DisableStream()
         {
-            _isVisible = false;
             streamConnection.Disconnect();
             
             if (IsOwner)
