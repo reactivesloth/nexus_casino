@@ -38,7 +38,6 @@ namespace Code.Network.Stream
         [SerializeField] private float minSendRate = 0.05f;           // максимум 20 FPS
         [SerializeField] private float maxSendRate = 0.3f;            // минимум ~3 FPS
         [SerializeField] private float qualityAdjustInterval = 5f;    // раз в N секунд
-
         
         private int _frameCountForStats;
         private long _bytesForStats;
@@ -46,6 +45,7 @@ namespace Code.Network.Stream
         
         [Header("Debug")] [SerializeField] private bool showDebugLogs = true;
 
+        private MainScreenController _mainScreenController;
         private float _nextTime;
         private bool _isCapturing;
         private RenderTexture _tempRT;
@@ -69,6 +69,12 @@ namespace Code.Network.Stream
         public bool IsOwner => slotMachineInteractable.isOwner;
         public bool HasOwner => slotMachineInteractable.hasOwner;
 
+        private void Awake()
+        {
+            _mainScreenController = FindAnyObjectByType<MainScreenController>(FindObjectsInactive.Include);
+            _mainScreenController.StreamSlotId.onChanged += OnMainStreamerChanged;
+        }
+        
         private void Start()
         {
             _savedJPGQuality = jpgQuality;
@@ -359,16 +365,22 @@ namespace Code.Network.Stream
         // =================================================================================
 
         private bool _isVisible;
+        private bool _isMainStreamer;
+        
+        private void OnMainStreamerChanged(int newStreamerId)
+        {
+            _isMainStreamer = newStreamerId == SlotNumber;
+            OnVisibleChanged();
+        }
         
         private void OnOccupierChanged(bool isOccupied)
         {
             OnVisibleChanged();
-            
         }
 
         private void OnVisibleChanged()
         {
-            if(_isVisible)
+            if(_isVisible || _isMainStreamer)
                 OnBecameLocalVisible();
             else
                 OnBecameLocalInvisible();
@@ -379,7 +391,6 @@ namespace Code.Network.Stream
             _isVisible = true;
             _lastRecvFrameId = 0;
             
-            // Настройка видимости
             if (IsOwner)
             {
                 if (showDebugLogs) Debug.Log($"[Client] Я владелец. Начинаю стрим.");
@@ -423,40 +434,6 @@ namespace Code.Network.Stream
             _lastFrameHash = 0;
             _frameCheckCounter = 0;
         }
-
-        /*
-        protected override void OnOwnerChanged(PlayerID? oldOwner, PlayerID? newOwner, bool asServer)
-        {
-            base.OnOwnerChanged(oldOwner, newOwner, asServer);
-            
-            if(asServer)
-                return;
-            
-            _lastRecvFrameId = 0;
-            
-            if (isOwner)
-            {
-                if (showDebugLogs) Debug.Log($"[Client] Я владелец ({objectId}). Начинаю стрим.");
-                _isCapturing = false;
-                streamLoadBalancer?.RegisterStream();
-                _lastSentFrameId = 0;
-            }
-            else
-            {
-                targetImage.gameObject.SetActive(true);
-                streamLoadBalancer?.UnregisterStream();
-            }
-
-            if (!hasOwner)
-            {
-                targetImage.gameObject.SetActive(false);
-                streamLoadBalancer?.UnregisterStream();
-            }
-            else
-                streamConnection.Connect(SlotNumber);
-        }
-
-        */
         
         // API
         public void SetQualitySettings(float res, int quality)
