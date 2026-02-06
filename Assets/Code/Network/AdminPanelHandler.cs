@@ -43,7 +43,7 @@ namespace Code.Network
         }
 #endif
 
-        protected override void OnSpawned ()
+        protected override void OnSpawned()
         {
             base.OnSpawned();
             if (MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
@@ -145,7 +145,7 @@ namespace Code.Network
                 return;
             }
 
-            CommandCallback_Rpc(PlayerID.Server, $"User {username} was kicked", true);
+            CommandCallback_Rpc(sender, $"User {username} was kicked", true);
             Kick_TargetRpc(connection);
         }
 
@@ -246,7 +246,7 @@ namespace Code.Network
             // Обновляем словарь
             MutedDictionary[username] = currentMuteState;
 
-            CommandCallback_Rpc(PlayerID.Server, $"User {username} was muted", true);
+            CommandCallback_Rpc(sender, $"User {username} was muted", true);
             Mute_TargetRpc(connection, muteChat, muteVoice);
         }
 
@@ -306,12 +306,12 @@ namespace Code.Network
             // Обновляем словарь
             MutedDictionary[username] = currentMuteState;
 
-            CommandCallback_Rpc(PlayerID.Server, $"User {username} was unmuted", true);
+            CommandCallback_Rpc(sender, $"User {username} was unmuted", true);
             UnmuteCallback_Rpc(connection, unmuteChat, unmuteVoice);
         }
 
         [TargetRpc]
-        private void UnmuteCallback_Rpc(PlayerID target, bool unmuteChat = false, bool unmuteVoice = false)
+        private void UnmuteCallback_Rpc(PlayerID target, bool unmuteChat = false, bool unmuteVoice = false              )
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
@@ -470,12 +470,12 @@ namespace Code.Network
             {
                 var response = await PlayFlowLobby.ApiClient.StartServerAsync(serverRequest);
                 Debug.Log($"Server is starting! Instance ID: {response.instance_id}");
-                
+
                 PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIDName, response.instance_id);
                 PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIPName, response.network_ports[0].host);
                 PlayerPrefs.SetString(PlayFlowLobby.PrefsServerPortName,
                     response.network_ports[0].external_port.ToString());
-                
+
                 InstanceHandler.NetworkManager.StopClient();
                 LoadingScreenUI.Instance.LoadScene("Matchmaker");
             }
@@ -519,7 +519,7 @@ namespace Code.Network
         private void MoveUserTargetRpc(PlayerID target, string lobbyId)
         {
             PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIDName, lobbyId);
-            
+
             InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Matchmaker");
         }
@@ -575,11 +575,11 @@ namespace Code.Network
 
         private void CommandCallback(string message, bool success)
         {
-            if(success)
+            if (success)
                 Debug.Log(message);
             else
                 Debug.LogWarning(message);
-            
+
             chatController.SendSystemMessage(message,
                 !success
                     ? new ChatMessageStyle
