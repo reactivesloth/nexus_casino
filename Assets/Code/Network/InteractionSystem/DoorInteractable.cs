@@ -1,17 +1,9 @@
 using System;
-using System.Collections;
 using Code.Player;
-using PurrNet;
 using UnityEngine;
 
 namespace Code.Network.InteractionSystem
 {
-    public enum DoorMode
-    {
-        ManualOnly,
-        AutoOnly,
-        AutoAndManual
-    }
 
     [Serializable]
     public class DoorElement
@@ -21,11 +13,8 @@ namespace Code.Network.InteractionSystem
         public Vector3 openRot;
     }
 
-    public sealed class DoorInteractable : Interactable
+    public sealed class DoorInteractable : MonoBehaviour
     {
-        [Header("Mode")]
-        [SerializeField] private DoorMode mode = DoorMode.ManualOnly;
-
         [Header("Door Elements (multiple panels supported)")]
         [SerializeField] private DoorElement[] elements = Array.Empty<DoorElement>();
 
@@ -46,9 +35,7 @@ namespace Code.Network.InteractionSystem
         [SerializeField] private AnimationCurve closeCurve = AnimationCurve.Linear(0, 0, 1, 1);
         [SerializeField, Tooltip("Время анимации на клиенте, сек")]
         private float animationDuration = 0.5f;
-
-        private readonly SyncVar<float> _targetOpen = new SyncVar<float>();
-
+        
         private float _visualDegree;
         private AnimationCurve _currentCurve;
 
@@ -59,9 +46,7 @@ namespace Code.Network.InteractionSystem
         private Transform[] _players = Array.Empty<Transform>();
         private float _scanTimer;
 
-        private Coroutine _manualRoutine;
         private bool _isOpen;
-
         private bool _initedDoor;
 
         private void Awake()
@@ -77,84 +62,26 @@ namespace Code.Network.InteractionSystem
             if (col != null) col.isTrigger = true;
         }
 
-        private void OnEnable()
-        {
-            _targetOpen.onChanged += OnTargetChanged;
-        }
-
-        private void OnDisable()
-        {
-            _targetOpen.onChanged -= OnTargetChanged;
-
-            if (_manualRoutine != null)
-            {
-                StopCoroutine(_manualRoutine);
-                _manualRoutine = null;
-            }
-        }
-
         public void Start()
         {
-            _visualDegree = EvaluateByCurve(_targetOpen.value);
+            _visualDegree = EvaluateByCurve(_targetOpen);
             ApplyToElements(_visualDegree);
 
-            _prevTarget = _targetOpen.value;
+            _prevTarget = _targetOpen;
         }
 
         private void Update()
         {
-            if (mode == DoorMode.AutoOnly || mode == DoorMode.AutoAndManual)
-                Server_AutoTick();
+            UpdateCurve(_targetOpen);
+            CalculateDoor ();
 
-            float targetCurve = EvaluateByCurve(_targetOpen.value);
+            float targetCurve = EvaluateByCurve(_targetOpen);
             float step = (animationDuration > 0f) ? Time.deltaTime / animationDuration : 1f;
             _visualDegree = Mathf.MoveTowards(_visualDegree, targetCurve, step);
             ApplyToElements(_visualDegree);
         }
-
-        #region Interactable (Manual)
-        protected override void OnInteractCallback_Client(bool success, bool force = false)
-        {
-            base.OnInteractCallback_Client(success, force);
-            
-            if(!success)
-            {
-                // none sucsess action
-                return;
-            }
-            
-            if (mode == DoorMode.AutoOnly) return;
-
-            bool wantOpen = !_isOpen;
-            if (_manualRoutine != null) StopCoroutine(_manualRoutine);
-            _manualRoutine = StartCoroutine(Server_ManualSet(wantOpen));
-        }
-
-        private IEnumerator Server_ManualSet(bool open)
-        {
-            _isOpen = open;
-            float target = open ? 1f : 0f;
-
-            float t = _targetOpen.value;
-            float speed = Mathf.Max(0.0001f, manualSpeed);
-
-            while (!Mathf.Approximately(t, target))
-            {
-                float dir = Mathf.Sign(target - t);
-                t += dir * speed * Time.deltaTime;
-                t = Mathf.Clamp01(t);
-                if (!Mathf.Approximately(_targetOpen.value, t))
-                    _targetOpen.value = t;
-                yield return null;
-            }
-
-            _manualRoutine = null;
-        }
-        #endregion
-
-        #region Server: auto-logic
-        [ServerOnly]
-        private void Server_AutoTick()
+        
+        private void CalculateDoor()
         {
             _scanTimer -= Time.deltaTime;
             if (_scanTimer <= 0f)
@@ -208,15 +135,14 @@ namespace Code.Network.InteractionSystem
 
             _prevTarget = newTarget;
 
-            if (!Mathf.Approximately(_targetOpen.value, newTarget))
-                _targetOpen.value = newTarget;
+            if (!Mathf.Approximately(_targetOpen, newTarget))
+                _targetOpen = newTarget;
         }
-        #endregion
-
-        #region Client visuals helpers
 
         private float _prevCurve;
-        private void OnTargetChanged(float value)
+        private float _targetOpen;
+
+        private void UpdateCurve(float value)
         {
             if (value > _prevCurve)      _currentCurve = openCurve;
             else if (value < _prevCurve) _currentCurve = closeCurve;
@@ -243,7 +169,6 @@ namespace Code.Network.InteractionSystem
                 e.transform.localRotation = Quaternion.Lerp(e.transform.localRotation, Quaternion.Euler(rot), Time.deltaTime * 3);
             }
         }
-        #endregion
 
 #if UNITY_EDITOR
         private void OnValidate()
