@@ -1,5 +1,36 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!1 &2752257064804502999
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6654971045860563481}
+  m_Layer: 0
+  m_Name: Camera Target
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6654971045860563481
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2752257064804502999}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.000000059604645, y: 0.7071068, z: 0.000000029802322, w: 0.7071068}
+  m_LocalPosition: {x: 0.209, y: 1.407, z: 0}
+  m_LocalScale: {x: 1.44643, y: 1.0253199, z: 0.66666985}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2411919520584159765}
+  m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
 --- !u!1 &4462207169888732352
 GameObject:
   m_ObjectHideFlags: 0
@@ -446,6 +477,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7f7800c6eda820f438fa12eee7cb9de0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 3864430964741765293}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7f7800c6eda820f438fa12eee7cb9de0, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6654971045860563481}
     - targetCorrespondingSourceObject: {fileID: -6624747068299382927, guid: 7f7800c6eda820f438fa12eee7cb9de0, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1403303802639609563}
@@ -633,7 +667,7 @@ PrefabInstance:
     - target: {fileID: 1468934125875672948, guid: 9b306b656ae9bb34f8344f586c05be62, type: 3}
       propertyPath: headIKTarget
       value: 
-      objectReference: {fileID: 8439706181747224778}
+      objectReference: {fileID: 6654971045860563481}
     - target: {fileID: 1687175444409774949, guid: 9b306b656ae9bb34f8344f586c05be62, type: 3}
       propertyPath: m_StaticEditorFlags
       value: 0
@@ -1262,11 +1296,6 @@ PrefabInstance:
 --- !u!4 &3864430964741765293 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2015657308730844265, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
-  m_PrefabInstance: {fileID: 3339483825022540996}
-  m_PrefabAsset: {fileID: 0}
---- !u!224 &8439706181747224778 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 6577479591757589518, guid: a6f81d4766168754da77e8be18b04f25, type: 3}
   m_PrefabInstance: {fileID: 3339483825022540996}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &8877421194063752734 stripped
