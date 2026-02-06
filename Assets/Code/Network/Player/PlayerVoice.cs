@@ -1,6 +1,6 @@
 using System.Collections;
+using Dissonance;
 using PurrNet;
-using PurrNet.Voice;
 using UnityEngine;
 
 namespace Code.Network.Player
@@ -10,15 +10,13 @@ namespace Code.Network.Player
         public static PlayerVoice LocalInstance;
         public bool isMuted;
         public bool isInputMutedByServer;
-        public PurrVoicePlayer voicePlayer;
+
+        private VoiceBroadcastTrigger _voiceBroadcastTrigger;
         
         private IEnumerator Start()
         {
             yield return new WaitUntil(() => Player.GetLocalPlayer() != null);
             LocalInstance = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
-            voicePlayer = Player.GetLocalPlayer().GetComponentInChildren<PurrVoicePlayer>();
-            
-            
             SetMuteState(true);
         }
 
@@ -28,7 +26,11 @@ namespace Code.Network.Player
 
             isMuted = muted || isInputMutedByServer;
 
-            voicePlayer.muted = isMuted;
+            if (_voiceBroadcastTrigger == null)
+                _voiceBroadcastTrigger = DissonanceComms.GetSingleton()!.gameObject.GetComponent<VoiceBroadcastTrigger>();
+
+            if (_voiceBroadcastTrigger != null)
+                _voiceBroadcastTrigger.IsMuted = isMuted;
         }
 
         private void Update()

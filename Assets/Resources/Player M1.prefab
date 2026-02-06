@@ -940,9 +940,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4001682504778783961}
-    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2164318902226978531}
     - targetCorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4828444766259589334}
@@ -979,13 +976,10 @@ PrefabInstance:
       addedObject: {fileID: 5086600033916618086}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 3750846345577974219}
+      addedObject: {fileID: -7960841665413487116}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 5039567599468038841}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 6133512409587907014}
+      addedObject: {fileID: -884165700829949563}
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8509050154869065461}
@@ -1834,7 +1828,6 @@ MonoBehaviour:
   _visitiblityRules: {fileID: 0}
   isMuted: 1
   isInputMutedByServer: 0
-  voicePlayer: {fileID: 0}
 --- !u!114 &5086600033916618086
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1856,7 +1849,7 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
---- !u!114 &3750846345577974219
+--- !u!114 &-7960841665413487116
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1865,9 +1858,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 2302545898316884715}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 12cf33844d765b246855f943e21c97ea, type: 3}
+  m_Script: {fileID: 11500000, guid: 2b0e765a1e0e37144ae23f180fea3d4d, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.PurrVoicePlayer
+  m_EditorClassIdentifier: DissonanceVoip.PurrNet::Dissonance.Integrations.PurrNet.PurrNetDissonancePlayer
   _isSetup: 0
   _prefabId: -2147483648
   _componentIndex: -2147483648
@@ -1877,22 +1870,10 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
-  _inputProvider: {fileID: 5039567599468038841}
-  _outputProvider: {fileID: 6133512409587907014}
-  muted: 0
-  _enableLocalPlayback: 0
-  _localOutputProvider: {fileID: 0}
-  _currentDevice: 
-  _audioFilters:
-    _ownerAuth: 1
-    _filters:
-    - _filter: {fileID: 11400000, guid: be7fb27b864278f4db1782d36ee52f16, type: 2}
-      _filterLevel: 0
-      strength: 1
-  _enableSmoothing: 1
-  _visualAmplitudeScale: 3
-  _visualTimeScale: 1
---- !u!114 &5039567599468038841
+  trackingTransform: {fileID: 0}
+  dissonanceId_Debug: 
+  isTracking_Debug: 0
+--- !u!114 &-884165700829949563
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1901,23 +1882,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2302545898316884715}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 571e96e6d7235504988eab2f0a9676b9, type: 3}
+  m_Script: {fileID: 11500000, guid: 266ffb52b897fd94e9ef222571fce775, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.DefaultInputProvider
-  _reactToDeviceChanges: 1
---- !u!114 &6133512409587907014
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4ce79d01f8b587b449032b277322d8bb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.AudioSourceVoiceProvider
-  _audioSource: {fileID: 2833324864239222479}
+  m_EditorClassIdentifier: Assembly-CSharp::CrazyMinnow.SALSA.DissonanceLink.SalsaDissonanceLink
+  isDebug: 0
+  useLocalLipSync: 1
+  amplifyMultipleExperimental: 1
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
@@ -1950,9 +1920,9 @@ MonoBehaviour:
   m_Script: {fileID: -1091098677, guid: 21fe281538940584e84b6d5eedb3525e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioSrc: {fileID: 2833324864239222479}
+  audioSrc: {fileID: 0}
   waitForAudioSource: 0
-  useExternalAnalysis: 0
+  useExternalAnalysis: 1
   audioSourceWaitTarget: {fileID: 0}
   queueProcessor: {fileID: 6323055440327571151}
   emoter: {fileID: 3415041167778125870}
@@ -2563,77 +2533,6 @@ MonoBehaviour:
 Transform:
   m_CorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
   m_PrefabInstance: {fileID: 1384048308031903674}
-  m_PrefabAsset: {fileID: 0}
---- !u!1001 &4409275264675990341
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 1495082819104649297}
-    m_Modifications:
-    - target: {fileID: 535821762851530637, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_Name
-      value: Voice
-      objectReference: {fileID: 0}
-    - target: {fileID: 1900828616370910602, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: DopplerLevel
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.729
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: ed524522e89bb12419da49673cda9895, type: 3}
---- !u!4 &2164318902226978531 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
-  m_PrefabInstance: {fileID: 4409275264675990341}
-  m_PrefabAsset: {fileID: 0}
---- !u!82 &2833324864239222479 stripped
-AudioSource:
-  m_CorrespondingSourceObject: {fileID: 1900828616370910602, guid: ed524522e89bb12419da49673cda9895, type: 3}
-  m_PrefabInstance: {fileID: 4409275264675990341}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &5231084025345458665
 PrefabInstance:
