@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using Dissonance;
+using Dissonance.Integrations.PurrNet;
 
 namespace CrazyMinnow.SALSA.DissonanceLink
 {
@@ -61,7 +62,7 @@ namespace CrazyMinnow.SALSA.DissonanceLink
         private Salsa salsa;                    // link up and feed SALSA instance average data
         private IEnumerator coroAudioSourceLinkage; // coro pointer (best-practice for GC reduction)
         private const float PollTimer = .5f;        // how often the coro rechecks for playerState discovery
-
+        
         // using OnEnable() since it's probably necessary to re-process if the player is disabled/enabled for any reason
         private void OnEnable()
         {
