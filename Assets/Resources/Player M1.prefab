@@ -940,6 +940,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4001682504778783961}
+    - targetCorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8084298408223505793}
     - targetCorrespondingSourceObject: {fileID: 7208261743932278219, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 4828444766259589334}
@@ -974,12 +977,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5086600033916618086}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -7960841665413487116}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 299772469024318200}
     - targetCorrespondingSourceObject: {fileID: -259972160606440404, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8509050154869065461}
@@ -1849,45 +1846,6 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
---- !u!114 &-7960841665413487116
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b0e765a1e0e37144ae23f180fea3d4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: DissonanceVoip.PurrNet::Dissonance.Integrations.PurrNet.PurrNetDissonancePlayer
-  _isSetup: 0
-  _prefabId: -2147483648
-  _componentIndex: -2147483648
-  _shouldBePooled: 0
-  _parent: {fileID: 0}
-  _invertedPathToNearestParent: 
-  _directChildren: []
-  _networkRules: {fileID: 0}
-  _visitiblityRules: {fileID: 0}
-  trackingTransform: {fileID: 1495082819104649297}
-  dissonanceId_Debug: 
-  isTracking_Debug: 0
---- !u!114 &299772469024318200
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2302545898316884715}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 266ffb52b897fd94e9ef222571fce775, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CrazyMinnow.SALSA.DissonanceLink.SalsaDissonanceLink
-  isDebug: 0
-  useLocalLipSync: 1
-  amplifyMultipleExperimental: 1
 --- !u!95 &4782740562421246507 stripped
 Animator:
   m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 2e7148faed03f0f41bc3521d8e947d69, type: 3}
@@ -1920,9 +1878,9 @@ MonoBehaviour:
   m_Script: {fileID: -1091098677, guid: 21fe281538940584e84b6d5eedb3525e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  audioSrc: {fileID: 0}
+  audioSrc: {fileID: 5290036250396280237}
   waitForAudioSource: 0
-  useExternalAnalysis: 1
+  useExternalAnalysis: 0
   audioSourceWaitTarget: {fileID: 0}
   queueProcessor: {fileID: 6323055440327571151}
   emoter: {fileID: 3415041167778125870}
@@ -2739,3 +2697,70 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+--- !u!1001 &5983281140459384871
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1495082819104649297}
+    m_Modifications:
+    - target: {fileID: 535821762851530637, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_Name
+      value: Voice
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.707
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ed524522e89bb12419da49673cda9895, type: 3}
+--- !u!82 &5290036250396280237 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 1900828616370910602, guid: ed524522e89bb12419da49673cda9895, type: 3}
+  m_PrefabInstance: {fileID: 5983281140459384871}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &8084298408223505793 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2538289589782236582, guid: ed524522e89bb12419da49673cda9895, type: 3}
+  m_PrefabInstance: {fileID: 5983281140459384871}
+  m_PrefabAsset: {fileID: 0}
