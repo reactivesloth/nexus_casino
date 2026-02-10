@@ -23,8 +23,14 @@ namespace Code.Utility
         private void UpdateVisible()
         {
             var prevIsVisible = _isVisible;
+
+            if (PlayerMovementController.LocalInstance == null)
+            {
+                _isVisible = false;
+                return;
+            }
             
-            var playerTransform = PlayerMovementController.LocalInstance?.transform;
+            var playerTransform = PlayerMovementController.LocalInstance.transform;
             if(playerTransform == null)
             {
                 _isVisible = false;
