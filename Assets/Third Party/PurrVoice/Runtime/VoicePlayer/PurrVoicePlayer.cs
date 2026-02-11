@@ -72,6 +72,8 @@ namespace PurrNet.Voice
         {
             base.OnOwnerChanged(oldOwner, newOwner, asServer);
 
+            Cleanup();
+            
             if (isOwner)
             {
                 _inputProvider.Init(this);
