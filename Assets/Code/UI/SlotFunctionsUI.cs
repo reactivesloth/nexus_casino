@@ -135,7 +135,7 @@ namespace Code.UI
                 Uri = ApiRoutes.GetLoadFileUrl(),
                 Headers = ClientDataStorage.GetJwtHeader(),
                 FormData = form,
-                Timeout = 8
+                Timeout = (int)timeout
             };
 
             RestClient.Post(loadFileRequest).Then(fileLoadResponse =>
