@@ -46,19 +46,23 @@ namespace Code.Network.PlayFlow
             transport.address = PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1");
             transport.serverPort = ushort.Parse(PlayerPrefs.GetString("PlayFlow_Port", "7770"));
 
-            LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
+            if (LoadingScreenUI.Instance != null)
+            {
+                LoadingScreenUI.Instance.Show("loading.start_scene", "loading.please_wait");
 
-            yield return new WaitForSeconds(5f);
+                yield return new WaitForSeconds(5f);
 
-            transport.StartClient();
+                transport.StartClient();
 
-            yield return new WaitUntil(() => InstanceHandler.NetworkManager.clientState == ConnectionState.Connected);
-            Debug.Log("Success!");
-            FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
+                yield return new WaitUntil(() =>
+                    InstanceHandler.NetworkManager.clientState == ConnectionState.Connected);
+                Debug.Log("Success!");
+                FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
 
-            yield return new WaitForSeconds(2f);
+                yield return new WaitForSeconds(2f);
 
-            LoadingScreenUI.Instance.Hide();
+                LoadingScreenUI.Instance.Hide();
+            }
         }
 
         private void Update()

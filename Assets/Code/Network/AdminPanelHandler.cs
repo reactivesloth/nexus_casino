@@ -46,7 +46,7 @@ namespace Code.Network
         protected override void OnSpawned()
         {
             base.OnSpawned();
-            if (MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
+            if (ClientDataStorage.UserData.username != null && MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
                 SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
 
