@@ -19,7 +19,10 @@ namespace Code.Network.PlayFlow
     {
         [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float emptyServerLifeTime = 600f;
-        
+
+        [Header("Local Test"), SerializeField] private bool localTestMode = false;
+        [SerializeField] private bool asServer = false;
+
         public static PlayflowServerApiClient ApiClient;
         public static InstanceData CurrentServerData;
 
@@ -29,6 +32,15 @@ namespace Code.Network.PlayFlow
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
             InstanceHandler.NetworkManager.Subscribe<ChangeServerInfo>(HandleServerCustomData);
+
+            if (!localTestMode)
+                StartProd(transport);
+            else
+                StartLocalTestMode(transport);
+        }
+
+        private void StartProd(UDPTransport transport)
+        {
             ApiClient = new PlayflowServerApiClient(playflowApiKey);
 
 #if UNITY_SERVER
@@ -36,15 +48,28 @@ namespace Code.Network.PlayFlow
             transport.serverPort = 7770;
             transport.StartServer();
 #else
-            StartCoroutine(SpawnPlayer());
+            StartCoroutine(ConnectAndSpawnPlayer(PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1"),
+                ushort.Parse(PlayerPrefs.GetString("PlayFlow_Port", "7770"))));
 #endif
         }
 
-        private IEnumerator SpawnPlayer()
+        private void StartLocalTestMode(UDPTransport transport)
+        {
+            if (asServer)
+            {
+                transport.address = "";
+                transport.serverPort = 7770;
+                transport.StartServer();
+            }
+            
+            StartCoroutine(ConnectAndSpawnPlayer());
+        }
+
+        private IEnumerator ConnectAndSpawnPlayer(string ip = "127.0.0.1", ushort port = 7770)
         {
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
-            transport.address = PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1");
-            transport.serverPort = ushort.Parse(PlayerPrefs.GetString("PlayFlow_Port", "7770"));
+            transport.address = ip;
+            transport.serverPort = port;
 
             if (LoadingScreenUI.Instance != null)
             {
@@ -98,10 +123,10 @@ namespace Code.Network.PlayFlow
         {
             if (asServer)
                 return;
-            
+
             CurrentServerData = JsonConvert.DeserializeObject<InstanceData>(info.NewServerDataString);
-            
-            if(CurrentServerData.custom_data.TryGetValue("players", out var players))
+
+            if (CurrentServerData.custom_data.TryGetValue("players", out var players))
             {
                 // players, скорее всего, JArray
                 if (players is JArray jarr)
@@ -118,7 +143,7 @@ namespace Code.Network.PlayFlow
 
         private static readonly object _lock = new();
         private static Task _lastTask = Task.CompletedTask;
-        
+
         [ServerOnly]
         public static void UpdateSeverData(params (string, object)[] data)
         {
@@ -136,14 +161,17 @@ namespace Code.Network.PlayFlow
         [ServerOnly]
         private static async Task UpdateSeverData_Internal(params (string, object)[] data)
         {
-            if(CurrentServerData == null)
+            if (CurrentServerData == null)
                 AssignServerDataToServer();
-            if(CurrentServerData == null)
+            if (CurrentServerData == null)
             {
                 Debug.LogError("Server data is null");
                 return;
             }
-            
+
+            if (ApiClient == null)
+                return;
+
             var instanceId = CurrentServerData.instance_id;
             var customData = CurrentServerData.custom_data;
 

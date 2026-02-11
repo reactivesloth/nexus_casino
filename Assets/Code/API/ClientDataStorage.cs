@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Code.Network;
 
@@ -10,7 +11,14 @@ namespace Code.API
 
         public const string JwtHeaderName = "Jwt";
 
-        public static MeSchema UserData { get; set; }
+        public static MeSchema UserData { get; set; } = new MeSchema
+        {
+            id = 0,
+            username = "Player",
+            balance = 0,
+            role = "user",
+            created_at = DateTime.Now,
+        };
 
         public static Dictionary<string, string> GetJwtHeader(bool useRefresh = false)
         {
