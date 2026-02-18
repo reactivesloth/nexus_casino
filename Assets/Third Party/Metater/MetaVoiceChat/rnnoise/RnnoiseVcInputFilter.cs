@@ -8,6 +8,8 @@ namespace MetaVoiceChat.Rnnoise
 {
     public class RnnoiseVcInputFilter : VcInputFilter
     {
+        [SerializeField] private int filterCount = 5;
+        
         public MetaVc metaVc;
 
         private const int DenoiserFramesize = 480;
@@ -61,19 +63,22 @@ namespace MetaVoiceChat.Rnnoise
                 return;
             }
 
-            for (int i = 0; i < multiples; i++)
+            for (int iteration = 0; iteration < filterCount; iteration++)
             {
-                //var buffer = FixedLengthArrayPool<float>.Rent(DenoiserFramesize);
+                for (int i = 0; i < multiples; i++)
+                {
+                    //var buffer = FixedLengthArrayPool<float>.Rent(DenoiserFramesize);
 
-                // Copy the samples into the buffer
-                Array.Copy(samples, i * DenoiserFramesize, buffer, 0, DenoiserFramesize);
+                    // Copy the samples into the buffer
+                    Array.Copy(samples, i * DenoiserFramesize, buffer, 0, DenoiserFramesize);
 
-                denoiser.Denoise(buffer);
+                    denoiser.Denoise(buffer);
 
-                // Copy the denoised samples back to the original samples array
-                Array.Copy(buffer, 0, samples, i * DenoiserFramesize, DenoiserFramesize);
+                    // Copy the denoised samples back to the original samples array
+                    Array.Copy(buffer, 0, samples, i * DenoiserFramesize, DenoiserFramesize);
 
-                //FixedLengthArrayPool<float>.Return(buffer);
+                    //FixedLengthArrayPool<float>.Return(buffer);
+                }
             }
         }
     }
