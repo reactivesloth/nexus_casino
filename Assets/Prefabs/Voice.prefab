@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 1356153795954341607}
   - component: {fileID: 5016152487571491124}
   - component: {fileID: -2141109194514912051}
+  - component: {fileID: 7424771417517325574}
   m_Layer: 8
   m_Name: Voice
   m_TagString: Untagged
@@ -156,7 +157,7 @@ MonoBehaviour:
     jitterTimeWindow: 0.24
     jitterMeanOffsetWindow: 100
     outputMinBufferSize: 2
-  isEchoEnabled: 0
+  isEchoEnabled: 1
   isSineOverrideEnabled: 0
   maxCodecMilliseconds: 50
   allowMultipleCodecWarningsPerFrame: 0
@@ -223,6 +224,20 @@ MonoBehaviour:
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
 --- !u!114 &-2141109194514912051
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 535821762851530637}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 176f87b31a5c31b46adcf9fe6c17be09, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MetaVoiceChat.Rnnoise.RnnoiseVcInputFilter
+  optionalNextInputFilter: {fileID: 7424771417517325574}
+  metaVc: {fileID: 7975864247485389117}
+--- !u!114 &7424771417517325574
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
