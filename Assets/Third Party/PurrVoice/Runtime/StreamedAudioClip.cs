@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using UnityEngine;
 
 namespace PurrNet.Voice
@@ -15,26 +16,26 @@ namespace PurrNet.Voice
 
         public float playbackOffsetInSeconds = 0.1f;
         public IAudioInputSource inputSource;
-
         public int frequency => inputSource?.frequency ?? -1;
-
-        private readonly System.Collections.Concurrent.ConcurrentQueue<float> _buffer = new();
-        private int _bufferedSampleTarget;
-        private bool _isReady;
-        private bool _shouldPlay;
 
         private AudioClip _streamClip;
         private bool _audioSetup;
-        private int _lastWritePosition;
-        
+        private bool _isReady;
+
         private int _clipLen;
         private int _writeHead;
         private int _desiredLag;
 
-        public void Init(IAudioInputSource inputSource, ProcessSamplesDelegate processSamples = null, params FilterLevel[] levels)
+        private bool _shouldPlay;
+
+        private float[] _writeBuffer;
+
+        public void Init(IAudioInputSource inputSource,
+                         ProcessSamplesDelegate processSamples = null,
+                         params FilterLevel[] levels)
         {
             this.inputSource = inputSource;
-            this._processSamples = processSamples;
+            _processSamples = processSamples;
             _levels = levels;
             NetworkManager.main.onTick += OnTick;
         }
@@ -73,42 +74,59 @@ namespace PurrNet.Voice
 
         public void SetupAudio()
         {
-            inputSource.onSampleReady += OnSampleReady;
-            source.loop = true;
-            source.playOnAwake = false;
+            if (inputSource != null)
+                inputSource.onSampleReady += OnSampleReady;
+
+            if (source != null)
+            {
+                source.loop = true;
+                source.playOnAwake = false;
+            }
 
             _isReady = false;
             _audioSetup = false;
-            _bufferedSampleTarget = 0;
-            _lastWritePosition = 0;
+            _clipLen = 0;
+            _writeHead = 0;
         }
 
         private void EnsureAudioClipCreated()
         {
-            if (_audioSetup || frequency <= 0) return;
+            if (_audioSetup || frequency <= 0 || source == null)
+                return;
+
             int sr = AudioSettings.outputSampleRate;
-            _clipLen = sr; 
+            _clipLen = sr;
+
             _streamClip = AudioClip.Create("StreamedVoice", _clipLen, 1, sr, false);
             source.clip = _streamClip;
+
             AudioSettings.GetDSPBufferSize(out int dsp, out int num);
             _desiredLag = Mathf.CeilToInt(playbackOffsetInSeconds * sr) + (dsp * num);
+
             _writeHead = 0;
             _audioSetup = true;
+
+            if (_writeBuffer == null || _writeBuffer.Length < _clipLen)
+                _writeBuffer = new float[_clipLen];
         }
 
         public void Stop()
         {
             if (inputSource == null || !inputSource.isRecording)
                 return;
-            
+
             inputSource.Stop();
             StopAudio();
         }
 
         public void StopAudio()
         {
-            inputSource.onSampleReady -= OnSampleReady;
-            if (source && source.isPlaying) source.Stop();
+            if (inputSource != null)
+                inputSource.onSampleReady -= OnSampleReady;
+
+            if (source && source.isPlaying)
+                source.Stop();
+
             _audioSetup = false;
             _isReady = false;
         }
@@ -119,47 +137,65 @@ namespace PurrNet.Voice
 
         private void OnSampleReady(ArraySegment<float> data)
         {
+            if (data.Array == null || data.Count <= 0)
+                return;
+
             EnsureAudioClipCreated();
-            if (_processSamples != null) data = _processSamples(data, frequency, _levels);
-            
-            VoicePlaybackMonitor.ReportPlayback(data);
-            onStartPlayingSample?.Invoke(data);
+            if (!_audioSetup || _streamClip == null || source == null)
+                return;
+
+            var processed = data;
+            if (_processSamples != null)
+                processed = _processSamples(data, frequency, _levels);
+
+            VoicePlaybackMonitor.ReportPlayback(processed);
+            onStartPlayingSample?.Invoke(processed);
 
             int inRate = frequency;
             int outRate = AudioSettings.outputSampleRate;
 
             if (inRate == outRate)
             {
-                WriteSamplesDirect(data);
+                WriteSamplesDirect(processed);
             }
             else
             {
-                int outCount = Mathf.CeilToInt(data.Count * (outRate / (float)inRate));
-                var tmp = System.Buffers.ArrayPool<float>.Shared.Rent(outCount);
+                int outCount = Mathf.CeilToInt(processed.Count * (outRate / (float)inRate));
+                float[] tmp = ArrayPool<float>.Shared.Rent(outCount);
+
                 try
                 {
                     float ratio = inRate / (float)outRate;
+                    var srcArray = processed.Array;
+                    int srcOffset = processed.Offset;
+                    int srcCount = processed.Count;
+
                     for (int i = 0; i < outCount; i++)
                     {
                         float t = i * ratio;
                         int t0 = (int)t;
-                        int t1 = Mathf.Min(t0 + 1, data.Count - 1);
-                        tmp[i] = Mathf.Lerp(data.Array[data.Offset + t0], data.Array[data.Offset + t1], t - t0);
+                        int t1 = Mathf.Min(t0 + 1, srcCount - 1);
+
+                        float s0 = srcArray[srcOffset + t0];
+                        float s1 = srcArray[srcOffset + t1];
+
+                        tmp[i] = Mathf.Lerp(s0, s1, t - t0);
                     }
+
                     WriteFromBuffer(tmp, 0, outCount);
                 }
                 finally
                 {
-                    System.Buffers.ArrayPool<float>.Shared.Return(tmp);
+                    ArrayPool<float>.Shared.Return(tmp);
                 }
             }
-            
-            onEndPlayingSample?.Invoke(data);
-            
+
+            onEndPlayingSample?.Invoke(processed);
+
             if (!_isReady)
             {
-                int buffered = (_writeHead - source.timeSamples + _clipLen) % _clipLen;
-                if (buffered >= _desiredLag)
+                int ahead = (_writeHead - source.timeSamples + _clipLen) % _clipLen;
+                if (ahead >= _desiredLag)
                 {
                     int startPos = (_writeHead - _desiredLag + _clipLen) % _clipLen;
                     source.timeSamples = startPos;
@@ -168,13 +204,16 @@ namespace PurrNet.Voice
                 }
             }
         }
-        
+
         public void OnTick(bool asServer)
         {
-            if (!_audioSetup || _streamClip == null || source == null) return;
+            if (!_audioSetup || _streamClip == null || source == null)
+                return;
 
             int ahead = (_writeHead - source.timeSamples + _clipLen) % _clipLen;
-            if (ahead < _desiredLag) WriteZeros(_desiredLag - ahead);
+
+            if (ahead < _desiredLag)
+                WriteZeros(_desiredLag - ahead);
 
             if (!_isReady && ahead >= _desiredLag)
             {
@@ -187,57 +226,71 @@ namespace PurrNet.Voice
             if (_shouldPlay)
             {
                 _shouldPlay = false;
-                if (!source.isPlaying) source.Play();
+                if (!source.isPlaying)
+                    source.Play();
             }
         }
-        
+
         private void WriteZeros(int count)
         {
-            while (count > 0)
+            if (_writeBuffer == null || _writeBuffer.Length < _clipLen)
+                _writeBuffer = new float[_clipLen];
+
+            Array.Clear(_writeBuffer, 0, _writeBuffer.Length);
+
+            int remaining = count;
+            while (remaining > 0)
             {
-                int chunk = Mathf.Min(count, _clipLen - _writeHead);
-                var slice = System.Buffers.ArrayPool<float>.Shared.Rent(chunk);
-                Array.Clear(slice, 0, chunk);
-                _streamClip.SetData(slice, _writeHead);
+                int chunk = Mathf.Min(remaining, _clipLen - _writeHead);
+                _streamClip.SetData(_writeBuffer, _writeHead);
                 _writeHead = (_writeHead + chunk) % _clipLen;
-                System.Buffers.ArrayPool<float>.Shared.Return(slice);
-                count -= chunk;
+                remaining -= chunk;
             }
         }
 
         /// <summary>Writes samples directly when sample rates match. Zero allocations.</summary>
         private void WriteSamplesDirect(ArraySegment<float> data)
         {
+            if (_writeBuffer == null || _writeBuffer.Length < _clipLen)
+                _writeBuffer = new float[_clipLen];
+
+            var srcArray = data.Array;
+            int srcOffset = data.Offset;
             int remaining = data.Count;
-            int srcOff = data.Offset;
+            int srcPos = srcOffset;
+
             while (remaining > 0)
             {
                 int chunk = Mathf.Min(remaining, _clipLen - _writeHead);
-                var slice = System.Buffers.ArrayPool<float>.Shared.Rent(chunk);
-                Array.Copy(data.Array, srcOff, slice, 0, chunk);
-                _streamClip.SetData(slice, _writeHead);
+
+                Array.Copy(srcArray, srcPos, _writeBuffer, 0, chunk);
+                _streamClip.SetData(_writeBuffer, _writeHead);
+
                 _writeHead = (_writeHead + chunk) % _clipLen;
-                System.Buffers.ArrayPool<float>.Shared.Return(slice);
                 remaining -= chunk;
-                srcOff += chunk;
+                srcPos += chunk;
             }
         }
 
-        /// <summary>Writes from a buffer to the stream using ArrayPool for chunks. Zero allocations.</summary>
+        /// <summary>Writes from a buffer to the stream using единственный временный буфер.</summary>
         private void WriteFromBuffer(float[] buffer, int srcOffset, int count)
         {
+            if (_writeBuffer == null || _writeBuffer.Length < _clipLen)
+                _writeBuffer = new float[_clipLen];
+
             int remaining = count;
-            int srcOff = srcOffset;
+            int srcPos = srcOffset;
+
             while (remaining > 0)
             {
                 int chunk = Mathf.Min(remaining, _clipLen - _writeHead);
-                var slice = System.Buffers.ArrayPool<float>.Shared.Rent(chunk);
-                Array.Copy(buffer, srcOff, slice, 0, chunk);
-                _streamClip.SetData(slice, _writeHead);
+
+                Array.Copy(buffer, srcPos, _writeBuffer, 0, chunk);
+                _streamClip.SetData(_writeBuffer, _writeHead);
+
                 _writeHead = (_writeHead + chunk) % _clipLen;
-                System.Buffers.ArrayPool<float>.Shared.Return(slice);
                 remaining -= chunk;
-                srcOff += chunk;
+                srcPos += chunk;
             }
         }
     }

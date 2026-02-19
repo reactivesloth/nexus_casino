@@ -1,5 +1,5 @@
-using System.Linq;
 using System;
+using System.Collections;
 using PurrNet.Logging;
 using PurrNet.Utils;
 using UnityEngine;
@@ -71,12 +71,12 @@ namespace PurrNet.Voice
         protected override void OnSpawned()
         {
             base.OnSpawned();
-            
-            Invoke("InitDelay", 1);
+            StartCoroutine(InitDelayCoroutine());
         }
 
-        private void InitDelay()
+        private IEnumerator InitDelayCoroutine()
         {
+            yield return new WaitForSeconds(1f);
             if (isOwner)
             {
                 _inputProvider.Init(this);
@@ -122,7 +122,7 @@ namespace PurrNet.Voice
             _localOutputProvider?.output?.Stop();
             output?.Stop();
             
-            AudioDevices.onDevicesChanged += OnDevicesChanged;
+            AudioDevices.onDevicesChanged -= OnDevicesChanged;
         }
 
         private void SetupMicrophone()
@@ -134,7 +134,6 @@ namespace PurrNet.Voice
 
                 if (_enableLocalPlayback)
                 {
-                    var localSource = _localOutputProvider;
                     if (!_localOutputProvider)
                     {
                         PurrLogger.LogError($"Can't do local playback without a local output provider defined!", this);
@@ -192,11 +191,18 @@ namespace PurrNet.Voice
             _localOutputProvider?.output?.HandleAudioFilterRead(data, channels);
         }
 
+        private static readonly ArraySegment<float> EmptySegment = new ArraySegment<float>(new float[0]);
+
         private ArraySegment<float> ProcessSamples(ArraySegment<float> inputSamples, int frequency, params FilterLevel[] levels)
         {
-            if (muted && levels.Contains(FilterLevel.Receiver))
-                return MuteAudio(inputSamples);
-            
+            if (muted)
+            {
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    if (levels[i] == FilterLevel.Receiver)
+                        return EmptySegment; // вместо очистки буфера
+                }
+            }
             return DoProcessFilters(inputSamples, frequency, levels);
         }
         

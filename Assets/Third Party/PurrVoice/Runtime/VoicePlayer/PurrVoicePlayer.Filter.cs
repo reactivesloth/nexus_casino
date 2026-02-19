@@ -9,10 +9,17 @@ namespace PurrNet.Voice
     {
         [SerializeField] private SyncFilters _audioFilters = new();
         [SerializeField] private bool _enableSmoothing = true;
-        
-        public List<SyncFilters.Filter> audioFilters => _audioFilters.ToList();
+
+        public List<SyncFilters.Filter> audioFilters => _audioFilters.list;
+
         private SyncFilters _localFilters;
-        
+
+        private void EnsureLocalFilters()
+        {
+            if (_localFilters == null)
+                _localFilters = new SyncFilters(_audioFilters);
+        }
+
         /// <summary>
         /// This adds a filter to the audio processing chain.
         /// </summary>
@@ -21,6 +28,8 @@ namespace PurrNet.Voice
         /// <param name="initialStrength">The strength of the filter that gets setup. Only at this point can you sync the strength</param>
         public void AddFilter(PurrAudioFilter filter, FilterLevel level, float initialStrength = 1)
         {
+            EnsureLocalFilters();
+
             _audioFilters.AddFilter(filter, level, initialStrength);
             _localFilters.AddFilter(filter, level, initialStrength);
         }
@@ -31,6 +40,8 @@ namespace PurrNet.Voice
         /// <param name="index">Index at which to remove said filter</param>
         public void RemoveFilter(int index)
         {
+            EnsureLocalFilters();
+
             _audioFilters.RemoveFilter(index);
             _localFilters.RemoveFilter(index);
         }
@@ -41,11 +52,23 @@ namespace PurrNet.Voice
         /// <param name="filter">The filter you wish to remove. If multiple, it'll remove the first found</param>
         public void RemoveFilter(PurrAudioFilter filter)
         {
-            var filterIndex = _audioFilters.ToList().FindIndex(f => f.audioFilter == filter);
+            if (filter == null)
+            {
+                PurrLogger.LogError("Attempted to remove a null filter.");
+                return;
+            }
+
+            EnsureLocalFilters();
+
+            int filterIndex = _audioFilters.list.FindIndex(f => f.audioFilter == filter);
             if (filterIndex >= 0)
+            {
                 RemoveFilter(filterIndex);
+            }
             else
+            {
                 PurrLogger.LogError($"Filter {filter.name} not found in the audio filters list.");
+            }
         }
         
         /// <summary>
@@ -55,6 +78,8 @@ namespace PurrNet.Voice
         /// <param name="strength">Strength to set</param>
         public void SetFilterStrength(int index, float strength)
         {
+            EnsureLocalFilters();
+
             if (index < 0 || index >= _audioFilters.Count)
             {
                 PurrLogger.LogError($"Invalid filter index: {index}. Cannot set strength.");
@@ -77,17 +102,29 @@ namespace PurrNet.Voice
         /// <param name="strength">Strength to set</param>
         public void SetFilterStrength(PurrAudioFilter filter, float strength)
         {
-            var filterIndex = _audioFilters.ToList().FindIndex(f => f.audioFilter == filter);
+            if (filter == null)
+            {
+                PurrLogger.LogError("Attempted to set strength on a null filter.");
+                return;
+            }
+
+            EnsureLocalFilters();
+
+            int filterIndex = _audioFilters.list.FindIndex(f => f.audioFilter == filter);
             if (filterIndex >= 0)
+            {
                 SetFilterStrength(filterIndex, strength);
+            }
             else
+            {
                 PurrLogger.LogError($"Filter {filter.name} not found in the audio filters list.");
+            }
         }
-        
+
         private void FilterAwake()
         {
-            _localFilters = new(_audioFilters);
-            
+            _localFilters = new SyncFilters(_audioFilters);
+
             for (var i = 0; i < _audioFilters.Count; i++)
             {
                 var f = _audioFilters[i];
