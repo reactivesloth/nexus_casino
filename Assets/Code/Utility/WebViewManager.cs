@@ -178,9 +178,7 @@ namespace Code.Utility
             if (WebViewPrefabInstance == null) return;
 
             WebViewPrefabInstance.gameObject.SetActive(false);
-            // TODO: Find a way to destroy WebViewPrefabInstance without disposing WebView
-            //Destroy(WebViewPrefabInstance.gameObject);
-        
+            
             if (parkingCanvas != null)
             {
                 RebindToCanvas(WebViewPrefabInstance, parkingCanvas, bringToFront: false, worldSpace: false);
