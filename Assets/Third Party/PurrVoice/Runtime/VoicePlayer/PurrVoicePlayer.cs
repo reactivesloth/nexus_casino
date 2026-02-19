@@ -71,7 +71,12 @@ namespace PurrNet.Voice
         protected override void OnSpawned()
         {
             base.OnSpawned();
+            
+            Invoke("InitDelay", 1);
+        }
 
+        private void InitDelay()
+        {
             if (isOwner)
             {
                 _inputProvider.Init(this);
@@ -83,7 +88,7 @@ namespace PurrNet.Voice
                 SetupRemotePlayback();
             }
         }
-
+        
         protected override void OnDespawned()
         {
             base.OnDespawned();
