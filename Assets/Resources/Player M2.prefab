@@ -498,9 +498,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8432937166005262838}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -6964254128273823520}
     - targetCorrespondingSourceObject: {fileID: -5823106577872157028, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 7889299020810858274}
@@ -1398,15 +1395,9 @@ MonoBehaviour:
   _localOutputProvider: {fileID: 0}
   _currentDevice: 
   _audioFilters:
-    _ownerAuth: 0
-    _filters:
-    - _filter: {fileID: 11400000, guid: be7fb27b864278f4db1782d36ee52f16, type: 2}
-      _filterLevel: 0
-      strength: 1
-    - _filter: {fileID: 11400000, guid: 9c8418ab66b53de41a341150591d714e, type: 2}
-      _filterLevel: 0
-      strength: 1
-  _enableSmoothing: 1
+    _ownerAuth: 1
+    _filters: []
+  _enableSmoothing: 0
   _visualAmplitudeScale: 3
   _visualTimeScale: 1
 --- !u!114 &2984635193215056765
@@ -1435,19 +1426,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.AudioSourceVoiceProvider
   _audioSource: {fileID: 4646377691395651793}
---- !u!114 &-6964254128273823520
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2095315197724490687}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b97208d7a4e1cd4da4c69ca936f54ed, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.PurrVoicePlayerDebug
-  timeWindow: 3
 --- !u!137 &3903605093316825880 stripped
 SkinnedMeshRenderer:
   m_CorrespondingSourceObject: {fileID: -6343034315099908618, guid: 1fc916e49d8f7f140825f84eec4190a9, type: 3}

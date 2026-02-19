@@ -122,7 +122,7 @@ namespace PurrNet.Voice
             _localOutputProvider?.output?.Stop();
             output?.Stop();
             
-            AudioDevices.onDevicesChanged += OnDevicesChanged;
+            AudioDevices.onDevicesChanged -= OnDevicesChanged;
         }
 
         private void SetupMicrophone()
