@@ -14,9 +14,6 @@ namespace PurrNet.Voice
         private readonly int _sampleRate;
         private readonly int _channels;
         private readonly int _frameSize;
-
-        private const float ShortToFloatFactor = 1f / short.MaxValue;
-
         public int SampleRate => _sampleRate;
 
         public OpusCodec(int sampleRate, int channels, int frameSize)
@@ -34,23 +31,23 @@ namespace PurrNet.Voice
         /// <param name="input">Input float samples.</param>
         /// <param name="outputBuffer">Output buffer, must be at least MaxEncodedBytes.</param>
         /// <returns>Number of bytes written to outputBuffer.</returns>
+        public int Encode(float[] input, byte[] outputBuffer)
+        {
+            return Encode(input, 0, input.Length, outputBuffer);
+        }
+
+        /// <summary>
+        /// Encode a slice into a caller-provided buffer. Zero allocations.
+        /// </summary>
         public int Encode(float[] input, int offset, int count, byte[] outputBuffer)
         {
-            if (outputBuffer.Length < MaxEncodedBytes)
-                throw new ArgumentException($"Output buffer must be at least {MaxEncodedBytes} bytes");
-
             var shortInput = ArrayPool<short>.Shared.Rent(count);
             try
             {
                 for (int i = 0; i < count; i++)
-                {
-                    float sample = input[offset + i];
-                    sample = Math.Max(-1f, Math.Min(1f, sample));
-                    shortInput[i] = (short)(sample * short.MaxValue);
-                }
+                    shortInput[i] = (short)(Math.Clamp(input[offset + i], -1f, 1f) * short.MaxValue);
 
-                return _encoder.Encode(shortInput.AsSpan(0, count), _frameSize, outputBuffer.AsSpan(),
-                    outputBuffer.Length);
+                return _encoder.Encode(shortInput.AsSpan(0, count), _frameSize, outputBuffer.AsSpan(), outputBuffer.Length);
             }
             finally
             {
@@ -64,21 +61,25 @@ namespace PurrNet.Voice
         /// <param name="data">Encoded bytes.</param>
         /// <param name="outputBuffer">Output buffer for float samples, must be at least frameSize * channels.</param>
         /// <returns>Number of samples written to outputBuffer.</returns>
+        public int Decode(byte[] data, float[] outputBuffer)
+        {
+            return Decode(data, 0, data?.Length ?? 0, outputBuffer);
+        }
+
+        /// <summary>
+        /// Decode a slice into a caller-provided buffer. Zero allocations.
+        /// </summary>
         public int Decode(byte[] data, int offset, int count, float[] outputBuffer)
         {
             if (data == null || count <= 0) return 0;
 
-            int requiredSize = _frameSize * _channels;
-            if (outputBuffer.Length < requiredSize)
-                throw new ArgumentException($"Output buffer must be at least {requiredSize} samples");
-
-            var shortOutput = ArrayPool<short>.Shared.Rent(requiredSize);
+            var shortOutput = ArrayPool<short>.Shared.Rent(_frameSize * _channels);
             try
             {
                 int len = _decoder.Decode(data.AsSpan(offset, count), shortOutput.AsSpan(), _frameSize, false);
 
                 for (int i = 0; i < len; i++)
-                    outputBuffer[i] = shortOutput[i] * ShortToFloatFactor;
+                    outputBuffer[i] = shortOutput[i] / (float)short.MaxValue;
 
                 return len;
             }
@@ -98,7 +99,7 @@ namespace PurrNet.Voice
             {
                 int len = Encode(input, outputBuffer);
                 var result = new byte[len];
-                outputBuffer.AsSpan(0, len).CopyTo(result);
+                Array.Copy(outputBuffer, 0, result, 0, len);
                 return result;
             }
             finally
@@ -117,7 +118,7 @@ namespace PurrNet.Voice
             {
                 int len = Decode(data, tmp);
                 var result = new float[len];
-                tmp.AsSpan(0, len).CopyTo(result);
+                Array.Copy(tmp, 0, result, 0, len);
                 return result;
             }
             finally
@@ -125,11 +126,5 @@ namespace PurrNet.Voice
                 ArrayPool<float>.Shared.Return(tmp);
             }
         }
-
-        public int Encode(float[] input, byte[] outputBuffer)
-            => Encode(input, 0, input.Length, outputBuffer);
-
-        public int Decode(byte[] data, float[] outputBuffer)
-            => Decode(data, 0, data?.Length ?? 0, outputBuffer);
     }
 }

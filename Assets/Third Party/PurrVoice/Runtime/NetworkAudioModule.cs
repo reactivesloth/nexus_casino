@@ -1,4 +1,7 @@
 using System;
+using System.Linq;
+using PurrNet.Logging;
+using PurrNet.Packing;
 using PurrNet.Transports;
 using UnityEngine;
 
@@ -12,26 +15,24 @@ namespace PurrNet.Voice
         private int _chunkSize;
         private int _bufferPos;
         private ProcessSamplesDelegate _processSamples;
-
-        private SyncVar<int> _frequency = new SyncVar<int>(-1, ownerAuth: true);
-
+        private SyncVar<int> _frequency = new(-1, ownerAuth:true);
         private OpusCodec _clientCodec;
         private OpusCodec _serverCodec;
-
-        public event Action<int> OnFrequencyChanged
+        
+        public event Action<int> OnFrequencyChanged 
         {
             add => _frequency.onChanged += value;
             remove => _frequency.onChanged -= value;
         }
 
         public int frequency => _frequency;
+
         public bool isRecording { get; private set; }
 
         public event Action<ArraySegment<float>> onSampleReady;
 
         private const int MAX_CHUNK_SIZE_BYTES = 900;
 
-        private static readonly int[] s_frequencyOptions = { 8000, 12000, 16000, 24000, 48000 };
 
         public NetworkAudioModule(ProcessSamplesDelegate processSamples = null)
         {
@@ -48,27 +49,25 @@ namespace PurrNet.Voice
             _decodeBuffer = new float[_chunkSize];
             _encodeBuffer = new byte[OpusCodec.MaxEncodedBytes];
             _bufferPos = 0;
-
-            if (isClient)
+            if(isClient)
                 _clientCodec = new OpusCodec(targetRate, 1, _chunkSize);
-
-            if (isServer)
+            if(isServer)
                 _serverCodec = new OpusCodec(targetRate, 1, _chunkSize);
         }
 
-        private static int GetClosestFrequency(int frequency)
+        private int GetClosestFrequency(int frequency)
         {
-            int closest = s_frequencyOptions[0];
+            int[] options = { 8000, 12000, 16000, 24000, 48000 };
+            int closest = options[0];
             int minDiff = Math.Abs(frequency - closest);
 
-            for (int i = 1; i < s_frequencyOptions.Length; i++)
+            for (int i = 1; i < options.Length; i++)
             {
-                int option = s_frequencyOptions[i];
-                int diff = Math.Abs(frequency - option);
+                int diff = Math.Abs(frequency - options[i]);
                 if (diff < minDiff)
                 {
                     minDiff = diff;
-                    closest = option;
+                    closest = options[i];
                 }
             }
 
@@ -79,8 +78,7 @@ namespace PurrNet.Voice
         {
             if (!isController)
             {
-                Debug.LogError(
-                    $"Only the controller can set the frequency. Current controller: {owner}, current player: {localPlayer}");
+                Debug.LogError($"Only the controller can set the frequency. Current controller: {owner}, current player: {localPlayer}");
                 return;
             }
             
@@ -89,24 +87,15 @@ namespace PurrNet.Voice
 
         public void SendAudioChunk(ArraySegment<float> segment)
         {
-            if (!isOwner || _frequency.value < 0 || _chunkBuffer == null || _chunkBuffer.Length == 0 || _clientCodec == null)
-                return;
-
-            if (segment.Array == null || segment.Count <= 0)
-                return;
+            if (!isOwner || _frequency.value < 0 || _chunkBuffer.Length <= 0 || _clientCodec == null) return;
 
             int offset = 0;
-            var srcArray = segment.Array;
-            int srcBaseOffset = segment.Offset;
-
             while (offset < segment.Count)
             {
                 int remaining = _chunkSize - _bufferPos;
                 int copy = Math.Min(remaining, segment.Count - offset);
-                if (copy <= 0)
-                    break;
-
-                Array.Copy(srcArray, srcBaseOffset + offset, _chunkBuffer, _bufferPos, copy);
+                if (copy <= 0) break;
+                Array.Copy(segment.Array, segment.Offset + offset, _chunkBuffer, _bufferPos, copy);
                 _bufferPos += copy;
                 offset += copy;
 
@@ -114,14 +103,12 @@ namespace PurrNet.Voice
                 {
                     (parent as PurrVoicePlayer)?.DebugNetworkSentData(_chunkBuffer);
                     int encodedLen = _clientCodec.Encode(_chunkBuffer, _encodeBuffer);
+
                     int encodedOffset = 0;
                     while (encodedOffset < encodedLen)
                     {
                         int chunkLen = Math.Min(MAX_CHUNK_SIZE_BYTES, encodedLen - encodedOffset);
-
-                        var encodedSlice = new ByteData(_encodeBuffer, encodedOffset, chunkLen);
-                        RpcSendAudio(encodedSlice);
-
+                        RpcSendAudio(new ByteData(_encodeBuffer, encodedOffset, chunkLen));
                         encodedOffset += chunkLen;
                     }
 
@@ -137,9 +124,6 @@ namespace PurrNet.Voice
                 return;
 
             int sampleCount = _serverCodec.Decode(encoded.data, encoded.offset, encoded.length, _decodeBuffer);
-            if (sampleCount <= 0)
-                return;
-
             SendAudio_Internal(_decodeBuffer, sampleCount);
         }
 
@@ -151,26 +135,23 @@ namespace PurrNet.Voice
 
             float[] samples = segment.Array;
             int count = segment.Count;
-            int offset = segment.Offset;
-
-            if (samples == null || count <= 0 || _serverCodec == null)
+            if (samples == null || count <= 0)
                 return;
 
-            int encodedLen = _serverCodec.Encode(samples, offset, count, _encodeBuffer);
+            int encodedLen = _serverCodec.Encode(samples, segment.Offset, count, _encodeBuffer);
+
             (parent as PurrVoicePlayer)?.DebugServerProcessed(segment);
 
             var encodedData = new ByteData(_encodeBuffer, 0, encodedLen);
-
-            var observers = parent.observers;
-            for (int i = 0; i < observers.Count; i++)
+            for (var i = 0; i < networkManager.players.Count; i++)
             {
-                var player = observers[i];
-
+                var player = networkManager.players[i];
+                if (!parent.observers.Contains(player)) continue;
                 if (owner == player)
                     continue;
                 if (player == localPlayer)
                 {
-                    ReceiveAudio_Internal(samples, offset, count);
+                    ReceiveAudio_Internal(samples, segment.Offset, count);
                     continue;
                 }
 
@@ -185,9 +166,6 @@ namespace PurrNet.Voice
                 return;
 
             int sampleCount = _clientCodec.Decode(encoded.data, encoded.offset, encoded.length, _decodeBuffer);
-            if (sampleCount <= 0)
-                return;
-
             ReceiveAudio_Internal(_decodeBuffer, 0, sampleCount);
         }
 
