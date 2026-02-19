@@ -1442,6 +1442,15 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 431632902715827653}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -7620481115392372196}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 9000849885677838169}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6069391750259495059}
     - targetCorrespondingSourceObject: {fileID: -5151492872390713093, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8753856777003469895}
@@ -3438,6 +3447,71 @@ MonoBehaviour:
   _directChildren: []
   _networkRules: {fileID: 0}
   _visitiblityRules: {fileID: 0}
+--- !u!114 &-7620481115392372196
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127680710956633387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 12cf33844d765b246855f943e21c97ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.PurrVoicePlayer
+  _isSetup: 0
+  _prefabId: -2147483648
+  _componentIndex: -2147483648
+  _shouldBePooled: 0
+  _parent: {fileID: 0}
+  _invertedPathToNearestParent: 
+  _directChildren: []
+  _networkRules: {fileID: 0}
+  _visitiblityRules: {fileID: 0}
+  _inputProvider: {fileID: 9000849885677838169}
+  _outputProvider: {fileID: 6069391750259495059}
+  muted: 0
+  _enableLocalPlayback: 0
+  _localOutputProvider: {fileID: 0}
+  _currentDevice: 
+  _audioFilters:
+    _ownerAuth: 0
+    _filters:
+    - _filter: {fileID: 11400000, guid: be7fb27b864278f4db1782d36ee52f16, type: 2}
+      _filterLevel: 0
+      strength: 1
+    - _filter: {fileID: 11400000, guid: 9c8418ab66b53de41a341150591d714e, type: 2}
+      _filterLevel: 0
+      strength: 1
+  _enableSmoothing: 1
+  _visualAmplitudeScale: 3
+  _visualTimeScale: 1
+--- !u!114 &9000849885677838169
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127680710956633387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 571e96e6d7235504988eab2f0a9676b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.DefaultInputProvider
+  _reactToDeviceChanges: 1
+--- !u!114 &6069391750259495059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1127680710956633387}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ce79d01f8b587b449032b277322d8bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: PurrVoice.Runtime::PurrNet.Voice.AudioSourceVoiceProvider
+  _audioSource: {fileID: 7401336557040990074}
 --- !u!4 &1418592582831314488 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8013909246233647550, guid: 284185ec1f1e5c6409bed7bc27c6c215, type: 3}
