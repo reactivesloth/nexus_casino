@@ -1,7 +1,5 @@
 using System;
 using System.Linq;
-using PurrNet.Logging;
-using PurrNet.Packing;
 using PurrNet.Transports;
 using UnityEngine;
 
@@ -123,8 +121,9 @@ namespace PurrNet.Voice
             if (_serverCodec == null || _decodeBuffer == null || encoded.data == null || encoded.length <= 0)
                 return;
 
-            int sampleCount = _serverCodec.Decode(encoded.data, encoded.offset, encoded.length, _decodeBuffer);
-            SendAudio_Internal(_decodeBuffer, sampleCount);
+            // int sampleCount = _serverCodec.Decode(encoded.data, encoded.offset, encoded.length, _decodeBuffer);
+            // SendAudio_Internal(_decodeBuffer, sampleCount);
+            ObserversReceiveAudio(encoded);
         }
 
         private void SendAudio_Internal(float[] buffer, int sampleCount)
@@ -143,24 +142,12 @@ namespace PurrNet.Voice
             (parent as PurrVoicePlayer)?.DebugServerProcessed(segment);
 
             var encodedData = new ByteData(_encodeBuffer, 0, encodedLen);
-            for (var i = 0; i < networkManager.players.Count; i++)
-            {
-                var player = networkManager.players[i];
-                if (!parent.observers.Contains(player)) continue;
-                if (owner == player)
-                    continue;
-                if (player == localPlayer)
-                {
-                    ReceiveAudio_Internal(samples, segment.Offset, count);
-                    continue;
-                }
-
-                TargetReceiveAudio(player, encodedData);
-            }
+            
+            ObserversReceiveAudio(encodedData);
         }
 
-        [TargetRpc(channel: Channel.Unreliable, compressionLevel:CompressionLevel.Best)]
-        private void TargetReceiveAudio(PlayerID player, ByteData encoded)
+        [ObserversRpc(channel: Channel.Unreliable, compressionLevel:CompressionLevel.Best)]
+        private void ObserversReceiveAudio(ByteData encoded)
         {
             if (_clientCodec == null || _decodeBuffer == null || encoded.data == null || encoded.length <= 0)
                 return;
