@@ -49,6 +49,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayFlowManager
   playflowApiKey: pfzKiXdk216uJifam4nDDEMDLt6ie4f4IxY2dgEJcBYuI=
   emptyServerLifeTime: 600
+  localTestMode: 0
+  asServer: 0
 --- !u!114 &4148929254775448530
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -72,7 +74,7 @@ MonoBehaviour:
   _networkRules: {fileID: 11400000, guid: 49b645d77fb5c440d9ef38ce72d2e37e, type: 2}
   _visibilityRules: {fileID: 11400000, guid: 665279a58f09344828da3e562e35a930, type: 2}
   _authenticator: {fileID: 0}
-  _tickRate: 20
+  _tickRate: 10
   _patchLingeringProcessBug: 0
 --- !u!114 &4731415244911535516
 MonoBehaviour:
