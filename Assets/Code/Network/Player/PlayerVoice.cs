@@ -1,6 +1,6 @@
 using System.Collections;
+using Photon.Voice.Unity;
 using PurrNet;
-using PurrNet.Voice;
 using UnityEngine;
 
 namespace Code.Network.Player
@@ -10,14 +10,15 @@ namespace Code.Network.Player
         public static PlayerVoice LocalInstance;
         public bool isMuted;
         public bool isInputMutedByServer;
-        public PurrVoicePlayer voicePlayer;
+        public Recorder voice;
         
         private IEnumerator Start()
         {
             yield return new WaitUntil(() => Player.GetLocalPlayer() != null);
             LocalInstance = Player.GetLocalPlayer().GetComponent<PlayerVoice>();
-            voicePlayer = Player.GetLocalPlayer().GetComponentInChildren<PurrVoicePlayer>();
 
+            voice = FindAnyObjectByType<Recorder>();
+            
             SetMuteState(true);
         }
 
@@ -26,7 +27,7 @@ namespace Code.Network.Player
             if (!isOwner) return;
 
             isMuted = muted || isInputMutedByServer;
-            voicePlayer.muted = isMuted;
+            voice.TransmitEnabled = !isMuted;
         }
 
         private void Update()
