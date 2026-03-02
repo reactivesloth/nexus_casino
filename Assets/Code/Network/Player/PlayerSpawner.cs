@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
@@ -189,6 +190,17 @@ namespace Code.Network.Player
         private void OnClientConnectionState_Client(ConnectionState state)
         {
             _clientConnected = (state == ConnectionState.Connected);
+
+            if (state == ConnectionState.Disconnected)
+            {
+                Debug.Log("Network lost, attempting reconnect...");
+                StartCoroutine(ReconnectCoroutine());
+            }
+        }
+        
+        private IEnumerator ReconnectCoroutine() {
+            yield return new WaitForSeconds(2f);
+            FindAnyObjectByType<PlayFlowManager>().ConnectToServer();
         }
 
         // =========================
