@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -35,17 +35,14 @@ namespace Vuplex.WebView {
         /// <summary>
         /// 3D WebView automatically selects which native plugin to use based on
         /// the build platform and which plugins are installed in the project.
-        /// However, if you have multiple plugins installed for a single platform,
+        /// However, if your project has multiple plugins installed for a single platform,
         /// this option can be used to specify which plugin to use in order to override
-        /// the default behavior.
+        /// the default behavior. For example,
+        /// there are two plugins for Android: WebPluginType.Android and WebPluginType.AndroidGecko.
+        /// If both plugins are installed in the same project, then WebPluginType.AndroidGecko is used by default.
+        /// However, you can override this to force WebPluginType.Android to be used instead by passing
+        /// `new WebPluginType[] { WebPluginType.Android }`.
         /// </summary>
-        /// <remarks>
-        /// Currently, Android is the only platform that supports multiple 3D WebView
-        /// plugins: `WebPluginType.Android` and `WebPluginType.AndroidGecko`. If both
-        /// plugins are installed in the same project, `WebPluginType.AndroidGecko` will be used by default.
-        /// However, you can override this to force `WebPluginType.Android` to be used instead by specifying
-        /// `preferredPlugins = new WebPluginType[] { WebPluginType.Android }`.
-        /// </remarks>
         public WebPluginType[] preferredPlugins;
     }
 }

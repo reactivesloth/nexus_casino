@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -19,6 +19,7 @@ namespace Vuplex.WebView.Editor {
 
         public virtual void OnEnable() {
 
+            _audioSourceEnabled = serializedObject.FindProperty("AudioSourceEnabled");
             _clickingEnabled = serializedObject.FindProperty("ClickingEnabled");
             _cursorIconsEnabled = serializedObject.FindProperty("CursorIconsEnabled");
             _dragMode = serializedObject.FindProperty("DragMode");
@@ -49,6 +50,7 @@ namespace Vuplex.WebView.Editor {
             _renderCustomPlatformSpecificSettings();
             EditorGUILayout.PropertyField(_nativeOnScreenKeyboardEnabled);
             EditorGUILayout.PropertyField(_pixelDensity);
+            EditorGUILayout.PropertyField(_audioSourceEnabled);
             EditorGUILayout.PropertyField(_cursorIconsEnabled);
             EditorGUILayout.Space();
 
@@ -83,6 +85,7 @@ namespace Vuplex.WebView.Editor {
             serializedObject.ApplyModifiedProperties();
         }
 
+        SerializedProperty _audioSourceEnabled;
         SerializedProperty _clickingEnabled;
         SerializedProperty _cursorIconsEnabled;
         SerializedProperty _dragMode;

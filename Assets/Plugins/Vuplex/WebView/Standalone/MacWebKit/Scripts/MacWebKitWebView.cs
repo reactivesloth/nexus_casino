@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -23,6 +23,13 @@ using Vuplex.WebView.Internal;
 
 namespace Vuplex.WebView {
 
+    /// <summary>
+    /// MacWebKitWebView is the optional WebKit-based implementation of IWebView in
+    /// 3D WebView for Windows and macOS. It's powered by macOS's built-in WKWebView
+    /// component and also includes additional APIs for WebKit-specific functionality.
+    /// For details about the WebKit plugin and how to enable it, please see
+    /// <see href="https://support.vuplex.com/articles/standalone-browser-engines">this article</see>.
+    /// </summary>
     public class MacWebKitWebView : BaseWebView,
                                     IWebView,
                                     IWithDownloads,
@@ -133,8 +140,8 @@ namespace Vuplex.WebView {
         /// <summary>
         /// Returns an Objective-C pointer to the instance's underlying native <see href="https://developer.apple.com/documentation/webkit/wkwebview?language=objc">WKWebView</see>.
         /// The application can use this to utilize native macOS APIs for which 3D WebView doesn't yet have
-        /// dedicated C# equivalents. To utilize the pointer, the application must pass it to a native function
-        /// defined in an Objective-C (.m) file like illustrated in the example below.
+        /// dedicated C# equivalents. To utilize the pointer, the application must pass it to a function
+        /// defined in a native macOS library (.bundle file) like illustrated in the example below.
         /// </summary>
         /// <remarks>
         /// Warning: Adding code that interacts with the native WKWebView directly
@@ -401,6 +408,9 @@ namespace Vuplex.WebView {
 
             _assertValidState();
             _assertNative2DModeEnabled();
+            #if UNITY_EDITOR
+                rect = EditorGameViewHelper.AdjustRectForNative2DMode(rect);
+            #endif
             _rect = rect;
             WebView_setRect(_nativeWebViewPtr, (int)rect.x, (int)rect.y, (int)rect.width, (int)rect.height);
         }
@@ -409,7 +419,7 @@ namespace Vuplex.WebView {
 
             WebView_setRemoteDebuggingEnabled(enabled);
             if (enabled) {
-                WebViewLogger.Log("Remote debugging is enabled for macOS. For instructions, please see https://support.vuplex.com/articles/how-to-debug-web-content.");
+                WebViewLogger.Log("Remote debugging is enabled for macOS. For instructions, please see https://support.vuplex.com/articles/how-to-debug-web-content#webkit.");
             }
         }
 

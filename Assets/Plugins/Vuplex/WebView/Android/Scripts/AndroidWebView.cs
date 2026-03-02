@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -26,9 +26,12 @@ using Vuplex.WebView.Internal;
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// AndroidWebView is the IWebView implementation used by 3D WebView for Android.
-    /// It also includes additional APIs for Android-specific functionality.
+    /// AndroidWebView is the IWebView implementation in 3D WebView for Android.
+    /// It's powered by Android's built-in System WebView and also includes additional
+    /// APIs for Android-specific functionality.
     /// </summary>
+    /// <seealso href="https://support.vuplex.com/search#android">Support articles / FAQ for Android</seealso>
+    /// <seealso href="https://store.vuplex.com/webview/android#notes-and-limitations">Limitations of 3D WebView for Android</seealso>
     public class AndroidWebView : BaseWebView,
                                   IWebView,
                                   IWithAuth,

@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -19,6 +19,10 @@ namespace Vuplex.WebView {
     /// The default pixel density is `1`, but increasing it to `2` can make web content appear sharper
     /// or less blurry on high DPI displays.
     /// </summary>
+    /// <remarks>
+    /// For the macOS WebKit plugin, increasing the pixel density is disabled by default because it negatively impacts
+    /// performance, particularly on Macs with Intel processors. However, you can override this with MacWebKitWebView.PixelDensityEnabled.
+    /// </remarks>
     /// <example>
     /// <code>
     /// await webViewPrefab.WaitUntilInitialized();

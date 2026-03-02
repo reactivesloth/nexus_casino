@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -103,7 +103,12 @@ namespace Vuplex.WebView.Internal {
 
             #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
                 _legacyInputManagerDisabled = true;
-                WebViewLogger.LogWarning("3D WebView's support for automatically detecting input from the native keyboard currently requires Unity's Legacy Input Manager, which is currently disabled for the project. So, automatic detection of input from the native keyboard will be disabled. For details, please see this page: https://support.vuplex.com/articles/keyboard");
+                var message = "3D WebView is currently unable to detect native hardware keyboard input when \"Active Input Handling\" is set to \"Input System\". To enable native keyboard input, please go to Player Settings -> Other Settings and change \"Active Input Handling\" to \"Both\" or \"Input Manager\". For more details, see this page: https://support.vuplex.com/articles/keyboard";
+                #if UNITY_STANDALONE
+                    WebViewLogger.LogError(message);
+                #else
+                    WebViewLogger.LogWarning(message);
+                #endif
             #else
                 _enableImeIfNeeded();
             #endif
