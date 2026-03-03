@@ -193,8 +193,9 @@ namespace Code.Network.Player
 
             if (state == ConnectionState.Disconnected)
             {
-                Debug.Log("Network lost, attempting reconnect...");
-                StartCoroutine(ReconnectCoroutine());
+                 Debug.Log("Network lost, attempting reconnect...");
+            //     StartCoroutine(ReconnectCoroutine());
+                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             }
         }
         
