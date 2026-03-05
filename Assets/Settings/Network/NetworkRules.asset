@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: NetworkRules
   m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.NetworkRules
   _hostMigrationRules:
-    enabled: 0
+    enabled: 1
     migrateAsHost: 1
     identitiesAlwaysVisible: 1
     scenesAlwaysPublic: 1
@@ -46,7 +46,3 @@ MonoBehaviour:
     changeParentAuth: -1
   _defaultMiscRules:
     syncedTickUpdateInterval: 1
-  _addressableRules:
-    syncLoadState: 1
-    waitForLoadBeforeObserver: 1
-    releaseWhenLastDespawned: 1
