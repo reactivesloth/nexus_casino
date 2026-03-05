@@ -30,9 +30,15 @@ namespace Code.Network.PlayFlow
 
         private void Start()
         {
-            var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
             InstanceHandler.NetworkManager.Subscribe<ChangeServerInfo>(HandleServerCustomData);
+            
+            ConnectToServer();
+        }
 
+        public void ConnectToServer ()
+        {
+            var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
+            
             if (!localTestMode)
                 StartProd(transport);
             else

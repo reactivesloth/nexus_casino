@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -34,6 +34,7 @@ namespace Vuplex.WebView {
     /// <seealso href="https://store.vuplex.com/webview/windows-mac#notes-and-limitations">Limitations of 3D WebView for Windows and macOS</seealso>
     public partial class StandaloneWebView : BaseWebView,
                                              IWebView,
+                                             IWithAudioStream,
                                              IWithAuth,
                                              IWithCursorType,
                                              IWithDeepLinking,
@@ -50,6 +51,9 @@ namespace Vuplex.WebView {
                                              IWithPopups,
                                              IWithSettableUserAgent,
                                              IWithTouch {
+
+        /// <see cref="IWithAudioStream"/>
+        public event Action<IWithAudioStream, float[][], int, int> AudioStreamPacketReceived;
 
         /// <see cref="IWithAuth"/>
         public event EventHandler<AuthRequestedEventArgs> AuthRequested {
@@ -173,6 +177,9 @@ namespace Vuplex.WebView {
 
         /// <see cref="IWithPopups"/>
         public event EventHandler<PopupRequestedEventArgs> PopupRequested;
+
+        /// <see cref="IWithAudioStream"/>
+        public bool AudioStreamEnabled { get; private set; }
 
         /// <summary>
         /// Gets or sets the absolute file path to Chromium's cache directory.
@@ -340,7 +347,7 @@ namespace Vuplex.WebView {
 
             // Use a saved copy of the GameObject name here because trying to access gameObject.name can result in the following exception:
             // > MissingReferenceException: The object of type 'StandaloneWebView' has been destroyed but you are still trying to access it.
-            _webViewGameObjects.Remove(_gameObjectName);
+            _webViews.Remove(_gameObjectName);
             if (_isWindows) {
                 // Cancel the render if it has been scheduled via GL.IssuePluginEvent().
                 WebView_removePointer(_nativeWebViewPtr);
@@ -607,6 +614,21 @@ namespace Vuplex.WebView {
             WebView_setAudioMuted(_nativeWebViewPtr, muted);
         }
 
+        /// <see cref="IWithAudioStream"/>
+        public void SetAudioStreamEnabled(bool enabled) {
+
+            _assertValidState();
+            if (enabled && _isWindows && SystemInfo.deviceModel.Contains("Parallels Virtual Platform")) {
+                WebViewLogger.LogWarning(@"AudioSource support is enabled for a webview, but the app is running in a Parallels Virtual Machine, and Chromium is unable to output audio stream data when running in Parallels. As a result, the AudioSource will not output audio and the webview will effectively be muted. To avoid audio from being muted in this scenario, your app can use a script to detect when it's running in Parallels and then disable AudioSource support, like this:
+
+if (SystemInfo.deviceModel.Contains(""Parallels Virtual Platform"")) {
+    yourWebViewPrefab.AudioSourceEnabled = false;
+}");
+            }
+            AudioStreamEnabled = enabled;
+            WebView_setAudioStreamEnabled(_nativeWebViewPtr, enabled, AudioSettings.outputSampleRate);
+        }
+
         public static void SetAutoplayEnabled(bool enabled) {
 
             var success = WebView_setAutoplayEnabled(enabled);
@@ -615,13 +637,7 @@ namespace Vuplex.WebView {
             }
         }
 
-        public static void SetCameraAndMicrophoneEnabled(bool enabled) {
-
-            var success = WebView_setCameraAndMicrophoneEnabled(enabled);
-            if (!success) {
-                _throwAlreadyInitializedException("SetCameraAndMicrophoneEnabled");
-            }
-        }
+        public static void SetCameraAndMicrophoneEnabled(bool enabled) => WebView_setCameraAndMicrophoneEnabled(enabled);
 
         /// <summary>
         /// Sets the log level for the Chromium logs. The default is ChromiumLogLevel.Warning. For a description of where
@@ -933,6 +949,13 @@ namespace Vuplex.WebView {
         /// </example>
         public static Task TerminateBrowserProcess() {
 
+            // Log a message in order to help diagnose cases where this method wasn't called as expected
+            // when the application quits. For example, if the application attaches a handler to Application.quitting
+            // that throws an exception, it can prevent the Application.quitting handler in StandaloneWebPlugin from
+            // being called, in which case this method won't be called.
+            #if !UNITY_EDITOR
+                WebViewLogger.Log("[StandaloneWebView.TerminateBrowserProcess] Terminating the browser process.");
+            #endif
             if (_terminationTaskSource != null) {
                 return _terminationTaskSource.Task;
             }
@@ -960,6 +983,8 @@ namespace Vuplex.WebView {
 
     #region Non-public members
         static bool _acceleratedPaintEnabled = true;
+        // An array of arrays, where the outer array specifies the channel and the inner array contains the audio frames for that channel.
+        static float[][] _audioBuffers = new float[2][] { new float[1024], new float[1024] };
         EventHandler<AuthRequestedEventArgs> _authRequestedHandler;
         EventHandler<StandaloneClientCertificateRequestedEventArgs> _clientCertificateRequestedHandler;
         event EventHandler<EventArgs<string>> _cursorTypeChanged;
@@ -969,10 +994,10 @@ namespace Vuplex.WebView {
         Dictionary<string, TaskCompletionSource<string>> _pendingCreatePdfTaskSources = new Dictionary<string, TaskCompletionSource<string>>();
         static Dictionary<string, Action<Cookie[]>> _pendingGetCookiesResultCallbacks = new Dictionary<string, Action<Cookie[]>>();
         static Dictionary<string, Action<bool>> _pendingModifyCookiesResultCallbacks = new Dictionary<string, Action<bool>>();
-        const string WEBVIEW_DATA_SUBDIRECTORY_NAME = "Vuplex.WebView";
         static TaskCompletionSource<bool> _terminationTaskSource;
         readonly WaitForEndOfFrame _waitForEndOfFrame = new WaitForEndOfFrame();
-        static Dictionary<string, GameObject> _webViewGameObjects = new Dictionary<string, GameObject>();
+        static Dictionary<string, StandaloneWebView> _webViews = new Dictionary<string, StandaloneWebView>();
+        const string WEBVIEW_DATA_SUBDIRECTORY_NAME = "Vuplex.WebView";
 
         static Task<bool> _deleteCookies(string url = null, string cookieName = null) {
 
@@ -1006,6 +1031,32 @@ namespace Vuplex.WebView {
                 return TextureFormat.BGRA32;
             }
             return base._getTextureFormat();
+        }
+
+        [AOT.MonoPInvokeCallback(typeof(Action<string, IntPtr, int>))]
+        static void _handleAudioPacket(string gameObjectName, IntPtr audioFramesPtr, int framesCount) {
+
+            // The C# code (this method and WebAudioSource.cs) is implemented to also support mono (channelsCount = 1),
+            // but currently the native plugin is configured to use stereo and doesn't expose an option to specify mono.
+            int channelsCount = 2;
+            lock (_audioBuffers) {
+                if (framesCount > _audioBuffers[0].Length) {
+                    WebViewLogger.LogError($"The number of audio packets received (${framesCount}) is greater than the size of the audio copy buffer ({_audioBuffers[0].Length}). The audio packet will be truncated, resulting in audio data loss.");
+                    framesCount = _audioBuffers[0].Length;
+                }
+                // Copy audio data to the statically allocated _audioBuffers to avoid allocations.
+                // Stereo audio data provided by Chromium isn't interleaved; it's planar, where the first half of the packet
+                // contains all the left channel frames and then second half contains all the right channel frames.
+                // To simplify processing in WebAudioSource.cs, we go ahead and split the left and right channels into two
+                // separate arrays here (_audioBuffers[0] and _audioBuffers[1]).
+                Marshal.Copy(audioFramesPtr, _audioBuffers[0], 0, framesCount);
+                if (channelsCount > 1) {
+                    Marshal.Copy(audioFramesPtr + sizeof(float) * framesCount, _audioBuffers[1], 0, framesCount);
+                }
+                if (_webViews.TryGetValue(gameObjectName, out StandaloneWebView webView)) {
+                    webView.AudioStreamPacketReceived?.Invoke(webView, _audioBuffers, framesCount, channelsCount);
+                }
+            }
         }
 
         // Invoked by the native plugin.
@@ -1149,7 +1200,7 @@ namespace Vuplex.WebView {
 
             var task = await _initBase(width, height, asyncInit: true);
             _gameObjectName = gameObject.name;
-            _webViewGameObjects[gameObject.name] = gameObject;
+            _webViews[gameObject.name] = this;
             _nativeWebViewPtr = WebView_new(gameObject.name, width, height, PixelDensity, popupId);
             if (_nativeWebViewPtr == IntPtr.Zero) {
                 throw new TrialExpiredException("Your trial of 3D WebView for Windows and macOS has expired. Please purchase a license to continue using it.");
@@ -1184,6 +1235,7 @@ namespace Vuplex.WebView {
                 Marshal.GetFunctionPointerForDelegate<Action<string>>(_logWarning),
                 Marshal.GetFunctionPointerForDelegate<Action<string>>(_logError),
                 Marshal.GetFunctionPointerForDelegate<Action<string, string, string>>(_unitySendMessage),
+                Marshal.GetFunctionPointerForDelegate<Action<string, IntPtr, int>>(_handleAudioPacket),
                 Marshal.GetFunctionPointerForDelegate<Action<string, string>>(_handleGetCookiesResult),
                 Marshal.GetFunctionPointerForDelegate<Action<string, bool>>(_handleModifyCookiesResult)
             );
@@ -1281,9 +1333,9 @@ namespace Vuplex.WebView {
                     // Don't look up the GameObject via GameObject.Find() because it negatively impacts performance,
                     // especially if the scene contains a large number of objects. For example, if a scene contains
                     // thousands of objects, calling GameObject.Find() can cause a significant frame rate drop.
-                    // Instead, webview GameObjects are stored / looked up via this _webViewGameObjects dictionary.
-                    if (_webViewGameObjects.TryGetValue(gameObjectName, out GameObject gameObj)) {
-                        gameObj.SendMessage(methodName, message);
+                    // Instead, webview GameObjects are stored / looked up via this _webViews dictionary.
+                    if (_webViews.TryGetValue(gameObjectName, out StandaloneWebView webView)) {
+                        webView.gameObject.SendMessage(methodName, message);
                     } else {
                         WebViewLogger.LogWarning($"Unable to deliver a message from the native plugin to a webview GameObject because there is no longer a GameObject named '{gameObjectName}'. This can sometimes happen directly after destroying a webview. In that case, it is benign and this message can be ignored.");
                     }
@@ -1360,6 +1412,7 @@ namespace Vuplex.WebView {
             IntPtr logWarningFunction,
             IntPtr logErrorFunction,
             IntPtr unitySendMessageFunction,
+            IntPtr audioPacketCallback,
             IntPtr getCookiesCallback,
             IntPtr modifyCookiesCallback
         );
@@ -1413,6 +1466,9 @@ namespace Vuplex.WebView {
         [DllImport(_dllName)]
         static extern void WebView_setAudioMuted(IntPtr webViewPtr, bool muted);
 
+        [DllImport(_dllName)]
+        static extern void WebView_setAudioStreamEnabled(IntPtr webViewPtr, bool enabled, int sampleRate);
+
         [DllImport (_dllName)]
         static extern void WebView_setAuthEnabled(IntPtr webViewPtr, bool enabled);
 
@@ -1423,7 +1479,7 @@ namespace Vuplex.WebView {
         static extern bool WebView_setCachePath(string cachePath);
 
         [DllImport(_dllName)]
-        static extern bool WebView_setCameraAndMicrophoneEnabled(bool enabled);
+        static extern void WebView_setCameraAndMicrophoneEnabled(bool enabled);
 
         [DllImport(_dllName)]
         static extern bool WebView_setChromiumLogLevel(int level);

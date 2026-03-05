@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -68,6 +68,32 @@ namespace Vuplex.WebView {
         /// };
         /// </example>
         public virtual event EventHandler<ScrolledEventArgs> Scrolled;
+
+        /// <summary>
+        /// For Windows and macOS, gets the webview's AudioSource if it was enabled with AudioSourceEnabled, or null otherwise.
+        /// </summary>
+        /// <example>
+        /// <code>
+        /// webViewPrefab.AudioSourceEnabled = true;
+        /// await webViewPrefab.WaitUntilInitialized();
+        /// // Enable 3D spatial audio for the webview.
+        /// // The default is 2D audio (spatialBlend = 0f).
+        /// webViewPrefab.AudioSource.spatialBlend = 1f;
+        /// </code>
+        /// </example>
+        public AudioSource AudioSource { get => _webAudioSource == null ? null : _webAudioSource.AudioSource; }
+
+        /// <summary>
+        /// For Windows and macOS, sets whether the webview's audio is played through Unity as an AudioSource. The default is `false`, in which 
+        /// case audio is output directly to the system instead of being routed through Unity because that is more efficient. 
+        /// When set to `true`, the webview's audio is routed through Unity and played through an AudioSource attached to
+        /// the prefab, which is accessible to scripts via the WebViewPrefab.AudioSource property.
+        /// AudioSourceEnabled is only supported by 3D WebView for Windows and macOS. On other platforms, webview audio can only
+        /// be output directly to the system and cannot be routed through Unity.
+        /// </summary
+        [Label("Output Audio as AudioSource (Windows & macOS only)")]
+        [Tooltip("(Windows and macOS only) Sets whether the webview's audio is played through Unity as an AudioSource. This is disabled by default, in which case audio is output directly to the system instead of being routed through Unity because that is more efficient. When enabled, the webview's audio is routed through Unity and played through an AudioSource attached to the prefab, which is accessible to scripts via the WebViewPrefab.AudioSource property.")]
+        public bool AudioSourceEnabled;
 
         /// <summary>
         /// Determines whether clicking is enabled. The default is `true`.
@@ -192,8 +218,13 @@ namespace Vuplex.WebView {
         /// Windows, macOS, iOS, and visionOS.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// When running in <see href="https://support.vuplex.com/articles/native-2d-mode">Native 2D Mode</see>, the PixelDensity field
         /// isn't used because the device's native pixel density is used instead. So, the PixelDensity field's value is inaccurate and changes to it are ignored.
+        /// </para>
+        /// <para>
+        /// For the macOS WebKit plugin, increasing the pixel density is disabled by default because it negatively impacts
+        /// performance, particularly on Macs with Intel processors. However, you can override this with MacWebKitWebView.PixelDensityEnabled.
         /// </para>
         /// </remarks>
         /// <example>
@@ -404,17 +435,6 @@ namespace Vuplex.WebView {
             }
             return taskSource.Task;
         }
-        
-        public void RefreshPointerInputDetector() {
-            if (WebView == null) return;
-            if (_pointerInputDetector == null) return;
-
-            // Отцепить и прицепить заново, чтобы он пересчитал RectTransform / Canvas
-            _attachOrDetachPointerInputDetector(_pointerInputDetector, false);
-            _initPointerInputDetector(WebView);
-
-            WebViewLogger.Log("PointerInputDetector reattached for new Canvas context.");
-        }
 
     #region Non-public members
         float _appliedResolution;
@@ -460,6 +480,7 @@ namespace Vuplex.WebView {
         }
         Material _viewMaterial;
         bool _visible = true;
+        WebAudioSource _webAudioSource;
         protected IWebView _webViewForInitialization;
         [SerializeField]
         [HideInInspector]
@@ -537,6 +558,23 @@ namespace Vuplex.WebView {
                 var nativeOnScreenKeyboardEnabled = _getNativeOnScreenKeyboardEnabled();
                 (webView as IWithNativeOnScreenKeyboard).SetNativeOnScreenKeyboardEnabled(nativeOnScreenKeyboardEnabled);
             }
+        }
+
+        void _enableOrDisableAudioSourceIfNeeded(IWithAudioStream webViewWithAudioStream) {
+
+            if (webViewWithAudioStream == null) {
+                // This webview implementation doesn't support IWithAudioStream.
+                return;
+            }
+            var audioSourceEnabledValueChanged = AudioSourceEnabled != webViewWithAudioStream.AudioStreamEnabled;
+            if (!audioSourceEnabledValueChanged) {
+                return;
+            }
+            webViewWithAudioStream.SetAudioStreamEnabled(AudioSourceEnabled);
+            if (AudioSourceEnabled && _webAudioSource == null) {
+                _webAudioSource = gameObject.AddComponent<WebAudioSource>();
+                _webAudioSource.InitWithWebView(webViewWithAudioStream);
+            }            
         }
 
         void _enableOrDisableKeyboardIfNeeded() {
@@ -650,7 +688,6 @@ namespace Vuplex.WebView {
                 return _webViewForInitialization;
             }
             var webView = Web.CreateWebView(_options.preferredPlugins);
-
             // Enable Native 2D Mode if needed.
             var enableNative2DMode = preferNative2DMode && webView is IWithNative2DMode;
             if (enableNative2DMode) {
@@ -680,6 +717,9 @@ namespace Vuplex.WebView {
                 _handleTrialExpired();
                 throw ex;
             }
+
+            // (Windows and macOS only) Enable AudioSource if needed.
+            _enableOrDisableAudioSourceIfNeeded(webView as IWithAudioStream);
 
             // (Windows and macOS only) Enable cursor icons if needed.
             var webViewWithCursorType = webView as IWithCursorType;
@@ -945,6 +985,7 @@ namespace Vuplex.WebView {
             }
             _enableOrDisableKeyboardIfNeeded();
             _enableConsoleMessagesIfNeeded(WebView);
+            _enableOrDisableAudioSourceIfNeeded(WebView as IWithAudioStream);
         }
 
         void _updatePixelDensityIfNeeded(IWebView webView) {

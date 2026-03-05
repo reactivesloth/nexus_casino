@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -75,14 +75,18 @@ namespace Vuplex.WebView {
 
     #if UNITY_2020_3_OR_NEWER
         void Start() {
-            // It's preferable to use Application.quitting instead
-            // of OnApplicationQuit(), because the latter is called even if
-            // the quit is cancelled by the application returning false from
-            // Application.wantsToQuit, and the former is called only when the
-            // application really quits. Application.quitting was added in 2018.1, but in
-            // 2020.1 and 2020.2 it has a bug where it isn't raised when the application is
-            // quit with alt+f4:
-            // https://issuetracker.unity3d.com/issues/application-dot-quitting-event-is-not-raised-when-closing-build
+            // - It's preferable to use Application.quitting instead
+            //   of OnApplicationQuit(), because the latter is called even if
+            //   the quit is cancelled by the application returning false from
+            //   Application.wantsToQuit, and the former is called only when the
+            //   application really quits.
+            // - If the application attaches another Application.quitting handler that
+            //   throws an exception, then it can prevent this Application.quitting handler from running,
+            //   preventing TerminateBrowserProcess() from being called. So, TerminateBrowserProcess() logs
+            //   a message when it's called to help diagnose this scenario.
+            // - Application.quitting was added in 2018.1, but in 2020.1 and 2020.2
+            //   it has a bug where it isn't raised when the application is quit with alt+f4:
+            //   https://issuetracker.unity3d.com/issues/application-dot-quitting-event-is-not-raised-when-closing-build
             Application.quitting += () => StandaloneWebView.TerminateBrowserProcess();
         }
     #else

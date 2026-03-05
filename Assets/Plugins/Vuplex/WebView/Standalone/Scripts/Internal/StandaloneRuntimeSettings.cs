@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -27,7 +27,7 @@ namespace Vuplex.WebView.Internal {
                 var settings = AssetDatabase.LoadAssetAtPath<StandaloneRuntimeSettings>(_assetFilePath);
                 if (settings == null) {
                     settings = CreateInstance<StandaloneRuntimeSettings>();
-                    var directoryRelativePathInsideAssets = Path.GetDirectoryName(_assetFilePath).Split(new char[] {'/'}, 2)[1];
+                    var directoryRelativePathInsideAssets = Path.GetDirectoryName(_assetFilePath).Split(new char[] {Path.DirectorySeparatorChar}, 2)[1];
                     // AssetDatabase.CreateAsset() throws an exception if the destination directory doesn't exist.
                     Directory.CreateDirectory(Path.Combine(Application.dataPath, directoryRelativePathInsideAssets));
                     AssetDatabase.CreateAsset(settings, _assetFilePath);

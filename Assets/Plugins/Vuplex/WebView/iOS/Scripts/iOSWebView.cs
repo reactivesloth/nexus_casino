@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Vuplex Inc. All rights reserved.
+// Copyright (c) 2026 Vuplex Inc. All rights reserved.
 //
 // Licensed under the Vuplex Commercial Software Library License, you may
 // not use this file except in compliance with the License. You may obtain
@@ -26,9 +26,12 @@ using Vuplex.WebView.Internal;
 namespace Vuplex.WebView {
 
     /// <summary>
-    /// iOSWebView is the IWebView implementation used by 3D WebView for iOS.
-    /// It also includes additional APIs for iOS-specific functionality.
+    /// iOSWebView is the IWebView implementation in 3D WebView for iOS.
+    /// It's powered by iOS's built-in WKWebView component and also includes
+    /// additional APIs for iOS-specific functionality.
     /// </summary>
+    /// <seealso href="https://support.vuplex.com/search#ios">Support articles / FAQ for iOS</seealso>
+    /// <seealso href="https://store.vuplex.com/webview/ios#notes-and-limitations">Limitations of 3D WebView for iOS</seealso>
     public class iOSWebView : BaseWebView,
                               IWebView,
                               IWithDeepLinking,
@@ -531,7 +534,7 @@ namespace Vuplex.WebView {
 
             WebView_setRemoteDebuggingEnabled(enabled);
             if (enabled) {
-                WebViewLogger.Log("Remote debugging is enabled for iOS. For instructions, please see https://support.vuplex.com/articles/how-to-debug-web-content#ios.");
+                WebViewLogger.Log("Remote debugging is enabled for iOS. For instructions, please see https://support.vuplex.com/articles/how-to-debug-web-content#webkit.");
             }
         }
 
