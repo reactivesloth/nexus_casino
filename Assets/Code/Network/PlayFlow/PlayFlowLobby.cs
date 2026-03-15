@@ -141,7 +141,7 @@ namespace Code.Network.PlayFlow
             var serverRequest = new ServerCreateRequest
             {
                 name = $"Server {Random.Range(0, 10_000)}",
-                region = "eu-west",
+                region = "eu-north",
                 compute_size = "large",
                 version_tag = Application.version,
                 custom_data = new Dictionary<string, object> { { "max_players", 64 } },
