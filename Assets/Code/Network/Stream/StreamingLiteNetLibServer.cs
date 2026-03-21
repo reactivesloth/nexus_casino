@@ -28,8 +28,18 @@ namespace Code.Network.Stream
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
         public static StreamingLiteNetLibServer Instance { get; private set; }
-        public static string ServerAddress => PlayerPrefs.GetString("Server_IP", "fbd98a989947.pr.edgegap.net");
-        public static int ServerStreamPort => int.Parse(PlayerPrefs.GetString("Stream_Port", "32327"));
+        public static string ServerAddress
+        {
+            get
+            {
+                return PlayerPrefs.GetString("Server_IP", "fbd98a989947.pr.edgegap.net");
+            }
+        }
+
+        public static int ServerStreamPort
+        {
+            get { return int.Parse(PlayerPrefs.GetString("Stream_Port", "32327")); }
+        }
 
         private void Awake()
         {
