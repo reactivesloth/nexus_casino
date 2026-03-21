@@ -44,9 +44,10 @@ namespace Code.Network.Server
         {
             LoadingScreenUI.Instance.Show("loading.find_server", "loading");
             
-            PlayerPrefs.SetString("ServerIDName", "22227c366f03");
-            PlayerPrefs.SetString("Server_IP", "22227c366f03.pr.edgegap.net");
-            PlayerPrefs.SetString("Server_Port", "31742");
+            PlayerPrefs.SetString("ServerIDName", "fbd98a989947");
+            PlayerPrefs.SetString("Server_IP", "fbd98a989947.pr.edgegap.net");
+            PlayerPrefs.SetString("Server_Port", "31864");
+            PlayerPrefs.SetString("Stream_Port", "32327");
 
             MatchReady();
             

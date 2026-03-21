@@ -43,7 +43,7 @@ namespace Photon.Voice.Unity.UtilityScripts
         private void Start()
        {
            if (PlayFlowRoom)
-               RoomName = PlayerPrefs.GetString("PlayFlow_IP", "127.0.0.1") + PlayerPrefs.GetString("PlayFlow_Port", "7770");
+               RoomName = PlayerPrefs.GetString("Server_IP", "127.0.0.1") + PlayerPrefs.GetString("Server_Port", "7770");
            
             this.voiceConnection = this.GetComponent<VoiceConnection>();
             this.voiceConnection.Client.AddCallbackTarget(this);

@@ -27,12 +27,9 @@ namespace Code.Network.Stream
         private readonly Dictionary<NetPeer, int> _connectedPeersSlots = new();
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
-        
-        //private static PortMapping _serverPortMapping => PlayFlowLobby.CurrentServerData.network_ports[1];
-        public static string ServerAddress => "127.0.0.1"; //_serverPortMapping.host;
-        public static int ServerStreamPort => 7777; //_serverPortMapping.external_port;
-
         public static StreamingLiteNetLibServer Instance { get; private set; }
+        public static string ServerAddress => PlayerPrefs.GetString("Server_IP", "fbd98a989947.pr.edgegap.net");
+        public static int ServerStreamPort => int.Parse(PlayerPrefs.GetString("Stream_Port", "32327"));
 
         private void Awake()
         {
