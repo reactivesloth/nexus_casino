@@ -22,9 +22,6 @@ namespace Photon.Voice.Unity.UtilityScripts
     {
         private VoiceConnection voiceConnection;
 
-        public bool RandomRoom = true;
-        public bool PlayFlowRoom = true;
-        
         [SerializeField]
         private bool autoConnect = true;
 
@@ -42,8 +39,7 @@ namespace Photon.Voice.Unity.UtilityScripts
 
         private void Start()
        {
-           if (PlayFlowRoom)
-               RoomName = PlayerPrefs.GetString("Server_IP", "127.0.0.1") + PlayerPrefs.GetString("Server_Port", "7770");
+           RoomName = PlayerPrefs.GetString("Server_IP", "127.0.0.1") + PlayerPrefs.GetString("Server_Port", "7770");
            
             this.voiceConnection = this.GetComponent<VoiceConnection>();
             this.voiceConnection.Client.AddCallbackTarget(this);
@@ -111,16 +107,9 @@ namespace Photon.Voice.Unity.UtilityScripts
         public void OnConnectedToMaster()
         {
             this.enterRoomParams.RoomOptions.PublishUserId = this.publishUserId;
-            if (this.RandomRoom)
-            {
-                this.enterRoomParams.RoomName = null;
-                this.voiceConnection.Client.OpJoinRandomOrCreateRoom(new OpJoinRandomRoomParams(), this.enterRoomParams);
-            }
-            else
-            {
-                this.enterRoomParams.RoomName = this.RoomName;
-                this.voiceConnection.Client.OpJoinOrCreateRoom(this.enterRoomParams);
-            }
+            
+            this.enterRoomParams.RoomName = this.RoomName;
+            this.voiceConnection.Client.OpJoinOrCreateRoom(this.enterRoomParams);
         }
 
         public void OnDisconnected(DisconnectCause cause)
