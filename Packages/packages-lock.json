@@ -1,5 +1,15 @@
 {
   "dependencies": {
+    "com.edgegap.unity-servers-plugin": {
+      "version": "https://github.com/edgegap/edgegap-unity-plugin.git#partner/purrnet-source",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {
+        "com.unity.nuget.newtonsoft-json": "3.2.1",
+        "com.unity.modules.uielements": "1.0.0"
+      },
+      "hash": "924b312fae5c340f5349ccdc878d33f23fec704e"
+    },
     "com.endel.nativewebsocket": {
       "version": "https://github.com/endel/NativeWebSocket.git#upm",
       "depth": 0,

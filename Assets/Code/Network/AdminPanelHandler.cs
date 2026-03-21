@@ -513,7 +513,7 @@ namespace Code.Network
         [TargetRpc]
         private void MoveUserTargetRpc(PlayerID target, string lobbyId)
         {
-            PlayerPrefs.SetString("ServerIDName", lobbyId);
+            PlayerPrefs.SetString("Server_ID", lobbyId);
 
             InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Matchmaker");

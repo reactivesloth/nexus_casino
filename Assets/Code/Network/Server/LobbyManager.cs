@@ -43,7 +43,13 @@ namespace Code.Network.Server
         private async void SelectMatch()
         {
             LoadingScreenUI.Instance.Show("loading.find_server", "loading");
+            
+            PlayerPrefs.SetString("ServerIDName", "22227c366f03");
+            PlayerPrefs.SetString("Server_IP", "22227c366f03.pr.edgegap.net");
+            PlayerPrefs.SetString("Server_Port", "31742");
 
+            MatchReady();
+            
             // var builds = await ApiClient.GetBuildsAsync(Application.version);
             // if (builds.total_builds == 0)
             // {
