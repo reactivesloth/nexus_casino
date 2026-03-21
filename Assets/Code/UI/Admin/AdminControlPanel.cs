@@ -3,10 +3,8 @@ using System.Linq;
 using Code.Network;
 using Code.Network.InteractionSystem;
 using Code.Network.Player;
-using Code.Network.PlayFlow;
 using Code.UI.Popup;
 using Code.Utility;
-using PlayFlow.SDK.Servers;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -233,31 +231,9 @@ namespace Code.UI.Admin
             }
         }
 
-        private async void UpdateLobbies()
+        private void UpdateLobbies()
         {
             ClearContent();
-            try
-            {
-                OnLobbiesReceived(await PlayFlowManager.ApiClient.ListServersAsync());
-            }
-            catch (PlayFlowApiException e)
-            {
-                Debug.LogException(e);
-            }
-        }
-
-        private void OnLobbiesReceived(ServerList lobbies)
-        {
-            var availableLobbies = lobbies.servers.Where(s =>
-                s.version_tag == Application.version
-                && s.status != "stopped").ToList();
-            
-            foreach (var lobby in availableLobbies)
-            {
-                var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
-                controlElement.Init(lobby);
-                _controlElements.Add(controlElement);
-            }
         }
 
         private void ClearContent()

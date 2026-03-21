@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
-using Code.Network.PlayFlow;
 using PurrNet;
 using PurrNet.Logging;
 using PurrNet.Modules;
@@ -199,11 +198,6 @@ namespace Code.Network.Player
             }
         }
         
-        private IEnumerator ReconnectCoroutine() {
-            yield return new WaitForSeconds(2f);
-            FindAnyObjectByType<PlayFlowManager>().ConnectToServer();
-        }
-
         // =========================
         // SERVER SIDE
         // =========================
@@ -370,14 +364,13 @@ namespace Code.Network.Player
         [ServerOnly]
         private void OnPlayersDataUpdated()
         {
-            // Update PlayFlow custom Data
-            var playersList = SpawnedPlayerData.Values.Select(p => p.username).ToArray();
-            var hosts = SpawnedPlayerData.Values.Where(p => p.IsHost).Select(p => p.username).ToArray();
-            var admins = SpawnedPlayerData.Values.Where(p => p.IsAdmin).Select(p => p.username).ToArray();
-            var moderators = SpawnedPlayerData.Values.Where(p => p.IsModerator).Select(p => p.username).ToArray();
-
-            PlayFlowManager.UpdateSeverData(("players", playersList), ("hosts", hosts),
-                ("admins", admins), ("moderators", moderators));
+            // // Update PlayFlow custom Data
+            // var playersList = SpawnedPlayerData.Values.Select(p => p.username).ToArray();
+            // var hosts = SpawnedPlayerData.Values.Where(p => p.IsHost).Select(p => p.username).ToArray();
+            // var admins = SpawnedPlayerData.Values.Where(p => p.IsAdmin).Select(p => p.username).ToArray();
+            // var moderators = SpawnedPlayerData.Values.Where(p => p.IsModerator).Select(p => p.username).ToArray();
+            //
+            // PlayFlowManager.UpdateSeverData(("players", playersList), ("hosts", hosts), ("admins", admins), ("moderators", moderators));
 
             var adminsKeys = SpawnedPlayerData
                 .Where(data => data.Value.IsAdminRole)

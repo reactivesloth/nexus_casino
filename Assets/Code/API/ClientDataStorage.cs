@@ -19,7 +19,7 @@ namespace Code.API
             role = "user",
             created_at = DateTime.Now,
         };
-
+        
         public static Dictionary<string, string> GetJwtHeader(bool useRefresh = false)
         {
             return new Dictionary<string, string>(1)

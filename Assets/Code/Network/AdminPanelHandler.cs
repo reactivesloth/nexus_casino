@@ -1,15 +1,10 @@
-using System.Collections.Generic;
-using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.Chat;
 using Code.Network.InteractionSystem;
 using Code.Network.Player;
-using Code.Network.PlayFlow;
 using Code.Player;
 using Code.UI;
-using PlayFlow;
-using PlayFlow.SDK.Servers;
 using Proyecto26;
 using PurrNet;
 using UnityEngine;
@@ -455,7 +450,7 @@ namespace Code.Network
 
         private async void CreateRoom(string roomName, bool isPrivate)
         {
-            LoadingScreenUI.Instance.Show("loading", "loading");
+            /*LoadingScreenUI.Instance.Show("loading", "loading");
 
             var serverRequest = new ServerCreateRequest
             {
@@ -483,7 +478,7 @@ namespace Code.Network
             {
                 Debug.LogError($"Failed to start server: {e.Message}");
                 LoadingScreenUI.Instance.Hide();
-            }
+            }*/
         }
 
         public void MoveUserToRoom(string username, string roomId)
@@ -518,7 +513,7 @@ namespace Code.Network
         [TargetRpc]
         private void MoveUserTargetRpc(PlayerID target, string lobbyId)
         {
-            PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIDName, lobbyId);
+            PlayerPrefs.SetString("ServerIDName", lobbyId);
 
             InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Matchmaker");

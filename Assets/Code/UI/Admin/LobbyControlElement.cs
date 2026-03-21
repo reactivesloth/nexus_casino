@@ -5,7 +5,6 @@ using Code.Network.Player;
 using Code.UI.Popup;
 using Code.Utility;
 using Newtonsoft.Json.Linq;
-using PlayFlow.SDK.Servers;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -23,7 +22,6 @@ namespace Code.UI.Admin
         [SerializeField] private Button moveToButton;
 
         private string _lobbyId;
-        private InstanceData _instanceData;
         
         private NexusModularPopupOpener _popupOpener;
         private AdminPanelHandler _adminPanelHandler;
@@ -51,7 +49,7 @@ namespace Code.UI.Admin
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
         }
 
-        public void Init(InstanceData serverData) //LobbyDetails lobby)
+        /*public void Init(InstanceData serverData) //LobbyDetails lobby)
         {
             _instanceData = serverData;
             
@@ -67,7 +65,7 @@ namespace Code.UI.Admin
                 ? "admin.lobby.private.close"
                 : "admin.lobby.private.open";
             LocalizationHelper.SetLocalizedTextAsync(privateText, privateKey);
-        }
+        }*/
 
         private void OnMoveToButtonClick()
         {

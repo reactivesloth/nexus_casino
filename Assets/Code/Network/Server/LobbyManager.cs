@@ -1,37 +1,24 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Code.UI;
 using Code.UI.Popup;
 using Code.Utility;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
-using PlayFlow.SDK.Servers;
-using PurrNet;
 using Ricimi;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
-namespace Code.Network.PlayFlow
+namespace Code.Network.Server
 {
-    public class PlayFlowLobby : MonoBehaviour
+    public class LobbyManager : MonoBehaviour
     {
-        public const string PrefsServerIDName = "PlayFlow_ID";
-        public const string PrefsServerIPName = "PlayFlow_IP";
-        public const string PrefsServerPortName = "PlayFlow_Port";
+        private const string GameSceneName = "Main";
+        private const string MenuSceneName = "Init";
 
-        public const string GameSceneName = "Main";
-        public const string MenuSceneName = "Init";
-
-        [SerializeField] private string playflowApiKey = "YOUR_API_KEY_HERE";
         [SerializeField] private float timeout = 60f;
-
-        public static PlayflowServerApiClient ApiClient;
-
+        
         private float _leftTime = 0f;
-
-        public static InstanceData CurrentServerData { get; private set; }
         
         private NexusModularPopupOpener _popupOpener;
 
@@ -42,8 +29,6 @@ namespace Code.Network.PlayFlow
         
         void Start()
         {
-            ApiClient = new PlayflowServerApiClient(playflowApiKey);
-
             SelectMatch();
         }
 
@@ -59,14 +44,14 @@ namespace Code.Network.PlayFlow
         {
             LoadingScreenUI.Instance.Show("loading.find_server", "loading");
 
-            var builds = await ApiClient.GetBuildsAsync(Application.version);
-            if (builds.total_builds == 0)
-            {
-                OnMatchMakingError("version");
-                return;
-            }
+            // var builds = await ApiClient.GetBuildsAsync(Application.version);
+            // if (builds.total_builds == 0)
+            // {
+            //     OnMatchMakingError("version");
+            //     return;
+            // }
 
-            var savedServerId = PlayerPrefs.GetString(PrefsServerIDName, null);
+            var savedServerId = PlayerPrefs.GetString("PrefsServerIDName", null);
 
             if (string.IsNullOrEmpty(savedServerId))
             {
@@ -74,38 +59,20 @@ namespace Code.Network.PlayFlow
                 return;
             }
 
-            var instanceData = await GetInstanceData(savedServerId);
+            // var instanceData = await GetInstanceData(savedServerId);
+            //
+            // if (instanceData == null || instanceData.status == "stopped")
+            // {
+            //     FindServer();
+            //     return;
+            // }
 
-            if (instanceData == null || instanceData.status == "stopped")
-            {
-                FindServer();
-                return;
-            }
-
-            WaitWhenServerIsReadyAndConnect(savedServerId);
-        }
-
-        private async Task<InstanceData> GetInstanceData(string serverId)
-        {
-            try
-            {
-                var serverInfo = await ApiClient.GetServerDetailsAsync(serverId);
-                return serverInfo;
-            }
-            catch (PlayFlowApiException playFlowException)
-            {
-                if (playFlowException.StatusCode == 404)
-                    OnMatchMakingError("data null");
-                else
-                    OnMatchMakingError();
-            }
-
-            return null;
+            //WaitWhenServerIsReadyAndConnect(savedServerId);
         }
 
         public async void FindServer()
         {
-            try
+            /*try
             {
                 ServerList response = await ApiClient.ListServersAsync(includeLaunching: true);
                 Debug.Log($"Found {response.total_servers} total servers.");
@@ -133,10 +100,10 @@ namespace Code.Network.PlayFlow
             catch (PlayFlowApiException e)
             {
                 Debug.LogError($"Failed to list servers: {e.Message}");
-            }
+            }*/
         }
 
-        private async void StartNewServer()
+        /*private async void StartNewServer()
         {
             var serverRequest = new ServerCreateRequest
             {
@@ -180,9 +147,9 @@ namespace Code.Network.PlayFlow
                 {
                     CurrentServerData = data;
 
-                    PlayerPrefs.SetString(PrefsServerIDName, data.instance_id);
-                    PlayerPrefs.SetString(PrefsServerIPName, data.network_ports[0].host);
-                    PlayerPrefs.SetString(PrefsServerPortName, data.network_ports[0].external_port.ToString());
+                    PlayerPrefs.SetString("ServerIDName", data.instance_id);
+                    PlayerPrefs.SetString("Server_IP", data.network_ports[0].host);
+                    PlayerPrefs.SetString("Server_Port", data.network_ports[0].external_port.ToString());
 
                     MatchReady();
                     break;
@@ -191,7 +158,7 @@ namespace Code.Network.PlayFlow
                 await Task.Delay(1_000);
                 Debug.Log("Waiting For Server Ready...");
             }
-        }
+        }*/
 
         private async void MatchReady()
         {
@@ -215,6 +182,7 @@ namespace Code.Network.PlayFlow
             }
         }
 
+        /*
         private static int GetFreeSlotsInServerCount(InstanceData instanceData)
         {
             var customData = instanceData.custom_data;
@@ -236,6 +204,7 @@ namespace Code.Network.PlayFlow
                             - (!isHost ? 1 : 0) 
                             - (!isModerator ? 1 : 0);
         }
+        */
 
 
         private static bool TryGetArray(

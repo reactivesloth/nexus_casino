@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using Code.Network.PlayFlow;
 using Code.Network.Stream.Data;
 using LiteNetLib;
 using LiteNetLib.Utils;
-using PlayFlow.SDK.Servers;
 using UnityEngine;
 
 namespace Code.Network.Stream
@@ -30,9 +28,9 @@ namespace Code.Network.Stream
         private readonly Dictionary<int, StreamFrameData> _slotsLastFrame = new();
 
         
-        private static PortMapping _serverPortMapping => PlayFlowLobby.CurrentServerData.network_ports[1];
-        public static string ServerAddress => _serverPortMapping.host;
-        public static int ServerStreamPort => _serverPortMapping.external_port;
+        //private static PortMapping _serverPortMapping => PlayFlowLobby.CurrentServerData.network_ports[1];
+        public static string ServerAddress => "127.0.0.1"; //_serverPortMapping.host;
+        public static int ServerStreamPort => 7777; //_serverPortMapping.external_port;
 
         public static StreamingLiteNetLibServer Instance { get; private set; }
 
