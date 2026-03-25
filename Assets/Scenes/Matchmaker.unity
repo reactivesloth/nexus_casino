@@ -306,7 +306,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 781093401}
-  - component: {fileID: 781093400}
+  - component: {fileID: 781093402}
   m_Layer: 0
   m_Name: Lobby
   m_TagString: Untagged
@@ -314,21 +314,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &781093400
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 781093399}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3d39f5f2085476faabb70e01b5389c6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Code.Network.PlayFlow.PlayFlowLobby
-  edgegapApiKey: YOUR_API_KEY_HERE
-  appName: YourAppName
-  timeout: 120
 --- !u!4 &781093401
 Transform:
   m_ObjectHideFlags: 0
@@ -344,6 +329,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &781093402
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 781093399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4e52ddb80aa4150a2ecec7300bc856a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Matchmaking
+  timeout: 60
+  matchmakerApiUrl: https://om-94wi0wxxb0.edgegap.net
+  authToken: db78fc73-51e7-4035-8c05-cb29b8768672
+  pollIntervalSeconds: 2
 --- !u!1001 &1648250788
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -118,6 +118,9 @@ namespace Photon.Voice.Unity.UtilityScripts
             {
                 return;
             }
+            
+            ConnectNow();
+            
             Debug.LogErrorFormat("OnDisconnected cause={0}", cause);
         }
 

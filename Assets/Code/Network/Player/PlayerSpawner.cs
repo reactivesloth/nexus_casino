@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
+using Code.Network.Server;
 using PurrNet;
 using PurrNet.Logging;
 using PurrNet.Modules;
@@ -184,6 +185,12 @@ namespace Code.Network.Player
             });
             // Клиент -> Сервер (broadcast-сообщение без привязки к объекту)
             NetworkManager.main.SendToServer(msg);
+            
+            var info = new ChangeServerInfo
+            {
+                NewServerDataString = $"{PlayerPrefs.GetString("Ticket_ID")}|{PlayerPrefs.GetString("Player_IP")}"
+            };
+            InstanceHandler.NetworkManager.SendToServer(info);
         }
 
         private void OnClientConnectionState_Client(ConnectionState state)

@@ -32,13 +32,13 @@ namespace Code.Network.Stream
         {
             get
             {
-                return PlayerPrefs.GetString("Server_IP", "fbd98a989947.pr.edgegap.net");
+                return PlayerPrefs.GetString("Server_IP", "127.0.0.1");
             }
         }
 
         public static int ServerStreamPort
         {
-            get { return int.Parse(PlayerPrefs.GetString("Stream_Port", "32327")); }
+            get { return int.Parse(PlayerPrefs.GetString("Stream_Port", "9000")); }
         }
 
         private void Awake()

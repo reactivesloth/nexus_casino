@@ -26,10 +26,12 @@ namespace Code.UI.Popup
         public Action ManualyCloseAction;
         
         public NexusModularPopup LastPopup => m_popup.GetComponent<NexusModularPopup>();
-
+        public bool Opened;
+        
         public override void OpenPopup()
         {
             base.OpenPopup();
+            Opened = true;
             m_popup.GetComponent<NexusModularPopup>().Initialize(this);
             ResetValues();
         }
@@ -37,6 +39,7 @@ namespace Code.UI.Popup
         public override void ClosePopup()
         {
             base.ClosePopup();
+            Opened = false;
             m_popup.GetComponent<NexusModularPopup>().Close();
         }
 

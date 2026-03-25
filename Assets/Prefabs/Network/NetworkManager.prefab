@@ -47,7 +47,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ba2ec6105185aee4dbd56831eaf762d3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayFlowManager
-  playflowApiKey: pfzKiXdk216uJifam4nDDEMDLt6ie4f4IxY2dgEJcBYuI=
+  MatchmakerUrl: https://om-94wi0wxxb0.edgegap.net
+  MatchmakerToken: db78fc73-51e7-4035-8c05-cb29b8768672
   emptyServerLifeTime: 600
 --- !u!114 &4148929254775448530
 MonoBehaviour:
@@ -68,6 +69,7 @@ MonoBehaviour:
   _dontDestroyOnLoad: 0
   _transport: {fileID: 4731415244911535516}
   _networkPrefabs: {fileID: 11400000, guid: af47c7779c6c6cc4f816d7b1d13e303d, type: 2}
+  _addressableNetworkPrefabs: {fileID: 0}
   _networkAssets: {fileID: 11400000, guid: 31797f31e16dfc8418b19e34267ef130, type: 2}
   _networkRules: {fileID: 11400000, guid: 49b645d77fb5c440d9ef38ce72d2e37e, type: 2}
   _visibilityRules: {fileID: 11400000, guid: 665279a58f09344828da3e562e35a930, type: 2}
@@ -87,12 +89,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PurrNet.Runtime::PurrNet.Transports.UDPTransport
   _automaticCloudSetups:
-    _adaptToEdgegap: 1
+    _adaptToEdgegap: 0
   _serverPort: 7770
   _maxConnections: 100
   _address: 
   _timeoutInSeconds: 5
   _pollEventsInUpdate: 1
+  _networkSimulation:
+    includeInBuild: 0
+    simulateLatency: 0
+    minLatency: 30
+    maxLatency: 100
+    simulatePacketLoss: 0
+    packetLossChance: 10
 --- !u!114 &4239465161067467006
 MonoBehaviour:
   m_ObjectHideFlags: 0
