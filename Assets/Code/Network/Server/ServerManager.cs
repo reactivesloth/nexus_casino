@@ -15,8 +15,8 @@ namespace Code.Network.Server
 {
     public class ServerManager : MonoBehaviour
     {
-        [SerializeField] private string MatchmakerUrl   = "https://om-94wi0wxxb0.edgegap.net";
-        [SerializeField] private string MatchmakerToken = "YOUR_AUTH_TOKEN";
+        [SerializeField] private string MatchmakerUrl;
+        [SerializeField] private string MatchmakerToken;
         private const int    MaxPlayers      = 100;
 
         private readonly string _deleteUrl   = Environment.GetEnvironmentVariable("ARBITRIUM_DELETE_URL");
@@ -25,7 +25,8 @@ namespace Code.Network.Server
         private string    _backfillTicketId;
         private Coroutine _backfillCoroutine;
 
-        private readonly Dictionary<string, string> _playerTickets = new();
+        private readonly Dictionary<string, string>   _playerTickets    = new();
+        private readonly Dictionary<PlayerID, string> _playerIdToTicket = new();
 
         private float _emptyTime;
         [SerializeField] private float emptyServerLifeTime = 600f;
@@ -38,6 +39,8 @@ namespace Code.Network.Server
             ConnectToServer();
 
 #if UNITY_SERVER
+            InstanceHandler.NetworkManager.onPlayerJoined += OnPurrPlayerJoined;
+            InstanceHandler.NetworkManager.onPlayerLeft   += OnPurrPlayerLeft;
             ParseInitialTickets();
             _backfillCoroutine = StartCoroutine(BackfillRoutine());
 #endif
@@ -47,6 +50,14 @@ namespace Code.Network.Server
         {
 #if UNITY_SERVER
             UpdateEmptyTimer();
+#endif
+        }
+
+        private void OnDestroy()
+        {
+#if UNITY_SERVER
+            InstanceHandler.NetworkManager.onPlayerJoined -= OnPurrPlayerJoined;
+            InstanceHandler.NetworkManager.onPlayerLeft   -= OnPurrPlayerLeft;
 #endif
         }
 
@@ -89,13 +100,68 @@ namespace Code.Network.Server
             }
         }
 
+        // Клиент отправляет: NewServerDataString = "{ticketId}|{playerIp}"
         private void HandleServerCustomData(PlayerID player, ChangeServerInfo data, bool asServer)
         {
             if (!asServer) return;
-
             var parts = data.NewServerDataString?.Split('|');
             if (parts is { Length: 2 })
+            {
+                _playerIdToTicket[player] = parts[0];
                 OnPlayerJoined(parts[0], parts[1]);
+            }
+        }
+
+        #endregion
+
+        #region PurrNet player events
+
+        private void OnPurrPlayerJoined(PlayerID player, bool isReconnect, bool asServer)
+        {
+            if (!asServer) return;
+            Debug.Log($"[Server] PurrNet player connected: {player}");
+        }
+
+        private void OnPurrPlayerLeft(PlayerID player, bool asServer)
+        {
+            if (!asServer) return;
+
+            if (_playerIdToTicket.TryGetValue(player, out var ticketId))
+            {
+                OnPlayerLeft(ticketId);
+                _playerIdToTicket.Remove(player);
+            }
+
+            // Сразу обновляем backfill — не ждём 5 секунд
+            if (_backfillCoroutine != null)
+                StopCoroutine(_backfillCoroutine);
+            _backfillCoroutine = StartCoroutine(ImmediateBackfillUpdate());
+        }
+
+        private IEnumerator ImmediateBackfillUpdate()
+        {
+            if (string.IsNullOrEmpty(_backfillTicketId))
+                yield return StartCoroutine(PostBackfill());
+            else
+                yield return StartCoroutine(PutBackfill());
+
+            _backfillCoroutine = StartCoroutine(BackfillRoutine());
+        }
+
+        #endregion
+
+        #region Player join / leave
+
+        public void OnPlayerJoined(string ticketId, string playerIp)
+        {
+            _playerTickets[ticketId] = playerIp;
+            Debug.Log($"[Server] Player joined ({ticketId}). Total: {_playerTickets.Count}");
+        }
+
+        public void OnPlayerLeft(string ticketId)
+        {
+            _playerTickets.Remove(ticketId);
+            Debug.Log($"[Server] Player left ({ticketId}). Total: {_playerTickets.Count}");
         }
 
         #endregion
@@ -151,29 +217,6 @@ namespace Code.Network.Server
 
         #endregion
 
-        #region Player join / leave
-
-        /// <summary>
-        /// Вызывается когда игрок подключился к серверу.
-        /// На клиенте — отправь через ChangeServerInfo: $"{ticketId}|{playerIp}"
-        /// </summary>
-        public void OnPlayerJoined(string ticketId, string playerIp)
-        {
-            _playerTickets[ticketId] = playerIp;
-            Debug.Log($"[Server] Player joined ({ticketId}). Total: {_playerTickets.Count}");
-        }
-
-        /// <summary>
-        /// Вызывается когда игрок отключился от сервера.
-        /// </summary>
-        public void OnPlayerLeft(string ticketId)
-        {
-            _playerTickets.Remove(ticketId);
-            Debug.Log($"[Server] Player left ({ticketId}). Total: {_playerTickets.Count}");
-        }
-
-        #endregion
-
         #region Backfill
 
         private void ParseInitialTickets()
@@ -211,60 +254,46 @@ namespace Code.Network.Server
                     _backfillTicketId = null;
                 }
                 else if (!isFull && string.IsNullOrEmpty(_backfillTicketId))
-                {
                     yield return StartCoroutine(PostBackfill());
-                }
                 else if (!isFull && !string.IsNullOrEmpty(_backfillTicketId))
-                {
                     yield return StartCoroutine(PutBackfill());
-                }
             }
         }
 
         private string BuildBackfillBody()
         {
             var fqdn       = Environment.GetEnvironmentVariable("ARBITRIUM_SERVER_FQDN")               ?? "localhost";
-            var publicIp   = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP")                  ?? "127.0.0.1";
-            var portGame   = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_gameport_EXTERNAL")      ?? "7770";
-            var portStream = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_stream_peer_EXTERNAL")   ?? "9000";
+            var publicIp   = Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP")                 ?? "127.0.0.1";
+            var portGame   = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_gameport_EXTERNAL")    ?? "7770";
+            var portStream = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_stream_peer_EXTERNAL") ?? "9000";
 
-            var ticketsSb = new StringBuilder("{");
+            // Собираем tickets-словарь
+            var sb = new StringBuilder("{");
             bool first = true;
             foreach (var kv in _playerTickets)
             {
-                if (!first) ticketsSb.Append(",");
-                ticketsSb.Append($"\"{kv.Key}\":{{" +
-                    $"\"id\":\"{kv.Key}\"," +
-                    $"\"player_ip\":\"{kv.Value}\"," +
-                    $"\"attributes\":{{\"backfill_group_size\":[\"value 1\"]}}}}");
+                if (!first) sb.Append(",");
+                sb.Append($"\"{kv.Key}\":{{\"id\":\"{kv.Key}\",\"player_ip\":\"{kv.Value}\",\"attributes\":{{\"backfill_group_size\":[\"value 1\"]}}}}");
                 first = false;
             }
-            ticketsSb.Append("}");
+            sb.Append("}");
 
-            return $@"{{
-                ""profile"": ""backfill-example"",
-                ""attributes"": {{
-                    ""assignment"": {{
-                        ""fqdn"": ""{fqdn}"",
-                        ""public_ip"": ""{publicIp}"",
-                        ""ports"": {{
-                            ""gameport"": {{
-                                ""internal"": 7770,
-                                ""external"": {portGame},
-                                ""link"": ""{fqdn}:{portGame}"",
-                                ""protocol"": ""UDP""
-                            }},
-                            ""stream_peer"": {{
-                                ""internal"": 9000,
-                                ""external"": {portStream},
-                                ""link"": ""{fqdn}:{portStream}"",
-                                ""protocol"": ""TCP""
-                            }}
-                        }}
-                    }}
-                }},
-                ""tickets"": {ticketsSb}
-            }}";
+            return "{"
+                   + "\"profile\":\"backfill-example\","
+                   + "\"attributes\":{"
+                   //  ↓ ЭТО было пропущено — backfill_group_size на уровне самого backfill-тикета
+                   +     "\"backfill_group_size\":[\"value 1\",\"value 2\",\"value 3\"],"
+                   +     "\"assignment\":{"
+                   +         $"\"fqdn\":\"{fqdn}\","
+                   +         $"\"public_ip\":\"{publicIp}\","
+                   +         "\"ports\":{"
+                   +             $"\"gameport\":{{\"internal\":7770,\"external\":{portGame},\"link\":\"{fqdn}:{portGame}\",\"protocol\":\"UDP\"}},"
+                   +             $"\"stream_peer\":{{\"internal\":9000,\"external\":{portStream},\"link\":\"{fqdn}:{portStream}\",\"protocol\":\"TCP\"}}"
+                   +         "}"
+                   +     "}"
+                   + "},"
+                   + $"\"tickets\":{sb}"
+                   + "}";
         }
 
         private IEnumerator PostBackfill()
@@ -310,7 +339,7 @@ namespace Code.Network.Server
 
         private static string ParseField(string json, string field)
         {
-            var m = Regex.Match(json, $"\"{field}\"\\s*:\\s*\"([^\"]+)\"");
+            var m = Regex.Match(json, "\"" + field + "\"\\s*:\\s*\"([^\"]+)\"");
             return m.Success ? m.Groups[1].Value : null;
         }
 

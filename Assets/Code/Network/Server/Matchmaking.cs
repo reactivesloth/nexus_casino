@@ -29,7 +29,7 @@ public class Matchmaking : MonoBehaviour
     
     private NexusModularPopupOpener _popupOpener;
     
-    private void Awake()
+    private void Start()
     {
         _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
         LoadingScreenUI.Instance.Show("loading.find_server", "loading");
@@ -162,7 +162,7 @@ public class Matchmaking : MonoBehaviour
             profile = "backfill-example",
             attributes = new Attributes
             {
-                backfill_group_size = new string[] { "value 1"},
+                backfill_group_size = new string[] { "value 1" }, // пересекается с ["value 1","value 2","value 3"]
             }
         };
 
