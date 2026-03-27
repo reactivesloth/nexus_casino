@@ -15,8 +15,8 @@ namespace Code.Network.Server
 {
     public class ServerManager : MonoBehaviour
     {
-        [SerializeField] private string MatchmakerUrl;
-        [SerializeField] private string MatchmakerToken;
+        private const string MatchmakerUrl   = "https://om-94wi0wxxb0.edgegap.net";
+        private const string MatchmakerToken = "YOUR_AUTH_TOKEN";
         private const int    MaxPlayers      = 100;
 
         private readonly string _deleteUrl   = Environment.GetEnvironmentVariable("ARBITRIUM_DELETE_URL");
@@ -24,6 +24,7 @@ namespace Code.Network.Server
 
         private string    _backfillTicketId;
         private Coroutine _backfillCoroutine;
+        private string    _matchGroupId; // ← НОВОЕ: group_id матча из MMCORE_TICKETS
 
         private readonly Dictionary<string, string>   _playerTickets    = new();
         private readonly Dictionary<PlayerID, string> _playerIdToTicket = new();
@@ -132,7 +133,6 @@ namespace Code.Network.Server
                 _playerIdToTicket.Remove(player);
             }
 
-            // Сразу обновляем backfill — не ждём 5 секунд
             if (_backfillCoroutine != null)
                 StopCoroutine(_backfillCoroutine);
             _backfillCoroutine = StartCoroutine(ImmediateBackfillUpdate());
@@ -222,14 +222,29 @@ namespace Code.Network.Server
         private void ParseInitialTickets()
         {
             var raw = Environment.GetEnvironmentVariable("MMCORE_TICKETS");
+
+            // Диагностика
+            Debug.Log($"[Server] FQDN: {Environment.GetEnvironmentVariable("ARBITRIUM_SERVER_FQDN")}");
+            Debug.Log($"[Server] IP: {Environment.GetEnvironmentVariable("ARBITRIUM_PUBLIC_IP")}");
+            Debug.Log($"[Server] PORT gameport: {Environment.GetEnvironmentVariable("ARBITRIUM_PORT_gameport_EXTERNAL")}");
+            Debug.Log($"[Server] MMCORE_TICKETS: {raw}");
+
             if (string.IsNullOrEmpty(raw))
             {
                 Debug.LogWarning("[Server] MMCORE_TICKETS is empty.");
                 return;
             }
 
-            var ids = Regex.Matches(raw, "\"([a-z0-9]{20})\"\\s*:\\s*\\{");
-            var ips = Regex.Matches(raw, "\"player_ip\"\\s*:\\s*\"([^\"]+)\"");
+            // ← НОВОЕ: парсим group_id матча
+            var groupMatch = Regex.Match(raw, @"""group_id""\s*:\s*""([^""]+)""");
+            if (groupMatch.Success)
+            {
+                _matchGroupId = groupMatch.Groups[1].Value;
+                Debug.Log($"[Server] Match group_id: {_matchGroupId}");
+            }
+
+            var ids = Regex.Matches(raw, @"""([a-z0-9]{20})""\s*:\s*\{");
+            var ips = Regex.Matches(raw, @"""player_ip""\s*:\s*""([^""]+)""");
 
             for (int i = 0; i < ids.Count && i < ips.Count; i++)
                 _playerTickets[ids[i].Groups[1].Value] = ips[i].Groups[1].Value;
@@ -267,7 +282,6 @@ namespace Code.Network.Server
             var portGame   = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_gameport_EXTERNAL")    ?? "7770";
             var portStream = Environment.GetEnvironmentVariable("ARBITRIUM_PORT_stream_peer_EXTERNAL") ?? "9000";
 
-            // Собираем tickets-словарь
             var sb = new StringBuilder("{");
             bool first = true;
             foreach (var kv in _playerTickets)
@@ -278,22 +292,30 @@ namespace Code.Network.Server
             }
             sb.Append("}");
 
-            return "{"
-                   + "\"profile\":\"backfill-example\","
-                   + "\"attributes\":{"
-                   //  ↓ ЭТО было пропущено — backfill_group_size на уровне самого backfill-тикета
-                   +     "\"backfill_group_size\":[\"value 1\",\"value 2\",\"value 3\"],"
-                   +     "\"assignment\":{"
-                   +         $"\"fqdn\":\"{fqdn}\","
-                   +         $"\"public_ip\":\"{publicIp}\","
-                   +         "\"ports\":{"
-                   +             $"\"gameport\":{{\"internal\":7770,\"external\":{portGame},\"link\":\"{fqdn}:{portGame}\",\"protocol\":\"UDP\"}},"
-                   +             $"\"stream_peer\":{{\"internal\":9000,\"external\":{portStream},\"link\":\"{fqdn}:{portStream}\",\"protocol\":\"TCP\"}}"
-                   +         "}"
-                   +     "}"
-                   + "},"
-                   + $"\"tickets\":{sb}"
-                   + "}";
+            // ← НОВОЕ: включаем group_id если известен
+            var groupIdPart = !string.IsNullOrEmpty(_matchGroupId)
+                ? $"\"group_id\":\"{_matchGroupId}\","
+                : "";
+
+            var body = "{"
+                + "\"profile\":\"backfill-example\","
+                + groupIdPart
+                + "\"attributes\":{"
+                +     "\"backfill_group_size\":[\"value 1\",\"value 2\",\"value 3\"],"
+                +     "\"assignment\":{"
+                +         $"\"fqdn\":\"{fqdn}\","
+                +         $"\"public_ip\":\"{publicIp}\","
+                +         "\"ports\":{"
+                +             $"\"gameport\":{{\"internal\":7770,\"external\":{portGame},\"link\":\"{fqdn}:{portGame}\",\"protocol\":\"UDP\"}},"
+                +             $"\"stream_peer\":{{\"internal\":9000,\"external\":{portStream},\"link\":\"{fqdn}:{portStream}\",\"protocol\":\"TCP\"}}"
+                +         "}}"
+                +     "}"
+                + "},"
+                + $"\"tickets\":{sb}"
+                + "}";
+
+            Debug.Log($"[Server] Backfill body: {body}");
+            return body;
         }
 
         private IEnumerator PostBackfill()
@@ -339,7 +361,7 @@ namespace Code.Network.Server
 
         private static string ParseField(string json, string field)
         {
-            var m = Regex.Match(json, "\"" + field + "\"\\s*:\\s*\"([^\"]+)\"");
+            var m = Regex.Match(json, @"""" + field + @"""\s*:\s*""([^""]+)""");
             return m.Success ? m.Groups[1].Value : null;
         }
 
