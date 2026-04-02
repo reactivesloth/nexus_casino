@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
+using System.Text.RegularExpressions;
 using Code.UI;
 using Code.UI.Popup;
 using Code.Utility;
@@ -143,61 +145,104 @@ public class Matchmaking : MonoBehaviour
 
     private IEnumerator CreateTicketRoutine()
     {
-        
-        var url = $"{matchmakerApiUrl}/tickets";
-
+        // 1. Получаем IP игрока
         playerIp = null;
         using (var ipReq = UnityWebRequest.Get("https://api.ipify.org"))
         {
             yield return ipReq.SendWebRequest();
             if (ipReq.result == UnityWebRequest.Result.Success)
                 playerIp = ipReq.downloadHandler.text.Trim();
-            else { Debug.LogError("Failed to get IP"); yield break; }
-        }
-        
-        // Тело тикета — под твой пример
-        var bodyObj = new CreateTicketRequest
-        {
-            player_ip = playerIp,
-            profile = "backfill-example",
-            attributes = new Attributes
+            else
             {
-                backfill_group_size = new string[] { "value 1" }, // пересекается с ["value 1","value 2","value 3"]
+                Debug.LogError("Failed to get player IP");
+                yield break;
             }
-        };
+        }
 
-        var json = JsonUtility.ToJson(bodyObj);
-        var bodyRaw = Encoding.UTF8.GetBytes(json);
+        // 2. Пингуем беаконы через HTTPS
+        var beaconLatencies = new Dictionary<string, float>();
+        using (var beaconReq = UnityWebRequest.Get($"{matchmakerApiUrl}/locations/beacons"))
+        {
+            beaconReq.SetRequestHeader("Authorization", authToken);
+            yield return beaconReq.SendWebRequest();
 
-        using (var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbPOST))
+            if (beaconReq.result == UnityWebRequest.Result.Success)
+            {
+                var beaconJson = beaconReq.downloadHandler.text;
+                var fqdns  = Regex.Matches(beaconJson, "\"fqdn\"\\s*:\\s*\"([^\"]+)\"");
+                var cities = Regex.Matches(beaconJson, "\"city\"\\s*:\\s*\"([^\"]+)\"");
+
+                for (int i = 0; i < fqdns.Count && i < cities.Count; i++)
+                {
+                    string city = cities[i].Groups[1].Value;
+                    string host = fqdns[i].Groups[1].Value;
+
+                    float latency = 999f;
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    // ✅ HTTPS без порта — Unity не блокирует
+                    using var pingReq = UnityWebRequest.Head($"https://{host}");
+                    pingReq.timeout = 5;
+                    yield return pingReq.SendWebRequest();
+                    sw.Stop();
+
+                    // Любой ответ (даже 404/403) означает что сервер доступен
+                    latency = (float)sw.ElapsedMilliseconds;
+                    beaconLatencies[city] = latency;
+                    Debug.Log($"[Matchmaking] Beacon {city}: {latency}ms");
+                }
+            }
+
+            // Если беаконы не получили — фолбэк с одинаковыми значениями
+            // (правило difference:100 пройдёт, т.к. разница = 0)
+            if (beaconLatencies.Count == 0)
+            {
+                Debug.LogWarning("[Matchmaking] Beacon list empty, using fallback latencies");
+                beaconLatencies["Montreal"] = 50f;
+                beaconLatencies["Toronto"]  = 50f;
+                beaconLatencies["Quebec"]   = 50f;
+            }
+        }
+
+        // 3. Создаём тикет с реальными latency
+        var beaconParts = new System.Text.StringBuilder();
+        bool firstBeacon = true;
+        foreach (var kv in beaconLatencies)
+        {
+            if (!firstBeacon) beaconParts.Append(",");
+            beaconParts.Append($"\"{kv.Key}\":{kv.Value:F1}");
+            firstBeacon = false;
+        }
+
+        var ticketJson = "{"
+                         + $"\"player_ip\":\"{playerIp}\","
+                         + "\"profile\":\"backfill-example\","
+                         + "\"attributes\":{"
+                         + "\"backfill_group_size\":[\"value 1\"],"
+                         + $"\"beacons\":{{{beaconParts}}}"
+                         + "}}";
+
+        var bodyRaw = Encoding.UTF8.GetBytes(ticketJson);
+        using (var req = new UnityWebRequest($"{matchmakerApiUrl}/tickets", UnityWebRequest.kHttpVerbPOST))
         {
             req.uploadHandler = new UploadHandlerRaw(bodyRaw);
             req.downloadHandler = new DownloadHandlerBuffer();
             req.SetRequestHeader("Content-Type", "application/json");
             req.SetRequestHeader("Authorization", authToken);
-
             yield return req.SendWebRequest();
 
-#if UNITY_2020_1_OR_NEWER
             if (req.result != UnityWebRequest.Result.Success)
-#else
-            if (req.isNetworkError || req.isHttpError)
-#endif
             {
-                Debug.LogError($"CreateTicket error: {req.responseCode} {req.error} {req.downloadHandler.text}");
+                Debug.LogError($"CreateTicket error: {req.responseCode} {req.downloadHandler.text}");
                 OnMatchMakingError();
-                
                 yield break;
             }
 
-            Debug.Log($"CreateTicket response: {req.downloadHandler.text}");
-
-            // В ответе ticketId — поле id
+            Debug.Log($"[Matchmaking] Ticket created: {req.downloadHandler.text}");
             var ticketResponse = JsonUtility.FromJson<TicketResponse>(req.downloadHandler.text);
             _currentTicketId = ticketResponse.id;
-
-            _pollCoroutine = StartCoroutine(PollTicketRoutine(_currentTicketId));
         }
+
+        _pollCoroutine = StartCoroutine(PollTicketRoutine(_currentTicketId));
     }
 
     private IEnumerator PollTicketRoutine(string ticketId)

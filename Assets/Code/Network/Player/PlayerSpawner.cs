@@ -186,7 +186,7 @@ namespace Code.Network.Player
             // Клиент -> Сервер (broadcast-сообщение без привязки к объекту)
             NetworkManager.main.SendToServer(msg);
             
-            var info = new ChangeServerInfo
+            var info = new ServerManager.ChangeServerInfo
             {
                 NewServerDataString = $"{PlayerPrefs.GetString("Ticket_ID")}|{PlayerPrefs.GetString("Player_IP")}"
             };
