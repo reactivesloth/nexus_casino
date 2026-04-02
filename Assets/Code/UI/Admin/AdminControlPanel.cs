@@ -234,6 +234,16 @@ namespace Code.UI.Admin
         private void UpdateLobbies()
         {
             ClearContent();
+            StartCoroutine(EdgegapAdminAPI.GetServerList(servers =>
+            {
+                if (servers == null) return;
+                foreach (var server in servers)
+                {
+                    var controlElement = Instantiate(lobbyControlElementPrefab, contentContainer);
+                    controlElement.Init(server);
+                    _controlElements.Add(controlElement);
+                }
+            }));
         }
 
         private void ClearContent()

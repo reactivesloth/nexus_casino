@@ -1,14 +1,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using Code.Network;
-using Code.Network.Player;
 using Code.UI.Popup;
 using Code.Utility;
 using Newtonsoft.Json.Linq;
+using PurrNet;
+using PurrNet.Transports;
 using Ricimi;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using PlayerSpawner = Code.Network.Player.PlayerSpawner;
 
 namespace Code.UI.Admin
 {
@@ -22,7 +24,7 @@ namespace Code.UI.Admin
         [SerializeField] private Button moveToButton;
 
         private string _lobbyId;
-        
+
         private NexusModularPopupOpener _popupOpener;
         private AdminPanelHandler _adminPanelHandler;
 
@@ -49,23 +51,25 @@ namespace Code.UI.Admin
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
         }
 
-        /*public void Init(InstanceData serverData) //LobbyDetails lobby)
+        public void Init(EdgegapAdminAPI.ServerInstanceItem serverData)
         {
-            _instanceData = serverData;
-            
-            adminsStatusText.text = "";
-            _lobbyId = serverData.instance_id;
-            titleDisplayText.text = serverData.name;
-            idText.text = serverData.instance_id;
-            
-            var playersList = (serverData.custom_data["players"] as JArray)?.ToObject<List<string>>();
-            playersCountText.text = $"{playersList?.Count}/{serverData.custom_data["max_players"]}";
+            _lobbyId = serverData.request_id;
 
-            var privateKey = serverData.custom_data.TryGetValue("private", out var isPrivate) && (bool)isPrivate
-                ? "admin.lobby.private.close"
-                : "admin.lobby.private.open";
+            string currentId = PlayerPrefs.GetString("Current_Server_RequestId", "");
+            bool isCurrent = !string.IsNullOrEmpty(currentId) && serverData.request_id == currentId;
+
+            titleDisplayText.text = (isCurrent ? "▶ " : "") + (serverData.metadata?.name ?? serverData.request_id);
+            idText.text = serverData.request_id;
+            adminsStatusText.text = serverData.server?.location != null
+                ? $"{serverData.server.location.city}, {serverData.server.location.country}"
+                : "";
+
+            playersCountText.text = $"{serverData.total_reserved_seats}/{serverData.metadata?.max_players ?? 0}";
+
+            var isPrivate = serverData.total_joinable_seats == 0;
+            var privateKey = isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";
             LocalizationHelper.SetLocalizedTextAsync(privateText, privateKey);
-        }*/
+        }
 
         private void OnMoveToButtonClick()
         {
@@ -105,7 +109,7 @@ namespace Code.UI.Admin
         private void InitializePlayerSelectionSystem()
         {
             _allAvailablePlayers = PlayerSpawner.NameConnectionsData.Keys.Distinct().ToList();
-            
+
             AddPlayerToPopup();
         }
 

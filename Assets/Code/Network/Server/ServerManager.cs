@@ -14,27 +14,26 @@ namespace Code.Network.Server
 {
     public class ServerManager : MonoBehaviour
     {
-        [Header("Server Browser")]
-        public string ServerBrowserUrl  = "https://sb-XXXXXXXX.edgegap.net";
-        public string ServerToken       = "YOUR_SERVER_TOKEN";
-        public string GamePortName      = "gameport";
-        public string StreamPortName    = "stream_peer";
-        public int    MaxPlayers        = 100;
+        [Header("Server Browser")] public string ServerBrowserUrl = "https://sb-XXXXXXXX.edgegap.net";
+        public string ServerToken = "YOUR_SERVER_TOKEN";
+        public string GamePortName = "gameport";
+        public string StreamPortName = "stream_peer";
+        public int MaxPlayers = 100;
 
-        [Header("Keep-Alive")]
-        public float KeepAliveInterval  = 30f;
+        [Header("Keep-Alive")] public float KeepAliveInterval = 30f;
 
         [Header("Локальный тест (в контейнере берётся из ENV)")]
-        public string DebugRequestId    = "local-test-01";
-        public string DebugPublicIp     = "127.0.0.1";
-        public int    DebugGamePort     = 7770;
-        public int    DebugStreamPort   = 9000;
+        public string DebugRequestId = "local-test-01";
 
-        [Header("Авто-выключение пустого сервера")]
-        [SerializeField] private float emptyServerLifeTime = 600f;
+        public string DebugPublicIp = "127.0.0.1";
+        public int DebugGamePort = 7770;
+        public int DebugStreamPort = 9000;
+
+        [Header("Авто-выключение пустого сервера")] [SerializeField]
+        private float emptyServerLifeTime = 600f;
 
         private string _requestId;
-        private float  _emptyTime;
+        private float _emptyTime;
 
         // ── Unity lifecycle ───────────────────────────────────
 
@@ -45,7 +44,7 @@ namespace Code.Network.Server
 
 #if UNITY_SERVER
             InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
-            InstanceHandler.NetworkManager.onPlayerLeft   += OnPlayerLeft;
+            InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
 #endif
         }
 
@@ -60,7 +59,7 @@ namespace Code.Network.Server
         {
             if (InstanceHandler.NetworkManager == null) return;
             InstanceHandler.NetworkManager.onPlayerJoined -= OnPlayerJoined;
-            InstanceHandler.NetworkManager.onPlayerLeft   -= OnPlayerLeft;
+            InstanceHandler.NetworkManager.onPlayerLeft -= OnPlayerLeft;
         }
 
         // ── Connect / Spawn ───────────────────────────────────
@@ -70,13 +69,13 @@ namespace Code.Network.Server
             var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
 
 #if UNITY_SERVER
-            transport.address    = "";
+            transport.address = "";
             transport.serverPort = (ushort)DebugGamePort;
             transport.StartServer();
             StartCoroutine(RegisterAndKeepAlive());
 #else
             StartCoroutine(ConnectAndSpawnPlayer(
-                PlayerPrefs.GetString("Server_IP",   "127.0.0.1"),
+                PlayerPrefs.GetString("Server_IP", "127.0.0.1"),
                 ushort.Parse(PlayerPrefs.GetString("Server_Port", DebugGamePort.ToString()))
             ));
 #endif
@@ -84,8 +83,8 @@ namespace Code.Network.Server
 
         private IEnumerator ConnectAndSpawnPlayer(string ip = "127.0.0.1", ushort port = 7770)
         {
-            var transport        = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
-            transport.address    = ip;
+            var transport = InstanceHandler.NetworkManager.GetComponent<UDPTransport>();
+            transport.address = ip;
             transport.serverPort = port;
 
             LoadingScreenUI.Instance?.Show("loading.start_scene", "loading.please_wait");
@@ -103,10 +102,10 @@ namespace Code.Network.Server
 
         IEnumerator RegisterAndKeepAlive()
         {
-            _requestId       = Env("ARBITRIUM_REQUEST_ID", DebugRequestId);
-            string publicIp  = Env("ARBITRIUM_PUBLIC_IP",  DebugPublicIp);
+            _requestId = Env("ARBITRIUM_REQUEST_ID", DebugRequestId);
+            string publicIp = Env("ARBITRIUM_PUBLIC_IP", DebugPublicIp);
 
-            int gamePort   = ResolvePort(GamePortName,   DebugGamePort);
+            int gamePort = ResolvePort(GamePortName, DebugGamePort);
             int streamPort = ResolvePort(StreamPortName, DebugStreamPort);
 
             Debug.Log($"[ServerReg] id={_requestId} ip={publicIp} gamePort={gamePort} streamPort={streamPort}");
@@ -124,7 +123,7 @@ namespace Code.Network.Server
         {
             // Вариант 1: ARBITRIUM_PORT_GAMEPORT_EXTERNAL / ARBITRIUM_PORT_STREAM_PEER_EXTERNAL
             string envKey = $"ARBITRIUM_PORT_{portName.ToUpper().Replace("-", "_")}_EXTERNAL";
-            string val    = System.Environment.GetEnvironmentVariable(envKey);
+            string val = System.Environment.GetEnvironmentVariable(envKey);
             if (!string.IsNullOrEmpty(val) && int.TryParse(val, out int p1))
             {
                 Debug.Log($"[ServerReg] Порт '{portName}' из ENV {envKey} = {p1}");
@@ -163,27 +162,49 @@ namespace Code.Network.Server
             string locationJson = System.Environment.GetEnvironmentVariable("ARBITRIUM_DEPLOYMENT_LOCATION");
             if (!string.IsNullOrEmpty(locationJson))
             {
-                try { location = JsonConvert.DeserializeObject(locationJson); }
-                catch { location = new { city = "Unknown", country = "Unknown", continent = "Unknown", administrative_division = "Unknown", timezone = "UTC" }; }
+                try
+                {
+                    location = JsonConvert.DeserializeObject(locationJson);
+                }
+                catch
+                {
+                    location = new
+                    {
+                        city = "Unknown", country = "Unknown", continent = "Unknown",
+                        administrative_division = "Unknown", timezone = "UTC"
+                    };
+                }
             }
             else
             {
-                location = new { city = "Unknown", country = "Unknown", continent = "Unknown", administrative_division = "Unknown", timezone = "UTC" };
+                location = new
+                {
+                    city = "Unknown", country = "Unknown", continent = "Unknown", administrative_division = "Unknown",
+                    timezone = "UTC"
+                };
             }
 
             var body = new
             {
                 request_id = requestId,
-                metadata   = new { max_players = MaxPlayers, name = "Game Server", policy_name = "default" },
-                slots      = new[] { new { name = "default", available_seats = MaxPlayers, metadata = new { } } },
+                metadata = new { max_players = MaxPlayers, name = "Game Server", policy_name = "default" },
+                slots = new[] { new { name = "default", available_seats = MaxPlayers, metadata = new { } } },
                 server = new
                 {
-                    fqdn      = $"{requestId}.pr.edgegap.net",
+                    fqdn = $"{requestId}.pr.edgegap.net",
                     public_ip = publicIp,
-                    ports     = new Dictionary<string, object>
+                    ports = new Dictionary<string, object>
                     {
-                        [GamePortName]   = new { @internal = DebugGamePort,   external = gamePort,   link = $"{requestId}.pr.edgegap.net:{gamePort}",   protocol = "UDP" },
-                        [StreamPortName] = new { @internal = DebugStreamPort, external = streamPort, link = $"{requestId}.pr.edgegap.net:{streamPort}", protocol = "UDP" }
+                        [GamePortName] = new
+                        {
+                            @internal = DebugGamePort, external = gamePort,
+                            link = $"{requestId}.pr.edgegap.net:{gamePort}", protocol = "UDP"
+                        },
+                        [StreamPortName] = new
+                        {
+                            @internal = DebugStreamPort, external = streamPort,
+                            link = $"{requestId}.pr.edgegap.net:{streamPort}", protocol = "UDP"
+                        }
                     },
                     location = location
                 }
@@ -191,9 +212,9 @@ namespace Code.Network.Server
 
             yield return Post("/server-instances", body, code =>
             {
-                if      (code == 201) Debug.Log("[ServerReg] ✅ Зарегистрирован");
+                if (code == 201) Debug.Log("[ServerReg] ✅ Зарегистрирован");
                 else if (code == 409) Debug.LogWarning("[ServerReg] ⚠️ Уже зарегистрирован");
-                else    Debug.LogError($"[ServerReg] ❌ Ошибка регистрации: {code}");
+                else Debug.LogError($"[ServerReg] ❌ Ошибка регистрации: {code}");
             });
         }
 
@@ -241,7 +262,12 @@ namespace Code.Network.Server
 
         private void UpdateEmptyTimer()
         {
-            if (InstanceHandler.NetworkManager.playerCount > 0) { _emptyTime = 0f; return; }
+            if (InstanceHandler.NetworkManager.playerCount > 0)
+            {
+                _emptyTime = 0f;
+                return;
+            }
+
             _emptyTime += Time.deltaTime;
             if (_emptyTime >= emptyServerLifeTime) Application.Quit();
         }
@@ -259,7 +285,7 @@ namespace Code.Network.Server
         // ── HTTP helpers ──────────────────────────────────────
 
         IEnumerator Post(string path, object body, System.Action<long> onDone)
-            => Send("POST",  path, body, onDone);
+            => Send("POST", path, body, onDone);
 
         IEnumerator Patch(string path, object body, System.Action<long> onDone)
             => Send("PATCH", path, body, onDone);
@@ -269,11 +295,11 @@ namespace Code.Network.Server
             byte[] bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(body));
             using var req = new UnityWebRequest(ServerBrowserUrl + path, method)
             {
-                uploadHandler   = new UploadHandlerRaw(bytes),
+                uploadHandler = new UploadHandlerRaw(bytes),
                 downloadHandler = new DownloadHandlerBuffer()
             };
             req.SetRequestHeader("Authorization", ServerToken);
-            req.SetRequestHeader("Content-Type",  "application/json");
+            req.SetRequestHeader("Content-Type", "application/json");
             yield return req.SendWebRequest();
             onDone(req.responseCode);
         }
@@ -287,7 +313,7 @@ namespace Code.Network.Server
         {
             public string NewServerDataString;
         }
-        
+
         class PortsMappingEnv
         {
             public Dictionary<string, PortsMappingItem> ports;
@@ -296,8 +322,8 @@ namespace Code.Network.Server
         class PortsMappingItem
         {
             public string name;
-            public int    @internal;
-            public int    external;
+            public int @internal;
+            public int external;
             public string protocol;
         }
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using Code.API;
+using Code.Network;
 using Code.UI;
 using Code.UI.Popup;
 using Code.Utility;
@@ -15,20 +16,21 @@ using UnityEngine.UI;
 
 public class EdgegapServerBrowser : MonoBehaviour
 {
-    
+
     [SerializeField] private float timeout = 60f;
     private float _leftTime = 0f;
     private NexusModularPopupOpener _popupOpener;
-    
+
     private const string GameSceneName = "Main";
     private const string MenuSceneName = "Init";
-    
-    
-    
+
+
+
     [Header("Создание нового сервера")]
     public string EdgegapApiToken = "token YOUR_EDGEGAP_API_TOKEN"; // основной API токен
-    public string AppName         = "your-app-name";               // имя приложения в Edgegap
-    
+
+    public string AppName = "your-app-name"; // имя приложения в Edgegap
+
     public string ServerBrowserUrl = "https://sb-XXXXXXXX.edgegap.net";
 
     public string ClientToken = "YOUR_CLIENT_TOKEN";
@@ -38,19 +40,22 @@ public class EdgegapServerBrowser : MonoBehaviour
 
     public bool RetryIfNoServer = true;
     public float RetryInterval = 5f;
-    public int   MaxRetries    = 12;
+    public int MaxRetries = 12;
 
-    public event Action<string>         OnStatus;
-    public event Action<string, int>    OnReadyToConnect;
-    public event Action<string>         OnFailed;
+    public event Action<string> OnStatus;
+    public event Action<string, int> OnReadyToConnect;
+    public event Action<string> OnFailed;
+
+    private string _currentRequestId;
 
     public void Start()
     {
+        // Сохраняем настройки для AdminAPI
+        EdgegapAdminAPI.Configure(ServerBrowserUrl, ClientToken, EdgegapApiToken, AppName);
+
         _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
         LoadingScreenUI.Instance.Show("loading.find_server", "loading");
-
         StartCoroutine(Run());
-
         OnFailed += OnMatchMakingError;
     }
 
@@ -61,7 +66,7 @@ public class EdgegapServerBrowser : MonoBehaviour
         if (_leftTime >= timeout && !_popupOpener.Opened)
             OnFailed.Invoke("timeout");
     }
-    
+
     private void OnDisable()
     {
         OnFailed -= OnMatchMakingError;
@@ -92,7 +97,7 @@ public class EdgegapServerBrowser : MonoBehaviour
     }
 
 
-    private void ShowPopup (string title, string message)
+    private void ShowPopup(string title, string message)
     {
         CursorManager.Instance.SetForceShowCursor(true);
         _popupOpener.Title = title;
@@ -114,13 +119,13 @@ public class EdgegapServerBrowser : MonoBehaviour
         _popupOpener.Buttons.Add(okButton);
         _popupOpener.OpenPopup();
     }
-    
+
     private void LoadMainMenu()
     {
         CursorManager.Instance.SetForceShowCursor(true);
         LoadingScreenUI.Instance.LoadScene(MenuSceneName);
     }
-    
+
     private void OnMatchMakingError(string error = "unknown")
     {
         switch (error)
@@ -139,10 +144,26 @@ public class EdgegapServerBrowser : MonoBehaviour
 
     IEnumerator Run()
     {
+        string targetRequestId = PlayerPrefs.GetString("Target_Server_RequestId", "");
+        bool forceNewServer = PlayerPrefs.GetInt("Force_New_Server", 0) == 1;
+
+        // Сбрасываем флаги сразу
+        PlayerPrefs.DeleteKey("Target_Server_RequestId");
+        PlayerPrefs.DeleteKey("Force_New_Server");
+        PlayerPrefs.Save();
+
+        // Если есть конкретный сервер — коннектимся к нему напрямую
+        if (!string.IsNullOrEmpty(targetRequestId))
+        {
+            SetStatus($"Подключение к серверу {targetRequestId}...");
+            yield return StartCoroutine(ConnectToSpecificServer(targetRequestId));
+            yield break;
+        }
+
         int attempts = 0;
-        bool deploymentCreated = false;
+        bool deploymentCreated = forceNewServer; // если только что создали — пропускаем первый deploy
         int deploymentWaitAttempts = 0;
-        int maxDeploymentWaitAttempts = 6; // ждём максимум 6 * RetryInterval секунд
+        int maxDeploymentWaitAttempts = 6;
 
         while (true)
         {
@@ -157,8 +178,6 @@ public class EdgegapServerBrowser : MonoBehaviour
                 if (deploymentCreated)
                 {
                     deploymentWaitAttempts++;
-
-                    // Деплоймент так и не появился — считаем что упал, пробуем создать новый
                     if (deploymentWaitAttempts >= maxDeploymentWaitAttempts)
                     {
                         SetStatus("Сервер не запустился. Пробую создать новый...");
@@ -174,7 +193,6 @@ public class EdgegapServerBrowser : MonoBehaviour
                     }
                 }
 
-                // Создаём деплоймент
                 SetStatus("Свободных серверов нет. Создаю новый...");
                 bool created = false;
                 yield return StartCoroutine(CreateDeployment(r => created = r));
@@ -199,7 +217,6 @@ public class EdgegapServerBrowser : MonoBehaviour
                 continue;
             }
 
-            // Сервер найден — сбрасываем флаги
             deploymentCreated = false;
             deploymentWaitAttempts = 0;
 
@@ -208,6 +225,8 @@ public class EdgegapServerBrowser : MonoBehaviour
 
             if (slot != null)
             {
+                _currentRequestId = instance.request_id;
+
                 bool reserved = false;
                 yield return StartCoroutine(ReserveSeat(instance.request_id, slot.name, r => reserved = r));
 
@@ -236,31 +255,121 @@ public class EdgegapServerBrowser : MonoBehaviour
         }
     }
 
+    IEnumerator ConnectToSpecificServer(string requestId)
+    {
+        bool isNew = PlayerPrefs.GetInt("Target_Server_IsNew", 0) == 1;
+        PlayerPrefs.DeleteKey("Target_Server_IsNew");
+        PlayerPrefs.Save();
+
+        int attempts = 0;
+        int maxAttempts = isNew ? 20 : 10; // новый сервер ждём дольше
+
+        SetStatus(isNew
+            ? $"Ожидание запуска нового сервера..."
+            : $"Подключение к серверу {requestId}...");
+
+        while (attempts < maxAttempts)
+        {
+            attempts++;
+
+            // Для нового сервера сначала проверяем что он появился в Server Browser
+            if (isNew)
+            {
+                ServerInstanceItem instance = null;
+                yield return StartCoroutine(FindSpecificInstance(requestId, r => instance = r));
+
+                if (instance == null)
+                {
+                    SetStatus($"Ожидание регистрации сервера... ({attempts}/{maxAttempts})");
+                    yield return new WaitForSeconds(RetryInterval);
+                    continue;
+                }
+
+                isNew = false; // сервер появился, дальше как обычно
+            }
+
+            SlotItem slot = null;
+            yield return StartCoroutine(FindAvailableSlot(requestId, r => slot = r));
+
+            if (slot != null)
+            {
+                bool reserved = false;
+                yield return StartCoroutine(ReserveSeat(requestId, slot.name, r => reserved = r));
+
+                if (reserved)
+                {
+                    ServerConnectionInfo info = null;
+                    yield return StartCoroutine(GetServerInfo(requestId, r => info = r));
+
+                    if (info != null)
+                    {
+                        _currentRequestId = requestId;
+                        SetStatus($"Подключение к {info.host}:{info.port}...");
+                        ConnectToGameServer(info.host, info.port, info.streamPort);
+                        yield break;
+                    }
+                }
+            }
+
+            SetStatus($"Ожидание сервера... ({attempts}/{maxAttempts})");
+            yield return new WaitForSeconds(RetryInterval);
+        }
+
+        SetStatus("Целевой сервер недоступен, ищу другой...");
+        StartCoroutine(Run());
+    }
+
+    IEnumerator FindSpecificInstance(string requestId, Action<ServerInstanceItem> callback)
+    {
+        string url = $"{ServerBrowserUrl}/server-instances/{requestId}";
+
+        using var req = UnityWebRequest.Get(url);
+        req.SetRequestHeader("Authorization", ClientToken);
+        yield return req.SendWebRequest();
+
+        // 404 — сервер ещё не зарегистрировался, это нормально
+        if (req.responseCode == 404)
+        {
+            callback(null);
+            yield break;
+        }
+
+        if (req.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogWarning($"[SB] FindSpecificInstance {requestId}: {req.responseCode}");
+            callback(null);
+            yield break;
+        }
+
+        var inst = JsonConvert.DeserializeObject<ServerInstanceItem>(req.downloadHandler.text);
+        callback(inst?.total_joinable_seats > 0 ? inst : null);
+    }
+
     IEnumerator CreateDeployment(Action<bool> callback)
     {
-        string url  = "https://api.edgegap.com/v1/deploy";
+        string url = "https://api.edgegap.com/v1/deploy";
         string body = JsonConvert.SerializeObject(new
         {
-            app_name     = AppName,
+            app_name = AppName,
             version_name = Application.version,
             filters = new[]
             {
                 new
                 {
-                    filter_type = "any",       // 'any' | 'all' | 'not'
-                    field       = "continent",
-                    values      = new[] { "Europe" }
+                    filter_type = "any", // 'any' | 'all' | 'not'
+                    field = "continent",
+                    values = new[] { "Europe" }
                 }
             }
         });
 
         using var req = new UnityWebRequest(url, "POST")
         {
-            uploadHandler   = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body)),
+            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body)),
             downloadHandler = new DownloadHandlerBuffer()
         };
         req.SetRequestHeader("Authorization", EdgegapApiToken);
-        req.SetRequestHeader("Content-Type",  "application/json");
+        req.SetRequestHeader("Content-Type", "application/json");
 
         yield return req.SendWebRequest();
 
@@ -305,7 +414,7 @@ public class EdgegapServerBrowser : MonoBehaviour
     IEnumerator FindAvailableSlot(string requestId, Action<SlotItem> callback)
     {
         string filter = Uri.EscapeDataString("joinable_seats gt 0");
-        string url = $"{ServerBrowserUrl}/server-instances/{requestId}/slots?filter={filter}&limit=20"; 
+        string url = $"{ServerBrowserUrl}/server-instances/{requestId}/slots?filter={filter}&limit=20";
         yield return Get(url, json =>
         {
             var resp = JsonConvert.DeserializeObject<SlotListResponse>(json);
@@ -315,7 +424,8 @@ public class EdgegapServerBrowser : MonoBehaviour
 
     IEnumerator ReserveSeat(string requestId, string slotName, Action<bool> callback)
     {
-        string url  = $"{ServerBrowserUrl}/server-instances/{requestId}/slots/{Uri.EscapeDataString(slotName)}/reservations";
+        string url =
+            $"{ServerBrowserUrl}/server-instances/{requestId}/slots/{Uri.EscapeDataString(slotName)}/reservations";
         string body = JsonConvert.SerializeObject(new
         {
             users = new[] { new { user_id = ClientDataStorage.UserData.username } }
@@ -335,15 +445,19 @@ public class EdgegapServerBrowser : MonoBehaviour
         yield return Get(url, json =>
         {
             var inst = JsonConvert.DeserializeObject<ServerInstanceFull>(json);
-            if (inst?.server == null) { callback(null); return; }
-            
+            if (inst?.server == null)
+            {
+                callback(null);
+                return;
+            }
+
             callback(new ServerConnectionInfo
             {
                 host = inst.server.fqdn,
                 port = inst.server.ports[GamePortName].external,
                 streamPort = inst.server.ports[StreamPortName].external,
             });
-            
+
             Debug.Log($"JSON: " + json);
         });
     }
@@ -354,7 +468,9 @@ public class EdgegapServerBrowser : MonoBehaviour
         PlayerPrefs.SetString("Server_IP", host);
         PlayerPrefs.SetString("Server_Port", port.ToString());
         PlayerPrefs.SetString("Stream_Port", portStream.ToString());
-        
+        PlayerPrefs.SetString("Current_Server_RequestId", _currentRequestId);
+        PlayerPrefs.Save();
+
         SceneManager.LoadScene(GameSceneName);
     }
 
@@ -377,61 +493,72 @@ public class EdgegapServerBrowser : MonoBehaviour
     {
         using var req = new UnityWebRequest(url, "POST")
         {
-            uploadHandler   = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body)),
+            uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(body)),
             downloadHandler = new DownloadHandlerBuffer()
         };
         req.SetRequestHeader("Authorization", ClientToken);
         req.SetRequestHeader("Content-Type", "application/json");
         yield return req.SendWebRequest();
 
-        if ((int)req.responseCode == 201 || (int) req.responseCode == 409 || req.result == UnityWebRequest.Result.Success)
+        if ((int)req.responseCode == 201 || (int)req.responseCode == 409 ||
+            req.result == UnityWebRequest.Result.Success)
             onSuccess(req.downloadHandler.text);
         else
             Debug.LogError($"[SB] POST {url} → {req.responseCode}: {req.error}\n{req.downloadHandler.text}");
     }
 
-    void SetStatus(string msg) { Debug.Log($"[SB] {msg}"); OnStatus?.Invoke(msg); }
+    void SetStatus(string msg)
+    {
+        Debug.Log($"[SB] {msg}");
+        OnStatus?.Invoke(msg);
+    }
 
-    class ServerInstanceListResponse { public List<ServerInstanceItem> items; }
+    class ServerInstanceListResponse
+    {
+        public List<ServerInstanceItem> items;
+    }
 
     class ServerInstanceItem
     {
         public string request_id;
-        public int    total_available_seats;
-        public int    total_reserved_seats;
-        public int    total_joinable_seats;
+        public int total_available_seats;
+        public int total_reserved_seats;
+        public int total_joinable_seats;
         public object metadata;
     }
 
-    class SlotListResponse { public List<SlotItem> items; }
+    class SlotListResponse
+    {
+        public List<SlotItem> items;
+    }
 
     class SlotItem
     {
         public string name;
-        public int    available_seats;
-        public int    reserved_seats;
-        public int    joinable_seats;
+        public int available_seats;
+        public int reserved_seats;
+        public int joinable_seats;
     }
 
     class ServerInstanceFull
     {
-        public string       request_id;
-        public int          total_joinable_seats;
-        public ServerData   server;
+        public string request_id;
+        public int total_joinable_seats;
+        public ServerData server;
         public List<SlotItem> slots;
     }
 
     class ServerData
     {
-        public string                         fqdn;
-        public string                         public_ip;
-        public Dictionary<string, PortInfo>   ports;
+        public string fqdn;
+        public string public_ip;
+        public Dictionary<string, PortInfo> ports;
     }
 
     class PortInfo
     {
-        public int    @internal;
-        public int    external;
+        public int @internal;
+        public int external;
         public string link;
         public string protocol;
     }

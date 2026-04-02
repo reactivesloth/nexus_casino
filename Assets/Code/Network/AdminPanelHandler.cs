@@ -41,7 +41,8 @@ namespace Code.Network
         protected override void OnSpawned()
         {
             base.OnSpawned();
-            if (ClientDataStorage.UserData.username != null && MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
+            if (ClientDataStorage.UserData.username != null &&
+                MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
                 SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
 
@@ -306,7 +307,7 @@ namespace Code.Network
         }
 
         [TargetRpc]
-        private void UnmuteCallback_Rpc(PlayerID target, bool unmuteChat = false, bool unmuteVoice = false              )
+        private void UnmuteCallback_Rpc(PlayerID target, bool unmuteChat = false, bool unmuteVoice = false)
         {
             if (unmuteChat)
                 chatController.IsMuted = false;
@@ -448,37 +449,28 @@ namespace Code.Network
         private void CreateRoom_TargetRpc(PlayerID target, string roomName, bool isPrivate) =>
             CreateRoom(roomName, isPrivate);
 
-        private async void CreateRoom(string roomName, bool isPrivate)
+        private void CreateRoom(string roomName, bool isPrivate)
         {
-            /*LoadingScreenUI.Instance.Show("loading", "loading");
+            LoadingScreenUI.Instance.Show("loading", "loading");
 
-            var serverRequest = new ServerCreateRequest
+            StartCoroutine(EdgegapAdminAPI.CreateDeployment(requestId =>
             {
-                name = roomName,
-                region = "eu-west",
-                compute_size = "large",
-                version_tag = Application.version,
-                custom_data = new Dictionary<string, object> { { "max_players", 64 }, { "private", isPrivate } }
-            };
+                if (string.IsNullOrEmpty(requestId))
+                {
+                    Debug.LogError("[AdminPanel] Не удалось создать сервер");
+                    LoadingScreenUI.Instance.Hide();
+                    return;
+                }
 
-            try
-            {
-                var response = await PlayFlowLobby.ApiClient.StartServerAsync(serverRequest);
-                Debug.Log($"Server is starting! Instance ID: {response.instance_id}");
-
-                PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIDName, response.instance_id);
-                PlayerPrefs.SetString(PlayFlowLobby.PrefsServerIPName, response.network_ports[0].host);
-                PlayerPrefs.SetString(PlayFlowLobby.PrefsServerPortName,
-                    response.network_ports[0].external_port.ToString());
+                // Говорим браузеру ждать именно этот сервер
+                PlayerPrefs.SetString("Target_Server_RequestId", requestId);
+                PlayerPrefs.SetInt("Target_Server_IsNew", 1); // ещё не зарегистрирован в SB
+                PlayerPrefs.DeleteKey("Force_New_Server");
+                PlayerPrefs.Save();
 
                 InstanceHandler.NetworkManager.StopClient();
                 LoadingScreenUI.Instance.LoadScene("Matchmaker");
-            }
-            catch (PlayFlowApiException e)
-            {
-                Debug.LogError($"Failed to start server: {e.Message}");
-                LoadingScreenUI.Instance.Hide();
-            }*/
+            }));
         }
 
         public void MoveUserToRoom(string username, string roomId)
@@ -513,7 +505,8 @@ namespace Code.Network
         [TargetRpc]
         private void MoveUserTargetRpc(PlayerID target, string lobbyId)
         {
-            PlayerPrefs.SetString("Server_ID", lobbyId);
+            PlayerPrefs.SetString("Target_Server_RequestId", lobbyId);
+            PlayerPrefs.Save();
 
             InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Matchmaker");
