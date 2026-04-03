@@ -104,6 +104,37 @@ namespace Code.Network
             Debug.Log($"[EdgegapAdmin] Деплоймент создан: {response?.request_id}");
             callback(response?.request_id);
         }
+        
+        public static IEnumerator DeleteDeployment(string requestId, Action<bool> callback)
+        {
+            // Шаг 1: Останавливаем контейнер Edgegap
+            string stopUrl = $"https://api.edgegap.com/v1/stop/{requestId}";
+
+            using var stopReq = new UnityWebRequest(stopUrl, "DELETE")
+            {
+                downloadHandler = new DownloadHandlerBuffer()
+            };
+            stopReq.SetRequestHeader("Authorization", _edgegapApiToken);
+            yield return stopReq.SendWebRequest();
+
+            if (stopReq.responseCode != 200 && stopReq.responseCode != 204)
+                Debug.LogWarning($"[EdgegapAdmin] Stop deployment {requestId}: {stopReq.responseCode}");
+
+            // Шаг 2: Удаляем запись из Server Browser
+            string sbUrl = $"{_serverBrowserUrl}/server-instances/{requestId}";
+
+            using var sbReq = new UnityWebRequest(sbUrl, "DELETE")
+            {
+                downloadHandler = new DownloadHandlerBuffer()
+            };
+            sbReq.SetRequestHeader("Authorization", _clientToken);
+            yield return sbReq.SendWebRequest();
+
+            bool ok = sbReq.responseCode == 200 || sbReq.responseCode == 204 || sbReq.responseCode == 404;
+            if (!ok) Debug.LogError($"[EdgegapAdmin] Delete SB instance {requestId}: {sbReq.responseCode}\n{sbReq.downloadHandler.text}");
+
+            callback(ok);
+        }
 
         [Serializable]
         public class DeployResponse

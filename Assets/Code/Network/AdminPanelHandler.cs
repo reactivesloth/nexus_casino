@@ -1,3 +1,4 @@
+using System.Linq;
 using Code.API;
 using Code.API.Models;
 using Code.Chat;
@@ -123,6 +124,26 @@ namespace Code.Network
 
             Debug.Log(localPlayerForced.id);
             Kick_ServerRPC(localPlayerForced, username);
+        }
+        
+        public void KickAllFromServer(string requestId)
+        {
+            // Кикаем только если игроки на этом сервере
+            string currentId = PlayerPrefs.GetString("Current_Server_RequestId", "");
+            if (currentId != requestId) return; // мы не на этом сервере — кикать некого отсюда
+
+            // Кикаем всех через ServerRpc
+            KickAll_ServerRpc(localPlayerForced);
+        }
+
+        [ServerRpc(requireOwnership: false)]
+        private void KickAll_ServerRpc(PlayerID sender)
+        {
+            var connections = PlayerSpawner.NameConnectionsData.Values.ToList();
+            foreach (var connection in connections)
+            {
+                Kick_TargetRpc(connection);
+            }
         }
 
         [ServerRpc(requireOwnership: false)]

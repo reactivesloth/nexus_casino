@@ -3,9 +3,6 @@ using System.Linq;
 using Code.Network;
 using Code.UI.Popup;
 using Code.Utility;
-using Newtonsoft.Json.Linq;
-using PurrNet;
-using PurrNet.Transports;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -22,6 +19,7 @@ namespace Code.UI.Admin
         [SerializeField] private TMP_Text privateText;
 
         [SerializeField] private Button moveToButton;
+        [SerializeField] private Button closeServerButton;
 
         private string _lobbyId;
 
@@ -40,16 +38,19 @@ namespace Code.UI.Admin
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
             _adminPanelHandler = FindAnyObjectByType<AdminPanelHandler>(FindObjectsInactive.Include);
         }
-
+        
         private void OnEnable()
         {
             moveToButton.onClick.AddListener(OnMoveToButtonClick);
+            closeServerButton.onClick.AddListener(OnCloseServerButtonClick);
         }
 
         private void OnDisable()
         {
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
+            closeServerButton.onClick.RemoveListener(OnCloseServerButtonClick);
         }
+
 
         public void Init(EdgegapAdminAPI.ServerInstanceItem serverData)
         {
@@ -268,6 +269,51 @@ namespace Code.UI.Admin
             }
 
             _popupOpener.ClosePopup();
+        }
+        
+        private void OnCloseServerButtonClick()
+        {
+            _popupOpener.Title   = "Закрыть сервер?";
+            _popupOpener.Message = $"Сервер {_lobbyId} будет остановлен. Все игроки будут отключены.";
+
+            var confirmButton = new ButtonInfo
+            {
+                Label              = "Закрыть",
+                ClosePopupWhenClicked = true,
+                OnClickedEvent     = new Button.ButtonClickedEvent()
+            };
+            confirmButton.OnClickedEvent.AddListener(ConfirmCloseServer);
+
+            var cancelButton = new ButtonInfo
+            {
+                Label                 = "Отмена",
+                ClosePopupWhenClicked = true,
+                OnClickedEvent        = new Button.ButtonClickedEvent()
+            };
+
+            _popupOpener.Buttons.Add(confirmButton);
+            _popupOpener.Buttons.Add(cancelButton);
+            _popupOpener.OpenPopup();
+        }
+
+        private void ConfirmCloseServer()
+        {
+            // Кикаем всех игроков с этого сервера перед закрытием
+            _adminPanelHandler.KickAllFromServer(_lobbyId);
+
+            StartCoroutine(EdgegapAdminAPI.DeleteDeployment(_lobbyId, success =>
+            {
+                if (success)
+                {
+                    Debug.Log($"[AdminPanel] Сервер {_lobbyId} остановлен");
+                    // Скрываем элемент из списка
+                    gameObject.SetActive(false);
+                }
+                else
+                {
+                    Debug.LogError($"[AdminPanel] Не удалось остановить сервер {_lobbyId}");
+                }
+            }));
         }
     }
 }
