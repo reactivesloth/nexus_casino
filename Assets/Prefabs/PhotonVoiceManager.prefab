@@ -88,7 +88,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: PhotonVoice::Photon.Voice.Unity.Recorder
   voiceDetection: 1
-  voiceDetectionThreshold: 0.2
+  voiceDetectionThreshold: 0.13
   voiceDetectionDelayMs: 500
   interestGroup: 0
   useTargetPlayers: 0
@@ -130,7 +130,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b7f95aa3c06eaa84bba4eafdedf12758, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PhotonVoice::Photon.Voice.Unity.AudioChangesHandler
-  HandleDeviceChange: 1
+  HandleDeviceChange: 0
   HandleDeviceChangeIOS: 1
   HandleDeviceChangeAndroid: 1
 --- !u!114 &1747112239144976244
@@ -160,4 +160,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a86f533fd9917dd4da8601e9eb542c96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: PhotonVoice::Photon.Voice.Unity.VoiceLogger
-  LogLevel: 2
+  LogLevel: 1
