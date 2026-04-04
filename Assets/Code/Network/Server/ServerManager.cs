@@ -24,7 +24,6 @@ namespace Code.Network.Server
 
         [Header("Локальный тест (в контейнере берётся из ENV)")]
         public string DebugRequestId = "local-test-01";
-
         public string DebugPublicIp = "127.0.0.1";
         public int DebugGamePort = 7770;
         public int DebugStreamPort = 9000;
@@ -45,6 +44,7 @@ namespace Code.Network.Server
 #if UNITY_SERVER
             InstanceHandler.NetworkManager.onPlayerJoined += OnPlayerJoined;
             InstanceHandler.NetworkManager.onPlayerLeft += OnPlayerLeft;
+            Application.quitting += OnApplicationQuitting;
 #endif
         }
 
@@ -57,11 +57,45 @@ namespace Code.Network.Server
 
         private void OnDestroy()
         {
+#if UNITY_SERVER
+
             if (InstanceHandler.NetworkManager == null) return;
             InstanceHandler.NetworkManager.onPlayerJoined -= OnPlayerJoined;
             InstanceHandler.NetworkManager.onPlayerLeft -= OnPlayerLeft;
+            Application.quitting -= OnApplicationQuitting;
+            if (!_isShuttingDown)
+                DeleteFromServerBrowserSync();
+#endif
         }
 
+        private void OnApplicationQuitting()
+        {
+            _isShuttingDown = true;
+            DeleteFromServerBrowserSync();
+        }
+
+        private void DeleteFromServerBrowserSync()
+        {
+            if (string.IsNullOrEmpty(_requestId)) return;
+
+            // UnityWebRequest не успеет — используем System.Net напрямую
+            try
+            {
+                var url = $"{ServerBrowserUrl}/server-instances/{_requestId}";
+                var req = System.Net.WebRequest.Create(url) as System.Net.HttpWebRequest;
+                req.Method = "DELETE";
+                req.Headers["Authorization"] = ServerToken;
+                req.Timeout = 3000; // 3 секунды максимум
+
+                using var resp = req.GetResponse();
+                Debug.Log($"[ServerReg] Cleanup on quit: {((System.Net.HttpWebResponse)resp).StatusCode}");
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning($"[ServerReg] Cleanup on quit failed: {e.Message}");
+            }
+        }
+        
         // ── Connect / Spawn ───────────────────────────────────
 
         private void ConnectToServer()
@@ -87,11 +121,36 @@ namespace Code.Network.Server
             transport.address = ip;
             transport.serverPort = port;
 
+            yield return null;
+
             LoadingScreenUI.Instance?.Show("loading.start_scene", "loading.please_wait");
             transport.StartClient();
 
-            yield return new WaitUntil(() =>
-                InstanceHandler.NetworkManager.clientState == ConnectionState.Connected);
+            float elapsed = 0f;
+            float connectTimeout = 10f;
+
+            while (InstanceHandler.NetworkManager.clientState != ConnectionState.Connected)
+            {
+                elapsed += Time.deltaTime;
+
+                if (elapsed >= connectTimeout)
+                {
+                    Debug.LogWarning("[Client] Таймаут подключения — сервер не отвечает");
+                    transport.StopClient();
+
+                    // Чистим протухшие данные
+                    PlayerPrefs.DeleteKey("Server_IP");
+                    PlayerPrefs.DeleteKey("Server_Port");
+                    PlayerPrefs.DeleteKey("Current_Server_RequestId");
+                    PlayerPrefs.Save();
+
+                    // Идём на матчмейкер искать живой сервер
+                    LoadingScreenUI.Instance?.LoadScene("Matchmaker");
+                    yield break;
+                }
+
+                yield return null;
+            }
 
             Debug.Log("[Client] Connected to server!");
             FindAnyObjectByType<PlayerSpawner>().SpawnPlayer();
@@ -121,7 +180,6 @@ namespace Code.Network.Server
 
         private int ResolvePort(string portName, int fallback)
         {
-            // Вариант 1: ARBITRIUM_PORT_GAMEPORT_EXTERNAL / ARBITRIUM_PORT_STREAM_PEER_EXTERNAL
             string envKey = $"ARBITRIUM_PORT_{portName.ToUpper().Replace("-", "_")}_EXTERNAL";
             string val = System.Environment.GetEnvironmentVariable(envKey);
             if (!string.IsNullOrEmpty(val) && int.TryParse(val, out int p1))
@@ -130,7 +188,6 @@ namespace Code.Network.Server
                 return p1;
             }
 
-            // Вариант 2: ARBITRIUM_PORTS_MAPPING (JSON формат)
             string mapping = System.Environment.GetEnvironmentVariable("ARBITRIUM_PORTS_MAPPING");
             if (!string.IsNullOrEmpty(mapping))
             {
@@ -157,31 +214,16 @@ namespace Code.Network.Server
 
         IEnumerator RegisterInstance(string requestId, string publicIp, int gamePort, int streamPort)
         {
-            // Локация из ARBITRIUM_DEPLOYMENT_LOCATION (JSON)
             object location;
             string locationJson = System.Environment.GetEnvironmentVariable("ARBITRIUM_DEPLOYMENT_LOCATION");
             if (!string.IsNullOrEmpty(locationJson))
             {
-                try
-                {
-                    location = JsonConvert.DeserializeObject(locationJson);
-                }
-                catch
-                {
-                    location = new
-                    {
-                        city = "Unknown", country = "Unknown", continent = "Unknown",
-                        administrative_division = "Unknown", timezone = "UTC"
-                    };
-                }
+                try { location = JsonConvert.DeserializeObject(locationJson); }
+                catch { location = new { city = "Unknown", country = "Unknown", continent = "Unknown", administrative_division = "Unknown", timezone = "UTC" }; }
             }
             else
             {
-                location = new
-                {
-                    city = "Unknown", country = "Unknown", continent = "Unknown", administrative_division = "Unknown",
-                    timezone = "UTC"
-                };
+                location = new { city = "Unknown", country = "Unknown", continent = "Unknown", administrative_division = "Unknown", timezone = "UTC" };
             }
 
             var body = new
@@ -195,16 +237,8 @@ namespace Code.Network.Server
                     public_ip = publicIp,
                     ports = new Dictionary<string, object>
                     {
-                        [GamePortName] = new
-                        {
-                            @internal = DebugGamePort, external = gamePort,
-                            link = $"{requestId}.pr.edgegap.net:{gamePort}", protocol = "UDP"
-                        },
-                        [StreamPortName] = new
-                        {
-                            @internal = DebugStreamPort, external = streamPort,
-                            link = $"{requestId}.pr.edgegap.net:{streamPort}", protocol = "UDP"
-                        }
+                        [GamePortName] = new { @internal = DebugGamePort, external = gamePort, link = $"{requestId}.pr.edgegap.net:{gamePort}", protocol = "UDP" },
+                        [StreamPortName] = new { @internal = DebugStreamPort, external = streamPort, link = $"{requestId}.pr.edgegap.net:{streamPort}", protocol = "UDP" }
                     },
                     location = location
                 }
@@ -260,16 +294,65 @@ namespace Code.Network.Server
 
         // ── Авто-выключение пустого сервера ───────────────────
 
+        private bool _isShuttingDown = false;
+
         private void UpdateEmptyTimer()
         {
-            if (InstanceHandler.NetworkManager.playerCount > 0)
+            if (_isShuttingDown) return;
+
+            // Считаем только реальных клиентов, без host-соединения
+            int clientCount = InstanceHandler.NetworkManager.playerCount;
+    
+            if (clientCount > 0)
             {
                 _emptyTime = 0f;
                 return;
             }
 
             _emptyTime += Time.deltaTime;
-            if (_emptyTime >= emptyServerLifeTime) Application.Quit();
+
+            // Лог каждые 60 секунд чтобы видеть что таймер работает
+            if (Mathf.FloorToInt(_emptyTime) % 60 == 0 && _emptyTime > 1f)
+                Debug.Log($"[ServerReg] Пустой сервер: {Mathf.FloorToInt(_emptyTime)}с / {emptyServerLifeTime}с");
+
+            if (_emptyTime >= emptyServerLifeTime)
+            {
+                _isShuttingDown = true;
+                Debug.Log("[ServerReg] Сервер пуст — завершение...");
+                Shutdown(); // вместо Application.Quit() — чистит SB перед выходом
+            }
+        }
+
+        // ── Shutdown (вызывается AdminPanelHandler) ───────────
+
+        public void Shutdown()
+        {
+            if (_isShuttingDown && !isActiveAndEnabled) return;
+            _isShuttingDown = true;
+            StartCoroutine(ShutdownCoroutine());
+        }
+
+        private IEnumerator ShutdownCoroutine()
+        {
+            // Шаг 1: удаляем запись из Server Browser (используем ServerToken — без 403)
+            yield return Delete($"/server-instances/{_requestId}", code =>
+                Debug.Log($"[ServerReg] SB Delete: {code}"));
+
+            // Шаг 2: останавливаем контейнер через ARBITRIUM_DELETE_URL
+            string deleteUrl   = Env("ARBITRIUM_DELETE_URL", "");
+            string deleteToken = Env("ARBITRIUM_DELETE_TOKEN", "");
+
+            if (!string.IsNullOrEmpty(deleteUrl))
+            {
+                using var req = new UnityWebRequest(deleteUrl, "DELETE")
+                    { downloadHandler = new DownloadHandlerBuffer() };
+                req.SetRequestHeader("Authorization", deleteToken);
+                yield return req.SendWebRequest();
+                Debug.Log($"[ServerReg] Stop deployment: {req.responseCode}");
+            }
+
+            yield return new WaitForSeconds(1f);
+            Application.Quit();
         }
 
         // ── Custom data handler ───────────────────────────────
@@ -289,6 +372,15 @@ namespace Code.Network.Server
 
         IEnumerator Patch(string path, object body, System.Action<long> onDone)
             => Send("PATCH", path, body, onDone);
+
+        IEnumerator Delete(string path, System.Action<long> onDone)
+        {
+            using var req = new UnityWebRequest(ServerBrowserUrl + path, "DELETE")
+                { downloadHandler = new DownloadHandlerBuffer() };
+            req.SetRequestHeader("Authorization", ServerToken);
+            yield return req.SendWebRequest();
+            onDone(req.responseCode);
+        }
 
         IEnumerator Send(string method, string path, object body, System.Action<long> onDone)
         {

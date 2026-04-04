@@ -4,6 +4,7 @@ using Code.API.Models;
 using Code.Chat;
 using Code.Network.InteractionSystem;
 using Code.Network.Player;
+using Code.Network.Server;
 using Code.Player;
 using Code.UI;
 using Proyecto26;
@@ -46,7 +47,6 @@ namespace Code.Network
                 MutedDictionary.TryGetValue(ClientDataStorage.UserData.username, out var mutedStateSync))
                 SetMuteState(mutedStateSync.muteChat, mutedStateSync.muteVoice);
         }
-
 
         #region Ban
 
@@ -105,7 +105,6 @@ namespace Code.Network
                 }
 
                 CommandCallback($"User {username} was banned", true);
-
                 Debug.Log($"BAN {username} for {time}");
                 Kick(username);
             });
@@ -115,8 +114,7 @@ namespace Code.Network
 
         public void Kick(string username)
         {
-            // if(false)
-            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            if (!ClientDataStorage.UserData.IsAdminRole)
             {
                 CommandCallback("You can't kick other users.", false);
                 return;
@@ -124,26 +122,6 @@ namespace Code.Network
 
             Debug.Log(localPlayerForced.id);
             Kick_ServerRPC(localPlayerForced, username);
-        }
-        
-        public void KickAllFromServer(string requestId)
-        {
-            // Кикаем только если игроки на этом сервере
-            string currentId = PlayerPrefs.GetString("Current_Server_RequestId", "");
-            if (currentId != requestId) return; // мы не на этом сервере — кикать некого отсюда
-
-            // Кикаем всех через ServerRpc
-            KickAll_ServerRpc(localPlayerForced);
-        }
-
-        [ServerRpc(requireOwnership: false)]
-        private void KickAll_ServerRpc(PlayerID sender)
-        {
-            var connections = PlayerSpawner.NameConnectionsData.Values.ToList();
-            foreach (var connection in connections)
-            {
-                Kick_TargetRpc(connection);
-            }
         }
 
         [ServerRpc(requireOwnership: false)]
@@ -187,10 +165,7 @@ namespace Code.Network
             var unbanRequest = new RequestHelper
             {
                 Uri = ApiRoutes.GetUnbanUrl(),
-                Body = new BanData
-                {
-                    username = username
-                },
+                Body = new BanData { username = username },
                 Headers = ClientDataStorage.GetJwtHeader()
             };
 
@@ -215,18 +190,15 @@ namespace Code.Network
 
         #endregion
 
-        #region Communacations Commands
+        #region Communications Commands
 
         public void Mute(string username) => Mute(username, true, true);
-
         public void MuteChat(string username) => Mute(username, true, false);
-
         public void MuteVoice(string username) => Mute(username, false, true);
 
         private void Mute(string username, bool muteChat, bool muteVoice)
         {
-            // if(false)
-            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            if (!ClientDataStorage.UserData.IsAdminRole)
             {
                 CommandCallback("You can't mute other users.", false);
                 return;
@@ -251,16 +223,13 @@ namespace Code.Network
                 return;
             }
 
-            // Получаем текущее состояние мута или создаем новое
             var currentMuteState = MutedDictionary.ContainsKey(username)
                 ? MutedDictionary[username]
                 : new MuteStateSync { muteChat = false, muteVoice = false };
 
-            // Применяем действия мута
             if (muteChat) currentMuteState.muteChat = true;
             if (muteVoice) currentMuteState.muteVoice = true;
 
-            // Обновляем словарь
             MutedDictionary[username] = currentMuteState;
 
             CommandCallback_Rpc(sender, $"User {username} was muted", true);
@@ -270,25 +239,19 @@ namespace Code.Network
         [TargetRpc]
         private void Mute_TargetRpc(PlayerID target, bool muteChat = false, bool muteVoice = false)
         {
-            if (muteChat)
-                chatController.IsMuted = true;
-            if (muteVoice)
-                PlayerVoice.GetByPlayerID(target).isInputMutedByServer = true;
+            if (muteChat) chatController.IsMuted = true;
+            if (muteVoice) PlayerVoice.GetByPlayerID(target).isInputMutedByServer = true;
         }
 
         public void Unmute(string username) => Unmute(username, true, true);
-
         public void UnmuteChat(string username) => Unmute(username, true, false);
-
         public void UnmuteVoice(string username) => Unmute(username, false, true);
 
         private void Unmute(string username, bool unmuteChat, bool unmuteVoice)
         {
-            // if (false)
-            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            if (!ClientDataStorage.UserData.IsAdminRole)
             {
-                CommandCallback("You can't unmute other users.",
-                    false);
+                CommandCallback("You can't unmute other users.", false);
                 return;
             }
 
@@ -311,16 +274,13 @@ namespace Code.Network
                 return;
             }
 
-            // Получаем текущее состояние мута или создаем новое
             var currentMuteState = MutedDictionary.ContainsKey(username)
                 ? MutedDictionary[username]
                 : new MuteStateSync { muteChat = false, muteVoice = false };
 
-            // Применяем действия размута
             if (unmuteChat) currentMuteState.muteChat = false;
             if (unmuteVoice) currentMuteState.muteVoice = false;
 
-            // Обновляем словарь
             MutedDictionary[username] = currentMuteState;
 
             CommandCallback_Rpc(sender, $"User {username} was unmuted", true);
@@ -330,10 +290,8 @@ namespace Code.Network
         [TargetRpc]
         private void UnmuteCallback_Rpc(PlayerID target, bool unmuteChat = false, bool unmuteVoice = false)
         {
-            if (unmuteChat)
-                chatController.IsMuted = false;
-            if (unmuteVoice)
-                PlayerVoice.GetByPlayerID(target).isInputMutedByServer = false;
+            if (unmuteChat) chatController.IsMuted = false;
+            if (unmuteVoice) PlayerVoice.GetByPlayerID(target).isInputMutedByServer = false;
         }
 
         private void SetMuteState(bool muteChatState, bool muteVoiceState)
@@ -344,14 +302,12 @@ namespace Code.Network
 
         public void ToggleOffVoice(string username)
         {
-            // if(false)
-            if (!ClientDataStorage.UserData.IsAdminRole) //TODO 
+            if (!ClientDataStorage.UserData.IsAdminRole)
             {
                 CommandCallback("You can't mute other users.", false);
                 return;
             }
 
-            //Mute_ServerRpc(ClientManager.Connection, username, muteChat, muteVoice);
             ToggleOffVoce_ServerRpc(localPlayerForced, username);
         }
 
@@ -425,18 +381,12 @@ namespace Code.Network
             var argsLength = args.Length;
             switch (argsLength)
             {
-                case 1:
-                    NewRoomHandle(args[0], false, null);
-                    break;
+                case 1: NewRoomHandle(args[0], false, null); break;
                 case 2:
-                    if (args[1] == "-c")
-                        NewRoomHandle(args[0], true, null);
-                    else
-                        NewRoomHandle(args[0], false, args[1]);
+                    if (args[1] == "-c") NewRoomHandle(args[0], true, null);
+                    else NewRoomHandle(args[0], false, args[1]);
                     break;
-                case 3:
-                    NewRoomHandle(args[0], args[2] == "-c", args[1]);
-                    break;
+                case 3: NewRoomHandle(args[0], args[2] == "-c", args[1]); break;
             }
         }
 
@@ -483,9 +433,8 @@ namespace Code.Network
                     return;
                 }
 
-                // Говорим браузеру ждать именно этот сервер
                 PlayerPrefs.SetString("Target_Server_RequestId", requestId);
-                PlayerPrefs.SetInt("Target_Server_IsNew", 1); // ещё не зарегистрирован в SB
+                PlayerPrefs.SetInt("Target_Server_IsNew", 1);
                 PlayerPrefs.DeleteKey("Force_New_Server");
                 PlayerPrefs.Save();
 
@@ -531,6 +480,59 @@ namespace Code.Network
 
             InstanceHandler.NetworkManager.StopClient();
             LoadingScreenUI.Instance.LoadScene("Matchmaker");
+        }
+
+        #endregion
+
+        #region Shutdown Server
+
+        public void ShutdownServer(string requestId)
+        {
+            if (!ClientDataStorage.UserData.IsAdminRole)
+            {
+                CommandCallback("You can't shutdown servers", false);
+                return;
+            }
+
+            string currentRequestId = PlayerPrefs.GetString("Current_Server_RequestId", "");
+            bool isCurrentServer = requestId == currentRequestId;
+
+            if (isCurrentServer)
+            {
+                // Текущий сервер — кикаем всех через RPC, потом выключаем
+                ShutdownServer_ServerRpc(localPlayerForced, requestId);
+            }
+            else
+            {
+                // Чужой сервер — просто останавливаем деплоймент через API
+                // Игроки сами отключатся когда сервер упадёт
+                StartCoroutine(EdgegapAdminAPI.DeleteDeployment(requestId, success =>
+                {
+                    CommandCallback(
+                        success
+                            ? $"Server {requestId} stopped"
+                            : $"Failed to stop server {requestId}",
+                        success
+                    );
+                }));
+            }
+        }
+
+        [ServerRpc(requireOwnership: false)]
+        private void ShutdownServer_ServerRpc(PlayerID sender, string requestId)
+        {
+            var serverManager = FindAnyObjectByType<ServerManager>();
+            if (serverManager == null)
+            {
+                CommandCallback_Rpc(sender, "ServerManager not found", false);
+                return;
+            }
+
+            foreach (var connection in PlayerSpawner.NameConnectionsData.Values.ToList())
+                Kick_TargetRpc(connection);
+
+            CommandCallback_Rpc(sender, $"Server {requestId} shutting down...", true);
+            serverManager.Shutdown();
         }
 
         #endregion
@@ -584,39 +586,13 @@ namespace Code.Network
 
         private void CommandCallback(string message, bool success)
         {
-            if (success)
-                Debug.Log(message);
-            else
-                Debug.LogWarning(message);
+            if (success) Debug.Log(message);
+            else Debug.LogWarning(message);
 
             chatController.SendSystemMessage(message,
                 !success
-                    ? new ChatMessageStyle
-                    {
-                        hideUsername = true,
-                        messageBold = true,
-                        messageColor = Color.darkRed,
-                        messageItalic = true,
-                        messageUnderlined = false,
-                        noUsernameFollowup = true,
-                        usernameBold = false,
-                        usernameColor = Color.white,
-                        usernameItalic = false,
-                        usernameUnderlined = false
-                    }
-                    : new ChatMessageStyle
-                    {
-                        hideUsername = true,
-                        messageBold = true,
-                        messageColor = Color.green,
-                        messageItalic = true,
-                        messageUnderlined = false,
-                        noUsernameFollowup = true,
-                        usernameBold = false,
-                        usernameColor = Color.white,
-                        usernameItalic = false,
-                        usernameUnderlined = false
-                    });
+                    ? new ChatMessageStyle { hideUsername = true, messageBold = true, messageColor = Color.darkRed, messageItalic = true, messageUnderlined = false, noUsernameFollowup = true, usernameBold = false, usernameColor = Color.white, usernameItalic = false, usernameUnderlined = false }
+                    : new ChatMessageStyle { hideUsername = true, messageBold = true, messageColor = Color.green, messageItalic = true, messageUnderlined = false, noUsernameFollowup = true, usernameBold = false, usernameColor = Color.white, usernameItalic = false, usernameUnderlined = false });
         }
 
         #endregion

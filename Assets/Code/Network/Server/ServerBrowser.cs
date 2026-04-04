@@ -34,7 +34,8 @@ public class EdgegapServerBrowser : MonoBehaviour
     public string ServerBrowserUrl = "https://sb-XXXXXXXX.edgegap.net";
 
     public string ClientToken = "YOUR_CLIENT_TOKEN";
-
+    public string ServerToken = "YOUR_SERVER_TOKEN";
+    
     public string GamePortName = "gameport";
     public string StreamPortName = "stream_peer";
 
@@ -51,7 +52,7 @@ public class EdgegapServerBrowser : MonoBehaviour
     public void Start()
     {
         // Сохраняем настройки для AdminAPI
-        EdgegapAdminAPI.Configure(ServerBrowserUrl, ClientToken, EdgegapApiToken, AppName);
+        EdgegapAdminAPI.Configure(ServerBrowserUrl, ClientToken, ServerToken, EdgegapApiToken, AppName);
 
         _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
         LoadingScreenUI.Instance.Show("loading.find_server", "loading");
@@ -262,17 +263,34 @@ public class EdgegapServerBrowser : MonoBehaviour
         PlayerPrefs.Save();
 
         int attempts = 0;
-        int maxAttempts = isNew ? 20 : 10; // новый сервер ждём дольше
+        int maxAttempts = isNew ? 20 : 5; // для существующего сервера не ждём долго
 
         SetStatus(isNew
-            ? $"Ожидание запуска нового сервера..."
+            ? "Ожидание запуска нового сервера..."
             : $"Подключение к серверу {requestId}...");
+
+        // ── Для существующего сервера сначала проверяем что он живой ──
+        if (!isNew)
+        {
+            ServerInstanceItem existingCheck = null;
+            yield return StartCoroutine(FindSpecificInstance(requestId, r => existingCheck = r));
+
+            if (existingCheck == null)
+            {
+                // Сервера нет в Server Browser — он уже мёртв
+                SetStatus($"Сервер {requestId} не существует, ищу другой...");
+                PlayerPrefs.DeleteKey("Current_Server_RequestId");
+                PlayerPrefs.Save();
+                StartCoroutine(Run()); // идём в общий поиск
+                yield break;
+            }
+        }
 
         while (attempts < maxAttempts)
         {
             attempts++;
 
-            // Для нового сервера сначала проверяем что он появился в Server Browser
+            // Для нового сервера ждём появления в Server Browser
             if (isNew)
             {
                 ServerInstanceItem instance = null;
@@ -285,7 +303,7 @@ public class EdgegapServerBrowser : MonoBehaviour
                     continue;
                 }
 
-                isNew = false; // сервер появился, дальше как обычно
+                isNew = false;
             }
 
             SlotItem slot = null;
@@ -316,6 +334,8 @@ public class EdgegapServerBrowser : MonoBehaviour
         }
 
         SetStatus("Целевой сервер недоступен, ищу другой...");
+        PlayerPrefs.DeleteKey("Current_Server_RequestId");
+        PlayerPrefs.Save();
         StartCoroutine(Run());
     }
 

@@ -200,6 +200,16 @@ namespace Code.Network.Player
             if (state == ConnectionState.Disconnected)
             {
                  Debug.Log("Network lost, attempting reconnect...");
+                 PlayerPrefs.SetInt("ReloadAttempt", PlayerPrefs.GetInt("ReloadAttempt", 0) + 1);
+                 if (PlayerPrefs.GetInt("ReloadAttempt") == 3)
+                 {
+                     PlayerPrefs.DeleteKey("Server_IP");
+                     PlayerPrefs.DeleteKey("Server_Port");
+                     PlayerPrefs.DeleteKey("Current_Server_RequestId");
+                     PlayerPrefs.DeleteKey("ReloadAttempt");
+                     SceneManager.LoadScene(0);
+                     return;
+                 }
             //     StartCoroutine(ReconnectCoroutine());
                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             }

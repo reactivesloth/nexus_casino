@@ -26,11 +26,9 @@ namespace Code.UI.Admin
         private NexusModularPopupOpener _popupOpener;
         private AdminPanelHandler _adminPanelHandler;
 
-        // Кеш для логики исключения дубликатов
         private List<string> _allAvailablePlayers = new List<string>();
         private const string EMPTY_SELECTION = "-";
 
-        // Флаг для предотвращения рекурсии
         private bool _isUpdatingDropdowns = false;
 
         private void Awake()
@@ -38,7 +36,7 @@ namespace Code.UI.Admin
             _popupOpener = FindAnyObjectByType<NexusModularPopupOpener>(FindObjectsInactive.Include);
             _adminPanelHandler = FindAnyObjectByType<AdminPanelHandler>(FindObjectsInactive.Include);
         }
-        
+
         private void OnEnable()
         {
             moveToButton.onClick.AddListener(OnMoveToButtonClick);
@@ -50,7 +48,6 @@ namespace Code.UI.Admin
             moveToButton.onClick.RemoveListener(OnMoveToButtonClick);
             closeServerButton.onClick.RemoveListener(OnCloseServerButtonClick);
         }
-
 
         public void Init(EdgegapAdminAPI.ServerInstanceItem serverData)
         {
@@ -70,6 +67,9 @@ namespace Code.UI.Admin
             var isPrivate = serverData.total_joinable_seats == 0;
             var privateKey = isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";
             LocalizationHelper.SetLocalizedTextAsync(privateText, privateKey);
+
+            // Скрываем кнопку закрытия для своего текущего сервера
+ //           closeServerButton.gameObject.SetActive(!isCurrent);
         }
 
         private void OnMoveToButtonClick()
@@ -103,14 +103,12 @@ namespace Code.UI.Admin
 
             _popupOpener.OpenPopup();
 
-            // Инициализация логики исключения дубликатов
             InitializePlayerSelectionSystem();
         }
 
         private void InitializePlayerSelectionSystem()
         {
             _allAvailablePlayers = PlayerSpawner.NameConnectionsData.Keys.Distinct().ToList();
-
             AddPlayerToPopup();
         }
 
@@ -119,23 +117,16 @@ namespace Code.UI.Admin
             var popup = _popupOpener.LastPopup;
             if (popup == null) return;
 
-            // Создаем список опций с пустой опцией в начале
             var initialOptions = new List<string> { EMPTY_SELECTION };
             initialOptions.AddRange(_allAvailablePlayers);
 
-            // Добавляем новый дропдаун
             popup.AddDropdown("Player", initialOptions.ToArray());
 
-            // Получаем индекс последнего добавленного дропдауна
             var lastIndex = popup.Inputs.Count - 1;
 
-            // Подписываемся на изменения в новом дропдауне
             if (popup.Inputs[lastIndex] is TMP_Dropdown dropdown)
-            {
                 dropdown.onValueChanged.AddListener(_ => OnDropdownValueChanged());
-            }
 
-            // Обновляем все дропдауны с учетом ограничений
             UpdateAllDropdownsWithConstraints();
         }
 
@@ -146,24 +137,16 @@ namespace Code.UI.Admin
 
             var lastIndex = popup.Inputs.Count - 1;
 
-            // Отписываемся от событий перед удалением
             if (popup.Inputs[lastIndex] is TMP_Dropdown dropdown)
-            {
                 dropdown.onValueChanged.RemoveAllListeners();
-            }
 
             popup.RemoveInputAt(lastIndex);
-
-            // Обновляем оставшиеся дропдауны
             UpdateAllDropdownsWithConstraints();
         }
 
         private void OnDropdownValueChanged()
         {
-            // Предотвращаем рекурсию
-            if (_isUpdatingDropdowns)
-                return;
-
+            if (_isUpdatingDropdowns) return;
             UpdateAllDropdownsWithConstraints();
         }
 
@@ -176,16 +159,12 @@ namespace Code.UI.Admin
 
             try
             {
-                // Собираем текущие выбранные значения (исключая пустые)
                 var selectedPlayers = GetCurrentSelectedPlayers();
 
-                // Обновляем каждый дропдаун
                 for (int i = 0; i < popup.Inputs.Count; i++)
                 {
                     if (popup.Inputs[i] is TMP_Dropdown dropdown)
-                    {
                         UpdateDropdownOptions(i, dropdown, selectedPlayers);
-                    }
                 }
             }
             finally
@@ -207,9 +186,7 @@ namespace Code.UI.Admin
                 {
                     var selectedValue = dropdown.options[dropdown.value].text;
                     if (!string.IsNullOrEmpty(selectedValue) && selectedValue != EMPTY_SELECTION)
-                    {
                         selectedPlayers.Add(selectedValue);
-                    }
                 }
             }
 
@@ -222,23 +199,17 @@ namespace Code.UI.Admin
             var popup = _popupOpener.LastPopup;
             if (popup == null) return;
 
-            // Получаем текущее значение этого дропдауна
             var currentValue = EMPTY_SELECTION;
             if (targetDropdown.options.Count > 0)
-            {
                 currentValue = targetDropdown.options[targetDropdown.value].text;
-            }
 
-            // Создаем список доступных игроков: все игроки минус уже выбранные в других дропдаунах
             var availablePlayers = _allAvailablePlayers
                 .Where(player => !allSelectedPlayers.Contains(player) || player == currentValue)
                 .ToList();
 
-            // Формируем финальный список опций: всегда начинаем с пустой опции
             var finalOptions = new List<string> { EMPTY_SELECTION };
             finalOptions.AddRange(availablePlayers);
 
-            // Обновляем опции дропдауна
             popup.SetDropdownOptions(dropdownIndex, finalOptions, currentValue);
         }
 
@@ -247,48 +218,41 @@ namespace Code.UI.Admin
             var popup = _popupOpener.LastPopup;
             if (popup == null) return;
 
-            // Собираем всех выбранных игроков (исключая пустые значения)
             var selectedPlayers = new List<string>();
 
             for (var i = 0; i < popup.Inputs.Count; i++)
             {
                 var playerName = popup.GetInputValue(i);
                 if (!string.IsNullOrEmpty(playerName) && playerName != EMPTY_SELECTION)
-                {
                     selectedPlayers.Add(playerName);
-                }
             }
 
-            // Удаляем дубликаты на всякий случай
             var uniquePlayers = selectedPlayers.Distinct().ToList();
 
-            // Перемещаем каждого уникального игрока
             foreach (var playerName in uniquePlayers)
-            {
                 _adminPanelHandler.MoveUserToRoom(playerName, _lobbyId);
-            }
 
             _popupOpener.ClosePopup();
         }
-        
+
         private void OnCloseServerButtonClick()
         {
-            _popupOpener.Title   = "Закрыть сервер?";
+            _popupOpener.Title = "Закрыть сервер?";
             _popupOpener.Message = $"Сервер {_lobbyId} будет остановлен. Все игроки будут отключены.";
 
             var confirmButton = new ButtonInfo
             {
-                Label              = "Закрыть",
+                Label = "Закрыть",
                 ClosePopupWhenClicked = true,
-                OnClickedEvent     = new Button.ButtonClickedEvent()
+                OnClickedEvent = new Button.ButtonClickedEvent()
             };
             confirmButton.OnClickedEvent.AddListener(ConfirmCloseServer);
 
             var cancelButton = new ButtonInfo
             {
-                Label                 = "Отмена",
+                Label = "Отмена",
                 ClosePopupWhenClicked = true,
-                OnClickedEvent        = new Button.ButtonClickedEvent()
+                OnClickedEvent = new Button.ButtonClickedEvent()
             };
 
             _popupOpener.Buttons.Add(confirmButton);
@@ -298,22 +262,8 @@ namespace Code.UI.Admin
 
         private void ConfirmCloseServer()
         {
-            // Кикаем всех игроков с этого сервера перед закрытием
-            _adminPanelHandler.KickAllFromServer(_lobbyId);
-
-            StartCoroutine(EdgegapAdminAPI.DeleteDeployment(_lobbyId, success =>
-            {
-                if (success)
-                {
-                    Debug.Log($"[AdminPanel] Сервер {_lobbyId} остановлен");
-                    // Скрываем элемент из списка
-                    gameObject.SetActive(false);
-                }
-                else
-                {
-                    Debug.LogError($"[AdminPanel] Не удалось остановить сервер {_lobbyId}");
-                }
-            }));
+            _adminPanelHandler.ShutdownServer(_lobbyId);
+            gameObject.SetActive(false);
         }
     }
 }

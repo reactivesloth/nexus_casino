@@ -29,15 +29,17 @@ namespace Code.Network
 
         private static string _serverBrowserUrl;
         private static string _clientToken;
+        private static string _serverToken;
         private static string _edgegapApiToken;
         private static string _appName;
 
-        public static void Configure(string serverBrowserUrl, string clientToken,
+        public static void Configure(string serverBrowserUrl, string clientToken, string serverToken,
             string edgegapApiToken, string appName)
         {
             _serverBrowserUrl = serverBrowserUrl;
             _clientToken = clientToken;
             _edgegapApiToken = edgegapApiToken;
+            _serverToken = serverToken;
             _appName = appName;
             Debug.Log($"[EdgegapAdmin] Configured: {serverBrowserUrl}");
         }
@@ -127,7 +129,7 @@ namespace Code.Network
             {
                 downloadHandler = new DownloadHandlerBuffer()
             };
-            sbReq.SetRequestHeader("Authorization", _clientToken);
+            sbReq.SetRequestHeader("Authorization",  _serverToken);
             yield return sbReq.SendWebRequest();
 
             bool ok = sbReq.responseCode == 200 || sbReq.responseCode == 204 || sbReq.responseCode == 404;
