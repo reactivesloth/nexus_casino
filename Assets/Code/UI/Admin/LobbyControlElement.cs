@@ -3,6 +3,7 @@ using System.Linq;
 using Code.Network;
 using Code.UI.Popup;
 using Code.Utility;
+using PurrNet;
 using Ricimi;
 using TMPro;
 using UnityEngine;
@@ -62,7 +63,7 @@ namespace Code.UI.Admin
                 ? $"{serverData.server.location.city}, {serverData.server.location.country}"
                 : "";
 
-            playersCountText.text = $"{serverData.total_reserved_seats}/{serverData.metadata?.max_players ?? 0}";
+            playersCountText.text = $"{serverData.metadata?.max_players - serverData.total_available_seats}/{serverData.metadata?.max_players ?? 0}";
 
             var isPrivate = serverData.total_joinable_seats == 0;
             var privateKey = isPrivate ? "admin.lobby.private.close" : "admin.lobby.private.open";

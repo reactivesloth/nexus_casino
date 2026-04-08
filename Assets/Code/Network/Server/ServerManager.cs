@@ -159,6 +159,7 @@ namespace Code.Network.Server
 
         // ── Регистрация + Keep-alive ──────────────────────────
 
+        // В RegisterAndKeepAlive() — добавь синхронизацию слотов вместе с keep-alive
         IEnumerator RegisterAndKeepAlive()
         {
             _requestId = Env("ARBITRIUM_REQUEST_ID", DebugRequestId);
@@ -167,15 +168,25 @@ namespace Code.Network.Server
             int gamePort = ResolvePort(GamePortName, DebugGamePort);
             int streamPort = ResolvePort(StreamPortName, DebugStreamPort);
 
-            Debug.Log($"[ServerReg] id={_requestId} ip={publicIp} gamePort={gamePort} streamPort={streamPort}");
-
             yield return StartCoroutine(RegisterInstance(_requestId, publicIp, gamePort, streamPort));
 
             while (true)
             {
                 yield return new WaitForSeconds(KeepAliveInterval);
                 yield return StartCoroutine(SendKeepAlive(_requestId));
+        
+                // Синхронизируем слоты каждый keep-alive цикл
+                // Это перезаписывает любые истёкшие резервации актуальным числом игроков
+                yield return StartCoroutine(SyncSlots());
             }
+        }
+
+        private IEnumerator SyncSlots()
+        {
+            int occupied = InstanceHandler.NetworkManager.playerCount;
+            int freeSeats = Mathf.Max(0, MaxPlayers - occupied);
+            yield return StartCoroutine(UpdateSlotSeats("default", freeSeats));
+            Debug.Log($"[ServerReg] Sync slots: {occupied} игроков, {freeSeats} свободных");
         }
 
         private int ResolvePort(string portName, int fallback)
@@ -277,8 +288,11 @@ namespace Code.Network.Server
 
         void UpdateSlots()
         {
-            int freeSeats = Mathf.Max(0, MaxPlayers - InstanceHandler.NetworkManager.playerCount);
+            // playerCount — реальное число подключённых игроков
+            int occupied = InstanceHandler.NetworkManager.playerCount;
+            int freeSeats = Mathf.Max(0, MaxPlayers - occupied);
             StartCoroutine(UpdateSlotSeats("default", freeSeats));
+            Debug.Log($"[ServerReg] Игроков: {occupied}, свободно: {freeSeats}");
         }
 
         IEnumerator UpdateSlotSeats(string slotName, int availableSeats)
