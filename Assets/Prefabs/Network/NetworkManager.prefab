@@ -50,12 +50,14 @@ MonoBehaviour:
   ServerBrowserUrl: https://sb-5u6jzbo2cw.edgegap.net
   ServerToken: d5d50fd2-d32f-4824-ad23-bc28abf7b964
   GamePortName: gameport
+  StreamPortName: stream_peer
   MaxPlayers: 100
-  KeepAliveInterval: 30
-  emptyServerLifeTime: 600
+  KeepAliveInterval: 5
   DebugRequestId: local-test-01
   DebugPublicIp: 127.0.0.1
-  DebugExternalPort: 7770
+  DebugGamePort: 7770
+  DebugStreamPort: 9000
+  emptyServerLifeTime: 600
 --- !u!114 &4148929254775448530
 MonoBehaviour:
   m_ObjectHideFlags: 0
