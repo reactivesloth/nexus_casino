@@ -24,7 +24,7 @@ namespace Code.Network.InteractionSystem
 
         private bool _initedPlayerInteraction;
         private Interactable _prevHovered;
-
+        
         private float _postEndCooldown;
         [SerializeField] private float postEndCooldownTime = 0.05f;
 
@@ -39,6 +39,27 @@ namespace Code.Network.InteractionSystem
 
             input = PlayerInput.Instance;
             playerController = gameObject.GetComponent<PlayerMovementController>();
+
+            if (PlayerPrefs.HasKey("SavedInteractableKey") && PlayerPrefs.HasKey("SavedInteractableName"))
+            {
+                LoadingScreenUI.Instance?.Show("loading.start_scene", "loading.please_wait");
+                Invoke(nameof(ReconnectInteract), 2);
+            }
+        }
+
+        private void ReconnectInteract()
+        {
+            foreach (var interactable in FindObjectsOfType<Interactable>())
+            {
+                if (interactable.interactableKey == PlayerPrefs.GetString("SavedInteractableKey") && interactable.name == PlayerPrefs.GetString("SavedInteractableName"))
+                {
+                    RequestInteractWith(interactable.GetComponentInParent<CompositeInteractable>() != null
+                            ? interactable.GetComponentInParent<CompositeInteractable>()
+                            : interactable, true);
+                    LoadingScreenUI.Instance.Hide();
+                    break;
+                }
+            }
         }
 
         private void Update()
@@ -76,6 +97,8 @@ namespace Code.Network.InteractionSystem
 
                     _selected = Active;
                     _selected.RequestEndInteract();
+                    PlayerPrefs.DeleteKey("SavedInteractableKey");
+                    PlayerPrefs.DeleteKey("SavedInteractableName");
                 }
             }
 
@@ -90,6 +113,8 @@ namespace Code.Network.InteractionSystem
             _selected = interactable;
             _selected.InteractCallback_Client += OnStartInteractCallbackClient;
             _selected.RequestInteract(force);
+            PlayerPrefs.SetString("SavedInteractableKey", interactable.interactableKey);
+            PlayerPrefs.SetString("SavedInteractableName", interactable.name);
         }
 
         private void UpdateHover()
