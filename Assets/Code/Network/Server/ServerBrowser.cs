@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Code.API;
 using Code.Network;
@@ -407,27 +408,23 @@ public class EdgegapServerBrowser : MonoBehaviour
 
     IEnumerator FindAvailableInstance(Action<ServerInstanceItem> callback)
     {
-        // Без filter — берём всё и фильтруем сами
-        string url = $"{ServerBrowserUrl}/server-instances?limit=20";
+        string url = $"{ServerBrowserUrl}/server-instances?limit=5"; // Меньше кандидатов
 
         yield return Get(url, json =>
         {
-            Debug.Log($"[SB] server-instances response: {json}"); // временный лог
-
             var resp = JsonConvert.DeserializeObject<ServerInstanceListResponse>(json);
-            if (resp?.items == null || resp.items.Count == 0)
+            if (resp?.items == null) 
             {
-                Debug.Log("[SB] Список пустой");
                 callback(null);
                 return;
             }
 
-            // Фильтруем и сортируем на клиенте
-            var available = resp.items.FindAll(i => i.total_joinable_seats > 0);
-            available.Sort((a, b) => b.total_joinable_seats.CompareTo(a.total_joinable_seats));
+            // Берем первый с местами — остальное проверяется позже
+            var best = resp.items
+                .FirstOrDefault(i => i.total_joinable_seats > 0);
 
-            Debug.Log($"[SB] Найдено серверов: {resp.items.Count}, с местами: {available.Count}");
-            callback(available.Count > 0 ? available[0] : null);
+            Debug.Log($"[SB] Выбрал: {best?.request_id}");
+            callback(best);
         });
     }
 

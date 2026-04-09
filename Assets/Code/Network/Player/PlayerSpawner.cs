@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Code.API;
@@ -197,7 +196,7 @@ namespace Code.Network.Player
         {
             _clientConnected = (state == ConnectionState.Connected);
 
-            if (state == ConnectionState.Disconnected)
+            if (state == ConnectionState.Disconnecting ||  state == ConnectionState.Disconnected)
             {
                  Debug.Log("Network lost, attempting reconnect...");
                  PlayerPrefs.SetInt("ReloadAttempt", PlayerPrefs.GetInt("ReloadAttempt", 0) + 1);
@@ -210,8 +209,8 @@ namespace Code.Network.Player
                      SceneManager.LoadScene(0);
                      return;
                  }
-            //     StartCoroutine(ReconnectCoroutine());
-                SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+                 
+                 SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             }
         }
         
@@ -408,13 +407,16 @@ namespace Code.Network.Player
 
             for (int i = 0; i < msg.PlayerCount; i++)
             {
-                SpawnedPlayerData.Add(msg.Ids[i], msg.Datas[i]);
-                NameConnectionsData.Add(msg.Datas[i].username, msg.Ids[i]);
+                SpawnedPlayerData[msg.Ids[i]] = msg.Datas[i];
+                NameConnectionsData[msg.Datas[i].username] = msg.Ids[i];
             }
+
             var adminsKeys = SpawnedPlayerData
                 .Where(data => data.Value.IsAdminRole)
-                .Select(data => data.Key).ToList();
-            Debug.Log(adminsKeys.Count.ToString());
+                .Select(data => data.Key)
+                .ToList();
+
+            Debug.Log(adminsKeys.Count);
         }
     }
 }
